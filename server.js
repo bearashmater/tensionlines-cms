@@ -9,6 +9,7 @@
 
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import fs from 'fs';
 import path from 'path';
@@ -34,6 +35,10 @@ const limiter = rateLimit({
 });
 
 // Middleware
+app.use(helmet({
+  contentSecurityPolicy: false,  // Disabled for Vite dev server compatibility
+  crossOriginEmbedderPolicy: false
+}));
 app.use(limiter);
 app.use(cors({
   origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
@@ -170,28 +175,39 @@ function parseIdeasBank() {
   return ideas;
 }
 
+// Max content size for API responses (1MB)
+const MAX_CONTENT_SIZE = 1024 * 1024;
+
+/**
+ * Truncate content if too large
+ */
+function truncateContent(content, maxSize = MAX_CONTENT_SIZE) {
+  if (content.length <= maxSize) return content;
+  return content.substring(0, maxSize) + '\n\n[Content truncated - file too large]';
+}
+
 /**
  * Get all memory files
  */
 function getMemoryFiles() {
   if (cache.memoryFiles) return cache.memoryFiles;
   if (!fs.existsSync(MEMORY_DIR)) return [];
-  
+
   const files = fs.readdirSync(MEMORY_DIR)
     .filter(f => f.endsWith('.md'))
     .map(f => {
       const fullPath = path.join(MEMORY_DIR, f);
       const content = fs.readFileSync(fullPath, 'utf8');
       const stats = fs.statSync(fullPath);
-      
+
       return {
         filename: f,
-        content: content,
+        content: truncateContent(content),
         size: stats.size,
         modified: stats.mtime
       };
     });
-  
+
   cache.memoryFiles = files.sort((a, b) => b.modified - a.modified);
   return cache.memoryFiles;
 }
@@ -231,7 +247,7 @@ function getPhilosopherDrafts() {
         philosopher: phil,
         filename: file,
         platform: platform,
-        content: parsed.content,
+        content: truncateContent(parsed.content),
         metadata: parsed.data,
         modified: stats.mtime,
         size: stats.size
@@ -483,8 +499,9 @@ function getChapterDetails(bookId, chapterNum) {
   // Get chapter content if it exists
   const chapterPath = path.join(bookDir, 'chapters', `chapter-${chapterNum}.md`);
   if (fs.existsSync(chapterPath)) {
-    chapter.content = fs.readFileSync(chapterPath, 'utf8');
-    chapter.wordCount = chapter.content.split(/\s+/).filter(w => w).length;
+    const rawContent = fs.readFileSync(chapterPath, 'utf8');
+    chapter.content = truncateContent(rawContent);
+    chapter.wordCount = rawContent.split(/\s+/).filter(w => w).length;
   }
   
   // Get chapter outline from MASTER_OUTLINE.md
@@ -689,6 +706,17 @@ function calculateTimeInStatus(task) {
   };
 }
 
+// Valid filter values
+const VALID_STATUSES = ['assigned', 'in_progress', 'review', 'completed', 'shipped', 'blocked'];
+const MAX_FILTER_LENGTH = 100;
+
+/**
+ * Validate a query parameter (string, reasonable length, no special chars)
+ */
+function isValidFilter(value) {
+  return typeof value === 'string' && value.length <= MAX_FILTER_LENGTH && /^[a-zA-Z0-9_-]+$/.test(value);
+}
+
 /**
  * Get tasks (with optional filters)
  */
@@ -696,19 +724,28 @@ app.get('/api/tasks', (req, res) => {
   try {
     const mc = getMissionControl();
     let tasks = mc.tasks;
-    
-    // Filter by status
+
+    // Filter by status (validate against whitelist)
     if (req.query.status) {
+      if (!VALID_STATUSES.includes(req.query.status)) {
+        return res.status(400).json({ error: 'Invalid status filter' });
+      }
       tasks = tasks.filter(t => t.status === req.query.status);
     }
-    
-    // Filter by assignee
+
+    // Filter by assignee (validate format)
     if (req.query.assignee) {
+      if (!isValidFilter(req.query.assignee)) {
+        return res.status(400).json({ error: 'Invalid assignee filter' });
+      }
       tasks = tasks.filter(t => t.assigneeIds.includes(req.query.assignee));
     }
-    
-    // Filter by reviewer
+
+    // Filter by reviewer (validate format)
     if (req.query.reviewer) {
+      if (!isValidFilter(req.query.reviewer)) {
+        return res.status(400).json({ error: 'Invalid reviewer filter' });
+      }
       tasks = tasks.filter(t => t.reviewerIds.includes(req.query.reviewer));
     }
     
@@ -783,6 +820,11 @@ app.post('/api/tasks/:id/complete', (req, res) => {
   try {
     const { id } = req.params;
     let { completedBy } = req.body;
+
+    // Validate task ID format
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(id)) {
+      return res.status(400).json({ error: 'Invalid task ID' });
+    }
 
     // Validate completedBy - only allow alphanumeric, hyphens, underscores
     if (completedBy && (typeof completedBy !== 'string' || !/^[a-zA-Z0-9_-]{1,50}$/.test(completedBy))) {
