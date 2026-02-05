@@ -677,7 +677,7 @@ app.get('/api/agents/:id/soul', (req, res) => {
       'hypatia': 'hypatia',
       'leonardo': 'leonardo',
       'tension': 'tension',
-      'human': null
+      'human': 'human'
     };
 
     const philosopherDir = dirMap[id];
@@ -1315,11 +1315,492 @@ app.get('/api/costs', (req, res) => {
  * Health check
  */
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
+});
+
+// ============================================================================
+// SQUAD LEAD ENDPOINTS
+// ============================================================================
+
+/**
+ * Calculate due status for a task
+ */
+function calculateDueStatus(task) {
+  const now = new Date();
+  let dueDate = null;
+
+  // Priority order for determining due date
+  if (task.dueDate) {
+    dueDate = new Date(task.dueDate);
+  } else if (task.metadata?.deadline) {
+    dueDate = new Date(task.metadata.deadline);
+  } else if (task.startedAt && task.metadata?.estimatedMinutes) {
+    dueDate = new Date(new Date(task.startedAt).getTime() + task.metadata.estimatedMinutes * 60000);
+  }
+
+  if (!dueDate) {
+    return { dueDate: null, isOverdue: false, hoursRemaining: null, urgency: 'none' };
+  }
+
+  const msRemaining = dueDate - now;
+  const hoursRemaining = msRemaining / (1000 * 60 * 60);
+  const isOverdue = msRemaining < 0;
+
+  let urgency = 'normal';
+  if (isOverdue) urgency = 'overdue';
+  else if (hoursRemaining <= 4) urgency = 'critical';
+  else if (hoursRemaining <= 24) urgency = 'soon';
+
+  return {
+    dueDate: dueDate.toISOString(),
+    isOverdue,
+    hoursRemaining: Math.round(hoursRemaining * 10) / 10,
+    urgency
+  };
+}
+
+/**
+ * Calculate agent metrics
+ */
+function calculateAgentMetrics(agentId, allTasks) {
+  const agentTasks = allTasks.filter(t => t.assigneeIds?.includes(agentId));
+  const completedTasks = agentTasks.filter(t => ['completed', 'shipped'].includes(t.status));
+  const activeTasks = agentTasks.filter(t => ['assigned', 'in_progress', 'review'].includes(t.status));
+
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+  const tasksCompletedLast7Days = completedTasks.filter(t =>
+    t.completedAt && new Date(t.completedAt) >= weekAgo
+  ).length;
+
+  const tasksCompletedPreviousWeek = completedTasks.filter(t =>
+    t.completedAt && new Date(t.completedAt) >= twoWeeksAgo && new Date(t.completedAt) < weekAgo
+  ).length;
+
+  // Calculate average completion time
+  const completionTimes = completedTasks
+    .filter(t => t.startedAt && t.completedAt)
+    .map(t => (new Date(t.completedAt) - new Date(t.startedAt)) / 60000);
+
+  const avgCompletionTimeMinutes = completionTimes.length > 0
+    ? completionTimes.reduce((a, b) => a + b, 0) / completionTimes.length
+    : 0;
+
+  // Calculate workload score (0-100)
+  const workloadScore = Math.min(100, activeTasks.length * 25);
+
+  // Count stuck tasks
+  const stuckTasks = activeTasks.filter(t => {
+    const tracking = calculateTimeInStatus(t);
+    return tracking.alertLevel === 'yellow' || tracking.alertLevel === 'red';
+  }).length;
+
+  // Calculate trend vs last week
+  const tasksTrend = tasksCompletedPreviousWeek > 0
+    ? Math.round(((tasksCompletedLast7Days - tasksCompletedPreviousWeek) / tasksCompletedPreviousWeek) * 100)
+    : 0;
+
+  return {
+    totalTasks: agentTasks.length,
+    activeTasks: activeTasks.length,
+    completedTasks: completedTasks.length,
+    tasksCompletedLast7Days,
+    avgCompletionTimeMinutes: Math.round(avgCompletionTimeMinutes),
+    workloadScore,
+    stuckTasks,
+    tasksTrend,
+    completionRate: agentTasks.length > 0
+      ? Math.round((completedTasks.length / agentTasks.length) * 100)
+      : 0
+  };
+}
+
+/**
+ * Squad Lead Overview - all key data for the dashboard
+ */
+app.get('/api/squad-lead/overview', (req, res) => {
+  try {
+    const mc = getMissionControl();
+    const now = new Date();
+
+    // Calculate active tasks with time tracking
+    const activeTasks = mc.tasks.filter(t =>
+      ['assigned', 'in_progress', 'review'].includes(t.status)
+    ).map(t => ({
+      ...t,
+      timeTracking: calculateTimeInStatus(t),
+      dueStatus: calculateDueStatus(t)
+    }));
+
+    // Build alerts
+    const alerts = [];
+
+    // Overdue tasks
+    activeTasks.forEach(task => {
+      if (task.dueStatus.isOverdue) {
+        alerts.push({
+          id: `overdue-${task.id}`,
+          type: 'overdue',
+          priority: 'critical',
+          task,
+          timeInStatus: task.timeTracking.timeInStatusHuman
+        });
+      }
+    });
+
+    // Stuck tasks (yellow/red)
+    activeTasks.forEach(task => {
+      if (task.timeTracking.alertLevel === 'red') {
+        alerts.push({
+          id: `stuck-red-${task.id}`,
+          type: 'stuck',
+          priority: 'critical',
+          task,
+          timeInStatus: task.timeTracking.timeInStatusHuman
+        });
+      } else if (task.timeTracking.alertLevel === 'yellow') {
+        alerts.push({
+          id: `stuck-yellow-${task.id}`,
+          type: 'stuck',
+          priority: 'high',
+          task,
+          timeInStatus: task.timeTracking.timeInStatusHuman
+        });
+      }
+    });
+
+    // Blocked tasks (assigned to human or marked blocked)
+    activeTasks.forEach(task => {
+      if (task.status === 'blocked' || task.assigneeIds?.includes('human')) {
+        if (!alerts.find(a => a.task.id === task.id)) {
+          alerts.push({
+            id: `blocked-${task.id}`,
+            type: 'blocked',
+            priority: 'medium',
+            task,
+            timeInStatus: task.timeTracking.timeInStatusHuman
+          });
+        }
+      }
+    });
+
+    // Build agent workloads
+    const agentWorkloads = mc.agents.map(agent => {
+      const metrics = calculateAgentMetrics(agent.id, mc.tasks);
+      const agentActiveTasks = activeTasks.filter(t => t.assigneeIds?.includes(agent.id));
+      const currentTask = agentActiveTasks.find(t => t.status === 'in_progress') || agentActiveTasks[0];
+      const queuedTasks = agentActiveTasks.filter(t => t.status === 'assigned').length;
+
+      // Get avatar URL
+      let avatarUrl = null;
+      const avatarExtensions = ['png', 'jpg', 'svg'];
+      for (const ext of avatarExtensions) {
+        const avatarPath = path.join(__dirname, 'public', 'avatars', `${agent.id}.${ext}`);
+        if (fs.existsSync(avatarPath)) {
+          avatarUrl = `/avatars/${agent.id}.${ext}`;
+          break;
+        }
+      }
+
+      return {
+        id: agent.id,
+        name: agent.name,
+        role: agent.role,
+        avatarUrl,
+        workloadScore: metrics.workloadScore,
+        activeTasks: metrics.activeTasks,
+        queuedTasks,
+        stuckTasks: metrics.stuckTasks,
+        currentTask: currentTask ? {
+          id: currentTask.id,
+          title: currentTask.title,
+          status: currentTask.status
+        } : null
+      };
+    });
+
+    // Tasks with upcoming due dates (next 7 days)
+    const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const upcomingTasks = activeTasks
+      .filter(t => t.dueStatus.dueDate)
+      .map(t => ({
+        id: t.id,
+        title: t.title,
+        description: t.description,
+        status: t.status,
+        priority: t.metadata?.priority || 'normal',
+        dueDate: t.dueStatus.dueDate,
+        assigneeIds: t.assigneeIds,
+        isOverdue: t.dueStatus.isOverdue
+      }))
+      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+    // Summary stats
+    const stuckTasks = activeTasks.filter(t =>
+      t.timeTracking.alertLevel === 'yellow' || t.timeTracking.alertLevel === 'red'
+    ).length;
+
+    const criticalTasks = activeTasks.filter(t =>
+      t.timeTracking.alertLevel === 'red' || t.dueStatus.isOverdue
+    ).length;
+
+    res.json({
+      totalAgents: mc.agents.length,
+      activeAgents: mc.agents.filter(a => a.status === 'active').length,
+      tasksInProgress: activeTasks.length,
+      stuckTasks,
+      criticalTasks,
+      alerts: alerts.sort((a, b) => {
+        const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+        return (priorityOrder[a.priority] || 3) - (priorityOrder[b.priority] || 3);
+      }),
+      agentWorkloads,
+      upcomingTasks
+    });
+  } catch (error) {
+    console.error('Error in squad-lead overview:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Squad Lead Agent Detail
+ */
+app.get('/api/squad-lead/agent/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,50}$/.test(id)) {
+      return res.status(400).json({ error: 'Invalid agent ID' });
+    }
+
+    const mc = getMissionControl();
+    const agent = mc.agents.find(a => a.id === id);
+
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+
+    const metrics = calculateAgentMetrics(id, mc.tasks);
+
+    // Get agent's active tasks with tracking
+    const agentTasks = mc.tasks.filter(t => t.assigneeIds?.includes(id));
+    const activeTasks = agentTasks
+      .filter(t => ['assigned', 'in_progress', 'review'].includes(t.status))
+      .map(t => ({
+        ...t,
+        timeTracking: calculateTimeInStatus(t),
+        dueStatus: calculateDueStatus(t)
+      }));
+
+    const currentTask = activeTasks.find(t => t.status === 'in_progress');
+    const queuedTasks = activeTasks
+      .filter(t => t.status === 'assigned')
+      .sort((a, b) => {
+        // Sort by priority, then by creation date
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        const aPriority = priorityOrder[a.metadata?.priority] ?? 1;
+        const bPriority = priorityOrder[b.metadata?.priority] ?? 1;
+        if (aPriority !== bPriority) return aPriority - bPriority;
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      })
+      .map(t => ({
+        id: t.id,
+        title: t.title,
+        priority: t.metadata?.priority || 'normal',
+        dueDate: t.dueStatus.dueDate
+      }));
+
+    // Get avatar URL
+    let avatarUrl = null;
+    const avatarExtensions = ['png', 'jpg', 'svg'];
+    for (const ext of avatarExtensions) {
+      const avatarPath = path.join(__dirname, 'public', 'avatars', `${id}.${ext}`);
+      if (fs.existsSync(avatarPath)) {
+        avatarUrl = `/avatars/${id}.${ext}`;
+        break;
+      }
+    }
+
+    res.json({
+      agent: {
+        ...agent,
+        avatarUrl
+      },
+      metrics,
+      currentTask: currentTask ? {
+        id: currentTask.id,
+        title: currentTask.title,
+        status: currentTask.status,
+        timeInStatus: currentTask.timeTracking.timeInStatusHuman,
+        alertLevel: currentTask.timeTracking.alertLevel
+      } : null,
+      queuedTasks
+    });
+  } catch (error) {
+    console.error('Error in squad-lead agent detail:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Available agents for reassignment
+ */
+app.get('/api/squad-lead/available-agents', (req, res) => {
+  try {
+    const mc = getMissionControl();
+
+    const agents = mc.agents.map(agent => {
+      const metrics = calculateAgentMetrics(agent.id, mc.tasks);
+
+      // Get avatar URL
+      let avatarUrl = null;
+      const avatarExtensions = ['png', 'jpg', 'svg'];
+      for (const ext of avatarExtensions) {
+        const avatarPath = path.join(__dirname, 'public', 'avatars', `${agent.id}.${ext}`);
+        if (fs.existsSync(avatarPath)) {
+          avatarUrl = `/avatars/${agent.id}.${ext}`;
+          break;
+        }
+      }
+
+      return {
+        id: agent.id,
+        name: agent.name,
+        role: agent.role,
+        avatarUrl,
+        workloadScore: metrics.workloadScore,
+        activeTasks: metrics.activeTasks
+      };
+    });
+
+    res.json(agents);
+  } catch (error) {
+    console.error('Error getting available agents:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Reassign a task to a new agent
+ */
+app.post('/api/tasks/:id/reassign', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newAssigneeId, reason } = req.body;
+
+    // Validate task ID
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(id)) {
+      return res.status(400).json({ error: 'Invalid task ID' });
+    }
+
+    // Validate new assignee ID
+    if (!newAssigneeId || typeof newAssigneeId !== 'string' || !/^[a-zA-Z0-9_-]{1,50}$/.test(newAssigneeId)) {
+      return res.status(400).json({ error: 'Invalid assignee ID' });
+    }
+
+    const data = getMissionControl();
+    const task = data.tasks.find(t => t.id === id);
+
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const newAgent = data.agents.find(a => a.id === newAssigneeId);
+    if (!newAgent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+
+    const oldAssignees = [...(task.assigneeIds || [])];
+
+    // Update task
+    task.assigneeIds = [newAssigneeId];
+    task.metadata = task.metadata || {};
+    task.metadata.reassignedAt = new Date().toISOString();
+    task.metadata.reassignedFrom = oldAssignees;
+    if (reason) {
+      task.metadata.reassignReason = reason;
+    }
+
+    // Add activity
+    data.activities.unshift({
+      id: `activity-${Date.now()}`,
+      type: 'task_reassigned',
+      agentId: 'tension',
+      taskId: id,
+      timestamp: new Date().toISOString(),
+      description: `Reassigned "${task.title}" from ${oldAssignees.join(', ')} to ${newAssigneeId}`,
+      metadata: {
+        oldAssignees,
+        newAssignee: newAssigneeId,
+        reason: reason || null
+      }
+    });
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(data, null, 2));
+    cache.missionControl = null;
+
+    res.json({ success: true, task });
+  } catch (error) {
+    console.error('Error reassigning task:', error);
+    res.status(500).json({ error: 'Failed to reassign task' });
+  }
+});
+
+/**
+ * Set task due date
+ */
+app.post('/api/tasks/:id/due-date', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { dueDate } = req.body;
+
+    // Validate task ID
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(id)) {
+      return res.status(400).json({ error: 'Invalid task ID' });
+    }
+
+    // Validate due date
+    if (!dueDate || isNaN(new Date(dueDate).getTime())) {
+      return res.status(400).json({ error: 'Invalid due date' });
+    }
+
+    const data = getMissionControl();
+    const task = data.tasks.find(t => t.id === id);
+
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    task.dueDate = new Date(dueDate).toISOString();
+
+    // Add activity
+    data.activities.unshift({
+      id: `activity-${Date.now()}`,
+      type: 'due_date_set',
+      agentId: 'tension',
+      taskId: id,
+      timestamp: new Date().toISOString(),
+      description: `Set due date for "${task.title}" to ${new Date(dueDate).toLocaleDateString()}`,
+      metadata: {
+        dueDate: task.dueDate
+      }
+    });
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(data, null, 2));
+    cache.missionControl = null;
+
+    res.json({ success: true, task });
+  } catch (error) {
+    console.error('Error setting due date:', error);
+    res.status(500).json({ error: 'Failed to set due date' });
+  }
 });
 
 // ============================================================================

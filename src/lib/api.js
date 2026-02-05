@@ -148,3 +148,33 @@ export async function search(query) {
 export async function getHealth() {
   return apiFetch('/health')
 }
+
+// ============================================================================
+// SQUAD LEAD
+// ============================================================================
+
+export async function getSquadOverview() {
+  return apiFetch('/squad-lead/overview')
+}
+
+export async function getAgentDetail(id) {
+  return apiFetch(`/squad-lead/agent/${id}`)
+}
+
+export async function getAvailableAgents() {
+  return apiFetch('/squad-lead/available-agents')
+}
+
+export async function reassignTask(taskId, newAssigneeId, reason) {
+  return apiFetch(`/tasks/${taskId}/reassign`, {
+    method: 'POST',
+    body: JSON.stringify({ newAssigneeId, reason })
+  })
+}
+
+export async function setTaskDueDate(taskId, dueDate) {
+  return apiFetch(`/tasks/${taskId}/due-date`, {
+    method: 'POST',
+    body: JSON.stringify({ dueDate })
+  })
+}
