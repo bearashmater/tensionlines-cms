@@ -59,6 +59,10 @@ export async function getAgent(id) {
   return apiFetch(`/agents/${id}`)
 }
 
+export async function getAgentSoul(id) {
+  return apiFetch(`/agents/${id}/soul`)
+}
+
 // ============================================================================
 // TASKS
 // ============================================================================

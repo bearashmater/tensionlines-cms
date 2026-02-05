@@ -624,9 +624,123 @@ app.get('/api/dashboard', (req, res) => {
 app.get('/api/agents', (req, res) => {
   try {
     const mc = getMissionControl();
-    res.json(mc.agents);
+
+    // Add avatar URLs to each agent
+    const agentsWithAvatars = mc.agents.map(agent => {
+      let avatarUrl = null;
+      const avatarExtensions = ['png', 'jpg', 'svg'];
+      for (const ext of avatarExtensions) {
+        const avatarPath = path.join(__dirname, 'public', 'avatars', `${agent.id}.${ext}`);
+        if (fs.existsSync(avatarPath)) {
+          avatarUrl = `/avatars/${agent.id}.${ext}`;
+          break;
+        }
+      }
+      return { ...agent, avatarUrl };
+    });
+
+    res.json(agentsWithAvatars);
   } catch (error) {
     console.error(error); res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Get agent profile/soul
+ * Returns the agent's SOUL.md content if available
+ */
+app.get('/api/agents/:id/soul', (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate agent ID
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,50}$/.test(id)) {
+      return res.status(400).json({ error: 'Invalid agent ID' });
+    }
+
+    const mc = getMissionControl();
+    const agent = mc.agents.find(a => a.id === id);
+
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+
+    // Map agent IDs to philosopher directory names
+    const dirMap = {
+      'nietzsche': 'nietzsche',
+      'socrates': 'socrates',
+      'aristotle': 'aristotle',
+      'marcus': 'marcus',
+      'heraclitus': 'heraclitus',
+      'diogenes': 'diogenes',
+      'plato': 'plato',
+      'hypatia': 'hypatia',
+      'leonardo': 'leonardo',
+      'tension': 'tension',
+      'human': null
+    };
+
+    const philosopherDir = dirMap[id];
+    let soulContent = null;
+    let heartbeatContent = null;
+    let avatarUrl = null;
+
+    // Check for avatar image (png, jpg, or svg)
+    const avatarExtensions = ['png', 'jpg', 'svg'];
+    for (const ext of avatarExtensions) {
+      const avatarPath = path.join(__dirname, 'public', 'avatars', `${id}.${ext}`);
+      if (fs.existsSync(avatarPath)) {
+        avatarUrl = `/avatars/${id}.${ext}`;
+        break;
+      }
+    }
+
+    if (philosopherDir) {
+      // Try to read SOUL.md
+      const soulPath = path.join(PHILOSOPHERS_DIR, philosopherDir, 'SOUL.md');
+      if (fs.existsSync(soulPath)) {
+        soulContent = fs.readFileSync(soulPath, 'utf8');
+      }
+
+      // Try to read HEARTBEAT.md for current status
+      const heartbeatPath = path.join(PHILOSOPHERS_DIR, philosopherDir, 'HEARTBEAT.md');
+      if (fs.existsSync(heartbeatPath)) {
+        heartbeatContent = fs.readFileSync(heartbeatPath, 'utf8');
+      }
+    }
+
+    // Get agent's tasks and metrics
+    const agentTasks = mc.tasks.filter(t => t.assigneeIds?.includes(id));
+    const activeTasks = agentTasks.filter(t =>
+      ['assigned', 'in_progress', 'review'].includes(t.status)
+    );
+    const completedTasks = agentTasks.filter(t =>
+      ['completed', 'shipped'].includes(t.status)
+    );
+
+    // Recent activities
+    const recentActivities = mc.activities
+      .filter(a => a.agentId === id)
+      .slice(0, 10);
+
+    res.json({
+      agent,
+      soul: soulContent,
+      heartbeat: heartbeatContent,
+      avatarUrl,
+      stats: {
+        totalTasks: agentTasks.length,
+        activeTasks: activeTasks.length,
+        completedTasks: completedTasks.length,
+        completionRate: agentTasks.length > 0
+          ? Math.round((completedTasks.length / agentTasks.length) * 100)
+          : 0
+      },
+      recentActivities
+    });
+  } catch (error) {
+    console.error('Error getting agent soul:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -1327,9 +1441,29 @@ async function start() {
     appType: 'spa',
   });
 
-  // Serve Mission Control static files
+  // Block access to backup files and other sensitive patterns
+  app.use('/mission-control', (req, res, next) => {
+    const blockedPatterns = ['.backup', '.bak', '.old', '.orig', '.tmp', '~'];
+    const requestPath = req.path.toLowerCase();
+    if (blockedPatterns.some(p => requestPath.includes(p))) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    next();
+  });
+
+  // Serve Mission Control static files with security options
   const MISSION_CONTROL_DIR = path.join(BASE_DIR, 'mission-control');
-  app.use('/mission-control', express.static(MISSION_CONTROL_DIR));
+  app.use('/mission-control', express.static(MISSION_CONTROL_DIR, {
+    dotfiles: 'ignore',
+    index: 'index.html',
+    extensions: ['html', 'json', 'md', 'css', 'js'],
+    setHeaders: (res, filePath) => {
+      res.set('X-Content-Type-Options', 'nosniff');
+      if (filePath.endsWith('.json')) {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+      }
+    }
+  }));
 
   // Vite dev middleware (handles React HMR, module serving, etc.)
   app.use(vite.middlewares);

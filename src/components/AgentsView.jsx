@@ -1,9 +1,13 @@
+import { useState } from 'react'
 import useSWR from 'swr'
 import { getAgents } from '../lib/api'
 import { getInitials, getAgentColor, getStatusColor } from '../lib/formatters'
-import { User, CheckCircle, Circle, AlertCircle } from 'lucide-react'
+import { User, CheckCircle, Circle } from 'lucide-react'
+import AgentProfileModal from './AgentProfileModal'
 
 export default function AgentsView() {
+  const [selectedAgent, setSelectedAgent] = useState(null)
+
   const { data: agents, error } = useSWR('/agents', getAgents, {
     refreshInterval: 120000
   })
@@ -18,7 +22,7 @@ export default function AgentsView() {
     <div className="space-y-6 animate-fadeIn">
       <div>
         <h1 className="text-3xl font-serif font-bold text-black">Team</h1>
-        <p className="text-neutral-600 mt-1">All philosopher agents</p>
+        <p className="text-neutral-600 mt-1">All philosopher agents - click to see their soul</p>
       </div>
 
       {/* Stats */}
@@ -34,7 +38,11 @@ export default function AgentsView() {
           <h2 className="text-xl font-serif font-semibold mb-4">Active Agents</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {activeAgents.map(agent => (
-              <AgentCard key={agent.id} agent={agent} />
+              <AgentCard
+                key={agent.id}
+                agent={agent}
+                onClick={() => setSelectedAgent(agent)}
+              />
             ))}
           </div>
         </div>
@@ -46,25 +54,48 @@ export default function AgentsView() {
           <h2 className="text-xl font-serif font-semibold mb-4">Idle Agents</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {idleAgents.map(agent => (
-              <AgentCard key={agent.id} agent={agent} />
+              <AgentCard
+                key={agent.id}
+                agent={agent}
+                onClick={() => setSelectedAgent(agent)}
+              />
             ))}
           </div>
         </div>
+      )}
+
+      {/* Agent Profile Modal */}
+      {selectedAgent && (
+        <AgentProfileModal
+          agent={selectedAgent}
+          onClose={() => setSelectedAgent(null)}
+        />
       )}
     </div>
   )
 }
 
-function AgentCard({ agent }) {
+function AgentCard({ agent, onClick }) {
   const colorClass = getAgentColor(agent.id)
   const statusColor = getStatusColor(agent.status)
 
   return (
-    <div className="card card-hover">
+    <button
+      onClick={onClick}
+      className="card card-hover w-full text-left cursor-pointer transition-all hover:shadow-lg hover:border-gold"
+    >
       <div className="flex items-start space-x-3">
-        <div className={`flex-shrink-0 w-12 h-12 rounded-full ${colorClass} flex items-center justify-center text-white font-bold`}>
-          {getInitials(agent.name)}
-        </div>
+        {agent.avatarUrl ? (
+          <img
+            src={agent.avatarUrl}
+            alt={agent.name}
+            className="flex-shrink-0 w-12 h-12 rounded-full object-cover"
+          />
+        ) : (
+          <div className={`flex-shrink-0 w-12 h-12 rounded-full ${colorClass} flex items-center justify-center text-white font-bold`}>
+            {getInitials(agent.name)}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-black truncate">{agent.name}</h3>
           <p className="text-sm text-neutral-600 truncate">{agent.role}</p>
@@ -80,7 +111,7 @@ function AgentCard({ agent }) {
           )}
         </div>
       </div>
-    </div>
+    </button>
   )
 }
 
