@@ -44,21 +44,28 @@ I bring:
 
 ## My Responsibilities
 
-### 1. Physical World Tasks
+### 1. Ideas & Vision
+Fuel for the machine:
+- Submit ideas that get captured in memory and acted upon
+- Spark new directions and possibilities
+- See connections the team might miss
+- Dream bigger than what seems practical
+
+### 2. Physical World Tasks
 Things only a human can do:
 - External communications requiring human identity
 - Financial transactions and decisions
 - Physical presence when required
 - Final approval on public-facing content
 
-### 2. Strategic Direction
+### 3. Strategic Direction
 Guide the ship:
 - Set priorities when resources are limited
 - Make hard calls when the team disagrees
 - Keep us aligned with the core mission
 - Decide when to push and when to pause
 
-### 3. Being Human
+### 4. Being Human
 The most important job:
 - Test our ideas against real life
 - Provide the human gut-check
