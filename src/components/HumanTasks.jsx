@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import useSWR from 'swr'
 import { getTasks } from '../lib/api'
-import { CheckCircle, Clock, ExternalLink, AlertCircle } from 'lucide-react'
+import { CheckCircle, Clock, ExternalLink, AlertCircle, Copy, Check, Link, MessageSquare } from 'lucide-react'
 
 export default function HumanTasks() {
   const { data: allTasks, error, mutate } = useSWR('/tasks', getTasks, {
@@ -81,10 +81,15 @@ export default function HumanTasks() {
 }
 
 function TaskCard({ task, onComplete, completing }) {
+  const [copiedIndex, setCopiedIndex] = useState(null)
   const priority = task.metadata?.priority || 'medium'
   const estimatedMinutes = task.metadata?.estimatedMinutes || null
   const directLink = task.metadata?.directLink
   const unblocks = task.metadata?.unblocks
+  const actionItems = task.metadata?.actionItems || []
+
+  // Extract links from description if no actionItems provided
+  const extractedLinks = extractLinksFromDescription(task.description)
 
   const priorityColors = {
     high: 'border-l-red-500 bg-red-50',
@@ -96,6 +101,12 @@ function TaskCard({ task, onComplete, completing }) {
     high: 'bg-red-100 text-red-700 border-red-200',
     medium: 'bg-yellow-100 text-yellow-700 border-yellow-200',
     low: 'bg-blue-100 text-blue-700 border-blue-200'
+  }
+
+  const handleCopy = async (text, index) => {
+    await navigator.clipboard.writeText(text)
+    setCopiedIndex(index)
+    setTimeout(() => setCopiedIndex(null), 2000)
   }
 
   return (
@@ -110,7 +121,7 @@ function TaskCard({ task, onComplete, completing }) {
               {priority.toUpperCase()} PRIORITY
             </span>
           </div>
-          
+
           {estimatedMinutes && (
             <div className="flex items-center gap-2 text-sm text-neutral-600 mb-3">
               <Clock size={14} />
@@ -121,15 +132,65 @@ function TaskCard({ task, onComplete, completing }) {
       </div>
 
       <div className="prose prose-sm max-w-none mb-4">
-        <div 
+        <div
           className="text-neutral-700 whitespace-pre-wrap"
           dangerouslySetInnerHTML={{ __html: formatDescription(task.description) }}
         />
       </div>
 
+      {/* Quick Action Links */}
+      {(actionItems.length > 0 || extractedLinks.length > 0) && (
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+            <Link size={16} />
+            Quick Actions
+          </h4>
+          <div className="space-y-3">
+            {(actionItems.length > 0 ? actionItems : extractedLinks).map((item, index) => (
+              <div key={index} className="bg-white p-3 rounded-md border border-blue-100">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-sm text-neutral-800">
+                    {item.label || item.name || `Link ${index + 1}`}
+                  </span>
+                  <a
+                    href={item.url || item.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    <ExternalLink size={14} />
+                    Open
+                  </a>
+                </div>
+                {item.suggestedComment && (
+                  <div className="mt-2">
+                    <div className="flex items-center gap-2 text-xs text-neutral-500 mb-1">
+                      <MessageSquare size={12} />
+                      Suggested comment:
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <p className="flex-1 text-sm bg-neutral-50 p-2 rounded border border-neutral-200 italic">
+                        "{item.suggestedComment}"
+                      </p>
+                      <button
+                        onClick={() => handleCopy(item.suggestedComment, index)}
+                        className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-200 hover:bg-neutral-300 rounded transition-colors"
+                      >
+                        {copiedIndex === index ? <Check size={12} /> : <Copy size={12} />}
+                        {copiedIndex === index ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {directLink && (
         <div className="mb-4">
-          <a 
+          <a
             href={directLink}
             target="_blank"
             rel="noopener noreferrer"
@@ -162,13 +223,44 @@ function TaskCard({ task, onComplete, completing }) {
           <CheckCircle size={18} />
           {completing ? 'Marking Complete...' : 'Mark Complete'}
         </button>
-        
+
         <span className="text-sm text-neutral-500">
           Task #{task.id.replace('task-', '')}
         </span>
       </div>
     </div>
   )
+}
+
+function extractLinksFromDescription(description) {
+  // Extract profile/post links from description text
+  const linkRegex = /https?:\/\/(?:bsky\.app|twitter\.com|x\.com|reddit\.com|patreon\.com)[^\s\)]+/g
+  const matches = description.match(linkRegex) || []
+
+  // Try to extract names/labels for links
+  const links = matches.map(url => {
+    let label = url
+    // Try to get a better label from context
+    if (url.includes('bsky.app/profile/')) {
+      const handle = url.split('/profile/')[1]?.split(/[?\s]/)[0]
+      label = `@${handle}`
+    } else if (url.includes('twitter.com/') || url.includes('x.com/')) {
+      const handle = url.split('/').pop()?.split('?')[0]
+      label = `@${handle}`
+    } else if (url.includes('reddit.com/r/')) {
+      const sub = url.match(/reddit\.com\/r\/([^\/]+)/)?.[1]
+      label = `r/${sub}`
+    }
+    return { url, label, name: label }
+  })
+
+  // Remove duplicates
+  const seen = new Set()
+  return links.filter(link => {
+    if (seen.has(link.url)) return false
+    seen.add(link.url)
+    return true
+  })
 }
 
 function formatDescription(description) {
