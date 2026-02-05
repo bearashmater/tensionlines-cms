@@ -24,8 +24,11 @@ const app = express();
 const PORT = process.env.PORT || 5173;
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true
+}));
+app.use(express.json({ limit: '1mb' }));
 
 // Base paths
 const BASE_DIR = path.resolve(__dirname, '..');
@@ -428,13 +431,31 @@ function getBooksProgress() {
 }
 
 /**
+ * Validate bookId to prevent path traversal attacks
+ */
+function isValidBookId(bookId) {
+  if (!bookId || typeof bookId !== 'string') return false;
+  // Only allow alphanumeric, hyphens, underscores (no slashes, dots, etc.)
+  if (!/^[a-zA-Z0-9_-]+$/.test(bookId)) return false;
+  // Verify it's an actual book directory
+  const bookDir = path.join(BOOKS_DIR, bookId);
+  const resolvedPath = path.resolve(bookDir);
+  // Ensure resolved path is still within BOOKS_DIR
+  if (!resolvedPath.startsWith(path.resolve(BOOKS_DIR))) return false;
+  return fs.existsSync(bookDir) && fs.statSync(bookDir).isDirectory();
+}
+
+/**
  * Get chapter details including content and linked ideas
  */
 function getChapterDetails(bookId, chapterNum) {
-  const bookDir = path.join(BOOKS_DIR, bookId);
-  if (!fs.existsSync(bookDir)) {
-    throw new Error('Book not found');
+  if (!isValidBookId(bookId)) {
+    throw new Error('Invalid book ID');
   }
+  if (!Number.isInteger(chapterNum) || chapterNum < 0 || chapterNum > 100) {
+    throw new Error('Invalid chapter number');
+  }
+  const bookDir = path.join(BOOKS_DIR, bookId);
   
   const chapter = {
     bookId,
@@ -566,7 +587,7 @@ app.get('/api/dashboard', (req, res) => {
       recentActivity: mc.activities.slice(0, 5)
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -578,7 +599,7 @@ app.get('/api/agents', (req, res) => {
     const mc = getMissionControl();
     res.json(mc.agents);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -689,7 +710,7 @@ app.get('/api/tasks', (req, res) => {
     
     res.json(tasks);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -713,7 +734,7 @@ app.get('/api/tasks/:id', (req, res) => {
     
     res.json(taskWithTracking);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -723,12 +744,12 @@ app.get('/api/tasks/:id', (req, res) => {
 app.get('/api/activities', (req, res) => {
   try {
     const mc = getMissionControl();
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
-    
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+
     const start = (page - 1) * limit;
     const end = start + limit;
-    
+
     const activities = mc.activities.slice(start, end);
     
     res.json({
@@ -741,7 +762,7 @@ app.get('/api/activities', (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -808,7 +829,7 @@ app.get('/api/notifications', (req, res) => {
     
     res.json(notifications);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -820,7 +841,7 @@ app.get('/api/ideas', (req, res) => {
     const ideas = parseIdeasBank();
     res.json(ideas);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -843,7 +864,7 @@ app.get('/api/drafts', (req, res) => {
     
     res.json(drafts);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -855,7 +876,7 @@ app.get('/api/memory', (req, res) => {
     const files = getMemoryFiles();
     res.json(files);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -867,7 +888,7 @@ app.get('/api/books', (req, res) => {
     const books = getBooksProgress();
     res.json(books);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -880,7 +901,7 @@ app.get('/api/books/:bookId/chapters/:chapterNum', (req, res) => {
     const chapter = getChapterDetails(bookId, parseInt(chapterNum));
     res.json(chapter);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -898,7 +919,7 @@ app.post('/api/search', (req, res) => {
     const results = searchContent(query);
     res.json(results);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -938,7 +959,7 @@ app.get('/api/schedule', (req, res) => {
     };
     res.json(cache.postingSchedule);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -960,7 +981,7 @@ app.get('/api/recurring-tasks', (req, res) => {
     cache.recurringTasks = JSON.parse(data);
     res.json(cache.recurringTasks);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -1012,7 +1033,7 @@ app.get('/api/costs', (req, res) => {
       res.json(costsCache);
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -1073,11 +1094,12 @@ async function start() {
   // Vite dev middleware (handles React HMR, module serving, etc.)
   app.use(vite.middlewares);
 
-  app.listen(PORT, () => {
+  app.listen(PORT, 'localhost', () => {
     console.log(`\nTensionLines CMS (unified server)`);
     console.log(`  App:             http://localhost:${PORT}/`);
     console.log(`  API:             http://localhost:${PORT}/api/health`);
     console.log(`  Mission Control: http://localhost:${PORT}/mission-control/`);
+    console.log(`  Bound to localhost only (not accessible from network)`);
     console.log(`  Watching files for changes...\n`);
   });
 }
