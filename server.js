@@ -1589,7 +1589,7 @@ app.get('/api/squad-lead/agent/:id', (req, res) => {
 
     const metrics = calculateAgentMetrics(id, mc.tasks);
 
-    // Get agent's active tasks with tracking
+    // Get agent's tasks
     const agentTasks = mc.tasks.filter(t => t.assigneeIds?.includes(id));
     const activeTasks = agentTasks
       .filter(t => ['assigned', 'in_progress', 'review'].includes(t.status))
@@ -1603,7 +1603,6 @@ app.get('/api/squad-lead/agent/:id', (req, res) => {
     const queuedTasks = activeTasks
       .filter(t => t.status === 'assigned')
       .sort((a, b) => {
-        // Sort by priority, then by creation date
         const priorityOrder = { high: 0, medium: 1, low: 2 };
         const aPriority = priorityOrder[a.metadata?.priority] ?? 1;
         const bPriority = priorityOrder[b.metadata?.priority] ?? 1;
@@ -1614,7 +1613,32 @@ app.get('/api/squad-lead/agent/:id', (req, res) => {
         id: t.id,
         title: t.title,
         priority: t.metadata?.priority || 'normal',
-        dueDate: t.dueStatus.dueDate
+        dueDate: t.dueStatus.dueDate,
+        description: t.description?.substring(0, 200)
+      }));
+
+    // Get completed tasks (last 10)
+    const completedTasks = agentTasks
+      .filter(t => ['completed', 'shipped'].includes(t.status))
+      .sort((a, b) => new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt))
+      .slice(0, 10)
+      .map(t => ({
+        id: t.id,
+        title: t.title,
+        status: t.status,
+        completedAt: t.completedAt,
+        priority: t.metadata?.priority || 'normal'
+      }));
+
+    // Get recent activities for this agent
+    const recentActivities = mc.activities
+      .filter(a => a.agentId === id)
+      .slice(0, 10)
+      .map(a => ({
+        id: a.id,
+        type: a.type,
+        description: a.description,
+        timestamp: a.timestamp
       }));
 
     // Get avatar URL
@@ -1637,11 +1661,16 @@ app.get('/api/squad-lead/agent/:id', (req, res) => {
       currentTask: currentTask ? {
         id: currentTask.id,
         title: currentTask.title,
+        description: currentTask.description?.substring(0, 300),
         status: currentTask.status,
         timeInStatus: currentTask.timeTracking.timeInStatusHuman,
-        alertLevel: currentTask.timeTracking.alertLevel
+        alertLevel: currentTask.timeTracking.alertLevel,
+        startedAt: currentTask.startedAt,
+        dueDate: currentTask.dueStatus.dueDate
       } : null,
-      queuedTasks
+      queuedTasks,
+      completedTasks,
+      recentActivities
     });
   } catch (error) {
     console.error('Error in squad-lead agent detail:', error);

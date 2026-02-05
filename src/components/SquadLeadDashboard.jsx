@@ -115,18 +115,18 @@ export default function SquadLeadDashboard() {
 
         {/* Right Column */}
         <div className="space-y-6">
-          <WorkloadPanel
-            agents={overview?.agentWorkloads || []}
-            isLoading={isLoading}
-            selectedAgentId={selectedAgentId}
-            onSelectAgent={setSelectedAgentId}
-          />
           {selectedAgentId && (
             <AgentDetailPanel
               agentId={selectedAgentId}
               onClose={() => setSelectedAgentId(null)}
             />
           )}
+          <WorkloadPanel
+            agents={overview?.agentWorkloads || []}
+            isLoading={isLoading}
+            selectedAgentId={selectedAgentId}
+            onSelectAgent={setSelectedAgentId}
+          />
         </div>
       </div>
     </div>
