@@ -19,22 +19,23 @@
   "author": "Aristotle",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
+    "chokidar": "^3.5.3",
     "cors": "^2.8.5",
-    "gray-matter": "^4.0.3",
-    "chokidar": "^3.5.3"
+    "express": "^4.18.2",
+    "express-rate-limit": "^8.2.1",
+    "gray-matter": "^4.0.3"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.16",
     "concurrently": "^8.2.2",
+    "lucide-react": "^0.303.0",
     "postcss": "^8.4.32",
-    "tailwindcss": "^3.4.0",
-    "vite": "^5.0.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.1",
     "swr": "^2.2.4",
-    "lucide-react": "^0.303.0"
+    "tailwindcss": "^3.4.0",
+    "vite": "^5.0.8"
   }
 }

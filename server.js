@@ -9,6 +9,7 @@
 
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
@@ -23,7 +24,17 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5173;
 
+// Rate limiting - 100 requests per minute per IP
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' }
+});
+
 // Middleware
+app.use(limiter);
 app.use(cors({
   origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
   credentials: true
@@ -175,7 +186,6 @@ function getMemoryFiles() {
       
       return {
         filename: f,
-        path: fullPath,
         content: content,
         size: stats.size,
         modified: stats.mtime
@@ -220,7 +230,6 @@ function getPhilosopherDrafts() {
       drafts.push({
         philosopher: phil,
         filename: file,
-        path: fullPath,
         platform: platform,
         content: parsed.content,
         metadata: parsed.data,
@@ -487,8 +496,9 @@ function getChapterDetails(bookId, chapterNum) {
     let inChapter = false;
     let outlineLines = [];
     
+    const chapterHeader = `#### Chapter ${chapterNum}:`;
     for (const line of lines) {
-      if (line.match(new RegExp(`^####\\s+Chapter\\s+${chapterNum}:`))) {
+      if (line.startsWith(chapterHeader)) {
         inChapter = true;
         continue;
       }
@@ -772,7 +782,13 @@ app.get('/api/activities', (req, res) => {
 app.post('/api/tasks/:id/complete', (req, res) => {
   try {
     const { id } = req.params;
-    const { completedBy } = req.body;
+    let { completedBy } = req.body;
+
+    // Validate completedBy - only allow alphanumeric, hyphens, underscores
+    if (completedBy && (typeof completedBy !== 'string' || !/^[a-zA-Z0-9_-]{1,50}$/.test(completedBy))) {
+      return res.status(400).json({ error: 'Invalid completedBy value' });
+    }
+    completedBy = completedBy || 'human';
 
     const data = getMissionControl();
     const task = data.tasks.find(t => t.id === id);
@@ -784,7 +800,7 @@ app.post('/api/tasks/:id/complete', (req, res) => {
     // Update task status
     task.status = 'completed';
     task.completedAt = new Date().toISOString();
-    task.completedBy = completedBy || 'human';
+    task.completedBy = completedBy;
 
     // Add activity
     data.activities.unshift({
@@ -911,11 +927,11 @@ app.get('/api/books/:bookId/chapters/:chapterNum', (req, res) => {
 app.post('/api/search', (req, res) => {
   try {
     const { query } = req.body;
-    
-    if (!query || query.length < 2) {
+
+    if (!query || typeof query !== 'string' || query.length < 2 || query.length > 200) {
       return res.json([]);
     }
-    
+
     const results = searchContent(query);
     res.json(results);
   } catch (error) {
