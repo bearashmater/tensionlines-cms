@@ -868,6 +868,108 @@ app.post('/api/tasks/:id/complete', (req, res) => {
 });
 
 /**
+ * Record actual LLM used for a task
+ */
+const VALID_LLMS = ['ollama', 'haiku', 'sonnet', 'opus'];
+
+app.post('/api/tasks/:id/actual-llm', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { actualLLM } = req.body;
+
+    // Validate task ID
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(id)) {
+      return res.status(400).json({ error: 'Invalid task ID' });
+    }
+
+    // Validate LLM value
+    if (!actualLLM || !VALID_LLMS.includes(actualLLM.toLowerCase())) {
+      return res.status(400).json({ error: `Invalid LLM. Must be one of: ${VALID_LLMS.join(', ')}` });
+    }
+
+    const data = getMissionControl();
+    const task = data.tasks.find(t => t.id === id);
+
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    // Record actual LLM in metadata
+    if (!task.metadata) task.metadata = {};
+    task.metadata.actualLLM = actualLLM.toLowerCase();
+    task.metadata.actualLLMRecordedAt = new Date().toISOString();
+
+    // Check for mismatch and add activity
+    const hasMismatch = task.llm && task.llm !== actualLLM.toLowerCase();
+    if (hasMismatch) {
+      data.activities.unshift({
+        id: `activity-${Date.now()}`,
+        type: 'llm_mismatch',
+        agentId: 'system',
+        taskId: id,
+        timestamp: new Date().toISOString(),
+        description: `LLM mismatch on "${task.title}": predicted ${task.llm}, actual ${actualLLM.toLowerCase()}`,
+        metadata: {
+          predictedLLM: task.llm,
+          actualLLM: actualLLM.toLowerCase()
+        }
+      });
+    }
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(data, null, 2));
+    cache.missionControl = null;
+
+    res.json({
+      success: true,
+      task,
+      mismatch: hasMismatch,
+      message: hasMismatch
+        ? `Mismatch detected: predicted ${task.llm}, actual ${actualLLM.toLowerCase()}`
+        : 'Actual LLM recorded successfully'
+    });
+  } catch (error) {
+    console.error('Error recording actual LLM:', error);
+    res.status(500).json({ error: 'Failed to record actual LLM' });
+  }
+});
+
+/**
+ * Get LLM prediction accuracy stats
+ */
+app.get('/api/llm-stats', (req, res) => {
+  try {
+    const mc = getMissionControl();
+
+    const tasksWithPredictions = mc.tasks.filter(t =>
+      t.llm && (t.status === 'completed' || t.status === 'shipped')
+    );
+
+    const tasksWithActual = tasksWithPredictions.filter(t => t.metadata?.actualLLM);
+    const matches = tasksWithActual.filter(t => t.llm === t.metadata.actualLLM);
+    const mismatches = tasksWithActual.filter(t => t.llm !== t.metadata.actualLLM);
+
+    res.json({
+      totalPredicted: tasksWithPredictions.length,
+      totalWithActual: tasksWithActual.length,
+      matches: matches.length,
+      mismatches: mismatches.length,
+      accuracy: tasksWithActual.length > 0
+        ? Math.round((matches.length / tasksWithActual.length) * 100)
+        : 0,
+      mismatchDetails: mismatches.map(t => ({
+        id: t.id,
+        title: t.title,
+        predictedLLM: t.llm,
+        actualLLM: t.metadata.actualLLM,
+        assignees: t.assigneeIds
+      }))
+    });
+  } catch (error) {
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
  * Get notifications (by agent, read/unread)
  */
 app.get('/api/notifications', (req, res) => {
