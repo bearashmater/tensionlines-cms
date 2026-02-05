@@ -51,42 +51,31 @@ Built overnight by the philosopher squad: Socrates (strategy), Aristotle (backen
 ### 1. Install Dependencies
 
 ```bash
-cd cms
 npm install
 ```
 
 ### 2. Start the Server
 
-**Option A: Run both backend + frontend together**
 ```bash
 npm run dev
 ```
 
-**Option B: Run separately**
-```bash
-# Terminal 1: Backend API
-npm run server
-
-# Terminal 2: Frontend dev server
-npx vite
-```
-
 ### 3. Open in Browser
 
-```
-http://localhost:5173
-```
-
-API runs on `http://localhost:3001`
+- **CMS Dashboard:** http://localhost:5173/
+- **Mission Control:** http://localhost:5173/mission-control/
+- **API Health:** http://localhost:5173/api/health
 
 ---
 
 ## Architecture
 
-- **Backend:** Node.js + Express (REST API)
+- **Single Server:** Node.js + Express with Vite in middleware mode
 - **Frontend:** React + Vite + TailwindCSS
 - **Data:** File-based (reads from existing JSON/MD files)
-- **Real-time:** File watching with automatic updates
+- **Real-time:** File watching with automatic cache invalidation
+
+Everything runs on a single port (5173) — Express handles `/api/*` routes, serves Mission Control as static files at `/mission-control`, and Vite middleware handles React HMR and module serving.
 
 See `docs/ARCHITECTURE.md` for full technical details.
 
@@ -199,10 +188,9 @@ cms/
 ## Troubleshooting
 
 ### Port already in use
-If port 3001 or 5173 is busy:
+If port 5173 is busy:
 ```bash
-PORT=3002 npm run server    # Change API port
-PORT=5174 npx vite          # Change frontend port
+PORT=5174 npm run dev
 ```
 
 ### File watching not working
