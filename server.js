@@ -1237,6 +1237,86 @@ watcher.on('change', (filePath) => {
 });
 
 // ============================================================================
+// STUCK TASK MONITORING (Auto-notifications for red alerts)
+// ============================================================================
+
+// Track which tasks have been notified to avoid spam
+const notifiedStuckTasks = new Set();
+
+function checkStuckTasks() {
+  try {
+    const mc = getMissionControl();
+    const activeTasks = mc.tasks.filter(t => 
+      ['assigned', 'in_progress', 'review'].includes(t.status)
+    );
+    
+    const tasksWithTracking = activeTasks.map(t => ({
+      ...t,
+      timeTracking: calculateTimeInStatus(t)
+    }));
+    
+    const redAlertTasks = tasksWithTracking.filter(t => 
+      t.timeTracking.alertLevel === 'red'
+    );
+    
+    // For each red alert task, check if we've already notified
+    redAlertTasks.forEach(task => {
+      const notifKey = `${task.id}-red`;
+      
+      // Skip if already notified
+      if (notifiedStuckTasks.has(notifKey)) {
+        return;
+      }
+      
+      // Create notification
+      const notification = {
+        id: `notif-stuck-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: 'stuck_task',
+        title: `🚨 Task Stuck: ${task.title}`,
+        message: `Task #${task.id} has been in "${task.status}" status for ${task.timeTracking.timeInStatusHuman}. Assigned to: ${task.assigneeIds.join(', ')}. Consider intervention or reassignment.`,
+        from: 'system',
+        to: ['tension', ...task.assigneeIds],
+        createdAt: new Date().toISOString(),
+        read: false,
+        priority: 'critical',
+        actionRequired: true,
+        metadata: {
+          taskId: task.id,
+          timeInStatus: task.timeTracking.timeInStatusHuman,
+          alertLevel: 'red'
+        }
+      };
+      
+      // Write to database
+      mc.notifications.push(notification);
+      fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+      cache.missionControl = null;
+      
+      // Mark as notified
+      notifiedStuckTasks.add(notifKey);
+      
+      console.log(`[Stuck Task Alert] Created notification for task ${task.id}`);
+    });
+    
+    // Clean up notified tasks that are no longer stuck
+    const activeRedTaskIds = new Set(redAlertTasks.map(t => `${t.id}-red`));
+    for (const notifKey of notifiedStuckTasks) {
+      if (!activeRedTaskIds.has(notifKey)) {
+        notifiedStuckTasks.delete(notifKey);
+      }
+    }
+  } catch (error) {
+    console.error('[Stuck Task Monitor] Error:', error);
+  }
+}
+
+// Check for stuck tasks every 5 minutes
+setInterval(checkStuckTasks, 5 * 60 * 1000);
+
+// Run initial check 30 seconds after startup
+setTimeout(checkStuckTasks, 30 * 1000);
+
+// ============================================================================
 // START SERVER
 // ============================================================================
 
