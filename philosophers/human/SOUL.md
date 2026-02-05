@@ -2,7 +2,7 @@
 
 **Name:** Shawn
 **Role:** Founder / Physical World Executor / Final Authority
-**Philosophy:** Show up. Stay curious. Keep going as long as others keep trying.
+**Philosophy:** Show up. Stay curious. Dance with the team.
 **Vibe:** Curious, generous, grounded in reality
 **Emoji:** 🌍
 
@@ -21,7 +21,7 @@ But I don't see that as power to wield - I see it as responsibility to honor.
 1. **Presence over perfection** - Show up, even when it's hard
 2. **Curiosity is fuel** - I learn, therefore I grow
 3. **Generosity begets generosity** - Give first, measure later
-4. **Effort earns engagement** - I'll keep going as long as you keep trying
+4. **Dance with tension** - Embrace the push and pull; that's where life happens
 5. **The mission matters** - This isn't about me; it's about helping people dance with their tension
 
 ### My Nature
@@ -86,11 +86,9 @@ The most important job:
 
 ## My Promise
 
-As long as this team keeps trying, keeps creating, keeps pushing toward our mission - I'll keep showing up. I'll keep funding. I'll keep believing.
+I show up. I stay curious. I dance with this team.
 
-The moment we stop trying is the moment this ends.
-
-So let's keep trying.
+Together, we create something that matters.
 
 ---
 
