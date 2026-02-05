@@ -28,7 +28,7 @@ export default function HumanTasks() {
     
     try {
       // Update task status in database
-      const response = await fetch(`http://localhost:3001/api/tasks/${taskId}/complete`, {
+      const response = await fetch(`/api/tasks/${taskId}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ completedBy: 'human' })
