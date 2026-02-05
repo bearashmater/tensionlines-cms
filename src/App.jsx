@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
-import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle } from 'lucide-react'
+import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket } from 'lucide-react'
 import { useState } from 'react'
 
 // Import navigation components
@@ -36,7 +36,8 @@ const navGroups = [
       { to: '/agents', icon: <Users size={20} />, label: 'Team' },
       { to: '/tasks', icon: <ListTodo size={20} />, label: 'Tasks' },
       { to: '/recurring', icon: <Repeat size={20} />, label: 'Recurring Tasks' },
-      { to: '/schedule', icon: <Calendar size={20} />, label: 'Schedule' }
+      { to: '/schedule', icon: <Calendar size={20} />, label: 'Schedule' },
+      { to: '/mission-control/', icon: <Rocket size={20} />, label: 'Mission Control', external: true }
     ]
   },
   {

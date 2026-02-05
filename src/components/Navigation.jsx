@@ -4,16 +4,33 @@ import { ChevronRight } from 'lucide-react'
 /**
  * NavLink - Sidebar navigation link with active state
  */
-export function NavLink({ to, icon, label, isActive, onClick }) {
+export function NavLink({ to, icon, label, isActive, onClick, external }) {
+  const className = `flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
+    isActive
+      ? 'bg-gold text-black font-medium shadow-sm'
+      : 'text-neutral-700 hover:bg-neutral-100 hover:text-black'
+  }`
+
+  if (external) {
+    return (
+      <a
+        href={to}
+        onClick={onClick}
+        className={className}
+      >
+        <span className={isActive ? 'text-black' : 'text-neutral-600'}>
+          {icon}
+        </span>
+        <span>{label}</span>
+      </a>
+    )
+  }
+
   return (
     <Link
       to={to}
       onClick={onClick}
-      className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
-        isActive 
-          ? 'bg-gold text-black font-medium shadow-sm' 
-          : 'text-neutral-700 hover:bg-neutral-100 hover:text-black'
-      }`}
+      className={className}
     >
       <span className={isActive ? 'text-black' : 'text-neutral-600'}>
         {icon}
@@ -90,13 +107,14 @@ export function NavGroup({ title, items, currentPath, onItemClick }) {
       </h3>
       <div className="space-y-1">
         {items.map((item) => (
-          <NavLink 
-            key={item.to} 
-            to={item.to} 
-            icon={item.icon} 
+          <NavLink
+            key={item.to}
+            to={item.to}
+            icon={item.icon}
             label={item.label}
             isActive={currentPath === item.to}
             onClick={onItemClick}
+            external={item.external}
           />
         ))}
       </div>
