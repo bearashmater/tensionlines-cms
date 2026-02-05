@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F8F6F4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D0C8BD;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B8AC9E;
+}
+
+/* Base styles */
+body {
+  @apply bg-cream text-black font-sans;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-serif;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-in-out;
+}
+
+/* Card styles */
+.card {
+  @apply bg-white rounded-lg shadow-sm border border-neutral-200 p-6;
+}
+
+.card-hover {
+  @apply transition-shadow hover:shadow-md;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-status {
+  @apply badge;
+}
+
+.badge-status.active {
+  @apply bg-green-100 text-green-800;
+}
+
+.badge-status.idle {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.badge-status.blocked {
+  @apply bg-red-100 text-red-800;
+}
+
+.badge-task {
+  @apply badge;
+}
+
+.badge-task.inbox {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.badge-task.assigned {
+  @apply bg-purple-100 text-purple-800;
+}
+
+.badge-task.in_progress {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.badge-task.review {
+  @apply bg-orange-100 text-orange-800;
+}
+
+.badge-task.approved {
+  @apply bg-teal-100 text-teal-800;
+}
+
+.badge-task.completed {
+  @apply bg-green-100 text-green-800;
+}
+
+.badge-task.shipped {
+  @apply bg-emerald-100 text-emerald-800;
+}
+
+/* Button styles */
+.btn {
+  @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium transition-colors;
+}
+
+.btn-primary {
+  @apply btn bg-gold text-white hover:bg-accent-secondary;
+}
+
+.btn-secondary {
+  @apply btn bg-neutral-200 text-black hover:bg-neutral-300;
+}
+
+.btn-ghost {
+  @apply btn hover:bg-neutral-100;
+}
+
+/* Input styles */
+.input {
+  @apply w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent;
+}
+
+.input-search {
+  @apply input pl-10;
+}

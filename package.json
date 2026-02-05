@@ -1,0 +1,40 @@
+{
+  "name": "tensionlines-cms",
+  "version": "1.0.0",
+  "description": "TensionLines Content Management System - Visual dashboard for all project content, concepts, and operations",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "node server.js",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "cms",
+    "tensionlines",
+    "content-management"
+  ],
+  "author": "Aristotle",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "gray-matter": "^4.0.3",
+    "chokidar": "^3.5.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "concurrently": "^8.2.2",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "vite": "^5.0.8",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.21.1",
+    "swr": "^2.2.4",
+    "lucide-react": "^0.303.0"
+  }
+}
