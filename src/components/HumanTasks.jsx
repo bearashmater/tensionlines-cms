@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import useSWR from 'swr'
+import ReactMarkdown from 'react-markdown'
 import { getTasks, fetcher } from '../lib/api'
 import { CheckCircle, Clock, ExternalLink, AlertCircle, Copy, Check, Link, MessageSquare, Instagram, MessageCircle, Palette, Send, Plus, Trash2, Vote, MapPin, FileText, Image, Film, Lightbulb } from 'lucide-react'
 
@@ -203,10 +204,9 @@ function TaskCard({ task, onComplete, completing, ideaStats }) {
       </div>
 
       <div className="prose prose-sm max-w-none mb-4">
-        <div
-          className="text-neutral-700 whitespace-pre-wrap"
-          dangerouslySetInnerHTML={{ __html: formatDescription(task.description) }}
-        />
+        <div className="text-neutral-700 prose prose-sm max-w-none prose-headings:text-lg prose-headings:font-semibold prose-headings:mt-4 prose-headings:mb-2 prose-li:ml-4 prose-pre:bg-neutral-100 prose-pre:p-3 prose-pre:rounded-md">
+          <ReactMarkdown>{task.description}</ReactMarkdown>
+        </div>
       </div>
 
       {/* Quick Action Links */}
@@ -332,17 +332,6 @@ function extractLinksFromDescription(description) {
     seen.add(link.url)
     return true
   })
-}
-
-function formatDescription(description) {
-  // Convert markdown-style formatting to HTML
-  return description
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/^### (.*?)$/gm, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>')
-    .replace(/^- (.*?)$/gm, '<li class="ml-4">$1</li>')
-    .replace(/```([\s\S]*?)```/g, '<pre class="bg-neutral-100 p-3 rounded-md overflow-x-auto text-sm my-3">$1</pre>')
-    .replace(/\n\n/g, '</p><p class="mt-3">')
-    .replace(/^(.*)$/gm, '<p>$1</p>')
 }
 
 // ============================================================================

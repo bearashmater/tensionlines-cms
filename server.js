@@ -15,6 +15,7 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import chokidar from 'chokidar';
+import cron from 'node-cron';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { createServer as createViteServer } from 'vite';
@@ -85,6 +86,7 @@ app.use((req, res, next) => {
 // Base paths
 const BASE_DIR = path.resolve(__dirname, '..');
 const MISSION_CONTROL_DB = path.join(BASE_DIR, 'mission-control/database.json');
+const OPTIMIZATIONS_DB = path.join(BASE_DIR, 'mission-control/optimizations.json');
 const IDEAS_BANK = path.join(BASE_DIR, 'content/ideas-bank.md');
 const MEMORY_DIR = path.join(BASE_DIR, 'memory');
 const PHILOSOPHERS_DIR = path.join(BASE_DIR, 'philosophers');
@@ -2615,6 +2617,475 @@ setInterval(checkStuckTasks, 5 * 60 * 1000);
 
 // Run initial check 30 seconds after startup
 setTimeout(checkStuckTasks, 30 * 1000);
+
+// ============================================================================
+// OPTIMIZATION SYSTEM - Nightly Project Review by Tension
+// ============================================================================
+
+/**
+ * Get or initialize optimizations database
+ */
+function getOptimizations() {
+  if (!fs.existsSync(OPTIMIZATIONS_DB)) {
+    const initial = { runs: [], findings: [], stats: { totalRuns: 0, issuesFound: 0, issuesResolved: 0, costSavings: 0 } };
+    fs.writeFileSync(OPTIMIZATIONS_DB, JSON.stringify(initial, null, 2));
+    return initial;
+  }
+  return JSON.parse(fs.readFileSync(OPTIMIZATIONS_DB, 'utf8'));
+}
+
+/**
+ * Save optimizations database
+ */
+function saveOptimizations(data) {
+  fs.writeFileSync(OPTIMIZATIONS_DB, JSON.stringify(data, null, 2));
+}
+
+/**
+ * Run nightly optimization analysis
+ */
+function runOptimization() {
+  console.log('[Optimization] Starting nightly optimization run...');
+  const startTime = Date.now();
+  const findings = [];
+  const actions = [];
+  const mc = getMissionControl();
+  const ideas = parseIdeasBank();
+
+  const runId = `opt-${Date.now()}`;
+  const runDate = new Date().toISOString();
+
+  // ============================================================================
+  // 1. STUCK TASKS ANALYSIS
+  // ============================================================================
+  const activeTasks = mc.tasks.filter(t => ['assigned', 'in_progress', 'review'].includes(t.status));
+  activeTasks.forEach(task => {
+    const tracking = calculateTimeInStatus(task);
+    if (tracking.alertLevel === 'red') {
+      findings.push({
+        id: `finding-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        runId,
+        type: 'stuck_task',
+        severity: 'high',
+        title: `Task stuck in ${task.status} for ${tracking.timeInStatusHuman}`,
+        description: `Task "${task.title}" (${task.id}) has been in ${task.status} status for ${tracking.timeInStatusHuman}. Assigned to: ${task.assigneeIds?.join(', ') || 'unassigned'}`,
+        taskId: task.id,
+        assignee: task.assigneeIds?.[0],
+        recommendation: 'Consider reassigning or breaking into smaller tasks',
+        status: 'pending',
+        createdAt: runDate
+      });
+    } else if (tracking.alertLevel === 'yellow') {
+      findings.push({
+        id: `finding-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        runId,
+        type: 'slow_task',
+        severity: 'medium',
+        title: `Task progressing slowly`,
+        description: `Task "${task.title}" (${task.id}) has been in ${task.status} for ${tracking.timeInStatusHuman}.`,
+        taskId: task.id,
+        assignee: task.assigneeIds?.[0],
+        recommendation: 'Monitor progress, may need intervention soon',
+        status: 'monitoring',
+        createdAt: runDate
+      });
+    }
+  });
+
+  // ============================================================================
+  // 2. AGENT WORKLOAD ANALYSIS
+  // ============================================================================
+  const agentWorkloads = {};
+  mc.agents.forEach(agent => {
+    agentWorkloads[agent.id] = {
+      active: activeTasks.filter(t => t.assigneeIds?.includes(agent.id)).length,
+      completed7d: mc.tasks.filter(t => {
+        if (!t.completedAt || !t.assigneeIds?.includes(agent.id)) return false;
+        const completed = new Date(t.completedAt);
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        return completed >= weekAgo;
+      }).length
+    };
+  });
+
+  // Find overloaded agents (>5 active tasks)
+  Object.entries(agentWorkloads).forEach(([agentId, workload]) => {
+    if (workload.active > 5) {
+      findings.push({
+        id: `finding-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        runId,
+        type: 'agent_overload',
+        severity: 'medium',
+        title: `Agent ${agentId} is overloaded`,
+        description: `${agentId} has ${workload.active} active tasks. Consider redistributing workload.`,
+        assignee: agentId,
+        recommendation: 'Reassign some tasks to idle agents',
+        status: 'pending',
+        createdAt: runDate
+      });
+    }
+  });
+
+  // Find idle agents (0 active tasks, completed <2 in 7 days)
+  Object.entries(agentWorkloads).forEach(([agentId, workload]) => {
+    if (agentId !== 'human' && workload.active === 0 && workload.completed7d < 2) {
+      findings.push({
+        id: `finding-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        runId,
+        type: 'agent_idle',
+        severity: 'low',
+        title: `Agent ${agentId} appears idle`,
+        description: `${agentId} has no active tasks and only ${workload.completed7d} completions in 7 days.`,
+        assignee: agentId,
+        recommendation: 'Assign new tasks or check if agent is blocked',
+        status: 'pending',
+        createdAt: runDate
+      });
+    }
+  });
+
+  // ============================================================================
+  // 3. IDEAS PIPELINE ANALYSIS
+  // ============================================================================
+  const capturedIdeas = ideas.filter(i => i.status === 'captured');
+  if (capturedIdeas.length > 20) {
+    findings.push({
+      id: `finding-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      runId,
+      type: 'ideas_backlog',
+      severity: 'low',
+      title: `${capturedIdeas.length} ideas waiting to be processed`,
+      description: `Ideas bank has ${capturedIdeas.length} captured ideas that haven't been organized yet.`,
+      recommendation: 'Schedule idea processing session',
+      status: 'pending',
+      createdAt: runDate
+    });
+  }
+
+  // ============================================================================
+  // 4. COST ANALYSIS (if cost tracking exists)
+  // ============================================================================
+  const costFile = path.join(BASE_DIR, 'cost-tracking/daily-costs.json');
+  if (fs.existsSync(costFile)) {
+    try {
+      const costs = JSON.parse(fs.readFileSync(costFile, 'utf8'));
+      if (costs.daily && costs.daily.total > costs.daily.budget) {
+        findings.push({
+          id: `finding-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          runId,
+          type: 'cost_overrun',
+          severity: 'high',
+          title: `Daily cost exceeded budget`,
+          description: `Spent $${costs.daily.total.toFixed(2)} vs budget of $${costs.daily.budget.toFixed(2)}`,
+          recommendation: 'Review high-cost operations, consider using cheaper models for simple tasks',
+          status: 'pending',
+          forHuman: true,
+          createdAt: runDate
+        });
+      }
+    } catch (e) {
+      // Cost file parse error, skip
+    }
+  }
+
+  // ============================================================================
+  // 5. BLOCKED TASKS ANALYSIS
+  // ============================================================================
+  const blockedTasks = mc.tasks.filter(t => t.status === 'blocked');
+  blockedTasks.forEach(task => {
+    const blockedDays = task.statusChangedAt
+      ? Math.floor((Date.now() - new Date(task.statusChangedAt).getTime()) / (24 * 60 * 60 * 1000))
+      : 0;
+
+    if (blockedDays > 3) {
+      findings.push({
+        id: `finding-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        runId,
+        type: 'blocked_task',
+        severity: 'medium',
+        title: `Task blocked for ${blockedDays} days`,
+        description: `"${task.title}" has been blocked for ${blockedDays} days. Blocker: ${task.metadata?.blockedReason || 'Unknown'}`,
+        taskId: task.id,
+        recommendation: 'Review blocker, may need human intervention',
+        status: 'pending',
+        forHuman: true,
+        createdAt: runDate
+      });
+    }
+  });
+
+  // ============================================================================
+  // 6. DUPLICATE/SIMILAR TASKS CHECK
+  // ============================================================================
+  const taskTitles = mc.tasks.filter(t => !['completed', 'shipped'].includes(t.status)).map(t => ({ id: t.id, title: t.title.toLowerCase() }));
+  for (let i = 0; i < taskTitles.length; i++) {
+    for (let j = i + 1; j < taskTitles.length; j++) {
+      if (taskTitles[i].title === taskTitles[j].title) {
+        findings.push({
+          id: `finding-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          runId,
+          type: 'duplicate_task',
+          severity: 'low',
+          title: `Possible duplicate tasks`,
+          description: `Tasks ${taskTitles[i].id} and ${taskTitles[j].id} have identical titles`,
+          recommendation: 'Review and consolidate if duplicates',
+          status: 'pending',
+          createdAt: runDate
+        });
+      }
+    }
+  }
+
+  // ============================================================================
+  // 7. UNREAD NOTIFICATIONS CHECK
+  // ============================================================================
+  const unreadNotifs = mc.notifications.filter(n => !n.read);
+  if (unreadNotifs.length > 50) {
+    findings.push({
+      id: `finding-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      runId,
+      type: 'notification_backlog',
+      severity: 'low',
+      title: `${unreadNotifs.length} unread notifications`,
+      description: `Notification inbox has ${unreadNotifs.length} unread items.`,
+      recommendation: 'Review and clear notification backlog',
+      status: 'pending',
+      forHuman: true,
+      createdAt: runDate
+    });
+  }
+
+  // ============================================================================
+  // SAVE OPTIMIZATION RUN
+  // ============================================================================
+  const durationMs = Date.now() - startTime;
+  const optimizations = getOptimizations();
+
+  const run = {
+    id: runId,
+    date: runDate,
+    durationMs,
+    findingsCount: findings.length,
+    bySeverity: {
+      high: findings.filter(f => f.severity === 'high').length,
+      medium: findings.filter(f => f.severity === 'medium').length,
+      low: findings.filter(f => f.severity === 'low').length
+    },
+    byType: findings.reduce((acc, f) => {
+      acc[f.type] = (acc[f.type] || 0) + 1;
+      return acc;
+    }, {}),
+    forHuman: findings.filter(f => f.forHuman).length,
+    forAgents: findings.filter(f => !f.forHuman && f.assignee).length
+  };
+
+  optimizations.runs.unshift(run);
+  optimizations.runs = optimizations.runs.slice(0, 365); // Keep 1 year of runs
+  optimizations.findings.push(...findings);
+  optimizations.findings = optimizations.findings.slice(-1000); // Keep last 1000 findings
+  optimizations.stats.totalRuns++;
+  optimizations.stats.issuesFound += findings.length;
+
+  saveOptimizations(optimizations);
+
+  console.log(`[Optimization] Completed in ${durationMs}ms. Found ${findings.length} issues (${run.bySeverity.high} high, ${run.bySeverity.medium} medium, ${run.bySeverity.low} low)`);
+
+  return { run, findings };
+}
+
+/**
+ * Schedule nightly optimization at 2 AM
+ */
+cron.schedule('0 2 * * *', () => {
+  console.log('[Cron] Running nightly optimization...');
+  try {
+    runOptimization();
+  } catch (err) {
+    console.error('[Cron] Optimization failed:', err);
+  }
+}, {
+  timezone: 'America/Los_Angeles'
+});
+
+console.log('[Cron] Nightly optimization scheduled for 2:00 AM PST');
+
+// ============================================================================
+// OPTIMIZATION API ENDPOINTS
+// ============================================================================
+
+/**
+ * Get optimization runs with filtering
+ */
+app.get('/api/optimizations', (req, res) => {
+  try {
+    const optimizations = getOptimizations();
+    let runs = optimizations.runs;
+
+    // Filter by date range
+    if (req.query.range) {
+      const now = new Date();
+      let startDate;
+      switch (req.query.range) {
+        case 'day':
+          startDate = new Date(now.setDate(now.getDate() - 1));
+          break;
+        case 'week':
+          startDate = new Date(now.setDate(now.getDate() - 7));
+          break;
+        case 'month':
+          startDate = new Date(now.setMonth(now.getMonth() - 1));
+          break;
+        case 'year':
+          startDate = new Date(now.setFullYear(now.getFullYear() - 1));
+          break;
+      }
+      if (startDate) {
+        runs = runs.filter(r => new Date(r.date) >= startDate);
+      }
+    }
+
+    res.json({
+      runs,
+      stats: optimizations.stats,
+      lastRun: runs[0] || null
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Get optimization findings with filtering
+ */
+app.get('/api/optimizations/findings', (req, res) => {
+  try {
+    const optimizations = getOptimizations();
+    let findings = optimizations.findings;
+
+    // Filter by status
+    if (req.query.status) {
+      findings = findings.filter(f => f.status === req.query.status);
+    }
+
+    // Filter by severity
+    if (req.query.severity) {
+      findings = findings.filter(f => f.severity === req.query.severity);
+    }
+
+    // Filter by type
+    if (req.query.type) {
+      findings = findings.filter(f => f.type === req.query.type);
+    }
+
+    // Filter by forHuman
+    if (req.query.forHuman === 'true') {
+      findings = findings.filter(f => f.forHuman);
+    }
+
+    // Filter by date range
+    if (req.query.range) {
+      const now = new Date();
+      let startDate;
+      switch (req.query.range) {
+        case 'day':
+          startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+          break;
+        case 'week':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case 'year':
+          startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+          break;
+      }
+      if (startDate) {
+        findings = findings.filter(f => new Date(f.createdAt) >= startDate);
+      }
+    }
+
+    // Sort by date (newest first)
+    findings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json(findings);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Update finding status (resolve, dismiss, etc.)
+ */
+app.patch('/api/optimizations/findings/:id', (req, res) => {
+  try {
+    const { status, resolution } = req.body;
+    const optimizations = getOptimizations();
+
+    const findingIndex = optimizations.findings.findIndex(f => f.id === req.params.id);
+    if (findingIndex === -1) {
+      return res.status(404).json({ error: 'Finding not found' });
+    }
+
+    optimizations.findings[findingIndex].status = status;
+    if (resolution) {
+      optimizations.findings[findingIndex].resolution = resolution;
+    }
+    optimizations.findings[findingIndex].resolvedAt = new Date().toISOString();
+
+    if (status === 'resolved') {
+      optimizations.stats.issuesResolved++;
+    }
+
+    saveOptimizations(optimizations);
+
+    res.json({ success: true, finding: optimizations.findings[findingIndex] });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Manually trigger optimization run
+ */
+app.post('/api/optimizations/run', (req, res) => {
+  try {
+    const result = runOptimization();
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Get optimization stats/summary
+ */
+app.get('/api/optimizations/stats', (req, res) => {
+  try {
+    const optimizations = getOptimizations();
+    const recentRuns = optimizations.runs.slice(0, 7);
+    const pendingFindings = optimizations.findings.filter(f => f.status === 'pending');
+
+    res.json({
+      ...optimizations.stats,
+      recentRuns: recentRuns.length,
+      pendingIssues: pendingFindings.length,
+      pendingByPriority: {
+        high: pendingFindings.filter(f => f.severity === 'high').length,
+        medium: pendingFindings.filter(f => f.severity === 'medium').length,
+        low: pendingFindings.filter(f => f.severity === 'low').length
+      },
+      lastRunDate: optimizations.runs[0]?.date || null
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // ============================================================================
 // START SERVER
