@@ -24,3 +24,8 @@ logs/
 # Patches and temp files
 *.patch
 *.orig
+
+# Private project data (not for public repo)
+twitter-outreach/
+bluesky-outreach/
+cost-tracking/
