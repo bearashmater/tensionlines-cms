@@ -36,7 +36,13 @@
 
 **Length:** 2-5 short paragraphs, conversational rhythm
 
-**Example tone:**  
+**Multi-part posts:** When content exceeds 500 chars, split into 2-3 parts (max 5):
+- Each part starts with label: "1/3", "2/3", "3/3" (followed by blank line)
+- Labels are part of the content, not just metadata — readers use them to navigate
+- Keep each part under 500 chars including the label
+- Natural break points between parts (don't split mid-thought)
+
+**Example tone:**
 "You know that feeling when... [relatable moment]? Maybe that's because... [insight]. What if... [gentle challenge]?"
 
 ---
