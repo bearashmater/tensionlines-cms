@@ -1011,6 +1011,7 @@ app.post('/api/tasks/:id/reopen', (req, res) => {
 
     // Reopen task - set back to assigned status
     task.status = 'assigned';
+    task.reopenedAt = new Date().toISOString();
     delete task.completedAt;
     delete task.completedBy;
 

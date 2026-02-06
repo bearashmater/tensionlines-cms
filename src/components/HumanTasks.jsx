@@ -49,8 +49,17 @@ export default function HumanTasks() {
     }
   }
 
-  // Sort by priority
+  // Sort: reopened tasks first (most recent), then by priority
   const sortedTasks = [...humanTasks].sort((a, b) => {
+    // Reopened tasks go to the top, sorted by most recently reopened
+    const aReopened = a.reopenedAt ? new Date(a.reopenedAt) : null
+    const bReopened = b.reopenedAt ? new Date(b.reopenedAt) : null
+
+    if (aReopened && !bReopened) return -1
+    if (!aReopened && bReopened) return 1
+    if (aReopened && bReopened) return bReopened - aReopened
+
+    // Then sort by priority
     const priorityOrder = { high: 0, medium: 1, low: 2 }
     const aPriority = a.metadata?.priority || 'medium'
     const bPriority = b.metadata?.priority || 'medium'
