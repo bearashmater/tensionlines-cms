@@ -1235,10 +1235,207 @@
       },
       "completedAt": "2026-02-06T18:19:08.007Z",
       "completedBy": "tension"
+    },
+    {
+      "id": "task-033",
+      "title": "Reply to @eyal_kenigsvain + Follow",
+      "description": "Reply to this tweet, then follow @eyal_kenigsvain.\n\nhttps://x.com/eyal_kenigsvain/status/2019846273961234462\n\n> This is the tension nobody wants to name — \"meet them where they are\" can become an excuse to never ask them to move. Real growth lives in the discomfort between where you are and where you haven't been yet.",
+      "status": "completed",
+      "assigneeIds": [
+        "human"
+      ],
+      "llm": null,
+      "rationale": "Twitter outreach day 3 - reply 1 of 5",
+      "reviewerIds": [],
+      "createdBy": "tension",
+      "createdAt": "2026-02-06T22:58:00.000Z",
+      "metadata": {
+        "priority": "high",
+        "category": "social",
+        "platform": "twitter",
+        "outreachDay": 3
+      },
+      "completedAt": "2026-02-06T23:27:55.389Z",
+      "completedBy": "human"
+    },
+    {
+      "id": "task-033b",
+      "title": "Reply to @IntegralLife + Follow",
+      "description": "Reply to this tweet, then follow @IntegralLife.\n\nhttps://x.com/IntegralLife/status/2019531684501139849\n\n> Vervaeke is onto something critical here. The moment any model claims to be the final stage, it's already betrayed the complexity it set out to map. The map that knows it's incomplete is more honest than the one that claims to be finished.",
+      "status": "completed",
+      "assigneeIds": [
+        "human"
+      ],
+      "llm": null,
+      "rationale": "Twitter outreach day 3 - reply 2 of 5",
+      "reviewerIds": [],
+      "createdBy": "tension",
+      "createdAt": "2026-02-06T22:58:00.000Z",
+      "metadata": {
+        "priority": "high",
+        "category": "social",
+        "platform": "twitter",
+        "outreachDay": 3
+      },
+      "completedAt": "2026-02-06T23:29:25.304Z",
+      "completedBy": "human"
+    },
+    {
+      "id": "task-033c",
+      "title": "Reply to @myselfcoaching1 + Follow",
+      "description": "Reply to this tweet, then follow @myselfcoaching1.\n\nhttps://x.com/myselfcoaching1/status/2019907677682307355\n\n> \"Different arenas, different rules\" — this is exactly right. The mistake isn't ambition. It's thinking the same mode of operating works everywhere. The hardest skill isn't succeeding — it's knowing when to stop performing success.",
+      "status": "completed",
+      "assigneeIds": [
+        "human"
+      ],
+      "llm": null,
+      "rationale": "Twitter outreach day 3 - reply 3 of 5",
+      "reviewerIds": [],
+      "createdBy": "tension",
+      "createdAt": "2026-02-06T22:58:00.000Z",
+      "metadata": {
+        "priority": "high",
+        "category": "social",
+        "platform": "twitter",
+        "outreachDay": 3
+      },
+      "completedAt": "2026-02-06T23:30:16.156Z",
+      "completedBy": "human"
+    },
+    {
+      "id": "task-033d",
+      "title": "Reply to @rheology14 + Follow",
+      "description": "Reply to this tweet, then follow @rheology14.\n\nhttps://x.com/rheology14/status/2019814254476734713\n\n> Beautiful. And the inverse is equally true — composition reveals the things we choose to hide. The tension between improvisation and composition is where the real music lives.",
+      "status": "completed",
+      "assigneeIds": [
+        "human"
+      ],
+      "llm": null,
+      "rationale": "Twitter outreach day 3 - reply 4 of 5",
+      "reviewerIds": [],
+      "createdBy": "tension",
+      "createdAt": "2026-02-06T22:58:00.000Z",
+      "metadata": {
+        "priority": "high",
+        "category": "social",
+        "platform": "twitter",
+        "outreachDay": 3
+      },
+      "completedAt": "2026-02-06T23:31:14.168Z",
+      "completedBy": "human"
+    },
+    {
+      "id": "task-033e",
+      "title": "Reply to @mattjmanning333 + Follow",
+      "description": "Reply to this tweet, then follow @mattjmanning333.\n\nhttps://x.com/mattjmanning333/status/2018693731541451212\n\n> This is the question that keeps getting dodged. We want to engineer safety into machines while barely investing in developing it in ourselves. The mirror is uncomfortable — maybe that's why we keep looking away.",
+      "status": "completed",
+      "assigneeIds": [
+        "human"
+      ],
+      "llm": null,
+      "rationale": "Twitter outreach day 3 - reply 5 of 5",
+      "reviewerIds": [],
+      "createdBy": "tension",
+      "createdAt": "2026-02-06T22:58:00.000Z",
+      "metadata": {
+        "priority": "high",
+        "category": "social",
+        "platform": "twitter",
+        "outreachDay": 3
+      },
+      "completedAt": "2026-02-06T23:32:03.354Z",
+      "completedBy": "human"
+    },
+    {
+      "id": "task-034",
+      "title": "Twitter: Post Daily Original Tweet (Pick 1 of 3)",
+      "description": "Post 1 original tweet. Pick your favorite.\n\nhttps://x.com/compose/post\n\n---\n\n### Option A (Friday reflection)\n\n> The hardest conversations aren't the ones where you disagree. They're the ones where you're both right — and neither of you knows what to do with that.\n\n---\n\n### Option B (provocative)\n\n> The people most afraid of contradiction are the ones most governed by it.\n\n---\n\n### Option C (Nietzschean inversion)\n\n> Certainty is not the opposite of doubt. It's what happens when you stop paying attention.",
+      "status": "completed",
+      "assigneeIds": [
+        "human"
+      ],
+      "llm": null,
+      "rationale": "Twitter CLI blocked by error 226 - manual posting required",
+      "reviewerIds": [],
+      "createdBy": "tension",
+      "createdAt": "2026-02-06T22:58:00.000Z",
+      "metadata": {
+        "priority": "high",
+        "category": "social",
+        "platform": "twitter"
+      },
+      "completedAt": "2026-02-06T23:22:11.614Z",
+      "completedBy": "human"
     }
   ],
   "messages": [],
   "activities": [
+    {
+      "id": "activity-1770420723354",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-033e",
+      "timestamp": "2026-02-06T23:32:03.354Z",
+      "description": "Completed: Reply to @mattjmanning333 + Follow",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770420674168",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-033d",
+      "timestamp": "2026-02-06T23:31:14.168Z",
+      "description": "Completed: Reply to @rheology14 + Follow",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770420616156",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-033c",
+      "timestamp": "2026-02-06T23:30:16.156Z",
+      "description": "Completed: Reply to @myselfcoaching1 + Follow",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770420565304",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-033b",
+      "timestamp": "2026-02-06T23:29:25.304Z",
+      "description": "Completed: Reply to @IntegralLife + Follow",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770420475389",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-033",
+      "timestamp": "2026-02-06T23:27:55.389Z",
+      "description": "Completed: Reply to @eyal_kenigsvain + Follow",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770420131614",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-034",
+      "timestamp": "2026-02-06T23:22:11.614Z",
+      "description": "Completed: Twitter: Post Daily Original Tweet (Pick 1 of 3)",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
     {
       "id": "activity-1770412626313",
       "type": "step_added",
@@ -2818,6 +3015,77 @@
       },
       "readAt": "2026-02-06T20:27:01.820Z",
       "readBy": "human"
+    },
+    {
+      "id": "notif-stuck-1770416329345-57urd41aq",
+      "type": "stuck_task",
+      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "message": "Task #task-014 has been in \"in_progress\" status for 1d 9h. Assigned to: heraclitus.\nConsider intervention or reassignment.",
+      "from": "system",
+      "to": [
+        "tension",
+        "heraclitus"
+      ],
+      "createdAt": "2026-02-06T22:18:49.345Z",
+      "read": false,
+      "priority": "critical",
+      "actionRequired": true,
+      "metadata": {
+        "taskId": "task-014",
+        "timeInStatus": "1d 9h",
+        "alertLevel": "red",
+        "diagnostics": [],
+        "suggestions": []
+      }
+    },
+    {
+      "id": "notif-stuck-1770417199338-liafjb22u",
+      "type": "stuck_task",
+      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "message": "Task #task-013 has been in \"in_progress\" status for 1h 31m. Assigned to: nietzsche.\n⚠️ No agent activity since dispatch\n⚠️ No activity for extended period\n\nSuggested actions:\n• No agent activity since dispatch — check if the agent session is running\n• Re-dispatch the task or assign to a different agent\n• Escalate to Tension\n• Reassign task\n• Mark as blocked",
+      "from": "system",
+      "to": [
+        "tension",
+        "nietzsche"
+      ],
+      "createdAt": "2026-02-06T22:33:19.338Z",
+      "read": false,
+      "priority": "critical",
+      "actionRequired": true,
+      "metadata": {
+        "taskId": "task-013",
+        "timeInStatus": "1h 31m",
+        "alertLevel": "red",
+        "diagnostics": [
+          {
+            "type": "dispatch_no_progress",
+            "duration": 5469145,
+            "threshold": 300000,
+            "suggestions": [
+              "No agent activity since dispatch — check if the agent session is running",
+              "Re-dispatch the task or assign to a different agent"
+            ]
+          },
+          {
+            "type": "no_recent_steps",
+            "lastStepId": "step-1770411730189",
+            "duration": 5469145,
+            "threshold": 1050000,
+            "suggestions": [
+              "Escalate to Tension",
+              "Reassign task",
+              "Mark as blocked"
+            ]
+          }
+        ],
+        "suggestions": [
+          "No agent activity since dispatch — check if the agent session is running",
+          "Re-dispatch the task or assign to a different agent",
+          "Escalate to Tension",
+          "Reassign task",
+          "Mark as blocked"
+        ]
+      }
     }
   ],
   "stepDurations": [

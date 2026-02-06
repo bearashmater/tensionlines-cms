@@ -1,5 +1,21 @@
 {
-  "queue": [
+  "queue": [],
+  "posted": [
+    {
+      "id": "post-1738900000002",
+      "platform": "instagram",
+      "content": "\"The people who stay stuck\nare the ones who\nstopped moving.\"\n\n— The Seeker's Truth",
+      "caption": "There are really only 4 types of people when something breaks:\n\n1. The Blamers — everything is the computer's fault\n2. The Self-Defeaters — \"I'm just not a tech person\"\n3. The Ritual Followers — write it down, hope it works\n4. The Seekers — ask why, try things, stay curious\n\nOnly one group doesn't need help.\n\nNot because they're smarter. Because they haven't stopped moving.\n\n#philosophy #wisdom #mindset #personalgrowth #curiosity #tensionlines",
+      "ideaId": "002",
+      "createdBy": "heraclitus",
+      "createdAt": "2026-02-06T04:30:00.000Z",
+      "canvaRequired": true,
+      "canvaComplete": true,
+      "canvaInstructions": "Create quote card (1080x1080):\n- Background: Cream #FDFCFA\n- Text: Dark Brown #1A1613\n- Use Playfair Display for quote\n- Small @thetensionlines watermark bottom right",
+      "status": "posted",
+      "postUrl": "https://www.instagram.com",
+      "postedAt": "2026-02-06T05:31:59.861Z"
+    },
     {
       "id": "post-1738900000001",
       "platform": "threads",
@@ -21,39 +37,31 @@
       "createdBy": "heraclitus",
       "createdAt": "2026-02-06T04:30:00.000Z",
       "canvaRequired": false,
-      "status": "ready",
-      "postUrl": "https://www.threads.net"
-    },
-    {
-      "id": "post-1738900000002",
-      "platform": "instagram",
-      "content": "\"The people who stay stuck\nare the ones who\nstopped moving.\"\n\n— The Seeker's Truth",
-      "caption": "There are really only 4 types of people when something breaks:\n\n1. The Blamers — everything is the computer's fault\n2. The Self-Defeaters — \"I'm just not a tech person\"\n3. The Ritual Followers — write it down, hope it works\n4. The Seekers — ask why, try things, stay curious\n\nOnly one group doesn't need help.\n\nNot because they're smarter. Because they haven't stopped moving.\n\n#philosophy #wisdom #mindset #personalgrowth #curiosity #tensionlines",
-      "ideaId": "002",
-      "createdBy": "heraclitus",
-      "createdAt": "2026-02-06T04:30:00.000Z",
-      "canvaRequired": true,
-      "canvaComplete": false,
-      "canvaInstructions": "Create quote card (1080x1080):\n- Background: Cream #FDFCFA\n- Text: Dark Brown #1A1613\n- Use Playfair Display for quote\n- Small @thetensionlines watermark bottom right",
-      "status": "ready",
-      "postUrl": "https://www.instagram.com"
+      "status": "posted",
+      "postUrl": null,
+      "postedAt": "2026-02-06T04:35:41.220Z"
     }
   ],
-  "posted": [],
   "settings": {
     "platforms": {
       "instagram": {
         "enabled": true,
         "maxPostsPerDay": 2,
         "requiresCanva": true,
-        "safeHours": { "start": 9, "end": 21 },
+        "safeHours": {
+          "start": 9,
+          "end": 21
+        },
         "minHoursBetweenPosts": 4
       },
       "threads": {
         "enabled": true,
         "maxPostsPerDay": 3,
         "requiresCanva": false,
-        "safeHours": { "start": 8, "end": 22 },
+        "safeHours": {
+          "start": 8,
+          "end": 22
+        },
         "minHoursBetweenPosts": 3
       }
     },
