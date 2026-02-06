@@ -265,7 +265,7 @@ function getPhilosopherDrafts() {
 function searchContent(query) {
   const results = [];
   const lowerQuery = query.toLowerCase();
-  
+
   // Search tasks
   const mc = getMissionControl();
   mc.tasks.forEach(task => {
@@ -276,11 +276,42 @@ function searchContent(query) {
         id: task.id,
         title: task.title,
         snippet: task.description.substring(0, 150),
+        status: task.status,
+        assignees: task.assigneeIds,
         url: `/tasks/${task.id}`
       });
     }
   });
-  
+
+  // Search agents
+  mc.agents.forEach(agent => {
+    if (agent.name.toLowerCase().includes(lowerQuery) ||
+        agent.role?.toLowerCase().includes(lowerQuery) ||
+        agent.description?.toLowerCase().includes(lowerQuery)) {
+      results.push({
+        type: 'agent',
+        id: agent.id,
+        title: agent.name,
+        snippet: agent.role || agent.description?.substring(0, 150) || '',
+        status: agent.status,
+        url: `/agents/${agent.id}`
+      });
+    }
+  });
+
+  // Search activities
+  mc.activities.slice(0, 100).forEach(activity => {
+    if (activity.description?.toLowerCase().includes(lowerQuery)) {
+      results.push({
+        type: 'activity',
+        id: activity.id,
+        title: activity.description,
+        snippet: `${activity.type} by ${activity.agentId}`,
+        url: `/activities`
+      });
+    }
+  });
+
   // Search ideas
   const ideas = parseIdeasBank();
   ideas.forEach(idea => {
@@ -294,7 +325,7 @@ function searchContent(query) {
       });
     }
   });
-  
+
   // Search drafts
   const drafts = getPhilosopherDrafts();
   drafts.forEach(draft => {
@@ -308,7 +339,7 @@ function searchContent(query) {
       });
     }
   });
-  
+
   return results;
 }
 
