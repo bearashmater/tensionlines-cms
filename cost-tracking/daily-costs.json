@@ -1,0 +1,69 @@
+{
+  "daily": {
+    "date": "2026-02-06",
+    "total": 1.48,
+    "budget": 2,
+    "requests": 45
+  },
+  "models": [
+    {
+      "name": "Ollama qwen2.5:3b",
+      "cost": 0,
+      "requests": 6,
+      "tokens": 24612,
+      "total": 0
+    },
+    {
+      "name": "Claude Sonnet 4.5",
+      "cost": 1.48,
+      "requests": 38,
+      "tokens": 1598320,
+      "total": 1.48
+    },
+    {
+      "name": "Claude Haiku 3.5",
+      "cost": 0,
+      "requests": 1,
+      "tokens": 0,
+      "total": 0
+    }
+  ],
+  "elevations": [],
+  "weekly": [
+    {
+      "date": "Mon",
+      "label": "M",
+      "cost": 0
+    },
+    {
+      "date": "Tue",
+      "label": "T",
+      "cost": 0
+    },
+    {
+      "date": "Wed",
+      "label": "W",
+      "cost": 0
+    },
+    {
+      "date": "Thu",
+      "label": "T",
+      "cost": 1.48
+    },
+    {
+      "date": "Fri",
+      "label": "F",
+      "cost": 0
+    },
+    {
+      "date": "Sat",
+      "label": "S",
+      "cost": 0
+    },
+    {
+      "date": "Sun",
+      "label": "S",
+      "cost": 0
+    }
+  ]
+}
