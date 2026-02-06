@@ -1158,6 +1158,48 @@ function calculateTimeInStatus(task) {
 }
 
 /**
+ * Sync the weekly idea batch task status based on idea count vs goal.
+ * Auto-completes when weekly goal is met. Returns true if data was changed.
+ */
+function syncWeeklyIdeaTask(data) {
+  const task = data.tasks.find(t =>
+    t.metadata?.recurring === 'weekly' &&
+    t.title.toLowerCase().includes('idea') &&
+    (t.title.toLowerCase().includes('batch') || t.title.toLowerCase().includes('weekly'))
+  );
+  if (!task) return false;
+
+  // Count this week's ideas (Monday = start of week)
+  const ideas = parseIdeasBank();
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun, 1=Mon
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - ((day + 6) % 7)); // Monday
+  startOfWeek.setHours(0, 0, 0, 0);
+  const weekStart = startOfWeek.toISOString().split('T')[0];
+  const thisWeekIdeas = ideas.filter(i => i.date && i.date >= weekStart);
+
+  const goal = task.metadata?.weeklyGoal || 4;
+  const progress = thisWeekIdeas.length;
+  let changed = false;
+
+  if (progress >= goal && task.status === 'in_progress') {
+    task.status = 'completed';
+    task.completedAt = new Date().toISOString();
+    task.metadata.ideasThisWeek = progress;
+    changed = true;
+  }
+
+  // Always keep the count in metadata up to date
+  if (task.metadata.ideasThisWeek !== progress) {
+    task.metadata.ideasThisWeek = progress;
+    changed = true;
+  }
+
+  return changed;
+}
+
+/**
  * Record a completed step's duration to stepDurations history
  */
 function recordStepDuration(data, step, taskId) {
@@ -1229,6 +1271,13 @@ function isValidFilter(value) {
 app.get('/api/tasks', (req, res) => {
   try {
     const mc = getMissionControl();
+
+    // Sync weekly idea task status before returning
+    if (syncWeeklyIdeaTask(mc)) {
+      fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+      cache.missionControl = null;
+    }
+
     let tasks = mc.tasks;
 
     // Filter by status (validate against whitelist)
@@ -1870,9 +1919,10 @@ app.get('/api/ideas/stats', (req, res) => {
     const now = new Date();
     const today = now.toISOString().split('T')[0];
 
-    // Get start of current week (Sunday)
+    // Get start of current week (Monday)
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
+    const day = now.getDay(); // 0=Sun, 1=Mon
+    startOfWeek.setDate(now.getDate() - ((day + 6) % 7));
     startOfWeek.setHours(0, 0, 0, 0);
     const weekStart = startOfWeek.toISOString().split('T')[0];
 
@@ -1920,8 +1970,13 @@ app.get('/api/ideas/stats', (req, res) => {
       }
     });
 
-    // Weekly goal tracking
-    const weeklyGoal = 4;
+    // Weekly goal tracking (read from task metadata if available)
+    const mc = getMissionControl();
+    const ideaTask = mc.tasks.find(t =>
+      t.metadata?.recurring === 'weekly' &&
+      t.title.toLowerCase().includes('idea')
+    );
+    const weeklyGoal = ideaTask?.metadata?.weeklyGoal || 4;
     const weeklyProgress = thisWeekIdeas.length;
     const needsMoreIdeas = weeklyProgress < weeklyGoal;
 
@@ -4307,6 +4362,34 @@ cron.schedule('0 8 * * *', () => {
 });
 
 console.log('[Cron] Daily summary scheduled for 8:00 AM PST');
+
+/**
+ * Weekly Monday reset: Set idea batch task back to assigned
+ */
+cron.schedule('0 0 * * 1', () => {
+  console.log('[Cron] Weekly reset: Idea batch task');
+  try {
+    const data = getMissionControl();
+    const task = data.tasks.find(t =>
+      t.metadata?.recurring === 'weekly' &&
+      t.title.toLowerCase().includes('idea')
+    );
+    if (task && task.status !== 'assigned') {
+      task.status = 'assigned';
+      delete task.completedAt;
+      task.metadata.ideasThisWeek = 0;
+      fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(data, null, 2));
+      cache.missionControl = null;
+      console.log('[Cron] Reset idea batch task to assigned');
+    }
+  } catch (err) {
+    console.error('[Cron] Weekly reset error:', err);
+  }
+}, {
+  timezone: 'America/Los_Angeles'
+});
+
+console.log('[Cron] Weekly idea task reset scheduled for Monday 00:00 PST');
 
 // ============================================================================
 // OPTIMIZATION API ENDPOINTS
