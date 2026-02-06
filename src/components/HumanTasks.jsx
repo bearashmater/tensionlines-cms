@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import useSWR from 'swr'
 import { getTasks, fetcher } from '../lib/api'
-import { CheckCircle, Clock, ExternalLink, AlertCircle, Copy, Check, Link, MessageSquare, Instagram, MessageCircle, Palette, Send, Plus, Trash2, Vote, MapPin, FileText, Image, Film } from 'lucide-react'
+import { CheckCircle, Clock, ExternalLink, AlertCircle, Copy, Check, Link, MessageSquare, Instagram, MessageCircle, Palette, Send, Plus, Trash2, Vote, MapPin, FileText, Image, Film, Lightbulb } from 'lucide-react'
 
 export default function HumanTasks() {
   const { data: allTasks, error, mutate } = useSWR('/tasks', getTasks, {
@@ -10,17 +10,29 @@ export default function HumanTasks() {
   const { data: postingQueue, mutate: mutateQueue } = useSWR('/api/posting-queue', fetcher, {
     refreshInterval: 30000
   })
+  const { data: ideaStats } = useSWR('/api/ideas/stats', fetcher, {
+    refreshInterval: 60000
+  })
 
   const [completing, setCompleting] = useState(null)
 
   if (error) return <ErrorState />
   if (!allTasks) return <LoadingState />
 
-  const humanTasks = allTasks.filter(t => 
-    t.assigneeIds?.includes('human') && 
-    t.status !== 'completed' && 
-    t.status !== 'shipped'
-  )
+  // Filter human tasks, but hide idea batch task if goal is met
+  const humanTasks = allTasks.filter(t => {
+    if (!t.assigneeIds?.includes('human')) return false
+    if (t.status === 'completed' || t.status === 'shipped') return false
+
+    // Hide "Provide Weekly Idea Batch" if goal is met
+    const isIdeaTask = t.title.toLowerCase().includes('idea') &&
+      (t.title.toLowerCase().includes('batch') || t.title.toLowerCase().includes('weekly'))
+    if (isIdeaTask && ideaStats && !ideaStats.needsMoreIdeas) {
+      return false
+    }
+
+    return true
+  })
 
   if (humanTasks.length === 0) {
     return <EmptyState />
@@ -93,6 +105,7 @@ export default function HumanTasks() {
             task={task}
             onComplete={handleComplete}
             completing={completing === task.id}
+            ideaStats={ideaStats}
           />
         ))}
       </div>
@@ -100,13 +113,17 @@ export default function HumanTasks() {
   )
 }
 
-function TaskCard({ task, onComplete, completing }) {
+function TaskCard({ task, onComplete, completing, ideaStats }) {
   const [copiedIndex, setCopiedIndex] = useState(null)
   const priority = task.metadata?.priority || 'medium'
   const estimatedMinutes = task.metadata?.estimatedMinutes || null
   const directLink = task.metadata?.directLink
   const unblocks = task.metadata?.unblocks
   const actionItems = task.metadata?.actionItems || []
+
+  // Check if this is an idea-related task
+  const isIdeaTask = task.title.toLowerCase().includes('idea') &&
+    (task.title.toLowerCase().includes('batch') || task.title.toLowerCase().includes('weekly'))
 
   // Extract links from description if no actionItems provided
   const extractedLinks = extractLinksFromDescription(task.description)
@@ -146,6 +163,30 @@ function TaskCard({ task, onComplete, completing }) {
             <div className="flex items-center gap-2 text-sm text-neutral-600 mb-3">
               <Clock size={14} />
               <span>Estimated time: {estimatedMinutes} minutes</span>
+            </div>
+          )}
+
+          {/* Idea Progress Indicator */}
+          {isIdeaTask && ideaStats && (
+            <div className="flex items-center gap-3 mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <Lightbulb size={20} className="text-amber-600" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-amber-800">Weekly Progress</span>
+                  <span className="text-lg font-bold text-amber-600">
+                    {ideaStats.weeklyProgress}/{ideaStats.weeklyGoal}
+                  </span>
+                </div>
+                <div className="w-full bg-white rounded-full h-2">
+                  <div
+                    className="bg-amber-500 rounded-full h-2 transition-all"
+                    style={{ width: `${Math.min(100, (ideaStats.weeklyProgress / ideaStats.weeklyGoal) * 100)}%` }}
+                  />
+                </div>
+                <p className="text-xs text-amber-700 mt-1">
+                  {ideaStats.weeklyGoal - ideaStats.weeklyProgress} more idea{ideaStats.weeklyGoal - ideaStats.weeklyProgress === 1 ? '' : 's'} to hit your weekly goal
+                </p>
+              </div>
             </div>
           )}
         </div>

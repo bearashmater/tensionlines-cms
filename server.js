@@ -115,10 +115,18 @@ function parseIdeasBank() {
   const content = fs.readFileSync(IDEAS_BANK, 'utf8');
   const lines = content.split('\n');
   const ideas = [];
-  
+
   let currentIdea = null;
-  
+  let currentDate = null;
+
   for (const line of lines) {
+    // Match date headers like "## 2026-02-02"
+    const dateMatch = line.match(/^##\s+(\d{4}-\d{2}-\d{2})/);
+    if (dateMatch) {
+      currentDate = dateMatch[1];
+      continue;
+    }
+
     // Match idea headers like "### #001 - 06:42 AM PST" or "## 001 | 2026-02-02 14:30 PST"
     const headerMatch = line.match(/^###?\s+#?(\d+)\s+[-|]\s+(.+)/);
     if (headerMatch) {
@@ -126,6 +134,7 @@ function parseIdeasBank() {
       currentIdea = {
         id: headerMatch[1],
         capturedAt: headerMatch[2].trim(),
+        date: currentDate,
         text: '',
         quote: '',
         tags: [],
@@ -1430,6 +1439,114 @@ app.get('/api/ideas', (req, res) => {
     console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+/**
+ * Get idea submission stats
+ */
+app.get('/api/ideas/stats', (req, res) => {
+  try {
+    const ideas = parseIdeasBank();
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+
+    // Get start of current week (Sunday)
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    const weekStart = startOfWeek.toISOString().split('T')[0];
+
+    // Get start of current month
+    const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+
+    // Get start of current year
+    const yearStart = `${now.getFullYear()}-01-01`;
+
+    // Count ideas by period
+    const thisWeekIdeas = ideas.filter(i => i.date && i.date >= weekStart);
+    const thisMonthIdeas = ideas.filter(i => i.date && i.date >= monthStart);
+    const thisYearIdeas = ideas.filter(i => i.date && i.date >= yearStart);
+    const todayIdeas = ideas.filter(i => i.date === today);
+
+    // Group by date for charts (last 30 days)
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+
+    const dailyCounts = {};
+    ideas.forEach(idea => {
+      if (idea.date && idea.date >= thirtyDaysAgoStr) {
+        dailyCounts[idea.date] = (dailyCounts[idea.date] || 0) + 1;
+      }
+    });
+
+    // Group by week for last 12 weeks
+    const weeklyCounts = {};
+    ideas.forEach(idea => {
+      if (idea.date) {
+        const d = new Date(idea.date);
+        const weekNum = getWeekNumber(d);
+        const weekKey = `${d.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+        weeklyCounts[weekKey] = (weeklyCounts[weekKey] || 0) + 1;
+      }
+    });
+
+    // Group by month
+    const monthlyCounts = {};
+    ideas.forEach(idea => {
+      if (idea.date) {
+        const monthKey = idea.date.substring(0, 7); // YYYY-MM
+        monthlyCounts[monthKey] = (monthlyCounts[monthKey] || 0) + 1;
+      }
+    });
+
+    // Weekly goal tracking
+    const weeklyGoal = 4;
+    const weeklyProgress = thisWeekIdeas.length;
+    const needsMoreIdeas = weeklyProgress < weeklyGoal;
+
+    // Calculate streak (consecutive weeks meeting goal)
+    let streak = 0;
+    const sortedWeeks = Object.entries(weeklyCounts).sort((a, b) => b[0].localeCompare(a[0]));
+    for (const [week, count] of sortedWeeks) {
+      if (count >= weeklyGoal) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    res.json({
+      total: ideas.length,
+      today: todayIdeas.length,
+      thisWeek: weeklyProgress,
+      thisMonth: thisMonthIdeas.length,
+      thisYear: thisYearIdeas.length,
+      weeklyGoal,
+      weeklyProgress,
+      needsMoreIdeas,
+      streak,
+      dailyCounts,
+      weeklyCounts,
+      monthlyCounts,
+      byStatus: {
+        captured: ideas.filter(i => i.status === 'captured').length,
+        assigned: ideas.filter(i => i.status === 'assigned').length,
+        drafted: ideas.filter(i => i.status === 'drafted').length,
+        shipped: ideas.filter(i => i.status === 'shipped').length
+      }
+    });
+  } catch (error) {
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Helper: Get ISO week number
+function getWeekNumber(d) {
+  d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
 
 /**
  * Get all drafts

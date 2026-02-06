@@ -185,3 +185,7 @@ export async function reopenTask(taskId, reason) {
     body: JSON.stringify({ reason })
   })
 }
+
+export async function getIdeaStats() {
+  return apiFetch('/ideas/stats')
+}
