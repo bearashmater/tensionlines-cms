@@ -959,6 +959,64 @@ app.get('/api/activities', (req, res) => {
 });
 
 /**
+ * Update task status
+ */
+app.patch('/api/tasks/:id/status', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Validate task ID
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(id)) {
+      return res.status(400).json({ error: 'Invalid task ID' });
+    }
+
+    // Validate status
+    if (!status || !VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
+    }
+
+    const data = getMissionControl();
+    const task = data.tasks.find(t => t.id === id);
+
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const oldStatus = task.status;
+    task.status = status;
+
+    // Set timestamps based on status change
+    if (status === 'completed' || status === 'shipped') {
+      task.completedAt = new Date().toISOString();
+    } else if (oldStatus === 'completed' || oldStatus === 'shipped') {
+      // Reopening
+      task.reopenedAt = new Date().toISOString();
+      delete task.completedAt;
+    }
+
+    // Log activity
+    data.activities.unshift({
+      id: `activity-${Date.now()}`,
+      type: 'status_changed',
+      agentId: 'human',
+      taskId: id,
+      timestamp: new Date().toISOString(),
+      description: `Status changed: ${task.title} (${oldStatus} → ${status})`,
+      metadata: { oldStatus, newStatus: status }
+    });
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(data, null, 2));
+    cache.missionControl = null;
+
+    res.json({ success: true, task });
+  } catch (error) {
+    console.error('Error updating task status:', error);
+    res.status(500).json({ error: 'Failed to update task status' });
+  }
+});
+
+/**
  * Complete a task (for human tasks)
  */
 app.post('/api/tasks/:id/complete', (req, res) => {

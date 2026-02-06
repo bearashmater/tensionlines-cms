@@ -1,14 +1,16 @@
-import useSWR from 'swr'
+import useSWR, { mutate } from 'swr'
 import { useState } from 'react'
 import { getDashboard, getActivities, search } from '../lib/api'
-import { formatDate, formatPercent, formatNumber } from '../lib/formatters'
-import { Users, ListTodo, Lightbulb, Bell, TrendingUp, Search, FileText, X, Users as UsersIcon } from 'lucide-react'
+import { formatDate, formatPercent, formatNumber, formatStatus, getStatusColor } from '../lib/formatters'
+import { Users, ListTodo, Lightbulb, Bell, TrendingUp, Search, FileText, X, Users as UsersIcon, ChevronRight } from 'lucide-react'
 
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [searching, setSearching] = useState(false)
   const [showResults, setShowResults] = useState(false)
+  const [selectedTask, setSelectedTask] = useState(null)
+  const [updatingStatus, setUpdatingStatus] = useState(false)
 
   const { data: dashboard, error: dashError } = useSWR('/dashboard', getDashboard, {
     refreshInterval: 120000
@@ -40,6 +42,45 @@ export default function Dashboard() {
     setSearchQuery('')
     setSearchResults([])
     setShowResults(false)
+  }
+
+  const handleResultClick = async (result) => {
+    if (result.type === 'task') {
+      // Fetch full task details
+      try {
+        const response = await fetch(`/api/tasks/${result.id}`)
+        const task = await response.json()
+        setSelectedTask(task)
+      } catch (err) {
+        console.error('Error fetching task:', err)
+      }
+    }
+  }
+
+  const handleStatusChange = async (newStatus) => {
+    if (!selectedTask) return
+    setUpdatingStatus(true)
+    try {
+      const response = await fetch(`/api/tasks/${selectedTask.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      })
+      if (response.ok) {
+        const updated = await response.json()
+        setSelectedTask(updated.task)
+        // Refresh search results
+        if (searchQuery) {
+          const data = await search(searchQuery)
+          setSearchResults(data)
+        }
+        mutate('/tasks')
+        mutate('/dashboard')
+      }
+    } catch (err) {
+      console.error('Error updating status:', err)
+    }
+    setUpdatingStatus(false)
   }
 
   if (dashError || actError) {
@@ -103,7 +144,11 @@ export default function Dashboard() {
           ) : searchResults.length > 0 ? (
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {searchResults.map((result, idx) => (
-                <SearchResultItem key={idx} result={result} />
+                <SearchResultItem
+                  key={idx}
+                  result={result}
+                  onClick={() => handleResultClick(result)}
+                />
               ))}
             </div>
           ) : (
@@ -112,6 +157,16 @@ export default function Dashboard() {
             </p>
           )}
         </div>
+      )}
+
+      {/* Task Detail Modal */}
+      {selectedTask && (
+        <TaskDetailModal
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+          onStatusChange={handleStatusChange}
+          updatingStatus={updatingStatus}
+        />
       )}
 
       {/* Metrics Grid */}
@@ -243,7 +298,9 @@ function ErrorState({ message }) {
 }
 
 // Search Result Item
-function SearchResultItem({ result }) {
+function SearchResultItem({ result, onClick }) {
+  const isClickable = result.type === 'task'
+
   const getIcon = () => {
     switch (result.type) {
       case 'task': return <ListTodo size={16} className="text-blue-600" />
@@ -265,7 +322,12 @@ function SearchResultItem({ result }) {
   }
 
   return (
-    <div className="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors">
+    <div
+      onClick={isClickable ? onClick : undefined}
+      className={`flex items-start gap-3 p-3 bg-neutral-50 rounded-lg transition-colors ${
+        isClickable ? 'cursor-pointer hover:bg-blue-50 hover:border-blue-200 border border-transparent' : 'hover:bg-neutral-100'
+      }`}
+    >
       <div className="mt-0.5">{getIcon()}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
@@ -280,6 +342,121 @@ function SearchResultItem({ result }) {
         {result.snippet && (
           <p className="text-xs text-neutral-600 mt-1 line-clamp-2">{result.snippet}</p>
         )}
+      </div>
+      {isClickable && (
+        <ChevronRight size={16} className="text-neutral-400 mt-1 flex-shrink-0" />
+      )}
+    </div>
+  )
+}
+
+// Task Detail Modal
+function TaskDetailModal({ task, onClose, onStatusChange, updatingStatus }) {
+  const statuses = ['assigned', 'in_progress', 'review', 'completed', 'shipped']
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-neutral-200">
+          <div>
+            <span className="text-xs text-neutral-500 font-mono">{task.id}</span>
+            <h2 className="text-xl font-serif font-bold text-black mt-1">{task.title}</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
+          {/* Status */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-neutral-700 mb-2">Status</label>
+            <div className="flex flex-wrap gap-2">
+              {statuses.map(status => (
+                <button
+                  key={status}
+                  onClick={() => onStatusChange(status)}
+                  disabled={updatingStatus || task.status === status}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    task.status === status
+                      ? 'bg-gold text-white'
+                      : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                  } ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {status === 'in_progress' ? 'In Progress' : status.charAt(0).toUpperCase() + status.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Assignees */}
+          {task.assigneeIds && task.assigneeIds.length > 0 && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">Assigned To</label>
+              <div className="flex flex-wrap gap-2">
+                {task.assigneeIds.map(a => (
+                  <span key={a} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+                    {a === 'human' ? 'Shawn' : a}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Description */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-neutral-700 mb-2">Description</label>
+            <div className="bg-neutral-50 rounded-lg p-4 text-sm text-neutral-800 whitespace-pre-wrap">
+              {task.description}
+            </div>
+          </div>
+
+          {/* Metadata */}
+          {task.metadata && Object.keys(task.metadata).length > 0 && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">Details</label>
+              <div className="bg-neutral-50 rounded-lg p-4 space-y-2">
+                {task.metadata.priority && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-600">Priority:</span>
+                    <span className={`font-medium ${
+                      task.metadata.priority === 'high' ? 'text-red-600' :
+                      task.metadata.priority === 'medium' ? 'text-amber-600' : 'text-blue-600'
+                    }`}>{task.metadata.priority}</span>
+                  </div>
+                )}
+                {task.metadata.estimatedMinutes && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-600">Estimated:</span>
+                    <span className="font-medium">{task.metadata.estimatedMinutes} min</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Dates */}
+          <div className="text-xs text-neutral-500 space-y-1">
+            {task.createdAt && <p>Created: {formatDate(task.createdAt)}</p>}
+            {task.completedAt && <p>Completed: {formatDate(task.completedAt)}</p>}
+            {task.reopenedAt && <p className="text-amber-600">Reopened: {formatDate(task.reopenedAt)}</p>}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 p-6 border-t border-neutral-200 bg-neutral-50">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-neutral-200 text-neutral-700 rounded-lg font-medium hover:bg-neutral-300 transition-colors"
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
   )
