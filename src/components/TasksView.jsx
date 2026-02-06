@@ -362,7 +362,11 @@ export default function TasksView() {
                     </h2>
                     <div className="space-y-3">
                       {periodTasks
-                        .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+                        .sort((a, b) => {
+                          const dateA = a.completedAt ? new Date(a.completedAt) : new Date(0)
+                          const dateB = b.completedAt ? new Date(b.completedAt) : new Date(0)
+                          return dateB - dateA  // Most recent first
+                        })
                         .map(task => (
                           <TaskCard key={task.id} task={task} showCompletedDate />
                         ))}
@@ -379,7 +383,11 @@ export default function TasksView() {
               // Show filtered list
               <div className="space-y-3">
                 {filteredTasks
-                  .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+                  .sort((a, b) => {
+                    const dateA = a.completedAt ? new Date(a.completedAt) : new Date(0)
+                    const dateB = b.completedAt ? new Date(b.completedAt) : new Date(0)
+                    return dateB - dateA  // Most recent first
+                  })
                   .map(task => (
                     <TaskCard key={task.id} task={task} showCompletedDate />
                   ))}
