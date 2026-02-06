@@ -1,27 +1,43 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { DollarSign, TrendingUp, AlertTriangle, CheckCircle, Clock, Zap, Info, GitBranch, ChevronDown } from 'lucide-react'
+import { DollarSign, TrendingUp, AlertTriangle, CheckCircle, Clock, Zap, Info, GitBranch, ChevronDown, X, ChevronRight } from 'lucide-react'
 
 export default function CostDashboard() {
   const [costs, setCosts] = useState(null)
+  const [details, setDetails] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showDecisionTree, setShowDecisionTree] = useState(true)
+  const [selectedModel, setSelectedModel] = useState(null)
 
   useEffect(() => {
     loadCosts()
-    const interval = setInterval(loadCosts, 120000)
+    loadDetails()
+    const interval = setInterval(() => {
+      loadCosts()
+      loadDetails()
+    }, 120000)
     return () => clearInterval(interval)
   }, [])
 
   const loadCosts = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/costs')
+      const response = await fetch('/api/costs')
       const data = await response.json()
       setCosts(data)
       setLoading(false)
     } catch (error) {
       console.error('Failed to load costs:', error)
       setLoading(false)
+    }
+  }
+
+  const loadDetails = async () => {
+    try {
+      const response = await fetch('/api/costs/details')
+      const data = await response.json()
+      setDetails(data)
+    } catch (error) {
+      console.error('Failed to load cost details:', error)
     }
   }
 
@@ -293,14 +309,29 @@ export default function CostDashboard() {
         <h2 className="text-xl font-serif font-semibold mb-4 flex items-center gap-2">
           <Zap size={20} className="text-gold" />
           Model Usage Today
+          <span className="text-sm font-normal text-neutral-500 ml-2">(click for details)</span>
         </h2>
 
         <div className="space-y-3">
           {costs.models.map((model) => (
-            <ModelUsageRow key={model.name} model={model} />
+            <ModelUsageRow
+              key={model.name}
+              model={model}
+              onClick={() => setSelectedModel(model.name)}
+              isSelected={selectedModel === model.name}
+            />
           ))}
         </div>
       </div>
+
+      {/* Model Details Modal */}
+      {selectedModel && details?.models?.[selectedModel] && (
+        <ModelDetailsModal
+          modelName={selectedModel}
+          modelData={details.models[selectedModel]}
+          onClose={() => setSelectedModel(null)}
+        />
+      )}
 
       {/* Model Reference Guide */}
       <div className="bg-white rounded-lg border border-neutral-200 p-6">
@@ -416,17 +447,23 @@ function StatBox({ label, value, icon, color }) {
   )
 }
 
-function ModelUsageRow({ model }) {
+function ModelUsageRow({ model, onClick, isSelected }) {
   const usagePercent = (model.cost / model.total * 100) || 0
 
   return (
-    <div>
+    <div
+      onClick={onClick}
+      className={`cursor-pointer p-3 -mx-3 rounded-lg transition-colors hover:bg-neutral-50 ${isSelected ? 'bg-neutral-100' : ''}`}
+    >
       <div className="flex justify-between text-sm mb-1">
-        <span className="font-medium text-black">{model.name}</span>
-        <span className="text-neutral-600">${model.cost.toFixed(3)}</span>
+        <span className="font-medium text-black flex items-center gap-2">
+          {model.name}
+          <ChevronRight size={14} className="text-neutral-400" />
+        </span>
+        <span className="text-neutral-600">${model.cost.toFixed(4)}</span>
       </div>
       <div className="w-full bg-neutral-200 rounded-full h-2 overflow-hidden">
-        <div 
+        <div
           className="h-full bg-gold transition-all duration-300"
           style={{ width: `${Math.min(usagePercent, 100)}%` }}
         />
@@ -434,6 +471,85 @@ function ModelUsageRow({ model }) {
       <div className="flex justify-between text-xs text-neutral-500 mt-1">
         <span>{model.requests} requests</span>
         <span>{model.tokens.toLocaleString()} tokens</span>
+      </div>
+    </div>
+  )
+}
+
+function ModelDetailsModal({ modelName, modelData, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-neutral-200 flex items-center justify-between bg-neutral-50">
+          <div>
+            <h2 className="text-xl font-serif font-semibold text-black">{modelName}</h2>
+            <p className="text-sm text-neutral-600">
+              {modelData.requests} requests · ${modelData.cost.toFixed(4)} total · {modelData.tokens.toLocaleString()} tokens
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-neutral-200 rounded-lg transition-colors"
+          >
+            <X size={20} className="text-neutral-600" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="overflow-auto max-h-[calc(80vh-100px)]">
+          <table className="w-full">
+            <thead className="bg-neutral-50 sticky top-0">
+              <tr className="text-left text-sm text-neutral-600">
+                <th className="px-4 py-3 font-semibold">Time</th>
+                <th className="px-4 py-3 font-semibold">Context</th>
+                <th className="px-4 py-3 font-semibold text-right">Tokens</th>
+                <th className="px-4 py-3 font-semibold text-right">Cost</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100">
+              {modelData.details.map((req, idx) => (
+                <tr key={req.id || idx} className="hover:bg-neutral-50">
+                  <td className="px-4 py-3 text-sm">
+                    <div className="font-mono text-neutral-900">{req.time}</div>
+                    {req.channel && req.channel !== 'unknown' && (
+                      <div className="text-xs text-neutral-500">{req.channel}</div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <div className="text-neutral-700 max-w-md truncate" title={req.context}>
+                      {req.context}
+                    </div>
+                    {req.stopReason && req.stopReason !== 'stop' && (
+                      <div className="text-xs text-amber-600">{req.stopReason}</div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-right">
+                    <div className="font-mono text-neutral-900">{req.tokens.toLocaleString()}</div>
+                    <div className="text-xs text-neutral-500">
+                      {req.input}→{req.output}
+                      {req.cacheRead > 0 && <span className="text-green-600 ml-1">({req.cacheRead} cached)</span>}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-right">
+                    <span className={`font-mono ${req.cost > 0.1 ? 'text-red-600 font-semibold' : req.cost > 0.01 ? 'text-amber-600' : 'text-neutral-900'}`}>
+                      ${req.cost.toFixed(4)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {modelData.details.length === 0 && (
+            <div className="text-center py-12 text-neutral-500">
+              No requests recorded for this model today
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

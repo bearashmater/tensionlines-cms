@@ -1312,6 +1312,33 @@ app.get('/api/costs', (req, res) => {
 });
 
 /**
+ * Cost details - drill down by model
+ */
+let detailsCache = null;
+let detailsCacheTime = 0;
+app.get('/api/costs/details', (req, res) => {
+  try {
+    // Cache for 30 seconds
+    if (detailsCache && Date.now() - detailsCacheTime < 30000) {
+      return res.json(detailsCache);
+    }
+    const detailsPath = path.join(BASE_DIR, 'cost-tracking/daily-details.json');
+
+    if (!fs.existsSync(detailsPath)) {
+      return res.json({ date: new Date().toISOString().split('T')[0], models: {} });
+    }
+
+    const data = fs.readFileSync(detailsPath, 'utf8');
+    detailsCache = JSON.parse(data);
+    detailsCacheTime = Date.now();
+    res.json(detailsCache);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
  * Health check
  */
 app.get('/api/health', (req, res) => {
