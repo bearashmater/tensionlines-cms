@@ -139,7 +139,13 @@ Before posting, ask:
 
 ## Channel Configuration Status
 
-**Configured:** Telegram (current channel)  
-**Pending:** Threads, Bluesky, Twitter/X, Instagram
+**Configured:**
+- Telegram (current channel)
+- Twitter/X (automated via Nietzsche)
+- Bluesky (automated via Heraclitus)
+- **Instagram** (manual posting via Canva - see CANVA_WORKFLOW.md)
+- **Threads** (manual posting - see CANVA_WORKFLOW.md)
 
-*Update this file as channels come online.*
+**Manual Posting Queue:** CMS → Content → Posting Queue
+
+*Instagram and Threads require manual posting to avoid account bans.*

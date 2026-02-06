@@ -1,0 +1,25 @@
+{
+  "queue": [],
+  "posted": [],
+  "settings": {
+    "platforms": {
+      "instagram": {
+        "enabled": true,
+        "maxPostsPerDay": 2,
+        "requiresCanva": true,
+        "safeHours": { "start": 9, "end": 21 },
+        "minHoursBetweenPosts": 4
+      },
+      "threads": {
+        "enabled": true,
+        "maxPostsPerDay": 3,
+        "requiresCanva": false,
+        "safeHours": { "start": 8, "end": 22 },
+        "minHoursBetweenPosts": 3
+      }
+    },
+    "warmupMode": true,
+    "warmupStartDate": null,
+    "warmupDaysRemaining": 14
+  }
+}
