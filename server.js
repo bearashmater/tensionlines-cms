@@ -1157,6 +1157,61 @@ function calculateTimeInStatus(task) {
   };
 }
 
+/**
+ * Record a completed step's duration to stepDurations history
+ */
+function recordStepDuration(data, step, taskId) {
+  if (!step.startedAt || !step.completedAt) return;
+
+  const durationMs = new Date(step.completedAt).getTime() - new Date(step.startedAt).getTime();
+  if (durationMs <= 0) return;
+
+  // Skip instant/trivial steps
+  const desc = (step.description || '').trim().toLowerCase();
+  if (desc === 'dispatched') return;
+
+  if (!data.stepDurations) data.stepDurations = [];
+
+  data.stepDurations.push({
+    description: desc,
+    durationMs,
+    taskId,
+    completedAt: step.completedAt
+  });
+
+  // Cap at 500 entries (drop oldest)
+  if (data.stepDurations.length > 500) {
+    data.stepDurations = data.stepDurations.slice(-500);
+  }
+}
+
+/**
+ * Compute average durations grouped by normalized step description
+ */
+function getStepAverages(data) {
+  const durations = data.stepDurations || [];
+  const groups = {};
+
+  durations.forEach(entry => {
+    const key = entry.description;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(entry.durationMs);
+  });
+
+  const averages = {};
+  for (const [key, values] of Object.entries(groups)) {
+    const sum = values.reduce((a, b) => a + b, 0);
+    averages[key] = {
+      avg: Math.round(sum / values.length),
+      min: Math.min(...values),
+      max: Math.max(...values),
+      count: values.length
+    };
+  }
+
+  return averages;
+}
+
 // Valid filter values
 const VALID_STATUSES = ['assigned', 'in_progress', 'review', 'completed', 'shipped', 'blocked'];
 const MAX_FILTER_LENGTH = 100;
@@ -1200,12 +1255,16 @@ app.get('/api/tasks', (req, res) => {
       tasks = tasks.filter(t => t.reviewerIds.includes(req.query.reviewer));
     }
     
-    // Add time-in-status calculation to each task
+    // Compute step averages once for all tasks
+    const stepAverages = getStepAverages(mc);
+
+    // Add time-in-status calculation and step averages to each task
     tasks = tasks.map(task => ({
       ...task,
-      timeTracking: calculateTimeInStatus(task)
+      timeTracking: calculateTimeInStatus(task),
+      _stepAverages: stepAverages
     }));
-    
+
     res.json(tasks);
   } catch (error) {
     console.error(error); res.status(500).json({ error: 'Internal server error' });
@@ -1224,13 +1283,26 @@ app.get('/api/tasks/:id', (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
     
-    // Add time-in-status calculation
+    // Add time-in-status calculation and step averages
     const taskWithTracking = {
       ...task,
-      timeTracking: calculateTimeInStatus(task)
+      timeTracking: calculateTimeInStatus(task),
+      _stepAverages: getStepAverages(mc)
     };
-    
+
     res.json(taskWithTracking);
+  } catch (error) {
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Get step duration averages (debugging/dashboard)
+ */
+app.get('/api/step-averages', (req, res) => {
+  try {
+    const mc = getMissionControl();
+    res.json(getStepAverages(mc));
   } catch (error) {
     console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
@@ -3057,6 +3129,307 @@ app.post('/api/tasks/:id/due-date', (req, res) => {
   } catch (error) {
     console.error('Error setting due date:', error);
     res.status(500).json({ error: 'Failed to set due date' });
+  }
+});
+
+// ============================================================================
+// TASK DISPATCH & STEPS
+// ============================================================================
+
+/**
+ * Dispatch an assigned task — sets it in motion
+ */
+app.post('/api/tasks/:id/dispatch', (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(id)) {
+      return res.status(400).json({ error: 'Invalid task ID' });
+    }
+
+    const data = getMissionControl();
+    const task = data.tasks.find(t => t.id === id);
+
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    if (task.status !== 'assigned') {
+      return res.status(400).json({ error: 'Only assigned tasks can be dispatched' });
+    }
+
+    const now = new Date().toISOString();
+
+    task.status = 'in_progress';
+    task.startedAt = now;
+    task.dispatchedAt = now;
+    task.dispatchedBy = 'human';
+
+    // Create initial "Dispatched" step
+    if (!task.steps) task.steps = [];
+    task.steps.push({
+      id: `step-${Date.now()}`,
+      description: 'Dispatched',
+      status: 'completed',
+      startedAt: now,
+      completedAt: now,
+      agentId: 'human'
+    });
+
+    // Log activity
+    data.activities.unshift({
+      id: `activity-${Date.now()}`,
+      type: 'task_dispatched',
+      agentId: 'human',
+      taskId: id,
+      timestamp: now,
+      description: `Dispatched: ${task.title}`,
+      metadata: { dispatchedBy: 'human' }
+    });
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(data, null, 2));
+    cache.missionControl = null;
+
+    res.json({ success: true, task });
+  } catch (error) {
+    console.error('Error dispatching task:', error);
+    res.status(500).json({ error: 'Failed to dispatch task' });
+  }
+});
+
+/**
+ * Add a step to a task
+ */
+app.post('/api/tasks/:id/steps', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { description, status, agentId } = req.body;
+
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(id)) {
+      return res.status(400).json({ error: 'Invalid task ID' });
+    }
+
+    if (!description || typeof description !== 'string' || description.length > 500) {
+      return res.status(400).json({ error: 'Description is required (max 500 chars)' });
+    }
+
+    const validStepStatuses = ['pending', 'in_progress', 'completed', 'failed', 'blocked'];
+    const stepStatus = status && validStepStatuses.includes(status) ? status : 'in_progress';
+
+    const data = getMissionControl();
+    const task = data.tasks.find(t => t.id === id);
+
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    if (!task.steps) task.steps = [];
+
+    const now = new Date().toISOString();
+
+    // Auto-complete any previous in_progress step and record duration
+    task.steps.forEach(s => {
+      if (s.status === 'in_progress') {
+        s.status = 'completed';
+        s.completedAt = now;
+        recordStepDuration(data, s, id);
+      }
+    });
+
+    const newStep = {
+      id: `step-${Date.now()}`,
+      description: description.trim(),
+      status: stepStatus,
+      startedAt: now,
+      completedAt: (stepStatus === 'completed' || stepStatus === 'failed') ? now : undefined,
+      agentId: agentId || task.assigneeIds?.[0] || 'unknown'
+    };
+
+    task.steps.push(newStep);
+
+    // Log activity
+    data.activities.unshift({
+      id: `activity-${Date.now()}`,
+      type: 'step_added',
+      agentId: newStep.agentId,
+      taskId: id,
+      timestamp: now,
+      description: `Step added to "${task.title}": ${newStep.description}`,
+      metadata: { stepId: newStep.id, stepStatus }
+    });
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(data, null, 2));
+    cache.missionControl = null;
+
+    res.json({ success: true, step: newStep, task });
+  } catch (error) {
+    console.error('Error adding step:', error);
+    res.status(500).json({ error: 'Failed to add step' });
+  }
+});
+
+/**
+ * Update a step's status
+ */
+app.patch('/api/tasks/:id/steps/:stepId', (req, res) => {
+  try {
+    const { id, stepId } = req.params;
+    const { status } = req.body;
+
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(id)) {
+      return res.status(400).json({ error: 'Invalid task ID' });
+    }
+
+    if (!stepId || typeof stepId !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(stepId)) {
+      return res.status(400).json({ error: 'Invalid step ID' });
+    }
+
+    const validStepStatuses = ['pending', 'in_progress', 'completed', 'failed', 'blocked'];
+    if (!status || !validStepStatuses.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${validStepStatuses.join(', ')}` });
+    }
+
+    const data = getMissionControl();
+    const task = data.tasks.find(t => t.id === id);
+
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    if (!task.steps) {
+      return res.status(404).json({ error: 'Task has no steps' });
+    }
+
+    const step = task.steps.find(s => s.id === stepId);
+    if (!step) {
+      return res.status(404).json({ error: 'Step not found' });
+    }
+
+    step.status = status;
+    if (status === 'completed' || status === 'failed') {
+      step.completedAt = new Date().toISOString();
+      recordStepDuration(data, step, id);
+    }
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(data, null, 2));
+    cache.missionControl = null;
+
+    res.json({ success: true, step, task });
+  } catch (error) {
+    console.error('Error updating step:', error);
+    res.status(500).json({ error: 'Failed to update step' });
+  }
+});
+
+/**
+ * Analyze breakdowns for a task
+ */
+function analyzeBreakdowns(task) {
+  const breakdowns = [];
+  if (!task.steps || task.steps.length === 0) return breakdowns;
+
+  const now = new Date();
+
+  // Thresholds in ms
+  const defaultStepThreshold = 2 * 60 * 60 * 1000; // 2h
+  const draftingStepThreshold = 3 * 60 * 60 * 1000; // 3h
+  const reviewStepThreshold = 1 * 60 * 60 * 1000; // 1h
+  const gapThreshold = 30 * 60 * 1000; // 30min
+  const silenceThreshold = 4 * 60 * 60 * 1000; // 4h
+
+  // Check each step for step_too_long
+  task.steps.forEach(step => {
+    if (step.status !== 'in_progress') return;
+
+    const started = new Date(step.startedAt);
+    const elapsed = now - started;
+
+    // Pick threshold based on step description
+    const desc = (step.description || '').toLowerCase();
+    let threshold = defaultStepThreshold;
+    if (desc.includes('draft') || desc.includes('writing')) threshold = draftingStepThreshold;
+    if (desc.includes('review') || desc.includes('final')) threshold = reviewStepThreshold;
+
+    if (elapsed > threshold) {
+      const suggestions = ['Break into smaller steps', 'Check if blocked'];
+      if (elapsed > threshold * 2) suggestions.push('Consider reassigning');
+
+      breakdowns.push({
+        type: 'step_too_long',
+        stepId: step.id,
+        stepDescription: step.description,
+        duration: elapsed,
+        threshold,
+        suggestions
+      });
+    }
+  });
+
+  // Check gaps between steps
+  for (let i = 1; i < task.steps.length; i++) {
+    const prev = task.steps[i - 1];
+    const curr = task.steps[i];
+
+    if (prev.completedAt && curr.startedAt) {
+      const gap = new Date(curr.startedAt) - new Date(prev.completedAt);
+      if (gap > gapThreshold) {
+        breakdowns.push({
+          type: 'gap_between_steps',
+          afterStepId: prev.id,
+          beforeStepId: curr.id,
+          duration: gap,
+          threshold: gapThreshold,
+          suggestions: ['Nudge agent']
+        });
+      }
+    }
+  }
+
+  // Check for no recent steps on active tasks
+  if (task.status === 'in_progress' && task.steps.length > 0) {
+    const lastStep = task.steps[task.steps.length - 1];
+    const lastActivity = lastStep.completedAt || lastStep.startedAt;
+    if (lastActivity) {
+      const silence = now - new Date(lastActivity);
+      if (silence > silenceThreshold) {
+        const suggestions = ['Escalate to Tension', 'Reassign task'];
+        if (silence > silenceThreshold * 2) suggestions.push('Mark as blocked');
+
+        breakdowns.push({
+          type: 'no_recent_steps',
+          lastStepId: lastStep.id,
+          duration: silence,
+          threshold: silenceThreshold,
+          suggestions
+        });
+      }
+    }
+  }
+
+  return breakdowns;
+}
+
+app.get('/api/tasks/:id/breakdown', (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(id)) {
+      return res.status(400).json({ error: 'Invalid task ID' });
+    }
+
+    const data = getMissionControl();
+    const task = data.tasks.find(t => t.id === id);
+
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const breakdowns = analyzeBreakdowns(task);
+
+    res.json({ taskId: id, breakdowns, stepCount: (task.steps || []).length });
+  } catch (error) {
+    console.error('Error analyzing breakdowns:', error);
+    res.status(500).json({ error: 'Failed to analyze breakdowns' });
   }
 });
 

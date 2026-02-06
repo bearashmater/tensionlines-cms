@@ -189,3 +189,35 @@ export async function reopenTask(taskId, reason) {
 export async function getIdeaStats() {
   return apiFetch('/ideas/stats')
 }
+
+// ============================================================================
+// TASK DISPATCH & STEPS
+// ============================================================================
+
+export async function dispatchTask(id) {
+  return apiFetch(`/tasks/${id}/dispatch`, {
+    method: 'POST'
+  })
+}
+
+export async function addTaskStep(id, description, status, agentId) {
+  return apiFetch(`/tasks/${id}/steps`, {
+    method: 'POST',
+    body: JSON.stringify({ description, status, agentId })
+  })
+}
+
+export async function updateTaskStep(id, stepId, status) {
+  return apiFetch(`/tasks/${id}/steps/${stepId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status })
+  })
+}
+
+export async function getTaskBreakdown(id) {
+  return apiFetch(`/tasks/${id}/breakdown`)
+}
+
+export async function getStepAverages() {
+  return apiFetch('/step-averages')
+}

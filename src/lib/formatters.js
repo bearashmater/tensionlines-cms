@@ -147,6 +147,24 @@ export function formatFileSize(bytes) {
 }
 
 /**
+ * Format millisecond duration to human-readable string
+ * e.g. "30s", "15m", "2h 30m", "1d 6h"
+ */
+export function formatDuration(ms) {
+  if (!ms || ms < 0) return '0s'
+
+  const seconds = Math.floor(ms / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+
+  if (days > 0) return `${days}d ${hours % 24}h`
+  if (hours > 0) return `${hours}h ${minutes % 60}m`
+  if (minutes > 0) return `${minutes}m`
+  return `${seconds}s`
+}
+
+/**
  * Get alert level color classes for time-in-status indicators
  */
 export function getAlertLevelColor(alertLevel) {

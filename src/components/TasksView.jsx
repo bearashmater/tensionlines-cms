@@ -1,7 +1,7 @@
 import useSWR, { mutate } from 'swr'
-import { getTasks, reopenTask } from '../lib/api'
-import { formatDate, formatStatus, getStatusColor, getAlertLevelColor, truncate } from '../lib/formatters'
-import { ListTodo, RotateCcw, Clock, Search, X } from 'lucide-react'
+import { getTasks, reopenTask, dispatchTask } from '../lib/api'
+import { formatDate, formatStatus, getStatusColor, getAlertLevelColor, truncate, formatDuration } from '../lib/formatters'
+import { ListTodo, RotateCcw, Clock, Search, X, Play, ChevronDown, CheckCircle2, Loader2, Circle, XCircle } from 'lucide-react'
 import { useState } from 'react'
 
 // Infer category from task title
@@ -449,11 +449,278 @@ export default function TasksView() {
   )
 }
 
+// Step status icon helper
+function StepStatusIcon({ status, size = 14 }) {
+  switch (status) {
+    case 'completed': return <CheckCircle2 size={size} className="text-green-500" />
+    case 'in_progress': return <Loader2 size={size} className="text-yellow-500 animate-spin" />
+    case 'failed': return <XCircle size={size} className="text-red-500" />
+    case 'blocked': return <XCircle size={size} className="text-orange-500" />
+    default: return <Circle size={size} className="text-neutral-300" />
+  }
+}
+
+// Client-side breakdown detection (mirrors backend logic, avoids extra API call)
+function detectBreakdowns(task) {
+  if (!task.steps || task.steps.length === 0) return 0
+
+  const now = Date.now()
+  let count = 0
+
+  const defaultThreshold = 2 * 60 * 60 * 1000
+  const gapThreshold = 30 * 60 * 1000
+  const silenceThreshold = 4 * 60 * 60 * 1000
+
+  // Step too long
+  task.steps.forEach(step => {
+    if (step.status !== 'in_progress' || !step.startedAt) return
+    const elapsed = now - new Date(step.startedAt).getTime()
+    const desc = (step.description || '').toLowerCase()
+    let threshold = defaultThreshold
+    if (desc.includes('draft') || desc.includes('writing')) threshold = 3 * 60 * 60 * 1000
+    if (desc.includes('review') || desc.includes('final')) threshold = 1 * 60 * 60 * 1000
+    if (elapsed > threshold) count++
+  })
+
+  // Gaps between steps
+  for (let i = 1; i < task.steps.length; i++) {
+    const prev = task.steps[i - 1]
+    const curr = task.steps[i]
+    if (prev.completedAt && curr.startedAt) {
+      const gap = new Date(curr.startedAt).getTime() - new Date(prev.completedAt).getTime()
+      if (gap > gapThreshold) count++
+    }
+  }
+
+  // No recent steps on active task
+  if (task.status === 'in_progress') {
+    const lastStep = task.steps[task.steps.length - 1]
+    const lastActivity = lastStep.completedAt || lastStep.startedAt
+    if (lastActivity && (now - new Date(lastActivity).getTime()) > silenceThreshold) count++
+  }
+
+  return count
+}
+
+// Expected phases for ghost steps
+const EXPECTED_PHASES = ['Research/Planning', 'Drafting', 'Review', 'Final Polish']
+
+// Look up average duration for a step description from _stepAverages
+function getStepAvg(stepAverages, description) {
+  if (!stepAverages || !description) return null
+  const key = description.trim().toLowerCase()
+  return stepAverages[key] || null
+}
+
+function StepTimeline({ task }) {
+  const [expanded, setExpanded] = useState(false)
+  const steps = task.steps || []
+  if (steps.length === 0) return null
+
+  const now = Date.now()
+  const stepAverages = task._stepAverages || {}
+  const currentStep = steps.find(s => s.status === 'in_progress')
+  const completedSteps = steps.filter(s => s.status === 'completed')
+  const completedDescriptions = steps.map(s => s.description.toLowerCase())
+
+  // Ghost steps: expected phases not yet covered
+  const ghostSteps = EXPECTED_PHASES.filter(phase =>
+    !completedDescriptions.some(d => d.includes(phase.toLowerCase().split('/')[0]))
+  )
+
+  // Total phases = real steps (excluding "Dispatched") + remaining ghost steps
+  const realSteps = steps.filter(s => s.description !== 'Dispatched')
+  const totalPhases = realSteps.length + ghostSteps.length
+  const completedPhases = realSteps.filter(s => s.status === 'completed').length
+  const stepPercent = totalPhases > 0 ? Math.round((completedPhases / totalPhases) * 100) : 0
+
+  // Elapsed time since dispatch
+  const dispatchedAt = task.dispatchedAt || steps[0]?.startedAt
+  const elapsedMs = dispatchedAt ? now - new Date(dispatchedAt).getTime() : 0
+
+  // Current step elapsed
+  const currentStepElapsed = currentStep?.startedAt
+    ? now - new Date(currentStep.startedAt).getTime()
+    : 0
+
+  // Current step average (if history exists)
+  const currentStepAvg = currentStep ? getStepAvg(stepAverages, currentStep.description) : null
+
+  // Next expected phase
+  const nextPhase = currentStep
+    ? null
+    : ghostSteps[0] || null
+
+  return (
+    <div className="mt-3 border-t border-neutral-200 pt-3">
+      {/* Always-visible progress summary */}
+      <div className="space-y-2">
+        {/* Step progress bar */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-medium text-neutral-600">
+                Steps: {completedPhases}/{totalPhases} phases
+              </span>
+              <div className="flex items-center gap-2 text-xs text-neutral-500">
+                {elapsedMs > 0 && (
+                  <span>Total: {formatDuration(elapsedMs)}</span>
+                )}
+              </div>
+            </div>
+            <div className="w-full bg-neutral-200 rounded-full h-2">
+              <div
+                className="bg-emerald-500 rounded-full h-2 transition-all duration-500"
+                style={{ width: `${stepPercent}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Current activity line */}
+        <div className="flex items-center justify-between text-xs">
+          {currentStep ? (
+            <div className={`flex items-center gap-2 px-2 py-1 rounded-md ${
+              currentStepAvg && currentStepElapsed > currentStepAvg.avg
+                ? 'text-amber-800 bg-amber-50'
+                : 'text-yellow-700 bg-yellow-50'
+            }`}>
+              <Loader2 size={12} className="animate-spin" />
+              <span className="font-medium">{currentStep.description}</span>
+              {currentStepElapsed > 0 && (
+                <span className={currentStepAvg && currentStepElapsed > currentStepAvg.avg ? 'text-amber-600' : 'text-yellow-500'}>
+                  {formatDuration(currentStepElapsed)}
+                  {currentStepAvg ? ` / ~${formatDuration(currentStepAvg.avg)}` : ''}
+                </span>
+              )}
+              {currentStepAvg && currentStepElapsed > currentStepAvg.avg && (
+                <span className="text-amber-600 font-medium">over avg</span>
+              )}
+            </div>
+          ) : nextPhase ? (
+            <div className="flex items-center gap-2 text-neutral-400 px-2 py-1">
+              <Circle size={12} />
+              <span className="italic">Next: {nextPhase}</span>
+            </div>
+          ) : completedPhases === totalPhases && totalPhases > 0 ? (
+            <div className="flex items-center gap-2 text-emerald-600 px-2 py-1">
+              <CheckCircle2 size={12} />
+              <span className="font-medium">All steps complete</span>
+            </div>
+          ) : null}
+
+          {/* Expand toggle */}
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="flex items-center gap-1 text-neutral-400 hover:text-neutral-600 transition-colors px-2 py-1"
+          >
+            <span>{expanded ? 'Hide' : 'Details'}</span>
+            <ChevronDown size={12} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* Expanded step-by-step timeline */}
+      {expanded && (
+        <div className="mt-3 ml-2 space-y-0">
+          {steps.map((step, i) => {
+            const duration = step.completedAt && step.startedAt
+              ? new Date(step.completedAt).getTime() - new Date(step.startedAt).getTime()
+              : step.startedAt && step.status === 'in_progress'
+                ? now - new Date(step.startedAt).getTime()
+                : null
+
+            const stepAvg = getStepAvg(stepAverages, step.description)
+
+            // Check if step is overdue (use average if available, else 2h fallback)
+            const isOverdue = step.status === 'in_progress' && duration && duration > 2 * 60 * 60 * 1000
+            const isOverAvg = step.status === 'in_progress' && duration && stepAvg && duration > stepAvg.avg
+
+            // Check gap to next step
+            let gapMs = 0
+            if (i < steps.length - 1 && step.completedAt && steps[i + 1].startedAt) {
+              gapMs = new Date(steps[i + 1].startedAt).getTime() - new Date(step.completedAt).getTime()
+            }
+
+            return (
+              <div key={step.id}>
+                <div className={`flex items-start gap-3 py-2 px-2 rounded ${isOverdue ? 'bg-red-50' : isOverAvg ? 'bg-amber-50' : ''}`}>
+                  {/* Timeline line + icon */}
+                  <div className="flex flex-col items-center">
+                    <StepStatusIcon status={step.status} />
+                    {(i < steps.length - 1 || ghostSteps.length > 0) && (
+                      <div className="w-px h-4 bg-neutral-200 mt-1" />
+                    )}
+                  </div>
+
+                  {/* Step content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-medium ${isOverdue ? 'text-red-700' : isOverAvg ? 'text-amber-700' : 'text-neutral-800'}`}>
+                        {step.description}
+                      </span>
+                      {step.agentId && step.agentId !== 'human' && step.agentId !== 'unknown' && (
+                        <span className="text-xs text-neutral-400">{step.agentId}</span>
+                      )}
+                    </div>
+                    {duration !== null && (
+                      <span className={`text-xs ${isOverdue ? 'text-red-500 font-medium' : isOverAvg ? 'text-amber-600 font-medium' : 'text-neutral-400'}`}>
+                        {formatDuration(duration)}
+                        {stepAvg ? ` / ~${formatDuration(stepAvg.avg)} avg` : ''}
+                        {isOverdue ? ' (overdue)' : isOverAvg ? ' (over avg)' : ''}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Gap warning */}
+                {gapMs > 30 * 60 * 1000 && (
+                  <div className="flex items-center gap-3 py-1 px-2">
+                    <div className="flex flex-col items-center">
+                      <div className="w-px h-2 bg-amber-300" />
+                    </div>
+                    <span className="text-xs text-amber-600 font-medium">
+                      {formatDuration(gapMs)} gap
+                    </span>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+
+          {/* Ghost steps */}
+          {ghostSteps.map((phase, i) => {
+            const phaseAvg = getStepAvg(stepAverages, phase)
+            return (
+              <div key={`ghost-${i}`} className="flex items-start gap-3 py-2 px-2 opacity-40">
+                <div className="flex flex-col items-center">
+                  <Circle size={14} className="text-neutral-300" />
+                  {i < ghostSteps.length - 1 && (
+                    <div className="w-px h-4 bg-neutral-200 mt-1" />
+                  )}
+                </div>
+                <div>
+                  <span className="text-sm text-neutral-400 italic">{phase}</span>
+                  {phaseAvg && (
+                    <span className="text-xs text-neutral-400 ml-2">~{formatDuration(phaseAvg.avg)} avg</span>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
   const [reopening, setReopening] = useState(false)
+  const [dispatching, setDispatching] = useState(false)
   const statusColor = getStatusColor(task.status)
   const category = getTaskCategory(task)
   const isCompleted = ['completed', 'shipped'].includes(task.status)
+  const breakdownCount = detectBreakdowns(task)
 
   const handleReopen = async () => {
     if (!confirm('Reopen this task? It will be marked as "assigned" and returned to the assignee.')) {
@@ -469,7 +736,19 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
     }
     setReopening(false)
   }
-  
+
+  const handleDispatch = async () => {
+    setDispatching(true)
+    try {
+      await dispatchTask(task.id)
+      mutate('/tasks')
+    } catch (err) {
+      console.error('Error dispatching task:', err)
+      alert('Failed to dispatch task. Please try again.')
+    }
+    setDispatching(false)
+  }
+
   // Calculate progress
   const getProgress = (task) => {
     if (task.metadata?.progress) {
@@ -486,7 +765,7 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
     }
     return statusProgress[task.status] || 0
   }
-  
+
   const progress = getProgress(task)
   const alertLevel = task.timeTracking?.alertLevel || 'none'
 
@@ -514,11 +793,16 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
                 <Clock size={11} /> {task.timeTracking.timeInStatusHuman}
               </span>
             )}
+            {breakdownCount > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                {breakdownCount} breakdown{breakdownCount !== 1 ? 's' : ''}
+              </span>
+            )}
             <span className="text-xs text-neutral-500">{task.id}</span>
           </div>
           <h3 className="font-semibold text-lg text-black mb-2">{task.title}</h3>
           <p className="text-sm text-neutral-600 mb-3">{truncate(task.description, 200)}</p>
-          
+
           {/* LLM Assignment */}
           {task.llm && (
             <div className={`mb-3 p-3 rounded-md border-l-3 ${
@@ -551,7 +835,7 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
           )}
         </div>
       </div>
-      
+
       {/* Progress Bar */}
       <div className="mb-3">
         <div className="flex items-center justify-between mb-1">
@@ -559,14 +843,17 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
           <span className="text-xs font-semibold text-gold">{progress}%</span>
         </div>
         <div className="w-full bg-neutral-200 rounded-full h-2">
-          <div 
+          <div
             className="bg-gold rounded-full h-2 transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
       </div>
-      
-      <div className="flex items-center justify-between text-xs text-neutral-500">
+
+      {/* Step Timeline */}
+      <StepTimeline task={task} />
+
+      <div className="flex items-center justify-between text-xs text-neutral-500 mt-3">
         <div className="flex items-center space-x-4">
           {task.assigneeIds && task.assigneeIds.length > 0 && (
             <span>👤 {task.assigneeIds.map(a => a === 'human' ? 'Shawn' : a).join(', ')}</span>
@@ -578,18 +865,33 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
           )}
         </div>
 
-        {/* Reopen button for completed tasks */}
-        {isCompleted && (
-          <button
-            onClick={handleReopen}
-            disabled={reopening}
-            className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-md hover:bg-amber-200 transition-colors disabled:opacity-50"
-            title="Reopen this task and return it to the assignee"
-          >
-            <RotateCcw size={14} className={reopening ? 'animate-spin' : ''} />
-            {reopening ? 'Reopening...' : 'Undo Complete'}
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Dispatch button for assigned tasks */}
+          {task.status === 'assigned' && (
+            <button
+              onClick={handleDispatch}
+              disabled={dispatching}
+              className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-md hover:bg-amber-200 transition-colors disabled:opacity-50 font-medium"
+              title="Dispatch this task — start execution"
+            >
+              <Play size={14} className={dispatching ? 'animate-pulse' : ''} />
+              {dispatching ? 'Dispatching...' : 'Dispatch'}
+            </button>
+          )}
+
+          {/* Reopen button for completed tasks */}
+          {isCompleted && (
+            <button
+              onClick={handleReopen}
+              disabled={reopening}
+              className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-md hover:bg-amber-200 transition-colors disabled:opacity-50"
+              title="Reopen this task and return it to the assignee"
+            >
+              <RotateCcw size={14} className={reopening ? 'animate-spin' : ''} />
+              {reopening ? 'Reopening...' : 'Undo Complete'}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
