@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
-import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target } from 'lucide-react'
+import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell } from 'lucide-react'
 import { useState } from 'react'
 
 // Import navigation components
@@ -20,6 +20,7 @@ import RecurringTasks from './components/RecurringTasks'
 import CostDashboard from './components/CostDashboard'
 import HumanTasks from './components/HumanTasks'
 import SquadLeadDashboard from './components/SquadLeadDashboard'
+import NotificationsView from './components/NotificationsView'
 
 // Navigation structure with grouping
 const navGroups = [
@@ -28,6 +29,7 @@ const navGroups = [
     items: [
       { to: '/', icon: <Home size={20} />, label: 'Dashboard' },
       { to: '/human-tasks', icon: <AlertTriangle size={20} />, label: 'Your Tasks', priority: true },
+      { to: '/notifications', icon: <Bell size={20} />, label: 'Notifications' },
       { to: '/costs', icon: <DollarSign size={20} />, label: 'Cost Management', priority: true }
     ]
   },
@@ -149,6 +151,7 @@ function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenu
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/human-tasks" element={<HumanTasks />} />
+            <Route path="/notifications" element={<NotificationsView />} />
             <Route path="/costs" element={<CostDashboard />} />
             <Route path="/agents" element={<AgentsView />} />
             <Route path="/tasks" element={<TasksView />} />

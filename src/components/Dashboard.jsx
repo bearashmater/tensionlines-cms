@@ -1,5 +1,6 @@
 import useSWR, { mutate } from 'swr'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getDashboard, getActivities, search } from '../lib/api'
 import { formatDate, formatPercent, formatNumber, formatStatus, getStatusColor } from '../lib/formatters'
 import { Users, ListTodo, Lightbulb, Bell, TrendingUp, Search, FileText, X, Users as UsersIcon, ChevronRight } from 'lucide-react'
@@ -177,6 +178,7 @@ export default function Dashboard() {
           value={dashboard.agents.active}
           total={dashboard.agents.total}
           bgColor="bg-accent-tertiary"
+          to="/agents"
         />
         <MetricCard
           icon={<ListTodo size={24} className="text-gold" />}
@@ -184,6 +186,7 @@ export default function Dashboard() {
           value={dashboard.tasks.inProgress}
           total={dashboard.tasks.total}
           bgColor="bg-accent-tertiary"
+          to="/tasks"
         />
         <MetricCard
           icon={<Lightbulb size={24} className="text-gold" />}
@@ -191,6 +194,7 @@ export default function Dashboard() {
           value={dashboard.ideas.total}
           subtitle={`${dashboard.ideas.shipped} shipped`}
           bgColor="bg-accent-tertiary"
+          to="/content"
         />
         <MetricCard
           icon={<Bell size={24} className="text-gold" />}
@@ -198,11 +202,12 @@ export default function Dashboard() {
           value={dashboard.notifications.unread}
           total={dashboard.notifications.total}
           bgColor="bg-accent-tertiary"
+          to="/notifications"
         />
       </div>
 
       {/* Task Completion */}
-      <div className="card card-hover">
+      <Link to="/analytics" className="card card-hover block">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-serif font-semibold">Task Completion</h2>
           <span className="text-2xl font-bold text-gold">
@@ -219,15 +224,15 @@ export default function Dashboard() {
           <span>{dashboard.tasks.completed} completed</span>
           <span>{dashboard.tasks.total} total</span>
         </div>
-      </div>
+      </Link>
 
       {/* Recent Activity */}
-      <div className="card">
+      <Link to="/tasks" className="card card-hover block">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-serif font-semibold">Recent Activity</h2>
           <TrendingUp size={20} className="text-gold" />
         </div>
-        
+
         {activities && activities.activities && activities.activities.length > 0 ? (
           <div className="space-y-3">
             {activities.activities.slice(0, 8).map((activity) => (
@@ -237,28 +242,40 @@ export default function Dashboard() {
         ) : (
           <p className="text-neutral-500 text-center py-8">No recent activity</p>
         )}
-      </div>
+      </Link>
     </div>
   )
 }
 
 // Metric Card Component
-function MetricCard({ icon, label, value, total, subtitle, bgColor }) {
+function MetricCard({ icon, label, value, total, subtitle, bgColor, to }) {
+  const content = (
+    <div className="flex items-start justify-between">
+      <div>
+        <p className="text-sm text-neutral-600 mb-1">{label}</p>
+        <p className="text-3xl font-bold text-black">
+          {formatNumber(value)}
+          {total && <span className="text-lg text-neutral-500">/{total}</span>}
+        </p>
+        {subtitle && <p className="text-xs text-neutral-500 mt-1">{subtitle}</p>}
+      </div>
+      <div className="p-2 rounded-lg bg-white">
+        {icon}
+      </div>
+    </div>
+  )
+
+  if (to) {
+    return (
+      <Link to={to} className={`card card-hover ${bgColor} block`}>
+        {content}
+      </Link>
+    )
+  }
+
   return (
     <div className={`card card-hover ${bgColor}`}>
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-neutral-600 mb-1">{label}</p>
-          <p className="text-3xl font-bold text-black">
-            {formatNumber(value)}
-            {total && <span className="text-lg text-neutral-500">/{total}</span>}
-          </p>
-          {subtitle && <p className="text-xs text-neutral-500 mt-1">{subtitle}</p>}
-        </div>
-        <div className="p-2 rounded-lg bg-white">
-          {icon}
-        </div>
-      </div>
+      {content}
     </div>
   )
 }

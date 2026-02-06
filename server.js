@@ -1533,18 +1533,70 @@ app.get('/api/notifications', (req, res) => {
   try {
     const mc = getMissionControl();
     let notifications = mc.notifications;
-    
+
     // Filter by recipient
     if (req.query.agent) {
       notifications = notifications.filter(n => n.recipientId === req.query.agent);
     }
-    
+
     // Filter by read status
     if (req.query.unread === 'true') {
       notifications = notifications.filter(n => !n.read);
     }
-    
+
     res.json(notifications);
+  } catch (error) {
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Mark a notification as read
+ */
+app.post('/api/notifications/:id/read', (req, res) => {
+  try {
+    const mc = getMissionControl();
+    const notifIndex = mc.notifications.findIndex(n => n.id === req.params.id);
+
+    if (notifIndex === -1) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
+
+    mc.notifications[notifIndex].read = true;
+    mc.notifications[notifIndex].readAt = new Date().toISOString();
+    mc.notifications[notifIndex].readBy = 'human';
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+    cache.missionControl = null;
+
+    res.json({ success: true, notification: mc.notifications[notifIndex] });
+  } catch (error) {
+    console.error(error); res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Mark all notifications as read
+ */
+app.post('/api/notifications/mark-all-read', (req, res) => {
+  try {
+    const mc = getMissionControl();
+    const now = new Date().toISOString();
+    let markedCount = 0;
+
+    mc.notifications.forEach(n => {
+      if (!n.read) {
+        n.read = true;
+        n.readAt = now;
+        n.readBy = 'human';
+        markedCount++;
+      }
+    });
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+    cache.missionControl = null;
+
+    res.json({ success: true, markedCount });
   } catch (error) {
     console.error(error); res.status(500).json({ error: 'Internal server error' });
   }

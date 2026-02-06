@@ -22,7 +22,7 @@ export default function HumanTasks() {
   // Filter human tasks, but hide idea batch task if goal is met
   const humanTasks = allTasks.filter(t => {
     if (!t.assigneeIds?.includes('human')) return false
-    if (t.status === 'completed' || t.status === 'shipped') return false
+    if (['completed', 'shipped', 'deferred', 'blocked'].includes(t.status)) return false
 
     // Hide "Provide Weekly Idea Batch" if goal is met
     const isIdeaTask = t.title.toLowerCase().includes('idea') &&
