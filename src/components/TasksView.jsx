@@ -4,9 +4,77 @@ import { formatDate, formatStatus, getStatusColor, truncate } from '../lib/forma
 import { ListTodo } from 'lucide-react'
 import { useState } from 'react'
 
+// Infer category from task title
+function getTaskCategory(task) {
+  const title = task.title.toLowerCase()
+
+  // Social platforms
+  if (title.includes('twitter') || title.includes('bluesky') ||
+      title.includes('reddit') || title.includes('threads') ||
+      title.includes('instagram') || title.includes('social') ||
+      title.includes('outreach') || title.includes('follow')) {
+    return 'social'
+  }
+
+  // Book/Content
+  if (title.includes('book') || title.includes('chapter') ||
+      title.includes('writing') || title.includes('manuscript')) {
+    return 'book'
+  }
+
+  // Website/Tech
+  if (title.includes('website') || title.includes('cms') ||
+      title.includes('gumroad') || title.includes('technical') ||
+      title.includes('build') || title.includes('fix') ||
+      title.includes('api') || title.includes('server')) {
+    return 'project'
+  }
+
+  // Human tasks
+  if (task.assigneeIds?.includes('human')) {
+    return 'human'
+  }
+
+  return 'other'
+}
+
+const CATEGORIES = {
+  social: { label: 'Social', color: 'bg-blue-100 text-blue-700' },
+  project: { label: 'Project', color: 'bg-purple-100 text-purple-700' },
+  book: { label: 'Book', color: 'bg-amber-100 text-amber-700' },
+  human: { label: 'Human', color: 'bg-green-100 text-green-700' },
+  other: { label: 'Other', color: 'bg-neutral-100 text-neutral-700' }
+}
+
+// Group completed tasks by time period
+function getTimePeriod(dateStr) {
+  if (!dateStr) return 'unknown'
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now - date
+  const diffDays = diffMs / (1000 * 60 * 60 * 24)
+
+  if (diffDays < 1) return 'today'
+  if (diffDays < 7) return 'last7days'
+  if (diffDays < 30) return 'lastMonth'
+  if (diffDays < 365) return 'lastYear'
+  return 'older'
+}
+
+const TIME_PERIODS = {
+  today: { label: 'Today', order: 0 },
+  last7days: { label: 'Last 7 Days', order: 1 },
+  lastMonth: { label: 'Last 30 Days', order: 2 },
+  lastYear: { label: 'Last Year', order: 3 },
+  older: { label: 'Older', order: 4 },
+  unknown: { label: 'Unknown', order: 5 }
+}
+
 export default function TasksView() {
-  const [viewMode, setViewMode] = useState('by-assignee') // 'by-assignee' or 'by-status'
+  const [viewMode, setViewMode] = useState('by-assignee') // 'by-assignee', 'by-status', 'by-category', or 'completed'
   const [filter, setFilter] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [timePeriodFilter, setTimePeriodFilter] = useState('all')
   const { data: tasks, error } = useSWR('/tasks', getTasks, {
     refreshInterval: 120000
   })
@@ -14,9 +82,24 @@ export default function TasksView() {
   if (error) return <div className="card bg-red-50">Error loading tasks</div>
   if (!tasks) return <LoadingState />
 
-  const filteredTasks = filter === 'all' 
-    ? tasks 
-    : tasks.filter(t => t.status === filter)
+  // Apply filters
+  let filteredTasks = tasks
+
+  // In completed view, only show completed/shipped tasks
+  if (viewMode === 'completed') {
+    filteredTasks = filteredTasks.filter(t => ['completed', 'shipped'].includes(t.status))
+    if (timePeriodFilter !== 'all') {
+      filteredTasks = filteredTasks.filter(t => getTimePeriod(t.completedAt) === timePeriodFilter)
+    }
+  } else {
+    if (filter !== 'all') {
+      filteredTasks = filteredTasks.filter(t => t.status === filter)
+    }
+  }
+
+  if (categoryFilter !== 'all') {
+    filteredTasks = filteredTasks.filter(t => getTaskCategory(t) === categoryFilter)
+  }
 
   const statuses = ['all', 'assigned', 'in_progress', 'review', 'completed', 'shipped']
 
@@ -60,6 +143,38 @@ export default function TasksView() {
     return bIncomplete - aIncomplete // Most incomplete work first
   })
 
+  // Group tasks by category
+  const tasksByCategory = {}
+  sortedTasks.forEach(task => {
+    const category = getTaskCategory(task)
+    if (!tasksByCategory[category]) {
+      tasksByCategory[category] = []
+    }
+    tasksByCategory[category].push(task)
+  })
+
+  // Sort categories by task count
+  const sortedCategories = Object.entries(tasksByCategory).sort((a, b) => {
+    const order = ['social', 'project', 'book', 'human', 'other']
+    return order.indexOf(a[0]) - order.indexOf(b[0])
+  })
+
+  // Group completed tasks by time period (for completed view)
+  const completedTasks = tasks.filter(t => ['completed', 'shipped'].includes(t.status))
+  const tasksByTimePeriod = {}
+  completedTasks.forEach(task => {
+    const period = getTimePeriod(task.completedAt)
+    if (!tasksByTimePeriod[period]) {
+      tasksByTimePeriod[period] = []
+    }
+    tasksByTimePeriod[period].push(task)
+  })
+
+  // Sort time periods by recency
+  const sortedTimePeriods = Object.entries(tasksByTimePeriod).sort((a, b) => {
+    return (TIME_PERIODS[a[0]]?.order || 99) - (TIME_PERIODS[b[0]]?.order || 99)
+  })
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between">
@@ -90,6 +205,26 @@ export default function TasksView() {
           >
             By Status
           </button>
+          <button
+            onClick={() => setViewMode('by-category')}
+            className={`px-4 py-2 rounded-md font-medium transition-colors ${
+              viewMode === 'by-category'
+                ? 'bg-gold text-white'
+                : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50'
+            }`}
+          >
+            By Category
+          </button>
+          <button
+            onClick={() => setViewMode('completed')}
+            className={`px-4 py-2 rounded-md font-medium transition-colors ${
+              viewMode === 'completed'
+                ? 'bg-gold text-white'
+                : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50'
+            }`}
+          >
+            Completed
+          </button>
         </div>
       </div>
 
@@ -107,6 +242,64 @@ export default function TasksView() {
               }`}
             >
               {status === 'all' ? 'All' : formatStatus(status)}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Category Filters (only in by-category view) */}
+      {viewMode === 'by-category' && (
+        <div className="flex space-x-2 overflow-x-auto">
+          <button
+            onClick={() => setCategoryFilter('all')}
+            className={`px-4 py-2 rounded-md font-medium transition-colors ${
+              categoryFilter === 'all'
+                ? 'bg-gold text-white'
+                : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50'
+            }`}
+          >
+            All
+          </button>
+          {Object.entries(CATEGORIES).map(([key, { label }]) => (
+            <button
+              key={key}
+              onClick={() => setCategoryFilter(key)}
+              className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                categoryFilter === key
+                  ? 'bg-gold text-white'
+                  : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Time Period Filters (only in completed view) */}
+      {viewMode === 'completed' && (
+        <div className="flex space-x-2 overflow-x-auto">
+          <button
+            onClick={() => setTimePeriodFilter('all')}
+            className={`px-4 py-2 rounded-md font-medium transition-colors ${
+              timePeriodFilter === 'all'
+                ? 'bg-gold text-white'
+                : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50'
+            }`}
+          >
+            All Time
+          </button>
+          {Object.entries(TIME_PERIODS).filter(([k]) => k !== 'unknown').map(([key, { label }]) => (
+            <button
+              key={key}
+              onClick={() => setTimePeriodFilter(key)}
+              className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                timePeriodFilter === key
+                  ? 'bg-gold text-white'
+                  : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50'
+              }`}
+            >
+              {label}
             </button>
           ))}
         </div>
@@ -132,6 +325,67 @@ export default function TasksView() {
               </div>
             ))}
           </div>
+        ) : viewMode === 'by-category' ? (
+          <div className="space-y-6">
+            {sortedCategories.map(([category, categoryTasks]) => (
+              <div key={category} className="bg-white rounded-lg border border-neutral-200 p-6">
+                <h2 className="text-xl font-serif font-semibold mb-4 flex items-center gap-3">
+                  <span className={`px-3 py-1 rounded-full text-sm ${CATEGORIES[category]?.color || 'bg-neutral-100'}`}>
+                    {CATEGORIES[category]?.label || category}
+                  </span>
+                  <span className="text-neutral-500 font-normal text-sm">
+                    ({categoryTasks.length} {categoryTasks.length === 1 ? 'task' : 'tasks'})
+                  </span>
+                </h2>
+                <div className="space-y-3">
+                  {categoryTasks.map(task => (
+                    <TaskCard key={task.id} task={task} hideCategory />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : viewMode === 'completed' ? (
+          <div className="space-y-6">
+            {timePeriodFilter === 'all' ? (
+              // Show grouped by time period
+              sortedTimePeriods.length > 0 ? (
+                sortedTimePeriods.map(([period, periodTasks]) => (
+                  <div key={period} className="bg-white rounded-lg border border-neutral-200 p-6">
+                    <h2 className="text-xl font-serif font-semibold mb-4 flex items-center gap-3">
+                      <span className="text-green-600">
+                        {TIME_PERIODS[period]?.label || period}
+                      </span>
+                      <span className="text-neutral-500 font-normal text-sm">
+                        ({periodTasks.length} {periodTasks.length === 1 ? 'task' : 'tasks'})
+                      </span>
+                    </h2>
+                    <div className="space-y-3">
+                      {periodTasks
+                        .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+                        .map(task => (
+                          <TaskCard key={task.id} task={task} showCompletedDate />
+                        ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="card text-center py-12">
+                  <ListTodo size={48} className="text-neutral-300 mx-auto mb-4" />
+                  <p className="text-neutral-500">No completed tasks yet</p>
+                </div>
+              )
+            ) : (
+              // Show filtered list
+              <div className="space-y-3">
+                {filteredTasks
+                  .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+                  .map(task => (
+                    <TaskCard key={task.id} task={task} showCompletedDate />
+                  ))}
+              </div>
+            )}
+          </div>
         ) : (
           <div className="space-y-3">
             {sortedTasks.map(task => (
@@ -149,8 +403,9 @@ export default function TasksView() {
   )
 }
 
-function TaskCard({ task }) {
+function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
   const statusColor = getStatusColor(task.status)
+  const category = getTaskCategory(task)
   
   // Calculate progress
   const getProgress = (task) => {
@@ -179,6 +434,11 @@ function TaskCard({ task }) {
             <span className={`badge ${statusColor}`}>
               {formatStatus(task.status)}
             </span>
+            {!hideCategory && (
+              <span className={`px-2 py-0.5 rounded text-xs font-medium ${CATEGORIES[category]?.color || 'bg-neutral-100'}`}>
+                {CATEGORIES[category]?.label || category}
+              </span>
+            )}
             <span className="text-xs text-neutral-500">{task.id}</span>
           </div>
           <h3 className="font-semibold text-lg text-black mb-2">{task.title}</h3>
@@ -235,7 +495,9 @@ function TaskCard({ task }) {
         {task.assigneeIds && task.assigneeIds.length > 0 && (
           <span>👤 {task.assigneeIds.map(a => a === 'human' ? 'Shawn' : a).join(', ')}</span>
         )}
-        {task.createdAt && (
+        {showCompletedDate && task.completedAt ? (
+          <span className="text-green-600 font-medium">✓ Completed {formatDate(task.completedAt)}</span>
+        ) : task.createdAt && (
           <span>Created {formatDate(task.createdAt)}</span>
         )}
       </div>
