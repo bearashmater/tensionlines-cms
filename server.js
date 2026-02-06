@@ -25,7 +25,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 5173;
+const PORT = process.env.PORT || 3001;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 // Rate limiting - separate limits for read vs write operations
@@ -3092,34 +3092,48 @@ watcher.on('change', (filePath) => {
 // STUCK TASK MONITORING (Auto-notifications for red alerts)
 // ============================================================================
 
-// Track which tasks have been notified to avoid spam
+// Track which tasks have been notified to avoid spam (in-memory cache, backed by DB check)
 const notifiedStuckTasks = new Set();
 
 function checkStuckTasks() {
   try {
     const mc = getMissionControl();
-    const activeTasks = mc.tasks.filter(t => 
-      ['assigned', 'in_progress', 'review'].includes(t.status)
+    const activeTasks = mc.tasks.filter(t =>
+      ['assigned', 'in_progress', 'review'].includes(t.status) &&
+      !t.metadata?.recurring  // Skip recurring/ongoing tasks
     );
-    
+
     const tasksWithTracking = activeTasks.map(t => ({
       ...t,
       timeTracking: calculateTimeInStatus(t)
     }));
-    
-    const redAlertTasks = tasksWithTracking.filter(t => 
+
+    const redAlertTasks = tasksWithTracking.filter(t =>
       t.timeTracking.alertLevel === 'red'
     );
-    
+
     // For each red alert task, check if we've already notified
     redAlertTasks.forEach(task => {
       const notifKey = `${task.id}-red`;
-      
-      // Skip if already notified
+
+      // Skip if already in memory cache
       if (notifiedStuckTasks.has(notifKey)) {
         return;
       }
-      
+
+      // Also check database for recent notification (within 24 hours) to survive restarts
+      const existingNotif = mc.notifications.find(n =>
+        n.type === 'stuck_task' &&
+        n.metadata?.taskId === task.id &&
+        new Date(n.createdAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+      );
+
+      if (existingNotif) {
+        // Add to memory cache and skip
+        notifiedStuckTasks.add(notifKey);
+        return;
+      }
+
       // Create notification
       const notification = {
         id: `notif-stuck-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -3138,15 +3152,15 @@ function checkStuckTasks() {
           alertLevel: 'red'
         }
       };
-      
+
       // Write to database
       mc.notifications.push(notification);
       fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
       cache.missionControl = null;
-      
+
       // Mark as notified
       notifiedStuckTasks.add(notifKey);
-      
+
       console.log(`[Stuck Task Alert] Created notification for task ${task.id}`);
     });
     
@@ -3393,9 +3407,12 @@ function runOptimization() {
   const runDate = new Date().toISOString();
 
   // ============================================================================
-  // 1. STUCK TASKS ANALYSIS
+  // 1. STUCK TASKS ANALYSIS (skip recurring tasks)
   // ============================================================================
-  const activeTasks = mc.tasks.filter(t => ['assigned', 'in_progress', 'review'].includes(t.status));
+  const activeTasks = mc.tasks.filter(t =>
+    ['assigned', 'in_progress', 'review'].includes(t.status) &&
+    !t.metadata?.recurring  // Recurring tasks are ongoing, not stuck
+  );
   activeTasks.forEach(task => {
     const tracking = calculateTimeInStatus(task);
     if (tracking.alertLevel === 'red') {
@@ -3752,20 +3769,37 @@ console.log('[Cron] Nightly optimization scheduled for 2:00 AM PST');
 /**
  * Generate daily summary notification for human
  */
-function generateDailySummary() {
+function generateDailySummary(force = false) {
   console.log('[DailySummary] Generating morning briefing...');
+
   const mc = getMissionControl();
+  const today = new Date().toISOString().split('T')[0];
+
+  // Check if we already have a daily summary for today (unless forced)
+  if (!force) {
+    const existingSummary = mc.notifications.find(n =>
+      n.type === 'daily_summary' &&
+      n.createdAt?.startsWith(today)
+    );
+
+    if (existingSummary) {
+      console.log('[DailySummary] Already generated for today, skipping');
+      return existingSummary;
+    }
+  }
+
   const optimizations = getOptimizations();
   const ideas = parseIdeasBank();
   const now = new Date();
   const yesterday = new Date(now - 24 * 60 * 60 * 1000);
 
   // Tasks completed yesterday
-  const completedYesterday = mc.tasks.filter(t => {
+  const completedYesterdayTasks = mc.tasks.filter(t => {
     if (!t.completedAt) return false;
     const d = new Date(t.completedAt);
     return d >= yesterday && d < now;
-  }).length;
+  });
+  const completedYesterday = completedYesterdayTasks.length;
 
   // Active tasks
   const activeTasks = mc.tasks.filter(t => ['assigned', 'in_progress', 'review'].includes(t.status));
@@ -3846,10 +3880,34 @@ function generateDailySummary() {
     createdAt: now.toISOString(),
     metadata: {
       completedYesterday,
+      completedDetails: completedYesterdayTasks.slice(0, 10).map(t => ({
+        id: t.id, title: t.title, assignees: t.assigneeIds || []
+      })),
       activeTasks: activeTasks.length,
+      activeDetails: activeTasks.map(t => {
+        const tracking = calculateTimeInStatus(t);
+        return {
+          id: t.id, title: t.title, status: t.status,
+          assignees: t.assigneeIds || [],
+          timeInStatus: tracking.timeInStatusHuman,
+          alertLevel: tracking.alertLevel
+        };
+      }),
       stuckTasks: stuckTasks.length,
       humanTasks: humanTasks.length,
-      highPriorityIssues: highPriorityIssues.length
+      humanDetails: humanTasks.slice(0, 10).map(t => ({
+        id: t.id, title: t.title, status: t.status
+      })),
+      unreadCount,
+      costStatus,
+      highPriorityIssues: highPriorityIssues.length,
+      highPriorityDetails: highPriorityIssues.slice(0, 5).map(issue => ({
+        title: issue.title,
+        description: issue.description,
+        recommendation: issue.recommendation,
+        taskId: issue.taskId || null,
+        type: issue.type
+      }))
     }
   };
 
@@ -4031,11 +4089,13 @@ app.post('/api/optimizations/run', (req, res) => {
 
 /**
  * Manually trigger daily summary
+ * Pass { "force": true } in body to override duplicate check
  */
 app.post('/api/daily-summary/generate', (req, res) => {
   try {
-    const notification = generateDailySummary();
-    res.json({ success: true, notification });
+    const force = req.body?.force === true;
+    const notification = generateDailySummary(force);
+    res.json({ success: true, notification, skipped: !force && notification.createdAt?.startsWith(new Date().toISOString().split('T')[0]) === false });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });

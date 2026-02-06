@@ -1,7 +1,7 @@
 import useSWR, { mutate } from 'swr'
 import { getTasks, reopenTask } from '../lib/api'
-import { formatDate, formatStatus, getStatusColor, truncate } from '../lib/formatters'
-import { ListTodo, RotateCcw } from 'lucide-react'
+import { formatDate, formatStatus, getStatusColor, getAlertLevelColor, truncate } from '../lib/formatters'
+import { ListTodo, RotateCcw, Clock, Search, X } from 'lucide-react'
 import { useState } from 'react'
 
 // Infer category from task title
@@ -75,6 +75,7 @@ export default function TasksView() {
   const [filter, setFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [timePeriodFilter, setTimePeriodFilter] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const { data: tasks, error } = useSWR('/tasks', getTasks, {
     refreshInterval: 120000
   })
@@ -99,6 +100,17 @@ export default function TasksView() {
 
   if (categoryFilter !== 'all') {
     filteredTasks = filteredTasks.filter(t => getTaskCategory(t) === categoryFilter)
+  }
+
+  // Search filter
+  if (searchQuery.trim().length >= 2) {
+    const q = searchQuery.toLowerCase()
+    filteredTasks = filteredTasks.filter(t =>
+      t.title?.toLowerCase().includes(q) ||
+      t.description?.toLowerCase().includes(q) ||
+      t.id?.toLowerCase().includes(q) ||
+      t.assigneeIds?.some(a => a.toLowerCase().includes(q))
+    )
   }
 
   const statuses = ['all', 'assigned', 'in_progress', 'review', 'completed', 'shipped']
@@ -177,12 +189,38 @@ export default function TasksView() {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-serif font-bold text-black">Tasks</h1>
-          <p className="text-neutral-600 mt-1">{tasks.length} total tasks</p>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-serif font-bold text-black">Tasks</h1>
+            <p className="text-neutral-600 mt-1">
+              {searchQuery.trim().length >= 2
+                ? `${filteredTasks.length} result${filteredTasks.length !== 1 ? 's' : ''} of ${tasks.length} tasks`
+                : `${tasks.length} total tasks`}
+            </p>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={16} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tasks..."
+              className="w-full pl-9 pr-9 py-2 bg-white border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
         </div>
-        
+
         {/* View Mode Toggle */}
         <div className="flex gap-2">
           <button
@@ -450,9 +488,16 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
   }
   
   const progress = getProgress(task)
+  const alertLevel = task.timeTracking?.alertLevel || 'none'
+
+  const borderClass = alertLevel === 'red'
+    ? 'border-red-300 border-l-4 border-l-red-500'
+    : alertLevel === 'yellow'
+      ? 'border-yellow-300 border-l-4 border-l-yellow-500'
+      : 'border-neutral-200'
 
   return (
-    <div className="bg-neutral-50 rounded-lg border border-neutral-200 p-4 hover:shadow-md transition-shadow">
+    <div className={`bg-neutral-50 rounded-lg border ${borderClass} p-4 hover:shadow-md transition-shadow`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-2">
@@ -462,6 +507,11 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
             {!hideCategory && (
               <span className={`px-2 py-0.5 rounded text-xs font-medium ${CATEGORIES[category]?.color || 'bg-neutral-100'}`}>
                 {CATEGORIES[category]?.label || category}
+              </span>
+            )}
+            {!isCompleted && alertLevel !== 'none' && task.timeTracking?.timeInStatusHuman && (
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${getAlertLevelColor(alertLevel)}`}>
+                <Clock size={11} /> {task.timeTracking.timeInStatusHuman}
               </span>
             )}
             <span className="text-xs text-neutral-500">{task.id}</span>

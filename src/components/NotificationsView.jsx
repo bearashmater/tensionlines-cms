@@ -1,6 +1,7 @@
 import useSWR from 'swr'
 import { useState } from 'react'
-import { Bell, Check, CheckCheck, Filter, Clock, AlertTriangle, MessageSquare, User, ChevronDown, ChevronUp, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Bell, Check, CheckCheck, Filter, Clock, AlertTriangle, MessageSquare, User, ChevronDown, ChevronUp, X, Lightbulb, DollarSign, BarChart3, ListTodo, UserCheck } from 'lucide-react'
 
 export default function NotificationsView() {
   const [filter, setFilter] = useState('unread') // 'all' | 'unread'
@@ -212,7 +213,11 @@ function NotificationCard({ notification, expanded, onToggle, onMarkRead }) {
           {/* Expanded Content */}
           {expanded && (
             <div className="mt-3 space-y-3">
-              <p className="text-sm text-neutral-800 whitespace-pre-wrap">{message}</p>
+              {type === 'daily_summary' && metadata ? (
+                <BriefingMessage metadata={metadata} />
+              ) : (
+                <p className="text-sm text-neutral-800 whitespace-pre-wrap">{message}</p>
+              )}
 
               {/* Recipients */}
               {to && to.length > 0 && (
@@ -222,8 +227,8 @@ function NotificationCard({ notification, expanded, onToggle, onMarkRead }) {
                 </div>
               )}
 
-              {/* Metadata */}
-              {metadata && Object.keys(metadata).length > 0 && (
+              {/* Metadata (skip for daily_summary — shown inline) */}
+              {type !== 'daily_summary' && metadata && Object.keys(metadata).length > 0 && (
                 <div className="p-3 bg-neutral-100 rounded-lg text-sm space-y-2">
                   {metadata.taskId && (
                     <div>
@@ -275,6 +280,196 @@ function NotificationCard({ notification, expanded, onToggle, onMarkRead }) {
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+function BriefingMessage({ metadata }) {
+  const [expanded, setExpanded] = useState({})
+  const toggle = (key) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }))
+
+  const m = metadata
+  const sections = []
+
+  // Progress — completed yesterday
+  sections.push({
+    key: 'progress',
+    icon: <BarChart3 size={16} className="text-green-600" />,
+    label: `${m.completedYesterday} task${m.completedYesterday !== 1 ? 's' : ''} completed yesterday`,
+    color: 'bg-green-50 border-green-200 hover:bg-green-100',
+    labelColor: 'text-green-800',
+    hasDetails: m.completedDetails?.length > 0,
+    linkTo: '/tasks',
+    content: m.completedDetails?.length > 0 ? (
+      <div className="space-y-2">
+        {m.completedDetails.map(t => (
+          <div key={t.id} className="flex items-center gap-2 text-sm">
+            <Check size={14} className="text-green-500 flex-shrink-0" />
+            <span className="font-medium text-neutral-900">{t.title}</span>
+            <span className="text-xs text-neutral-500 font-mono">{t.id}</span>
+          </div>
+        ))}
+      </div>
+    ) : null
+  })
+
+  // Active tasks
+  sections.push({
+    key: 'active',
+    icon: <ListTodo size={16} className="text-blue-600" />,
+    label: `${m.activeTasks} task${m.activeTasks !== 1 ? 's' : ''} in progress${m.stuckTasks > 0 ? ` (${m.stuckTasks} stuck)` : ''}`,
+    color: m.stuckTasks > 0 ? 'bg-amber-50 border-amber-200 hover:bg-amber-100' : 'bg-blue-50 border-blue-200 hover:bg-blue-100',
+    labelColor: m.stuckTasks > 0 ? 'text-amber-800' : 'text-blue-800',
+    hasDetails: m.activeDetails?.length > 0,
+    linkTo: '/tasks',
+    content: m.activeDetails?.length > 0 ? (
+      <div className="space-y-2">
+        {m.activeDetails.map(t => (
+          <div key={t.id} className="flex items-start gap-2 text-sm">
+            {t.alertLevel === 'red' ? <AlertTriangle size={14} className="text-red-500 mt-0.5 flex-shrink-0" /> :
+             t.alertLevel === 'yellow' ? <Clock size={14} className="text-yellow-500 mt-0.5 flex-shrink-0" /> :
+             <ListTodo size={14} className="text-blue-500 mt-0.5 flex-shrink-0" />}
+            <div className="flex-1">
+              <span className="font-medium text-neutral-900">{t.title}</span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs text-neutral-500 font-mono">{t.id}</span>
+                <span className="text-xs text-neutral-500">{t.status}</span>
+                {t.timeInStatus && <span className="text-xs text-neutral-500">{t.timeInStatus}</span>}
+                {t.assignees.length > 0 && <span className="text-xs text-neutral-500">→ {t.assignees.join(', ')}</span>}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : null
+  })
+
+  // Human tasks
+  sections.push({
+    key: 'human',
+    icon: <UserCheck size={16} className="text-purple-600" />,
+    label: `${m.humanTasks} awaiting your attention`,
+    color: m.humanTasks > 0 ? 'bg-purple-50 border-purple-200 hover:bg-purple-100' : 'bg-neutral-50 border-neutral-200 hover:bg-neutral-100',
+    labelColor: m.humanTasks > 0 ? 'text-purple-800' : 'text-neutral-600',
+    hasDetails: m.humanDetails?.length > 0,
+    linkTo: '/tasks',
+    content: m.humanDetails?.length > 0 ? (
+      <div className="space-y-2">
+        {m.humanDetails.map(t => (
+          <div key={t.id} className="flex items-center gap-2 text-sm">
+            <User size={14} className="text-purple-500 flex-shrink-0" />
+            <span className="font-medium text-neutral-900">{t.title}</span>
+            <span className="text-xs text-neutral-500 font-mono">{t.id}</span>
+          </div>
+        ))}
+      </div>
+    ) : null
+  })
+
+  // Notifications
+  sections.push({
+    key: 'notifs',
+    icon: <Bell size={16} className="text-amber-600" />,
+    label: `${m.unreadCount ?? 0} unread notification${(m.unreadCount ?? 0) !== 1 ? 's' : ''}`,
+    color: 'bg-neutral-50 border-neutral-200 hover:bg-neutral-100',
+    labelColor: 'text-neutral-700',
+    hasDetails: false,
+    linkTo: '/notifications'
+  })
+
+  // Cost
+  if (m.costStatus) {
+    sections.push({
+      key: 'cost',
+      icon: <DollarSign size={16} className="text-emerald-600" />,
+      label: `Monthly Cost: ${m.costStatus}`,
+      color: 'bg-neutral-50 border-neutral-200 hover:bg-neutral-100',
+      labelColor: 'text-neutral-700',
+      hasDetails: false,
+      linkTo: '/analytics'
+    })
+  }
+
+  // High priority issues
+  if (m.highPriorityDetails?.length > 0) {
+    sections.push({
+      key: 'issues',
+      icon: <AlertTriangle size={16} className="text-red-500" />,
+      label: `${m.highPriorityIssues} high priority issue${m.highPriorityIssues !== 1 ? 's' : ''} need attention`,
+      color: 'bg-red-50 border-red-200 hover:bg-red-100',
+      labelColor: 'text-red-700 font-semibold',
+      hasDetails: true,
+      content: (
+        <div className="space-y-3">
+          {m.highPriorityDetails.map((issue, i) => (
+            <div key={i} className="border-b border-neutral-100 last:border-0 pb-3 last:pb-0">
+              <div className="flex items-start gap-2">
+                <AlertTriangle size={14} className="text-red-500 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium text-neutral-900">{issue.title}</p>
+                  <p className="text-xs text-neutral-600 mt-1">{issue.description}</p>
+                  <div className="mt-2 flex items-start gap-1.5 p-2 bg-amber-50 rounded-md border border-amber-200">
+                    <Lightbulb size={13} className="text-amber-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs font-medium text-amber-800">{issue.recommendation}</p>
+                  </div>
+                  {issue.taskId && (
+                    <Link to="/tasks" className="inline-flex items-center gap-1 mt-2 text-xs text-gold hover:text-gold/80 font-medium">
+                      View task {issue.taskId} →
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )
+    })
+  }
+
+  return (
+    <div className="space-y-2">
+      {sections.map(section => (
+        <div key={section.key}>
+          {section.hasDetails ? (
+            <button
+              onClick={() => toggle(section.key)}
+              className={`flex items-center gap-2 text-left w-full px-3 py-2 rounded-lg border transition-colors group ${section.color}`}
+            >
+              {section.icon}
+              <span className={`flex-1 text-sm font-medium ${section.labelColor}`}>{section.label}</span>
+              <span className="text-xs text-neutral-400 group-hover:text-neutral-600">
+                {expanded[section.key] ? 'Hide' : 'View'}
+              </span>
+              {expanded[section.key] ? <ChevronUp size={14} className="text-neutral-400" /> : <ChevronDown size={14} className="text-neutral-400" />}
+            </button>
+          ) : section.linkTo ? (
+            <Link
+              to={section.linkTo}
+              className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg border transition-colors group ${section.color}`}
+            >
+              {section.icon}
+              <span className={`flex-1 text-sm font-medium ${section.labelColor}`}>{section.label}</span>
+              <span className="text-xs text-neutral-400 group-hover:text-neutral-600">Open →</span>
+            </Link>
+          ) : (
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${section.color}`}>
+              {section.icon}
+              <span className={`text-sm font-medium ${section.labelColor}`}>{section.label}</span>
+            </div>
+          )}
+
+          {expanded[section.key] && section.content && (
+            <div className="mt-2 border border-neutral-200 rounded-lg p-4 bg-white">
+              {section.content}
+              {section.linkTo && (
+                <Link to={section.linkTo} className="inline-flex items-center gap-1 mt-3 text-xs text-gold hover:text-gold/80 font-medium">
+                  View all →
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   )
 }

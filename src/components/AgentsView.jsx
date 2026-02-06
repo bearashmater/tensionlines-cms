@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import useSWR from 'swr'
-import { getAgents } from '../lib/api'
+import { getAgents, getTasks } from '../lib/api'
 import { getInitials, getAgentColor, getStatusColor } from '../lib/formatters'
-import { User, CheckCircle, Circle } from 'lucide-react'
+import { User, CheckCircle, Circle, AlertTriangle } from 'lucide-react'
 import AgentProfileModal from './AgentProfileModal'
 
 export default function AgentsView() {
@@ -11,9 +11,24 @@ export default function AgentsView() {
   const { data: agents, error } = useSWR('/agents', getAgents, {
     refreshInterval: 120000
   })
+  const { data: tasks } = useSWR('/tasks', getTasks, {
+    refreshInterval: 120000
+  })
 
   if (error) return <div className="card bg-red-50">Error loading agents</div>
   if (!agents) return <LoadingState />
+
+  // Build map of agent → stuck task count
+  const agentStuckCounts = {}
+  if (tasks) {
+    tasks.forEach(task => {
+      if (task.timeTracking?.alertLevel && task.timeTracking.alertLevel !== 'none') {
+        (task.assigneeIds || []).forEach(id => {
+          agentStuckCounts[id] = (agentStuckCounts[id] || 0) + 1
+        })
+      }
+    })
+  }
 
   const activeAgents = agents.filter(a => a.status === 'active')
   const idleAgents = agents.filter(a => a.status === 'idle')
@@ -41,6 +56,7 @@ export default function AgentsView() {
               <AgentCard
                 key={agent.id}
                 agent={agent}
+                stuckCount={agentStuckCounts[agent.id] || 0}
                 onClick={() => setSelectedAgent(agent)}
               />
             ))}
@@ -57,6 +73,7 @@ export default function AgentsView() {
               <AgentCard
                 key={agent.id}
                 agent={agent}
+                stuckCount={agentStuckCounts[agent.id] || 0}
                 onClick={() => setSelectedAgent(agent)}
               />
             ))}
@@ -75,7 +92,7 @@ export default function AgentsView() {
   )
 }
 
-function AgentCard({ agent, onClick }) {
+function AgentCard({ agent, stuckCount = 0, onClick }) {
   const colorClass = getAgentColor(agent.id)
   const statusColor = getStatusColor(agent.status)
 
@@ -104,6 +121,11 @@ function AgentCard({ agent, onClick }) {
               {agent.status}
             </span>
           </div>
+          {stuckCount > 0 && (
+            <div className="mt-1.5 flex items-center gap-1 text-xs font-medium text-red-600">
+              <AlertTriangle size={12} /> {stuckCount} stuck task{stuckCount !== 1 ? 's' : ''}
+            </div>
+          )}
           {agent.currentTaskId && (
             <p className="text-xs text-neutral-500 mt-2">
               Working on: {agent.currentTaskId}

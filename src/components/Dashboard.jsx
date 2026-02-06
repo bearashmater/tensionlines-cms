@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getDashboard, getActivities, search } from '../lib/api'
 import { formatDate, formatPercent, formatNumber, formatStatus, getStatusColor } from '../lib/formatters'
-import { Users, ListTodo, Lightbulb, Bell, TrendingUp, Search, FileText, X, Users as UsersIcon, ChevronRight } from 'lucide-react'
+import { Users, ListTodo, Lightbulb, Bell, TrendingUp, Search, FileText, X, Users as UsersIcon, ChevronRight, AlertTriangle } from 'lucide-react'
 
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -171,7 +171,7 @@ export default function Dashboard() {
       )}
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <MetricCard
           icon={<Users size={24} className="text-gold" />}
           label="Active Agents"
@@ -186,6 +186,14 @@ export default function Dashboard() {
           value={dashboard.tasks.inProgress}
           total={dashboard.tasks.total}
           bgColor="bg-accent-tertiary"
+          to="/tasks"
+        />
+        <MetricCard
+          icon={<AlertTriangle size={24} className={dashboard.tasks.critical > 0 ? 'text-red-500' : 'text-amber-500'} />}
+          label="Stuck Tasks"
+          value={dashboard.tasks.stuck || 0}
+          subtitle={dashboard.tasks.critical > 0 ? `${dashboard.tasks.critical} critical` : undefined}
+          bgColor={dashboard.tasks.critical > 0 ? 'bg-red-50' : 'bg-accent-tertiary'}
           to="/tasks"
         />
         <MetricCard

@@ -138,10 +138,21 @@ export function getAgentColor(agentId) {
  */
 export function formatFileSize(bytes) {
   if (bytes === 0) return '0 Bytes'
-  
+
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
+
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+}
+
+/**
+ * Get alert level color classes for time-in-status indicators
+ */
+export function getAlertLevelColor(alertLevel) {
+  const colorMap = {
+    'yellow': 'bg-yellow-100 text-yellow-700',
+    'red': 'bg-red-100 text-red-700'
+  }
+  return colorMap[alertLevel] || ''
 }
