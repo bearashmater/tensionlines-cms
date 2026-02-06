@@ -13,6 +13,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import matter from 'gray-matter';
 import chokidar from 'chokidar';
 import cron from 'node-cron';
@@ -87,6 +88,7 @@ app.use((req, res, next) => {
 const BASE_DIR = path.resolve(__dirname, '..');
 const MISSION_CONTROL_DB = path.join(BASE_DIR, 'mission-control/database.json');
 const OPTIMIZATIONS_DB = path.join(BASE_DIR, 'mission-control/optimizations.json');
+const BACKUPS_DIR = path.join(BASE_DIR, 'mission-control/backups');
 const IDEAS_BANK = path.join(BASE_DIR, 'content/ideas-bank.md');
 const MEMORY_DIR = path.join(BASE_DIR, 'memory');
 const PHILOSOPHERS_DIR = path.join(BASE_DIR, 'philosophers');
@@ -945,6 +947,141 @@ app.get('/api/agents/:id/soul', (req, res) => {
 });
 
 /**
+ * Get detailed agent performance metrics
+ * Used for optimization dashboard and squad lead
+ */
+app.get('/api/agents/:id/performance', (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,50}$/.test(id)) {
+      return res.status(400).json({ error: 'Invalid agent ID' });
+    }
+
+    const mc = getMissionControl();
+    const agent = mc.agents.find(a => a.id === id);
+
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+
+    const now = new Date();
+    const dayAgo = new Date(now - 24 * 60 * 60 * 1000);
+    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+
+    const agentTasks = mc.tasks.filter(t => t.assigneeIds?.includes(id));
+    const completedTasks = agentTasks.filter(t => ['completed', 'shipped'].includes(t.status) && t.completedAt);
+
+    // Task completion by period
+    const completed24h = completedTasks.filter(t => new Date(t.completedAt) >= dayAgo).length;
+    const completed7d = completedTasks.filter(t => new Date(t.completedAt) >= weekAgo).length;
+    const completed30d = completedTasks.filter(t => new Date(t.completedAt) >= monthAgo).length;
+
+    // Average completion time (for tasks that have both startedAt and completedAt)
+    const tasksWithTiming = completedTasks.filter(t => t.startedAt && t.completedAt);
+    let avgCompletionTimeMinutes = 0;
+    if (tasksWithTiming.length > 0) {
+      const totalMs = tasksWithTiming.reduce((sum, t) => {
+        return sum + (new Date(t.completedAt) - new Date(t.startedAt));
+      }, 0);
+      avgCompletionTimeMinutes = Math.round(totalMs / tasksWithTiming.length / (1000 * 60));
+    }
+
+    // Current workload
+    const activeTasks = agentTasks.filter(t => ['assigned', 'in_progress', 'review'].includes(t.status));
+    const stuckTasks = activeTasks.filter(t => {
+      const tracking = calculateTimeInStatus(t);
+      return tracking.alertLevel === 'red' || tracking.alertLevel === 'yellow';
+    });
+
+    // Workload score (0-100)
+    const workloadScore = Math.min(100, activeTasks.length * 20);
+
+    // Trend: compare this week vs last week
+    const twoWeeksAgo = new Date(now - 14 * 24 * 60 * 60 * 1000);
+    const lastWeekTasks = completedTasks.filter(t => {
+      const d = new Date(t.completedAt);
+      return d >= twoWeeksAgo && d < weekAgo;
+    }).length;
+    const trend = completed7d - lastWeekTasks;
+
+    // Task type breakdown
+    const taskTypes = agentTasks.reduce((acc, t) => {
+      const type = t.type || 'general';
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
+
+    res.json({
+      agentId: id,
+      agentName: agent.name,
+      metrics: {
+        completed24h,
+        completed7d,
+        completed30d,
+        totalCompleted: completedTasks.length,
+        totalAssigned: agentTasks.length,
+        avgCompletionTimeMinutes,
+        activeTasks: activeTasks.length,
+        stuckTasks: stuckTasks.length,
+        workloadScore,
+        completionRate: agentTasks.length > 0 ? Math.round((completedTasks.length / agentTasks.length) * 100) : 0,
+        trend,
+        trendLabel: trend > 0 ? 'improving' : trend < 0 ? 'declining' : 'stable'
+      },
+      taskTypes,
+      activeTasks: activeTasks.map(t => ({
+        id: t.id,
+        title: t.title,
+        status: t.status,
+        priority: t.metadata?.priority || 'medium',
+        timeInStatus: calculateTimeInStatus(t)
+      }))
+    });
+  } catch (error) {
+    console.error('Error getting agent performance:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Get all agents with performance summary
+ */
+app.get('/api/agents/performance/summary', (req, res) => {
+  try {
+    const mc = getMissionControl();
+    const now = new Date();
+    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+
+    const summary = mc.agents
+      .filter(a => a.id !== 'human')
+      .map(agent => {
+        const agentTasks = mc.tasks.filter(t => t.assigneeIds?.includes(agent.id));
+        const completedTasks = agentTasks.filter(t => ['completed', 'shipped'].includes(t.status) && t.completedAt);
+        const activeTasks = agentTasks.filter(t => ['assigned', 'in_progress', 'review'].includes(t.status));
+        const completed7d = completedTasks.filter(t => new Date(t.completedAt) >= weekAgo).length;
+
+        return {
+          id: agent.id,
+          name: agent.name,
+          role: agent.role,
+          active: activeTasks.length,
+          completed7d,
+          totalCompleted: completedTasks.length,
+          workloadScore: Math.min(100, activeTasks.length * 20)
+        };
+      })
+      .sort((a, b) => b.completed7d - a.completed7d);
+
+    res.json({ agents: summary, timestamp: now.toISOString() });
+  } catch (error) {
+    console.error('Error getting performance summary:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
  * Calculate time in current status and alert level
  */
 function calculateTimeInStatus(task) {
@@ -1760,6 +1897,243 @@ function getWeekNumber(d) {
   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
 
+// ============================================================================
+// CONTENT ENGAGEMENT TRACKING
+// ============================================================================
+
+const ENGAGEMENT_FILE = path.join(BASE_DIR, 'content/engagement.json');
+
+/**
+ * Get engagement data structure or create default
+ */
+function getEngagementData() {
+  if (fs.existsSync(ENGAGEMENT_FILE)) {
+    try {
+      return JSON.parse(fs.readFileSync(ENGAGEMENT_FILE, 'utf8'));
+    } catch (e) {
+      console.error('Error reading engagement file:', e);
+    }
+  }
+  return {
+    posts: [],
+    metrics: {
+      totalPosts: 0,
+      totalLikes: 0,
+      totalComments: 0,
+      totalShares: 0,
+      avgEngagementRate: 0
+    },
+    lastUpdated: null
+  };
+}
+
+/**
+ * Save engagement data
+ */
+function saveEngagementData(data) {
+  data.lastUpdated = new Date().toISOString();
+  const dir = path.dirname(ENGAGEMENT_FILE);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  fs.writeFileSync(ENGAGEMENT_FILE, JSON.stringify(data, null, 2));
+}
+
+/**
+ * Get content engagement stats
+ */
+app.get('/api/content/engagement', (req, res) => {
+  try {
+    const data = getEngagementData();
+    const { range = 'week' } = req.query;
+
+    const now = new Date();
+    let startDate;
+    switch (range) {
+      case 'day':
+        startDate = new Date(now - 24 * 60 * 60 * 1000);
+        break;
+      case 'week':
+        startDate = new Date(now - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'month':
+        startDate = new Date(now - 30 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        startDate = new Date(0);
+    }
+
+    const filteredPosts = data.posts.filter(p => new Date(p.publishedAt) >= startDate);
+
+    // Calculate metrics for period
+    const periodMetrics = {
+      posts: filteredPosts.length,
+      likes: filteredPosts.reduce((sum, p) => sum + (p.likes || 0), 0),
+      comments: filteredPosts.reduce((sum, p) => sum + (p.comments || 0), 0),
+      shares: filteredPosts.reduce((sum, p) => sum + (p.shares || 0), 0),
+      impressions: filteredPosts.reduce((sum, p) => sum + (p.impressions || 0), 0)
+    };
+
+    if (periodMetrics.impressions > 0) {
+      periodMetrics.engagementRate = ((periodMetrics.likes + periodMetrics.comments + periodMetrics.shares) / periodMetrics.impressions * 100).toFixed(2);
+    } else {
+      periodMetrics.engagementRate = 0;
+    }
+
+    // Top performing posts
+    const topPosts = [...filteredPosts]
+      .sort((a, b) => ((b.likes || 0) + (b.comments || 0) + (b.shares || 0)) - ((a.likes || 0) + (a.comments || 0) + (a.shares || 0)))
+      .slice(0, 5);
+
+    // Performance by platform
+    const byPlatform = {};
+    filteredPosts.forEach(p => {
+      if (!byPlatform[p.platform]) {
+        byPlatform[p.platform] = { posts: 0, likes: 0, comments: 0, shares: 0, impressions: 0 };
+      }
+      byPlatform[p.platform].posts++;
+      byPlatform[p.platform].likes += p.likes || 0;
+      byPlatform[p.platform].comments += p.comments || 0;
+      byPlatform[p.platform].shares += p.shares || 0;
+      byPlatform[p.platform].impressions += p.impressions || 0;
+    });
+
+    // Performance by philosopher
+    const byPhilosopher = {};
+    filteredPosts.forEach(p => {
+      if (!byPhilosopher[p.author]) {
+        byPhilosopher[p.author] = { posts: 0, likes: 0, comments: 0, shares: 0 };
+      }
+      byPhilosopher[p.author].posts++;
+      byPhilosopher[p.author].likes += p.likes || 0;
+      byPhilosopher[p.author].comments += p.comments || 0;
+      byPhilosopher[p.author].shares += p.shares || 0;
+    });
+
+    res.json({
+      range,
+      metrics: periodMetrics,
+      allTimeMetrics: data.metrics,
+      topPosts,
+      byPlatform,
+      byPhilosopher,
+      lastUpdated: data.lastUpdated
+    });
+  } catch (error) {
+    console.error('Error getting engagement data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Record a new post's engagement
+ */
+app.post('/api/content/engagement', (req, res) => {
+  try {
+    const { platform, author, postId, title, url, publishedAt, likes, comments, shares, impressions } = req.body;
+
+    if (!platform || !author) {
+      return res.status(400).json({ error: 'Platform and author are required' });
+    }
+
+    // Validate platform and author
+    if (!VALID_PLATFORMS.includes(platform.toLowerCase())) {
+      return res.status(400).json({ error: 'Invalid platform' });
+    }
+    if (!VALID_PHILOSOPHERS.includes(author.toLowerCase()) && author !== 'human') {
+      return res.status(400).json({ error: 'Invalid author' });
+    }
+
+    const data = getEngagementData();
+
+    const post = {
+      id: postId || `post-${Date.now()}`,
+      platform: platform.toLowerCase(),
+      author: author.toLowerCase(),
+      title: title || 'Untitled',
+      url: url || null,
+      publishedAt: publishedAt || new Date().toISOString(),
+      likes: parseInt(likes) || 0,
+      comments: parseInt(comments) || 0,
+      shares: parseInt(shares) || 0,
+      impressions: parseInt(impressions) || 0,
+      recordedAt: new Date().toISOString()
+    };
+
+    // Check if post already exists (update if so)
+    const existingIndex = data.posts.findIndex(p => p.id === post.id);
+    if (existingIndex >= 0) {
+      data.posts[existingIndex] = { ...data.posts[existingIndex], ...post };
+    } else {
+      data.posts.unshift(post);
+    }
+
+    // Keep last 500 posts
+    data.posts = data.posts.slice(0, 500);
+
+    // Update all-time metrics
+    data.metrics.totalPosts = data.posts.length;
+    data.metrics.totalLikes = data.posts.reduce((sum, p) => sum + (p.likes || 0), 0);
+    data.metrics.totalComments = data.posts.reduce((sum, p) => sum + (p.comments || 0), 0);
+    data.metrics.totalShares = data.posts.reduce((sum, p) => sum + (p.shares || 0), 0);
+    const totalImpressions = data.posts.reduce((sum, p) => sum + (p.impressions || 0), 0);
+    if (totalImpressions > 0) {
+      data.metrics.avgEngagementRate = ((data.metrics.totalLikes + data.metrics.totalComments + data.metrics.totalShares) / totalImpressions * 100).toFixed(2);
+    }
+
+    saveEngagementData(data);
+
+    res.json({ success: true, post });
+  } catch (error) {
+    console.error('Error recording engagement:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Update engagement for existing post
+ */
+app.patch('/api/content/engagement/:postId', (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { likes, comments, shares, impressions } = req.body;
+
+    if (!postId) {
+      return res.status(400).json({ error: 'Post ID is required' });
+    }
+
+    const data = getEngagementData();
+    const postIndex = data.posts.findIndex(p => p.id === postId);
+
+    if (postIndex < 0) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    // Update metrics
+    if (likes !== undefined) data.posts[postIndex].likes = parseInt(likes) || 0;
+    if (comments !== undefined) data.posts[postIndex].comments = parseInt(comments) || 0;
+    if (shares !== undefined) data.posts[postIndex].shares = parseInt(shares) || 0;
+    if (impressions !== undefined) data.posts[postIndex].impressions = parseInt(impressions) || 0;
+    data.posts[postIndex].updatedAt = new Date().toISOString();
+
+    // Recalculate all-time metrics
+    data.metrics.totalLikes = data.posts.reduce((sum, p) => sum + (p.likes || 0), 0);
+    data.metrics.totalComments = data.posts.reduce((sum, p) => sum + (p.comments || 0), 0);
+    data.metrics.totalShares = data.posts.reduce((sum, p) => sum + (p.shares || 0), 0);
+    const totalImpressions = data.posts.reduce((sum, p) => sum + (p.impressions || 0), 0);
+    if (totalImpressions > 0) {
+      data.metrics.avgEngagementRate = ((data.metrics.totalLikes + data.metrics.totalComments + data.metrics.totalShares) / totalImpressions * 100).toFixed(2);
+    }
+
+    saveEngagementData(data);
+
+    res.json({ success: true, post: data.posts[postIndex] });
+  } catch (error) {
+    console.error('Error updating engagement:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 /**
  * Get all drafts
  */
@@ -1990,15 +2364,191 @@ app.get('/api/costs/details', (req, res) => {
 });
 
 /**
- * Health check
+ * Cost forecasting - predict budget usage
+ */
+app.get('/api/costs/forecast', (req, res) => {
+  try {
+    const historyPath = path.join(BASE_DIR, 'cost-tracking/history.json');
+    const costsPath = path.join(BASE_DIR, 'cost-tracking/daily-costs.json');
+
+    // Get current costs and budget
+    let currentCosts = { daily: { total: 0, budget: 15 }, monthly: { total: 0, budget: 300 } };
+    if (fs.existsSync(costsPath)) {
+      try {
+        currentCosts = JSON.parse(fs.readFileSync(costsPath, 'utf8'));
+      } catch (e) { /* use defaults */ }
+    }
+
+    // Get historical data if available
+    let history = [];
+    if (fs.existsSync(historyPath)) {
+      try {
+        history = JSON.parse(fs.readFileSync(historyPath, 'utf8'));
+      } catch (e) { /* empty history */ }
+    }
+
+    // Calculate averages
+    const last7Days = history.slice(-7);
+    const last30Days = history.slice(-30);
+
+    const avg7Day = last7Days.length > 0
+      ? last7Days.reduce((sum, d) => sum + (d.total || 0), 0) / last7Days.length
+      : currentCosts.daily?.total || 0;
+
+    const avg30Day = last30Days.length > 0
+      ? last30Days.reduce((sum, d) => sum + (d.total || 0), 0) / last30Days.length
+      : currentCosts.daily?.total || 0;
+
+    // Project to end of month
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const dayOfMonth = now.getDate();
+    const daysRemaining = daysInMonth - dayOfMonth;
+
+    const projectedMonthly = (currentCosts.monthly?.total || 0) + (avg7Day * daysRemaining);
+    const monthlyBudget = currentCosts.monthly?.budget || 300;
+    const projectedOverage = Math.max(0, projectedMonthly - monthlyBudget);
+
+    // Trend analysis
+    let trend = 'stable';
+    if (history.length >= 14) {
+      const recentWeekAvg = last7Days.reduce((sum, d) => sum + (d.total || 0), 0) / 7;
+      const prevWeekAvg = history.slice(-14, -7).reduce((sum, d) => sum + (d.total || 0), 0) / 7;
+      if (recentWeekAvg > prevWeekAvg * 1.1) trend = 'increasing';
+      else if (recentWeekAvg < prevWeekAvg * 0.9) trend = 'decreasing';
+    }
+
+    // Model cost efficiency recommendations
+    const detailsPath = path.join(BASE_DIR, 'cost-tracking/daily-details.json');
+    let modelRecommendations = [];
+    if (fs.existsSync(detailsPath)) {
+      try {
+        const details = JSON.parse(fs.readFileSync(detailsPath, 'utf8'));
+        if (details.models) {
+          // Find expensive model usage for simple operations
+          Object.entries(details.models).forEach(([model, data]) => {
+            if (model.includes('opus') && data.operations) {
+              // Flag simple operations on expensive models
+              const simpleOps = ['status_check', 'list', 'simple_query', 'health_check'];
+              const wastedCost = Object.entries(data.operations || {})
+                .filter(([op]) => simpleOps.some(s => op.includes(s)))
+                .reduce((sum, [, cost]) => sum + cost, 0);
+
+              if (wastedCost > 0.1) {
+                modelRecommendations.push({
+                  type: 'model_routing',
+                  severity: wastedCost > 1 ? 'high' : 'medium',
+                  message: `Consider using Haiku for simple operations instead of ${model}`,
+                  potentialSavings: `$${(wastedCost * 0.9).toFixed(2)}/day`,
+                  currentCost: `$${wastedCost.toFixed(2)}`
+                });
+              }
+            }
+          });
+        }
+      } catch (e) { /* skip */ }
+    }
+
+    res.json({
+      current: {
+        dailySpend: currentCosts.daily?.total || 0,
+        dailyBudget: currentCosts.daily?.budget || 15,
+        monthlySpend: currentCosts.monthly?.total || 0,
+        monthlyBudget
+      },
+      forecast: {
+        avgDaily7Day: Math.round(avg7Day * 100) / 100,
+        avgDaily30Day: Math.round(avg30Day * 100) / 100,
+        projectedMonthly: Math.round(projectedMonthly * 100) / 100,
+        projectedOverage: Math.round(projectedOverage * 100) / 100,
+        daysRemaining,
+        trend,
+        onTrack: projectedMonthly <= monthlyBudget
+      },
+      recommendations: modelRecommendations,
+      historyDays: history.length
+    });
+  } catch (error) {
+    console.error('Error generating cost forecast:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Health check - Enhanced with system metrics
  */
 app.get('/api/health', (req, res) => {
+  // Get memory usage
+  const memUsage = process.memoryUsage();
+  const totalMem = os.totalmem();
+  const freeMem = os.freemem();
+
+  // Get last backup time
+  let lastBackup = null;
+  if (fs.existsSync(BACKUPS_DIR)) {
+    const backups = fs.readdirSync(BACKUPS_DIR)
+      .map(f => ({ name: f, mtime: fs.statSync(path.join(BACKUPS_DIR, f)).mtime }))
+      .sort((a, b) => b.mtime - a.mtime);
+    if (backups.length > 0) {
+      lastBackup = backups[0].mtime.toISOString();
+    }
+  }
+
+  // Get last optimization run
+  let lastOptimization = null;
+  const optimizations = getOptimizations();
+  if (optimizations.runs.length > 0) {
+    lastOptimization = optimizations.runs[0].date;
+  }
+
+  // Get database stats
+  const mc = getMissionControl();
+  const dbStats = {
+    tasks: mc.tasks.length,
+    agents: mc.agents.length,
+    notifications: mc.notifications.length,
+    activeTasks: mc.tasks.filter(t => ['assigned', 'in_progress', 'review'].includes(t.status)).length
+  };
+
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    uptimeHuman: formatDuration(process.uptime() * 1000),
+    memory: {
+      heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
+      heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024),
+      rss: Math.round(memUsage.rss / 1024 / 1024),
+      systemFree: Math.round(freeMem / 1024 / 1024),
+      systemTotal: Math.round(totalMem / 1024 / 1024),
+      systemUsedPercent: Math.round((1 - freeMem / totalMem) * 100)
+    },
+    backups: {
+      lastBackup,
+      backupCount: fs.existsSync(BACKUPS_DIR) ? fs.readdirSync(BACKUPS_DIR).length : 0
+    },
+    optimization: {
+      lastRun: lastOptimization,
+      pendingIssues: optimizations.stats.pendingIssues
+    },
+    database: dbStats
   });
 });
+
+/**
+ * Format duration in human-readable format
+ */
+function formatDuration(ms) {
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return `${days}d ${hours % 24}h`;
+  if (hours > 0) return `${hours}h ${minutes % 60}m`;
+  if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+  return `${seconds}s`;
+}
 
 // ============================================================================
 // SQUAD LEAD ENDPOINTS
@@ -2619,6 +3169,193 @@ setInterval(checkStuckTasks, 5 * 60 * 1000);
 setTimeout(checkStuckTasks, 30 * 1000);
 
 // ============================================================================
+// AUTOMATIC BACKUP SYSTEM
+// ============================================================================
+
+/**
+ * Create backup of critical files
+ * Keeps: 7 daily backups + 4 weekly backups
+ */
+function createBackup() {
+  console.log('[Backup] Starting automatic backup...');
+
+  // Ensure backup directory exists
+  if (!fs.existsSync(BACKUPS_DIR)) {
+    fs.mkdirSync(BACKUPS_DIR, { recursive: true });
+  }
+
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0];
+  const timestamp = now.toISOString().replace(/[:.]/g, '-');
+  const dayOfWeek = now.getDay(); // 0 = Sunday
+
+  const filesToBackup = [
+    { src: MISSION_CONTROL_DB, name: 'database' },
+    { src: OPTIMIZATIONS_DB, name: 'optimizations' },
+    { src: IDEAS_BANK, name: 'ideas-bank' }
+  ];
+
+  const backupResults = [];
+
+  filesToBackup.forEach(file => {
+    if (fs.existsSync(file.src)) {
+      try {
+        const content = fs.readFileSync(file.src);
+        const ext = path.extname(file.src);
+
+        // Daily backup
+        const dailyBackup = path.join(BACKUPS_DIR, `${file.name}-daily-${dateStr}${ext}`);
+        fs.writeFileSync(dailyBackup, content);
+        backupResults.push({ file: file.name, type: 'daily', path: dailyBackup });
+
+        // Weekly backup (on Sundays)
+        if (dayOfWeek === 0) {
+          const weekNum = getWeekNumber(now);
+          const weeklyBackup = path.join(BACKUPS_DIR, `${file.name}-weekly-${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}${ext}`);
+          fs.writeFileSync(weeklyBackup, content);
+          backupResults.push({ file: file.name, type: 'weekly', path: weeklyBackup });
+        }
+      } catch (err) {
+        console.error(`[Backup] Failed to backup ${file.name}:`, err.message);
+      }
+    }
+  });
+
+  // Cleanup old backups
+  cleanupOldBackups();
+
+  console.log(`[Backup] Completed. ${backupResults.length} files backed up.`);
+  return backupResults;
+}
+
+/**
+ * Remove backups older than retention period
+ * Keep: 7 daily, 4 weekly
+ */
+function cleanupOldBackups() {
+  if (!fs.existsSync(BACKUPS_DIR)) return;
+
+  const files = fs.readdirSync(BACKUPS_DIR);
+  const now = Date.now();
+  const dailyMaxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+  const weeklyMaxAge = 28 * 24 * 60 * 60 * 1000; // 28 days
+
+  files.forEach(file => {
+    const filePath = path.join(BACKUPS_DIR, file);
+    const stat = fs.statSync(filePath);
+    const age = now - stat.mtime.getTime();
+
+    if (file.includes('-daily-') && age > dailyMaxAge) {
+      fs.unlinkSync(filePath);
+      console.log(`[Backup] Removed old daily backup: ${file}`);
+    } else if (file.includes('-weekly-') && age > weeklyMaxAge) {
+      fs.unlinkSync(filePath);
+      console.log(`[Backup] Removed old weekly backup: ${file}`);
+    }
+  });
+}
+
+/**
+ * Get list of available backups
+ */
+function getBackupsList() {
+  if (!fs.existsSync(BACKUPS_DIR)) return [];
+
+  return fs.readdirSync(BACKUPS_DIR)
+    .filter(f => !f.startsWith('.'))
+    .map(f => {
+      const filePath = path.join(BACKUPS_DIR, f);
+      const stat = fs.statSync(filePath);
+      return {
+        filename: f,
+        size: stat.size,
+        created: stat.mtime.toISOString(),
+        type: f.includes('-weekly-') ? 'weekly' : 'daily'
+      };
+    })
+    .sort((a, b) => new Date(b.created) - new Date(a.created));
+}
+
+/**
+ * Restore from a backup file
+ */
+function restoreFromBackup(backupFilename) {
+  const backupPath = path.join(BACKUPS_DIR, backupFilename);
+  if (!fs.existsSync(backupPath)) {
+    throw new Error('Backup file not found');
+  }
+
+  // Determine target file
+  let targetPath;
+  if (backupFilename.includes('database')) {
+    targetPath = MISSION_CONTROL_DB;
+  } else if (backupFilename.includes('optimizations')) {
+    targetPath = OPTIMIZATIONS_DB;
+  } else if (backupFilename.includes('ideas-bank')) {
+    targetPath = IDEAS_BANK;
+  } else {
+    throw new Error('Unknown backup type');
+  }
+
+  // Create backup of current state before restore
+  const preRestoreBackup = targetPath + '.pre-restore';
+  if (fs.existsSync(targetPath)) {
+    fs.copyFileSync(targetPath, preRestoreBackup);
+  }
+
+  // Restore
+  fs.copyFileSync(backupPath, targetPath);
+  cache.missionControl = null; // Clear cache
+
+  return { restored: backupFilename, target: targetPath };
+}
+
+// Schedule backup at 1:55 AM (before optimization at 2 AM)
+cron.schedule('55 1 * * *', () => {
+  console.log('[Cron] Running nightly backup...');
+  try {
+    createBackup();
+  } catch (err) {
+    console.error('[Cron] Backup failed:', err);
+  }
+}, {
+  timezone: 'America/Los_Angeles'
+});
+
+console.log('[Cron] Nightly backup scheduled for 1:55 AM PST');
+
+// Backup API endpoints
+app.get('/api/backups', (req, res) => {
+  try {
+    const backups = getBackupsList();
+    res.json(backups);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/backups/create', (req, res) => {
+  try {
+    const results = createBackup();
+    res.json({ success: true, backups: results });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/backups/restore/:filename', (req, res) => {
+  try {
+    const result = restoreFromBackup(req.params.filename);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================================
 // OPTIMIZATION SYSTEM - Nightly Project Review by Tension
 // ============================================================================
 
@@ -2783,6 +3520,51 @@ function runOptimization() {
           createdAt: runDate
         });
       }
+
+      // Model cost routing analysis
+      const detailsPath = path.join(BASE_DIR, 'cost-tracking/daily-details.json');
+      if (fs.existsSync(detailsPath)) {
+        try {
+          const details = JSON.parse(fs.readFileSync(detailsPath, 'utf8'));
+          if (details.models) {
+            Object.entries(details.models).forEach(([model, data]) => {
+              // Flag expensive model usage for simple operations
+              if (model.includes('opus') && data.calls > 10) {
+                const simpleOps = ['status', 'list', 'health', 'check', 'ping', 'get'];
+                let wastedCalls = 0;
+                let wastedCost = 0;
+
+                if (data.operations) {
+                  Object.entries(data.operations).forEach(([op, opData]) => {
+                    if (simpleOps.some(s => op.toLowerCase().includes(s))) {
+                      wastedCalls += opData.calls || 1;
+                      wastedCost += opData.cost || 0;
+                    }
+                  });
+                }
+
+                if (wastedCost > 0.5) {
+                  findings.push({
+                    id: `finding-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    runId,
+                    type: 'model_routing',
+                    severity: wastedCost > 2 ? 'high' : 'medium',
+                    title: `Expensive model used for simple operations`,
+                    description: `${model} was used for ${wastedCalls} simple operations, costing ~$${wastedCost.toFixed(2)}. Consider using Haiku for these.`,
+                    recommendation: 'Route simple status checks and list operations to cheaper models like Haiku',
+                    status: 'pending',
+                    forHuman: true,
+                    metadata: { model, wastedCalls, wastedCost },
+                    createdAt: runDate
+                  });
+                }
+              }
+            });
+          }
+        } catch (e) {
+          // Cost details parse error, skip
+        }
+      }
     } catch (e) {
       // Cost file parse error, skip
     }
@@ -2856,6 +3638,64 @@ function runOptimization() {
   }
 
   // ============================================================================
+  // 8. CONTENT ENGAGEMENT ANALYSIS
+  // ============================================================================
+  if (fs.existsSync(ENGAGEMENT_FILE)) {
+    try {
+      const engagement = JSON.parse(fs.readFileSync(ENGAGEMENT_FILE, 'utf8'));
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      // Check for declining engagement
+      const recentPosts = engagement.posts.filter(p => new Date(p.publishedAt) >= weekAgo);
+      if (recentPosts.length >= 3) {
+        const avgEngagement = recentPosts.reduce((sum, p) =>
+          sum + (p.likes || 0) + (p.comments || 0) + (p.shares || 0), 0) / recentPosts.length;
+
+        // Compare to all-time average (if available)
+        const allTimeAvg = (engagement.metrics.totalLikes + engagement.metrics.totalComments + engagement.metrics.totalShares) /
+          Math.max(1, engagement.metrics.totalPosts);
+
+        if (avgEngagement < allTimeAvg * 0.5 && allTimeAvg > 0) {
+          findings.push({
+            id: `finding-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            runId,
+            type: 'engagement_decline',
+            severity: 'medium',
+            title: `Content engagement declining`,
+            description: `Recent posts averaging ${avgEngagement.toFixed(1)} engagement vs ${allTimeAvg.toFixed(1)} all-time average.`,
+            recommendation: 'Review recent content strategy, analyze top performing posts for patterns',
+            status: 'pending',
+            forHuman: true,
+            createdAt: runDate
+          });
+        }
+      }
+
+      // Check for platforms with no recent posts
+      const activePlatforms = [...new Set(engagement.posts.slice(0, 50).map(p => p.platform))];
+      const dormantPlatforms = VALID_PLATFORMS.filter(p =>
+        !activePlatforms.includes(p) && ['twitter', 'bluesky', 'threads'].includes(p)
+      );
+
+      if (dormantPlatforms.length > 0) {
+        findings.push({
+          id: `finding-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          runId,
+          type: 'dormant_platform',
+          severity: 'low',
+          title: `No recent activity on ${dormantPlatforms.join(', ')}`,
+          description: `These platforms haven't had posts tracked recently.`,
+          recommendation: 'Check if content is being posted but not tracked, or schedule new content',
+          status: 'pending',
+          createdAt: runDate
+        });
+      }
+    } catch (e) {
+      // Engagement file parse error, skip
+    }
+  }
+
+  // ============================================================================
   // SAVE OPTIMIZATION RUN
   // ============================================================================
   const durationMs = Date.now() - startTime;
@@ -2908,6 +3748,118 @@ cron.schedule('0 2 * * *', () => {
 });
 
 console.log('[Cron] Nightly optimization scheduled for 2:00 AM PST');
+
+/**
+ * Generate daily summary notification for human
+ */
+function generateDailySummary() {
+  console.log('[DailySummary] Generating morning briefing...');
+  const mc = getMissionControl();
+  const optimizations = getOptimizations();
+  const now = new Date();
+  const yesterday = new Date(now - 24 * 60 * 60 * 1000);
+
+  // Tasks completed yesterday
+  const completedYesterday = mc.tasks.filter(t => {
+    if (!t.completedAt) return false;
+    const d = new Date(t.completedAt);
+    return d >= yesterday && d < now;
+  }).length;
+
+  // Active tasks
+  const activeTasks = mc.tasks.filter(t => ['assigned', 'in_progress', 'review'].includes(t.status));
+  const stuckTasks = activeTasks.filter(t => {
+    const tracking = calculateTimeInStatus(t);
+    return tracking.alertLevel === 'red';
+  });
+
+  // Human tasks pending
+  const humanTasks = mc.tasks.filter(t =>
+    t.assigneeIds?.includes('human') &&
+    !['completed', 'shipped', 'deferred', 'blocked'].includes(t.status)
+  );
+
+  // Pending optimization issues
+  const pendingIssues = optimizations.findings.filter(f => f.status === 'pending');
+  const highPriorityIssues = pendingIssues.filter(f => f.severity === 'high');
+
+  // Unread notifications
+  const unreadCount = mc.notifications.filter(n => !n.read).length;
+
+  // Cost status
+  let costStatus = 'not tracked';
+  const costFile = path.join(BASE_DIR, 'cost-tracking/daily-costs.json');
+  if (fs.existsSync(costFile)) {
+    try {
+      const costs = JSON.parse(fs.readFileSync(costFile, 'utf8'));
+      const monthlyTotal = costs.monthly?.total || 0;
+      const monthlyBudget = costs.monthly?.budget || 300;
+      const monthlyPercent = monthlyBudget > 0 ? Math.round((monthlyTotal / monthlyBudget) * 100) : 0;
+      costStatus = `$${monthlyTotal.toFixed(2)}/$${monthlyBudget} (${monthlyPercent}%)`;
+    } catch (e) { /* skip */ }
+  }
+
+  // Build summary message
+  const summaryParts = [
+    `**Daily Summary - ${now.toLocaleDateString()}**`,
+    '',
+    `📊 **Progress**: ${completedYesterday} tasks completed yesterday`,
+    `📋 **Active**: ${activeTasks.length} tasks in progress${stuckTasks.length > 0 ? ` (⚠️ ${stuckTasks.length} stuck)` : ''}`,
+    `👤 **Your Tasks**: ${humanTasks.length} awaiting your attention`,
+    `🔔 **Notifications**: ${unreadCount} unread`,
+    `💰 **Monthly Cost**: ${costStatus}`
+  ];
+
+  if (highPriorityIssues.length > 0) {
+    summaryParts.push('');
+    summaryParts.push(`⚠️ **${highPriorityIssues.length} high priority issues** need attention`);
+    highPriorityIssues.slice(0, 3).forEach(issue => {
+      summaryParts.push(`  • ${issue.title}`);
+    });
+  }
+
+  const summaryContent = summaryParts.join('\n');
+
+  // Create notification
+  const notification = {
+    id: `notif-${Date.now()}`,
+    type: 'daily_summary',
+    title: 'Morning Briefing',
+    message: summaryContent,
+    read: false,
+    createdAt: now.toISOString(),
+    metadata: {
+      completedYesterday,
+      activeTasks: activeTasks.length,
+      stuckTasks: stuckTasks.length,
+      humanTasks: humanTasks.length,
+      highPriorityIssues: highPriorityIssues.length
+    }
+  };
+
+  mc.notifications.unshift(notification);
+  fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+  cache.missionControl = null; // Clear cache
+
+  console.log(`[DailySummary] Morning briefing created: ${completedYesterday} completed, ${humanTasks.length} human tasks`);
+  return notification;
+}
+
+/**
+ * Schedule daily summary at 8 AM PST
+ */
+cron.schedule('0 8 * * *', () => {
+  console.log('[Cron] Generating morning summary...');
+  try {
+    generateDailySummary();
+  } catch (err) {
+    console.error('[Cron] Daily summary failed:', err);
+  }
+}, {
+  timezone: 'America/Los_Angeles'
+});
+
+console.log('[Cron] Daily summary scheduled for 8:00 AM PST');
 
 // ============================================================================
 // OPTIMIZATION API ENDPOINTS
@@ -3055,6 +4007,19 @@ app.post('/api/optimizations/run', (req, res) => {
   try {
     const result = runOptimization();
     res.json({ success: true, ...result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Manually trigger daily summary
+ */
+app.post('/api/daily-summary/generate', (req, res) => {
+  try {
+    const notification = generateDailySummary();
+    res.json({ success: true, notification });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
