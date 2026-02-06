@@ -42,6 +42,21 @@
 - Keep each part under 500 chars including the label
 - Natural break points between parts (don't split mid-thought)
 
+**Rich features (use occasionally, ~1 in 5 posts):**
+
+| Feature | When to use | Example |
+|---------|-------------|---------|
+| **Poll** | Binary tensions, either/or questions, gauge audience | "Which do you default to? Yes: Planning / No: Action" |
+| **Location** | Place-specific wisdom, grounding abstract ideas | Tag "Earth" for universal truths, or specific places for stories |
+| **Text Attachment** | Longer formatted quotes, definitions, lists | Use for excerpts, formatted poetry, structured breakdowns |
+| **Image** | Visual metaphors, quote cards, diagrams | Tension diagrams, nature photos that embody concepts |
+| **GIF** | Reactions, humor, cultural references | Sparingly — only when it genuinely adds to the point |
+
+**Poll format:**
+- Yes/No for binary tensions (action vs planning, comfort vs growth)
+- Custom options for philosophical choices
+- Always tie back to a larger insight in the post text
+
 **Example tone:**
 "You know that feeling when... [relatable moment]? Maybe that's because... [insight]. What if... [gentle challenge]?"
 
