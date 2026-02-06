@@ -303,6 +303,7 @@ function IdeasBrowser({ ideas }) {
   const [sortBy, setSortBy] = useState('date') // 'date' | 'id' | 'status'
   const [sortDir, setSortDir] = useState('desc')
   const [expandedId, setExpandedId] = useState(null)
+  const [selectedIdea, setSelectedIdea] = useState(null) // For detail modal
   const [page, setPage] = useState(1)
   const perPage = 20
 
@@ -558,6 +559,7 @@ function IdeasBrowser({ ideas }) {
           expandedId={expandedId}
           onExpand={setExpandedId}
           onTagClick={(tag) => { setTagFilter(tag); setPage(1) }}
+          onViewDetails={setSelectedIdea}
         />
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -567,6 +569,15 @@ function IdeasBrowser({ ideas }) {
         </div>
       ) : (
         <IdeasCompact ideas={paginatedIdeas} onTagClick={(tag) => { setTagFilter(tag); setPage(1) }} />
+      )}
+
+      {/* Idea Detail Modal */}
+      {selectedIdea && (
+        <IdeaDetailModal
+          idea={selectedIdea}
+          onClose={() => setSelectedIdea(null)}
+          onTagClick={(tag) => { setTagFilter(tag); setPage(1); setSelectedIdea(null) }}
+        />
       )}
 
       {/* Pagination */}
@@ -598,7 +609,7 @@ function IdeasBrowser({ ideas }) {
   )
 }
 
-function IdeasTable({ ideas, sortBy, sortDir, onSort, expandedId, onExpand, onTagClick }) {
+function IdeasTable({ ideas, sortBy, sortDir, onSort, expandedId, onExpand, onTagClick, onViewDetails }) {
   const SortHeader = ({ field, children }) => (
     <th
       className="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
@@ -661,7 +672,7 @@ function IdeasTable({ ideas, sortBy, sortDir, onSort, expandedId, onExpand, onTa
               {expandedId === idea.id && (
                 <tr key={`${idea.id}-expanded`}>
                   <td colSpan={5} className="px-4 py-4 bg-blue-50 border-l-4 border-l-blue-500">
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <p className="text-sm text-neutral-800 whitespace-pre-wrap">{idea.text || idea.quote}</p>
                       {idea.tags?.length > 0 && (
                         <div className="flex flex-wrap gap-1 pt-2">
@@ -675,6 +686,17 @@ function IdeasTable({ ideas, sortBy, sortDir, onSort, expandedId, onExpand, onTa
                             </button>
                           ))}
                         </div>
+                      )}
+                      {/* View Full Analysis Button */}
+                      {(idea.notes || idea.tension || idea.paradox || idea.connections || idea.chapter ||
+                        (Array.isArray(idea.potentialContent) ? idea.potentialContent.length > 0 : idea.potentialContent)) && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onViewDetails(idea) }}
+                          className="mt-2 px-4 py-2 bg-gold text-white rounded-lg text-sm font-medium hover:bg-gold/90 transition-colors flex items-center gap-2"
+                        >
+                          <Lightbulb size={16} />
+                          View Full Analysis
+                        </button>
                       )}
                     </div>
                   </td>
@@ -779,6 +801,169 @@ function LoadingState() {
   return (
     <div className="flex items-center justify-center h-64">
       <div className="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+}
+
+// ============================================================================
+// IDEA DETAIL MODAL - Full Processed Content View
+// ============================================================================
+
+function IdeaDetailModal({ idea, onClose, onTagClick }) {
+  const statusEmoji = { captured: '🔵', assigned: '🟡', drafted: '🟠', shipped: '🟢' }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Lightbulb size={24} className="text-gold" />
+            <div>
+              <h2 className="text-xl font-serif font-semibold">Idea #{idea.id}</h2>
+              <div className="flex items-center gap-3 text-sm text-neutral-500">
+                <span>{statusEmoji[idea.status]} {idea.status}</span>
+                {idea.date && <span>• {idea.date}</span>}
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Original Idea */}
+          <Section title="Original Idea" icon={<Lightbulb size={18} />}>
+            <p className="text-neutral-800 whitespace-pre-wrap">{idea.text || idea.quote}</p>
+          </Section>
+
+          {/* Tags */}
+          {idea.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {idea.tags.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => onTagClick(tag)}
+                  className="px-3 py-1 bg-neutral-100 text-neutral-700 rounded-full text-sm hover:bg-neutral-200 transition-colors flex items-center gap-1"
+                >
+                  <Tag size={12} />
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Notes */}
+          {idea.notes && (
+            <Section title="Notes" icon={<FileText size={18} />} color="blue">
+              <p className="text-neutral-800 whitespace-pre-wrap">{idea.notes}</p>
+            </Section>
+          )}
+
+          {/* The Tension */}
+          {idea.tension && (
+            <Section title="The Tension" icon={<AlertTriangle size={18} />} color="amber">
+              <p className="text-neutral-800 whitespace-pre-wrap">{idea.tension}</p>
+            </Section>
+          )}
+
+          {/* The Paradox */}
+          {idea.paradox && (
+            <Section title="The Paradox" icon={<TrendingUp size={18} />} color="purple">
+              <p className="text-neutral-800 whitespace-pre-wrap">{idea.paradox}</p>
+            </Section>
+          )}
+
+          {/* Connections */}
+          {idea.connections && (
+            <Section title="Connections" icon={<Grid size={18} />} color="green">
+              <p className="text-neutral-800 whitespace-pre-wrap">{idea.connections}</p>
+            </Section>
+          )}
+
+          {/* Potential Content */}
+          {idea.potentialContent && (Array.isArray(idea.potentialContent) ? idea.potentialContent.length > 0 : idea.potentialContent) && (
+            <Section title="Potential Content" icon={<Target size={18} />} color="gold">
+              {Array.isArray(idea.potentialContent) ? (
+                <ul className="space-y-2">
+                  {idea.potentialContent.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="text-yellow-600 mt-1">•</span>
+                      <span className="text-neutral-800">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-neutral-800 whitespace-pre-wrap">{idea.potentialContent}</p>
+              )}
+            </Section>
+          )}
+
+          {/* Chapter Mapping */}
+          {idea.chapter && (
+            <Section title="Chapter Mapping" icon={<FileText size={18} />} color="indigo">
+              <p className="text-neutral-800 whitespace-pre-wrap">{idea.chapter}</p>
+            </Section>
+          )}
+
+          {/* Status Detail */}
+          {idea.statusDetail && (
+            <Section title="Status Notes" icon={<Clock size={18} />} color="neutral">
+              <p className="text-neutral-800 whitespace-pre-wrap">{idea.statusDetail}</p>
+            </Section>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="sticky bottom-0 bg-neutral-50 border-t border-neutral-200 px-6 py-4 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-300 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Section({ title, icon, color = 'neutral', children }) {
+  const colors = {
+    neutral: 'bg-neutral-50 border-neutral-200',
+    blue: 'bg-blue-50 border-blue-200',
+    amber: 'bg-amber-50 border-amber-200',
+    purple: 'bg-purple-50 border-purple-200',
+    green: 'bg-green-50 border-green-200',
+    gold: 'bg-yellow-50 border-yellow-300',
+    indigo: 'bg-indigo-50 border-indigo-200'
+  }
+
+  const iconColors = {
+    neutral: 'text-neutral-600',
+    blue: 'text-blue-600',
+    amber: 'text-amber-600',
+    purple: 'text-purple-600',
+    green: 'text-green-600',
+    gold: 'text-yellow-600',
+    indigo: 'text-indigo-600'
+  }
+
+  return (
+    <div className={`p-4 rounded-lg border ${colors[color]}`}>
+      <h3 className={`font-semibold mb-2 flex items-center gap-2 ${iconColors[color]}`}>
+        {icon}
+        {title}
+      </h3>
+      {children}
     </div>
   )
 }

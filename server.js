@@ -118,18 +118,35 @@ function parseIdeasBank() {
 
   let currentIdea = null;
   let currentDate = null;
+  let currentSection = null; // Track which section we're in (notes, potential content, etc.)
+  let sectionContent = [];
 
-  for (const line of lines) {
+  const saveSection = () => {
+    if (currentIdea && currentSection && sectionContent.length > 0) {
+      const text = sectionContent.join('\n').trim();
+      if (text) {
+        currentIdea[currentSection] = text;
+      }
+    }
+    sectionContent = [];
+    currentSection = null;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
     // Match date headers like "## 2026-02-02"
     const dateMatch = line.match(/^##\s+(\d{4}-\d{2}-\d{2})/);
     if (dateMatch) {
+      saveSection();
       currentDate = dateMatch[1];
       continue;
     }
 
-    // Match idea headers like "### #001 - 06:42 AM PST" or "## 001 | 2026-02-02 14:30 PST"
+    // Match idea headers like "### #001 - 06:42 AM PST"
     const headerMatch = line.match(/^###?\s+#?(\d+)\s+[-|]\s+(.+)/);
     if (headerMatch) {
+      saveSection();
       if (currentIdea) ideas.push(currentIdea);
       currentIdea = {
         id: headerMatch[1],
@@ -137,35 +154,73 @@ function parseIdeasBank() {
         date: currentDate,
         text: '',
         quote: '',
+        quoteOriginal: '',
+        quoteRefined: '',
         tags: [],
-        status: 'captured'
+        status: 'captured',
+        statusDetail: '',
+        chapter: '',
+        notes: '',
+        tension: '',
+        paradox: '',
+        connections: '',
+        potentialContent: []
       };
       continue;
     }
-    
-    // Match quote like "**Quote:** ..." or "**Quote (original):** ..." or "**Quote (refined):** ..."
-    const quoteMatch = line.match(/\*\*Quote.*?:\*\*\s+(.+)/);
-    if (quoteMatch && currentIdea) {
-      // Use refined quote if available, otherwise use original
-      if (line.includes('(refined)') || !currentIdea.quote) {
-        currentIdea.quote = quoteMatch[1].replace(/^"|"$/g, '');
-        currentIdea.text = currentIdea.quote; // Use quote as text
-      }
+
+    if (!currentIdea) continue;
+
+    // Match Quote (original)
+    const quoteOrigMatch = line.match(/\*\*Quote \(original\):\*\*\s+(.+)/);
+    if (quoteOrigMatch) {
+      saveSection();
+      currentIdea.quoteOriginal = quoteOrigMatch[1].replace(/^"|"$/g, '');
       continue;
     }
-    
-    // Match tags like "**Tags:** #balance #movement"
+
+    // Match Quote (refined)
+    const quoteRefMatch = line.match(/\*\*Quote \(refined\):\*\*\s+(.+)/);
+    if (quoteRefMatch) {
+      saveSection();
+      currentIdea.quoteRefined = quoteRefMatch[1].replace(/^"|"$/g, '');
+      currentIdea.quote = currentIdea.quoteRefined;
+      currentIdea.text = currentIdea.quoteRefined;
+      continue;
+    }
+
+    // Match simple Quote
+    const quoteMatch = line.match(/\*\*Quote:\*\*\s+(.+)/);
+    if (quoteMatch) {
+      saveSection();
+      currentIdea.quote = quoteMatch[1].replace(/^"|"$/g, '');
+      currentIdea.text = currentIdea.quote;
+      continue;
+    }
+
+    // Match tags
     const tagsMatch = line.match(/\*\*Tags:\*\*\s+(.+)/);
-    if (tagsMatch && currentIdea) {
+    if (tagsMatch) {
+      saveSection();
       currentIdea.tags = tagsMatch[1].split(/\s+/).filter(t => t.startsWith('#')).map(t => t.substring(1));
       continue;
     }
-    
-    // Match status like "**Status:** 🔵 New" or "**Status:** Captured → Assigned"
+
+    // Match chapter
+    const chapterMatch = line.match(/\*\*Chapter:\*\*\s+(.+)/);
+    if (chapterMatch) {
+      saveSection();
+      currentIdea.chapter = chapterMatch[1].trim();
+      continue;
+    }
+
+    // Match status
     const statusMatch = line.match(/\*\*Status:\*\*\s+(.+)/);
-    if (statusMatch && currentIdea) {
+    if (statusMatch) {
+      saveSection();
+      currentIdea.statusDetail = statusMatch[1].trim();
       const status = statusMatch[1].toLowerCase();
-      if (status.includes('🟢') || status.includes('used') || status.includes('shipped')) {
+      if (status.includes('🟢') || status.includes('used') || status.includes('shipped') || status.includes('posted')) {
         currentIdea.status = 'shipped';
       } else if (status.includes('🟠') || status.includes('creating') || status.includes('drafted')) {
         currentIdea.status = 'drafted';
@@ -176,8 +231,75 @@ function parseIdeasBank() {
       }
       continue;
     }
+
+    // Match Notes section start
+    if (line.match(/^\*\*Notes:\*\*/)) {
+      saveSection();
+      currentSection = 'notes';
+      const inlineContent = line.replace(/^\*\*Notes:\*\*\s*/, '').trim();
+      if (inlineContent) sectionContent.push(inlineContent);
+      continue;
+    }
+
+    // Match The tension/The paradox sections
+    if (line.match(/^\*\*The tension:\*\*/i)) {
+      saveSection();
+      currentSection = 'tension';
+      const inlineContent = line.replace(/^\*\*The tension:\*\*\s*/i, '').trim();
+      if (inlineContent) sectionContent.push(inlineContent);
+      continue;
+    }
+
+    if (line.match(/^\*\*The paradox:\*\*/i)) {
+      saveSection();
+      currentSection = 'paradox';
+      const inlineContent = line.replace(/^\*\*The paradox:\*\*\s*/i, '').trim();
+      if (inlineContent) sectionContent.push(inlineContent);
+      continue;
+    }
+
+    // Match Connection to other ideas / TensionLines angle
+    if (line.match(/^\*\*(Connection|The TensionLines|Why)/i)) {
+      saveSection();
+      currentSection = 'connections';
+      sectionContent.push(line);
+      continue;
+    }
+
+    // Match Potential Content
+    if (line.match(/^\*\*Potential Content:\*\*/)) {
+      saveSection();
+      currentSection = 'potentialContent';
+      continue;
+    }
+
+    // Check for new bold section that ends current section
+    if (line.match(/^\*\*[^*]+:\*\*/) && currentSection) {
+      saveSection();
+      // Re-process this line to handle the new section
+      i--;
+      continue;
+    }
+
+    // If we're in a section, add content
+    if (currentSection) {
+      // For potential content, parse bullet points
+      if (currentSection === 'potentialContent') {
+        const bulletMatch = line.match(/^-\s+(.+)/);
+        if (bulletMatch) {
+          if (!Array.isArray(currentIdea.potentialContent)) {
+            currentIdea.potentialContent = [];
+          }
+          currentIdea.potentialContent.push(bulletMatch[1].trim());
+        }
+      } else {
+        sectionContent.push(line);
+      }
+    }
   }
-  
+
+  // Save final section and idea
+  saveSection();
   if (currentIdea) ideas.push(currentIdea);
 
   cache.ideasBank = ideas;
