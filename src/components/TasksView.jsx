@@ -1,7 +1,7 @@
-import useSWR from 'swr'
-import { getTasks } from '../lib/api'
+import useSWR, { mutate } from 'swr'
+import { getTasks, reopenTask } from '../lib/api'
 import { formatDate, formatStatus, getStatusColor, truncate } from '../lib/formatters'
-import { ListTodo } from 'lucide-react'
+import { ListTodo, RotateCcw } from 'lucide-react'
 import { useState } from 'react'
 
 // Infer category from task title
@@ -404,8 +404,25 @@ export default function TasksView() {
 }
 
 function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
+  const [reopening, setReopening] = useState(false)
   const statusColor = getStatusColor(task.status)
   const category = getTaskCategory(task)
+  const isCompleted = ['completed', 'shipped'].includes(task.status)
+
+  const handleReopen = async () => {
+    if (!confirm('Reopen this task? It will be marked as "assigned" and returned to the assignee.')) {
+      return
+    }
+    setReopening(true)
+    try {
+      await reopenTask(task.id, 'Marked as undone by user')
+      mutate('/tasks')
+    } catch (err) {
+      console.error('Error reopening task:', err)
+      alert('Failed to reopen task. Please try again.')
+    }
+    setReopening(false)
+  }
   
   // Calculate progress
   const getProgress = (task) => {
@@ -491,14 +508,29 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
         </div>
       </div>
       
-      <div className="flex items-center space-x-4 text-xs text-neutral-500">
-        {task.assigneeIds && task.assigneeIds.length > 0 && (
-          <span>👤 {task.assigneeIds.map(a => a === 'human' ? 'Shawn' : a).join(', ')}</span>
-        )}
-        {showCompletedDate && task.completedAt ? (
-          <span className="text-green-600 font-medium">✓ Completed {formatDate(task.completedAt)}</span>
-        ) : task.createdAt && (
-          <span>Created {formatDate(task.createdAt)}</span>
+      <div className="flex items-center justify-between text-xs text-neutral-500">
+        <div className="flex items-center space-x-4">
+          {task.assigneeIds && task.assigneeIds.length > 0 && (
+            <span>👤 {task.assigneeIds.map(a => a === 'human' ? 'Shawn' : a).join(', ')}</span>
+          )}
+          {showCompletedDate && task.completedAt ? (
+            <span className="text-green-600 font-medium">✓ Completed {formatDate(task.completedAt)}</span>
+          ) : task.createdAt && (
+            <span>Created {formatDate(task.createdAt)}</span>
+          )}
+        </div>
+
+        {/* Reopen button for completed tasks */}
+        {isCompleted && (
+          <button
+            onClick={handleReopen}
+            disabled={reopening}
+            className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-md hover:bg-amber-200 transition-colors disabled:opacity-50"
+            title="Reopen this task and return it to the assignee"
+          >
+            <RotateCcw size={14} className={reopening ? 'animate-spin' : ''} />
+            {reopening ? 'Reopening...' : 'Undo Complete'}
+          </button>
         )}
       </div>
     </div>

@@ -178,3 +178,10 @@ export async function setTaskDueDate(taskId, dueDate) {
     body: JSON.stringify({ dueDate })
   })
 }
+
+export async function reopenTask(taskId, reason) {
+  return apiFetch(`/tasks/${taskId}/reopen`, {
+    method: 'POST',
+    body: JSON.stringify({ reason })
+  })
+}
