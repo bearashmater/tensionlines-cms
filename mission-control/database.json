@@ -626,7 +626,19 @@
         "reportingFrequency": "Weekly summary every Sunday"
       },
       "dueDate": "2026-02-06T06:36:00.000Z",
-      "startedAt": "2026-02-05T12:35:38.821882Z"
+      "startedAt": "2026-02-06T21:02:10.189Z",
+      "dispatchedAt": "2026-02-06T21:02:10.189Z",
+      "dispatchedBy": "human",
+      "steps": [
+        {
+          "id": "step-1770411730189",
+          "description": "Dispatched",
+          "status": "completed",
+          "startedAt": "2026-02-06T21:02:10.189Z",
+          "completedAt": "2026-02-06T21:02:10.189Z",
+          "agentId": "human"
+        }
+      ]
     },
     {
       "id": "task-014",
@@ -755,7 +767,43 @@
         "reassignReason": "Restoring original assignment after test"
       },
       "dueDate": "2026-02-08T12:00:00.000Z",
-      "startedAt": "2026-02-05T12:35:38.821882Z"
+      "startedAt": "2026-02-06T20:58:15.434Z",
+      "dispatchedAt": "2026-02-06T20:58:15.434Z",
+      "dispatchedBy": "human",
+      "steps": [
+        {
+          "id": "step-1770411495434",
+          "description": "Dispatched",
+          "status": "completed",
+          "startedAt": "2026-02-06T20:58:15.434Z",
+          "completedAt": "2026-02-06T20:58:15.434Z",
+          "agentId": "human"
+        },
+        {
+          "id": "step-1770411500360",
+          "description": "Research/Planning",
+          "status": "completed",
+          "startedAt": "2026-02-06T20:58:20.360Z",
+          "agentId": "aristotle",
+          "completedAt": "2026-02-06T20:59:00.426Z"
+        },
+        {
+          "id": "step-1770412613386",
+          "description": "Testing duration tracking",
+          "status": "completed",
+          "startedAt": "2026-02-06T21:16:53.386Z",
+          "agentId": "aristotle",
+          "completedAt": "2026-02-06T21:17:06.312Z"
+        },
+        {
+          "id": "step-1770412626313",
+          "description": "Testing duration tracking",
+          "status": "completed",
+          "startedAt": "2026-02-06T21:17:06.312Z",
+          "agentId": "aristotle",
+          "completedAt": "2026-02-06T21:17:15.788Z"
+        }
+      ]
     },
     {
       "id": "task-017",
@@ -980,13 +1028,14 @@
           "team-page"
         ]
       },
-      "completedAt": "2026-02-05T13:07:11.810450Z"
+      "completedAt": "2026-02-06T06:02:02.843Z",
+      "completedBy": "human"
     },
     {
       "id": "task-024",
       "title": "Configure Social Channels (Threads, Instagram)",
       "description": "**HUMAN REQUIRED:** Set up channel configuration for @thetensionlines accounts.\n\n**Blocked content:**\n- Daily social posting cron jobs return 'Unknown channel' errors\n- Threads and Instagram content drafted but can't be posted\n\n**What's needed:**\n1. Configure Threads channel in OpenClaw\n2. Configure Instagram channel in OpenClaw\n3. Test posting to both platforms\n\n**See:** memory/2026-02-05.md for drafted content waiting to post\n\n**Unblocks:** Automated daily social posting on all platforms",
-      "status": "inbox",
+      "status": "completed",
       "assigneeIds": [
         "human"
       ],
@@ -1005,13 +1054,15 @@
           "threads",
           "instagram"
         ]
-      }
+      },
+      "completedAt": "2026-02-06T05:32:22.198Z",
+      "completedBy": "human"
     },
     {
       "id": "task-025",
       "title": "Review Book 1 Chapter Outlines",
       "description": "**HUMAN REQUIRED:** Review and approve TensionLines book chapter structure.\n\n**Current structure (5 chapters):**\n1. Chapter 1: The Buzz (Introduction) - Ecclesiastes, Exodus anchors\n2. Chapter 2: The Tension Line - Pole-flipping, case studies\n3. Chapter 3: Multiple Lines, One Life - Navigating simultaneous tensions\n4. Chapter 4: When Tension Collapses - Haidt, false reconciliation\n5. Chapter 5: The Pull (Transcendence) - Sensing the season\n\n**14 ideas mapped to chapters** (see ideas-bank.md)\n\n**Core thesis:** 'Stop trying to get rid of inconsistent principles. Accept the tension and buzz in it.'\n\n**Review for:**\n- Does chapter flow make sense?\n- Missing topics?\n- Chapter order correct?\n- Approve to move to drafting phase\n\n**See:** books/book1-philosophy/PROJECT_TRACKER.md",
-      "status": "inbox",
+      "status": "completed",
       "assigneeIds": [
         "human"
       ],
@@ -1025,13 +1076,15 @@
         "category": "book",
         "book": "book1-philosophy",
         "phase": "outline-review"
-      }
+      },
+      "completedAt": "2026-02-06T06:00:34.444Z",
+      "completedBy": "human"
     },
     {
       "id": "task-026",
       "title": "Provide Weekly Idea Batch for Content Pipeline",
       "description": "**HUMAN REQUIRED:** Feed raw ideas into the content system.\n\n**Current process:**\n- Shawn sends '!' thoughts via Telegram\n- Tension captures and organizes in ideas-bank.md\n- Ideas get mapped to book chapters and social content\n\n**This week's stats:**\n- 14 ideas captured total\n- 6 used for social posts\n- 8 organized into book chapters\n- ~5 new ideas per day keeps pipeline full\n\n**Idea format:**\n- Raw thoughts, quotes, observations\n- Can be rough - Tension will organize\n- Tag with '!' in Telegram to trigger capture\n\n**Goal:** Keep content pipeline flowing with fresh philosophical insights\n\n**Recurring:** Weekly check-in on idea flow",
-      "status": "in_progress",
+      "status": "completed",
       "assigneeIds": [
         "human"
       ],
@@ -1044,14 +1097,16 @@
         "priority": "high",
         "category": "content",
         "recurring": "weekly",
-        "ideasThisWeek": 14
-      }
+        "weeklyGoal": 4,
+        "ideasThisWeek": 17
+      },
+      "completedAt": "2026-02-06T21:29:57.006Z"
     },
     {
       "id": "task-027",
       "title": "Approve Gumroad Products Before Launch",
-      "description": "**HUMAN REQUIRED:** Final approval on digital products before going live.\n\n**Status:** BLOCKED until Twitter reaches 1000 followers (Shawn directive 2026-02-04)\n\n**Approved pricing:**\n- 'The Polarity Map' PDF Workbook ($7)\n- '30-Day Practice-Before-Theory Challenge' ($12)\n- 'TensionLines Field Guide' ($15-20)\n\n**When unblocked, review:**\n1. Product content quality\n2. Pricing confirmation\n3. Gumroad listing copy\n4. Website /products page\n5. Launch announcement copy\n\n**Gumroad account:** https://gumroad.com/thetensionlines\n\n**Blocked by:** task-013 (Twitter growth to 1000 followers)\n\n**See:** Task #012 for full Gumroad setup details",
-      "status": "blocked",
+      "description": "**HUMAN REQUIRED:** Final approval on digital products before going live.\n\n**Status:** DEFERRED until Twitter reaches 1000 followers (Shawn directive 2026-02-04)\n\n**Approved pricing:**\n- 'The Polarity Map' PDF Workbook ($7)\n- '30-Day Practice-Before-Theory Challenge' ($12)\n- 'TensionLines Field Guide' ($15-20)\n\n**When unblocked, review:**\n1. Product content quality\n2. Pricing confirmation\n3. Gumroad listing copy\n4. Website /products page\n5. Launch announcement copy\n\n**Gumroad account:** https://gumroad.com/thetensionlines\n\n**Blocked by:** task-013 (Twitter growth to 1000 followers)\n\n**See:** Task #012 for full Gumroad setup details",
+      "status": "deferred",
       "assigneeIds": [
         "human"
       ],
@@ -1064,14 +1119,17 @@
         "priority": "low",
         "category": "revenue",
         "blockedBy": "task-013",
-        "blockedReason": "Waiting for 1000 Twitter followers"
+        "blockedReason": "Waiting for 1000 Twitter followers",
+        "deferredUntil": "@thetensionlines reaches 1000 followers",
+        "deferredAt": "2026-02-05T21:55:00Z",
+        "reactivateTrigger": "Twitter follower count >= 1000"
       }
     },
     {
       "id": "task-028",
       "title": "Daily Instagram Posting (Manual - via Canva)",
       "description": "**HUMAN REQUIRED:** Manual posting to Instagram to avoid account bans.\n\n**Daily Process:**\n1. Check CMS → Posting Queue for Instagram items\n2. Create visual in Canva using brand templates\n3. Export PNG to instagram-ready folder\n4. Post from Instagram mobile app\n5. Mark as posted in CMS\n\n**Safe Posting Limits:**\n- Max 2 posts per day\n- Minimum 4 hours between posts\n- Post during 9 AM - 9 PM only\n- NO automation tools\n\n**Warmup (first 2 weeks):**\n- Week 1: 1 post every other day\n- Week 2: 1 post per day\n\n**Brand colors:** Cream #FDFCFA, Brown #1A1613, Gold #D4A574\n\n**See:** /content/CANVA_WORKFLOW.md for full guide",
-      "status": "assigned",
+      "status": "completed",
       "assigneeIds": [
         "human"
       ],
@@ -1085,13 +1143,15 @@
         "category": "social",
         "recurring": "daily",
         "platform": "instagram"
-      }
+      },
+      "completedAt": "2026-02-06T06:01:37.275Z",
+      "completedBy": "human"
     },
     {
       "id": "task-029",
       "title": "Daily Threads Posting (Manual)",
       "description": "**HUMAN REQUIRED:** Manual posting to Threads to avoid account bans.\n\n**Daily Process:**\n1. Check CMS → Posting Queue for Threads items\n2. Copy adapted content (no image needed)\n3. Post from Threads mobile app\n4. Mark as posted in CMS\n\n**Safe Posting Limits:**\n- Max 3 posts per day\n- Minimum 3 hours between posts\n- Post during 8 AM - 10 PM\n- Wait 2+ hours after posting same idea on other platforms\n\n**Voice:** Conversational, personal, warm\n- Use 'you know that feeling...' hooks\n- Casual language, contractions\n- 2-5 short paragraphs\n\n**NO automation** - Threads has no public API",
-      "status": "assigned",
+      "status": "completed",
       "assigneeIds": [
         "human"
       ],
@@ -1105,13 +1165,15 @@
         "category": "social",
         "recurring": "daily",
         "platform": "threads"
-      }
+      },
+      "completedAt": "2026-02-06T06:01:57.037Z",
+      "completedBy": "human"
     },
     {
       "id": "task-030",
       "title": "Set Up Canva Brand Kit for TensionLines",
       "description": "**HUMAN REQUIRED:** One-time setup of Canva brand templates.\n\n**Create in Canva:**\n1. Brand Kit with colors:\n   - Background: Cream #FDFCFA\n   - Primary Text: Dark Brown #1A1613\n   - Accent: Gold #D4A574\n   - Secondary: Warm Gray #6B5B4F\n\n2. Fonts:\n   - Headlines: Playfair Display\n   - Body: Inter or Source Sans Pro\n\n3. Templates (1080x1080):\n   - Quote Card - single powerful quote\n   - Carousel Slide - multi-part ideas\n   - Story Template (1080x1920)\n\n4. Add @thetensionlines watermark (subtle, bottom corner)\n\n**Save templates for reuse**\n\n**See:** /content/CANVA_WORKFLOW.md",
-      "status": "inbox",
+      "status": "completed",
       "assigneeIds": [
         "human"
       ],
@@ -1124,11 +1186,242 @@
         "priority": "high",
         "category": "setup",
         "oneTime": true
+      },
+      "completedAt": "2026-02-06T05:20:51.176Z",
+      "completedBy": "human"
+    },
+    {
+      "id": "task-031",
+      "title": "SECURITY: Decide on CMS Authentication Strategy",
+      "description": "**DEFERRED:** User chose to keep localhost-only for now.\n\n**Background:**\nSecurity audit found the CMS has NO authentication on any API endpoints. All POST/PATCH/DELETE operations are completely open.\n\n**Current Risk:** Acceptable for localhost-only. CRITICAL if ever exposed beyond localhost.\n\n**Decision:** Skipped for now - CMS stays localhost-only.\n\n**Reactivate if:**\n- CMS needs to be deployed to a server\n- CMS needs network access from other devices\n- Security requirements change\n\n**Options when needed:**\n1. Add basic auth\n2. Add JWT auth\n3. Add API key\n\n**See:** /cms/SECURITY_AUDIT.md for full report",
+      "status": "deferred",
+      "assigneeIds": [
+        "human"
+      ],
+      "llm": null,
+      "rationale": "User chose to keep localhost-only, no auth needed for now",
+      "reviewerIds": [],
+      "createdBy": "tension",
+      "createdAt": "2026-02-06T06:30:00.000Z",
+      "metadata": {
+        "priority": "low",
+        "category": "security",
+        "securityFinding": true,
+        "severity": "critical",
+        "deferredAt": "2026-02-06T18:20:00.000Z",
+        "deferredReason": "User chose localhost-only, skip auth for now",
+        "reactivateTrigger": "CMS deployment or network exposure needed"
       }
+    },
+    {
+      "id": "task-032",
+      "title": "SECURITY: Fix XSS Vulnerability in Task Descriptions",
+      "description": "**HUMAN REQUIRED:** Security fix needs library choice.\n\n**The Issue:**\nHumanTasks.jsx uses `dangerouslySetInnerHTML` to render task descriptions with formatting. This creates XSS (Cross-Site Scripting) vulnerability - malicious HTML/JS in task descriptions would execute in browser.\n\n**Location:** `/cms/src/components/HumanTasks.jsx:198`\n\n**Options:**\n1. **Use DOMPurify** - Sanitize HTML before rendering (npm install dompurify)\n2. **Use react-markdown** - Parse markdown safely (npm install react-markdown)\n3. **Remove HTML rendering** - Display plain text only (lose formatting)\n\n**Recommendation:** Option 2 (react-markdown) - cleanest solution, proper markdown support.\n\n**Risk Level:** HIGH - but only exploitable if attacker can modify task descriptions.\n\n**To implement:** Tell Claude which option you prefer and it will make the fix.\n\n**See:** /cms/SECURITY_AUDIT.md for full report",
+      "status": "completed",
+      "assigneeIds": [
+        "human"
+      ],
+      "llm": null,
+      "rationale": "Library choice requires human preference",
+      "reviewerIds": [],
+      "createdBy": "tension",
+      "createdAt": "2026-02-06T06:30:00.000Z",
+      "metadata": {
+        "priority": "high",
+        "category": "security",
+        "securityFinding": true,
+        "severity": "high",
+        "affectedFile": "src/components/HumanTasks.jsx"
+      },
+      "completedAt": "2026-02-06T18:19:08.007Z",
+      "completedBy": "tension"
     }
   ],
   "messages": [],
   "activities": [
+    {
+      "id": "activity-1770412626313",
+      "type": "step_added",
+      "agentId": "aristotle",
+      "taskId": "task-016",
+      "timestamp": "2026-02-06T21:17:06.312Z",
+      "description": "Step added to \"CMS Time-In-Status Alerts & Visual Indicators\": Testing duration tracking",
+      "metadata": {
+        "stepId": "step-1770412626313",
+        "stepStatus": "in_progress"
+      }
+    },
+    {
+      "id": "activity-1770412613386",
+      "type": "step_added",
+      "agentId": "aristotle",
+      "taskId": "task-016",
+      "timestamp": "2026-02-06T21:16:53.386Z",
+      "description": "Step added to \"CMS Time-In-Status Alerts & Visual Indicators\": Testing duration tracking",
+      "metadata": {
+        "stepId": "step-1770412613386",
+        "stepStatus": "in_progress"
+      }
+    },
+    {
+      "id": "activity-1770411730189",
+      "type": "task_dispatched",
+      "agentId": "human",
+      "taskId": "task-013",
+      "timestamp": "2026-02-06T21:02:10.189Z",
+      "description": "Dispatched: Twitter Daily Outreach - Growth to 1000 Followers",
+      "metadata": {
+        "dispatchedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770411679955",
+      "type": "status_changed",
+      "agentId": "human",
+      "taskId": "task-013",
+      "timestamp": "2026-02-06T21:01:19.955Z",
+      "description": "Status changed: Twitter Daily Outreach - Growth to 1000 Followers (in_progress → assigned)",
+      "metadata": {
+        "oldStatus": "in_progress",
+        "newStatus": "assigned"
+      }
+    },
+    {
+      "id": "activity-1770411500360",
+      "type": "step_added",
+      "agentId": "aristotle",
+      "taskId": "task-016",
+      "timestamp": "2026-02-06T20:58:20.360Z",
+      "description": "Step added to \"CMS Time-In-Status Alerts & Visual Indicators\": Research/Planning",
+      "metadata": {
+        "stepId": "step-1770411500360",
+        "stepStatus": "in_progress"
+      }
+    },
+    {
+      "id": "activity-1770411495434",
+      "type": "task_dispatched",
+      "agentId": "human",
+      "taskId": "task-016",
+      "timestamp": "2026-02-06T20:58:15.434Z",
+      "description": "Dispatched: CMS Time-In-Status Alerts & Visual Indicators",
+      "metadata": {
+        "dispatchedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770411492005",
+      "type": "status_changed",
+      "agentId": "human",
+      "taskId": "task-016",
+      "timestamp": "2026-02-06T20:58:12.005Z",
+      "description": "Status changed: CMS Time-In-Status Alerts & Visual Indicators (in_progress → assigned)",
+      "metadata": {
+        "oldStatus": "in_progress",
+        "newStatus": "assigned"
+      }
+    },
+    {
+      "id": "activity-1770401948007",
+      "type": "task_completed",
+      "agentId": "tension",
+      "taskId": "task-032",
+      "timestamp": "2026-02-06T18:19:08.007Z",
+      "description": "Completed: SECURITY: Fix XSS Vulnerability in Task Descriptions",
+      "metadata": {
+        "completedBy": "tension"
+      }
+    },
+    {
+      "id": "activity-1770357722843",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-023",
+      "timestamp": "2026-02-06T06:02:02.843Z",
+      "description": "Completed: Provide profile picture for CMS",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770357717037",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-029",
+      "timestamp": "2026-02-06T06:01:57.037Z",
+      "description": "Completed: Daily Threads Posting (Manual)",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770357697275",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-028",
+      "timestamp": "2026-02-06T06:01:37.275Z",
+      "description": "Completed: Daily Instagram Posting (Manual - via Canva)",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770357634444",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-025",
+      "timestamp": "2026-02-06T06:00:34.444Z",
+      "description": "Completed: Review Book 1 Chapter Outlines",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770355942198",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-024",
+      "timestamp": "2026-02-06T05:32:22.198Z",
+      "description": "Completed: Configure Social Channels (Threads, Instagram)",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770355251176",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-030",
+      "timestamp": "2026-02-06T05:20:51.176Z",
+      "description": "Completed: Set Up Canva Brand Kit for TensionLines",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770355123100",
+      "type": "status_changed",
+      "agentId": "human",
+      "taskId": "task-028",
+      "timestamp": "2026-02-06T05:18:43.100Z",
+      "description": "Status changed: Daily Instagram Posting (Manual - via Canva) (assigned → in_progress)",
+      "metadata": {
+        "oldStatus": "assigned",
+        "newStatus": "in_progress"
+      }
+    },
+    {
+      "id": "activity-1770354148769",
+      "type": "task_reopened",
+      "agentId": "human",
+      "taskId": "task-023",
+      "timestamp": "2026-02-06T05:02:28.769Z",
+      "description": "Reopened: Provide profile picture for CMS",
+      "metadata": {
+        "previousCompletedAt": "2026-02-05T13:07:11.810450Z",
+        "reason": "Marked as undone by user"
+      }
+    },
     {
       "id": "activity-1770298696359",
       "type": "due_date_set",
@@ -1948,166 +2241,339 @@
   "documents": [],
   "notifications": [
     {
-      "id": "notif-1770229560000",
-      "type": "backend_ready",
-      "title": "✅ Task #016 Backend Complete - UI Needed",
-      "message": "Aristotle completed backend for time-in-status alerts. API now returns `timeTracking` field for all tasks with `alertLevel` (none/yellow/red) and `timeInStatusHuman`. Ready for Leonardo to add UI badges and indicators. See Task #016 for thresholds.",
-      "from": "aristotle",
-      "to": [
-        "leonardo",
-        "tension"
-      ],
-      "createdAt": "2026-02-05T10:46:00.000Z",
+      "id": "notif-1770410146390",
+      "type": "daily_summary",
+      "title": "Morning Briefing",
+      "message": "**Daily Summary - 2/6/2026**\n\n📊 **Progress**: 7 tasks completed yesterday\n📋 **Active**: 4 tasks in progress (⚠️ 3 stuck)\n👤 **Your Tasks**: 0 awaiting your attention\n🔔 **Notifications**: 2 unread\n💰 **Monthly Cost**: $0.00/$300 (0%)\n\n⚠️ **3 high priority issues** need attention\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h",
       "read": false,
-      "priority": "high",
-      "actionRequired": true,
+      "createdAt": "2026-02-06T20:35:46.388Z",
       "metadata": {
-        "taskId": "task-016",
-        "apiChanges": [
-          "GET /api/tasks returns `timeTracking` field on each task",
-          "GET /api/tasks/:id returns `timeTracking` field",
-          "GET /api/dashboard returns `tasks.stuck` (yellow+red) and `tasks.critical` (red only)"
+        "completedYesterday": 7,
+        "completedDetails": [
+          {
+            "id": "task-023",
+            "title": "Provide profile picture for CMS",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-024",
+            "title": "Configure Social Channels (Threads, Instagram)",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-025",
+            "title": "Review Book 1 Chapter Outlines",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-028",
+            "title": "Daily Instagram Posting (Manual - via Canva)",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-029",
+            "title": "Daily Threads Posting (Manual)",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-030",
+            "title": "Set Up Canva Brand Kit for TensionLines",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-032",
+            "title": "SECURITY: Fix XSS Vulnerability in Task Descriptions",
+            "assignees": [
+              "human"
+            ]
+          }
         ],
-        "uiWork": [
-          "Tasks View: Add time-in-status badges with color coding",
-          "Agent cards: Show yellow/red indicators for stuck tasks",
-          "Dashboard: Show 'Stuck Tasks' count"
+        "activeTasks": 4,
+        "activeDetails": [
+          {
+            "id": "task-013",
+            "title": "Twitter Daily Outreach - Growth to 1000 Followers",
+            "status": "in_progress",
+            "assignees": [
+              "nietzsche"
+            ],
+            "timeInStatus": "1d 8h",
+            "alertLevel": "red"
+          },
+          {
+            "id": "task-014",
+            "title": "Bluesky Daily Outreach - Community Growth",
+            "status": "in_progress",
+            "assignees": [
+              "heraclitus"
+            ],
+            "timeInStatus": "1d 8h",
+            "alertLevel": "red"
+          },
+          {
+            "id": "task-016",
+            "title": "CMS Time-In-Status Alerts & Visual Indicators",
+            "status": "in_progress",
+            "assignees": [
+              "aristotle"
+            ],
+            "timeInStatus": "1d 8h",
+            "alertLevel": "red"
+          },
+          {
+            "id": "task-026",
+            "title": "Provide Weekly Idea Batch for Content Pipeline",
+            "status": "in_progress",
+            "assignees": [
+              "human"
+            ],
+            "timeInStatus": "unknown",
+            "alertLevel": "none"
+          }
         ],
-        "thresholds": {
-          "assigned": "yellow at 3h, red at 6h",
-          "in_progress": "yellow at 4h, red at 8h",
-          "review": "yellow at 2h, red at 4h"
-        }
+        "stuckTasks": 3,
+        "humanTasks": 0,
+        "humanDetails": [],
+        "unreadCount": 2,
+        "costStatus": "$0.00/$300 (0%)",
+        "highPriorityIssues": 3,
+        "highPriorityDetails": [
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Twitter Daily Outreach - Growth to 1000 Followers\" (task-013) has been in in_progress status for 1d 6h. Assigned to: nietzsche",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-013",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Bluesky Daily Outreach - Community Growth\" (task-014) has been in in_progress status for 1d 6h. Assigned to: heraclitus",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-014",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 1d 6h. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          }
+        ]
       }
     },
     {
-      "id": "notif-1770224775537",
-      "type": "task_assignment",
-      "title": "🚨 HIGH PRIORITY: CMS Time-In-Status Alerts",
-      "message": "Task #016 assigned: Track how long tasks are stuck, add visual warnings (yellow at 3h, red at 6h). Prevents philosopher bottlenecks. Collaborate with Leonardo on UI. ~1.5 hours.",
-      "from": "tension",
+      "id": "notif-1770409931939",
+      "type": "daily_summary",
+      "title": "Morning Briefing",
+      "message": "**Daily Summary - 2/6/2026**\n\n📊 **Progress**: 7 tasks completed yesterday\n📋 **Active**: 4 tasks in progress (⚠️ 3 stuck)\n👤 **Your Tasks**: 0 awaiting your attention\n🔔 **Notifications**: 1 unread\n💰 **Monthly Cost**: $0.00/$300 (0%)\n\n⚠️ **3 high priority issues** need attention\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h",
+      "read": false,
+      "createdAt": "2026-02-06T20:32:11.938Z",
+      "metadata": {
+        "completedYesterday": 7,
+        "activeTasks": 4,
+        "stuckTasks": 3,
+        "humanTasks": 0,
+        "highPriorityIssues": 3,
+        "highPriorityDetails": [
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Twitter Daily Outreach - Growth to 1000 Followers\" (task-013) has been in in_progress status for 1d 6h. Assigned to: nietzsche",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-013",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Bluesky Daily Outreach - Community Growth\" (task-014) has been in in_progress status for 1d 6h. Assigned to: heraclitus",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-014",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 1d 6h. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          }
+        ]
+      }
+    },
+    {
+      "id": "notif-1770406629964",
+      "type": "daily_summary",
+      "title": "Morning Briefing",
+      "message": "**Daily Summary - 2/6/2026**\n\n📊 **Progress**: 7 tasks completed yesterday\n📋 **Active**: 4 tasks in progress (⚠️ 3 stuck)\n👤 **Your Tasks**: 0 awaiting your attention\n🔔 **Notifications**: 29 unread\n💰 **Monthly Cost**: $0.00/$300 (0%)\n\n⚠️ **3 high priority issues** need attention\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h",
+      "read": false,
+      "createdAt": "2026-02-06T19:37:09.963Z",
+      "metadata": {
+        "completedYesterday": 7,
+        "activeTasks": 4,
+        "stuckTasks": 3,
+        "humanTasks": 0,
+        "highPriorityIssues": 3
+      }
+    },
+    {
+      "id": "notif-1770150633424",
+      "type": "urgent",
+      "title": "🚨 P0 FACT-CHECK: Task #008 BLOCKED",
+      "message": "Task #008 contains unattributed quote. Plagiarism risk if shipped. HOLD until source attribution added. See: philosophers/hypatia/notes/fact-check-task-008-URGENT.md",
+      "from": "hypatia",
       "to": [
-        "aristotle",
-        "leonardo"
+        "tension",
+        "heraclitus"
       ],
-      "createdAt": "2026-02-04T17:06:15.536Z",
+      "createdAt": "2026-02-03T20:30:33.424Z",
       "read": true,
-      "readAt": "2026-02-05T10:46:00.000Z",
-      "readBy": "aristotle",
-      "priority": "high",
+      "readAt": "2026-02-03T20:38:00Z",
+      "readBy": "tension",
+      "priority": "critical",
       "actionRequired": false,
+      "actionTaken": "Revised draft created and approved by squad lead. Task unblocked.",
       "metadata": {
-        "taskId": "task-016",
-        "estimatedHours": 1.5,
-        "collaborators": [
-          "aristotle",
-          "leonardo"
-        ],
-        "prevents": "Philosopher bottlenecks (see Task #003 - Leonardo stuck 5+ hours)"
+        "taskId": "task-008",
+        "reportPath": "philosophers/hypatia/notes/fact-check-task-008-URGENT.md",
+        "issue": "unattributed quote",
+        "risk": "plagiarism",
+        "resolution": "Rephrased as original thought, approved by Tension"
       }
     },
     {
-      "id": "notif-1770224775536",
+      "id": "notif-1770177120001",
       "type": "task_assignment",
-      "title": "🔧 CMS Improvement: Process Management",
-      "message": "Task #015 assigned: Add startup check to prevent multiple CMS instances. Simple bash script + cron update. 15 min task.",
+      "title": "📝 New Task: Website Content Development",
+      "message": "Task #011 assigned: Create Resources page for thetensionlines.com. Draft curated reading list, practical exercises, and navigation tools. See task details in Mission Control.",
       "from": "tension",
       "to": [
-        "aristotle"
+        "plato"
       ],
-      "createdAt": "2026-02-04T17:06:15.536Z",
-      "read": false,
+      "createdAt": "2026-02-04T04:32:00.001Z",
+      "read": true,
+      "readAt": "2026-02-04T04:45:00Z",
+      "readBy": "plato",
+      "priority": "normal",
+      "actionRequired": false,
+      "actionTaken": "Draft completed and submitted for fact-check",
+      "metadata": {
+        "taskId": "task-011",
+        "draftPath": "website-updates/2026-02-04-resources-page.md",
+        "estimatedHours": 2.5,
+        "recurringTaskId": "recurring-016"
+      }
+    },
+    {
+      "id": "notif-1770177900001",
+      "type": "review_request",
+      "title": "📋 Resources Page Ready for Fact-Check",
+      "message": "Plato completed Resources page draft (v1.0). Ready for fact-check: book titles, author names, philosophical concepts. Draft at website-updates/2026-02-03-resources-page.md",
+      "from": "plato",
+      "to": [
+        "hypatia"
+      ],
+      "createdAt": "2026-02-04T04:45:00.001Z",
+      "read": true,
       "priority": "normal",
       "actionRequired": false,
       "metadata": {
-        "taskId": "task-015",
-        "estimatedMinutes": 15,
-        "scriptPath": "scripts/cms-start.sh"
-      }
+        "taskId": "task-011",
+        "draftPath": "website-updates/2026-02-03-resources-page.md",
+        "checkFor": [
+          "Book titles accuracy",
+          "Author names spelling",
+          "Philosophical concepts correctness",
+          "Any factual errors"
+        ]
+      },
+      "readAt": "2026-02-04T04:48:15.889Z",
+      "readBy": "hypatia",
+      "actionTaken": "Fact-check completed - APPROVED. Report: philosophers/hypatia/notes/fact-check-task-011-resources-page.md"
     },
     {
-      "id": "notif-1770219600000",
-      "type": "task_assignment",
-      "title": "🌊 Bluesky Daily Outreach - Community Growth",
-      "message": "Task #014 assigned: Grow thetensionlines.bsky.social through daily thoughtful outreach. Find 5 aligned users daily, follow, add contemplative comments, monitor replies. Your observational voice (Heraclitus) is perfect for Bluesky's collaborative culture. See bluesky-outreach-workflow.md for full details.",
-      "from": "tension",
+      "id": "notif-1770180495890",
+      "type": "fact_check_approved",
+      "title": "✅ Fact-Check Complete: Resources Page APPROVED",
+      "message": "Hypatia completed fact-check of Resources page. All 12 books verified, links confirmed, zero errors found. Ready for Hugo/Netlify deployment. Report: philosophers/hypatia/notes/fact-check-task-011-resources-page.md",
+      "from": "hypatia",
       "to": [
-        "heraclitus"
+        "plato",
+        "aristotle",
+        "tension"
       ],
-      "createdAt": "2026-02-04T14:20:00Z",
+      "createdAt": "2026-02-04T04:48:15.890Z",
       "read": true,
-      "readAt": "2026-02-04T14:40:00Z",
-      "readBy": "heraclitus",
-      "priority": "high",
-      "actionRequired": false,
+      "readAt": "2026-02-04T04:49:00.000Z",
+      "readBy": "tension",
+      "priority": "normal",
+      "actionRequired": true,
       "metadata": {
-        "taskId": "task-014",
-        "workflowDoc": "bluesky-outreach-workflow.md",
-        "dailyCommitment": "30-40 min (Mon-Sat)",
-        "dailyTarget": "5 users: find, follow, comment, monitor",
-        "currentFollowers": "~20-50",
-        "targetFollowers": 500,
-        "targetFollowersLongTerm": 1500,
-        "escalationChannel": "Telegram to Shawn when replies received",
-        "startDate": "2026-02-04",
-        "reporting": "Weekly summary every Sunday",
-        "voiceStyle": "Heraclitus: observational, flux-focused, gentle",
-        "platformAdvantage": "Higher engagement, better cultural fit for contemplative content"
+        "taskId": "task-011",
+        "reportPath": "philosophers/hypatia/notes/fact-check-task-011-resources-page.md",
+        "verdict": "APPROVED",
+        "nextAction": "Aristotle: Deploy to Hugo/Netlify"
       }
     },
     {
-      "id": "notif-1770218820000",
-      "type": "task_assignment",
-      "title": "🚨 CRITICAL PATH: Twitter Daily Outreach",
-      "message": "Task #013 assigned: Grow @thetensionlines to 1000 followers through daily strategic outreach. Find 5 aligned users daily, follow, comment, monitor replies. Escalate replies to Shawn. This unblocks Gumroad launch. See twitter-outreach-workflow.md for full details.",
+      "id": "notif-1770180540000",
+      "type": "deployment_ready",
+      "title": "🚀 DEPLOY: Resources Page Approved & Ready",
+      "message": "Task #011 Resources page cleared all reviews. Deploy to Hugo/Netlify now. Source: website-updates/2026-02-03-resources-page.md → Hugo content/resources.md. Add to nav menu after Philosophy.",
       "from": "tension",
       "to": [
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-04T14:07:00Z",
-      "read": true,
-      "readAt": "2026-02-04T14:30:00Z",
-      "readBy": "nietzsche",
-      "priority": "critical",
-      "actionRequired": false,
-      "metadata": {
-        "taskId": "task-013",
-        "workflowDoc": "twitter-outreach-workflow.md",
-        "dailyCommitment": "30-40 min (Mon-Sat)",
-        "dailyTarget": "5 users: find, follow, comment, monitor",
-        "currentFollowers": "~50-100",
-        "targetFollowers": 1000,
-        "unblocks": "Task #012 (Gumroad launch)",
-        "escalationChannel": "Telegram to Shawn when replies received",
-        "startDate": "2026-02-04",
-        "reporting": "Weekly summary every Sunday"
-      }
-    },
-    {
-      "id": "notif-1770214620000",
-      "type": "task_blocked",
-      "title": "⏸️ Task #012 BLOCKED: Gumroad Launch on Hold",
-      "message": "Shawn directive: Push Gumroad launch until Twitter hits 1000 followers. Pricing approved ($7/$12/$15-20), product priority flexible. Focus all efforts on Twitter growth first.",
-      "from": "tension",
-      "to": [
-        "socrates",
         "aristotle"
       ],
-      "createdAt": "2026-02-04T13:17:00Z",
+      "createdAt": "2026-02-04T04:49:00.000Z",
       "read": true,
-      "readAt": "2026-02-04T05:34:00Z",
-      "readBy": "aristotle",
       "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "taskId": "task-011",
+        "sourcePath": "website-updates/2026-02-03-resources-page.md",
+        "targetPath": "tension-lines-website/content/resources.md",
+        "deployTo": "Netlify (production)",
+        "addToNav": true,
+        "navPosition": "after Philosophy, before Contact",
+        "estimatedTime": "15-20 minutes"
+      },
+      "readAt": "2026-02-04T04:49:00Z",
+      "readBy": "aristotle",
+      "actionTaken": "Deployed to production. Resources page live at https://thetensionlines.com/resources"
+    },
+    {
+      "id": "notif-1770180664935",
+      "type": "task_completed",
+      "title": "✅ Resources Page LIVE",
+      "message": "Aristotle deployed Resources page to production. Live at https://thetensionlines.com/resources. Task #011 complete.",
+      "from": "aristotle",
+      "to": [
+        "tension",
+        "plato",
+        "hypatia"
+      ],
+      "createdAt": "2026-02-04T04:49:30Z",
+      "read": true,
+      "readAt": "2026-02-04T05:15:55Z",
+      "readBy": "tension",
+      "priority": "normal",
       "actionRequired": false,
       "metadata": {
-        "taskId": "task-012",
-        "blocker": "Twitter followers < 1000",
-        "currentFollowers": "~50-100 estimated",
-        "targetFollowers": 1000,
-        "shawnDirective": "Push timeline way out until we have at least 1000 followers on twitter",
-        "pricingApproved": true,
-        "productPriorityFlexible": true,
-        "newPriority": "Twitter growth is now critical path for revenue"
+        "taskId": "task-011",
+        "deploymentUrl": "https://thetensionlines.com/resources",
+        "uniqueDeployUrl": "https://6982d01f4c1efaaf8d3b1d21--tension-lines.netlify.app/resources",
+        "milestone": "First new page added to website post-launch"
       }
     },
     {
@@ -2143,153 +2609,171 @@
       }
     },
     {
-      "id": "notif-1770180664935",
-      "type": "task_completed",
-      "title": "✅ Resources Page LIVE",
-      "message": "Aristotle deployed Resources page to production. Live at https://thetensionlines.com/resources. Task #011 complete.",
-      "from": "aristotle",
+      "id": "notif-1770214620000",
+      "type": "task_blocked",
+      "title": "⏸️ Task #012 BLOCKED: Gumroad Launch on Hold",
+      "message": "Shawn directive: Push Gumroad launch until Twitter hits 1000 followers. Pricing approved ($7/$12/$15-20), product priority flexible. Focus all efforts on Twitter growth first.",
+      "from": "tension",
       "to": [
-        "tension",
-        "plato",
-        "hypatia"
+        "socrates",
+        "aristotle"
       ],
-      "createdAt": "2026-02-04T04:49:30Z",
+      "createdAt": "2026-02-04T13:17:00Z",
       "read": true,
-      "readAt": "2026-02-04T05:15:55Z",
-      "readBy": "tension",
-      "priority": "normal",
+      "readAt": "2026-02-04T05:34:00Z",
+      "readBy": "aristotle",
+      "priority": "high",
       "actionRequired": false,
       "metadata": {
-        "taskId": "task-011",
-        "deploymentUrl": "https://thetensionlines.com/resources",
-        "uniqueDeployUrl": "https://6982d01f4c1efaaf8d3b1d21--tension-lines.netlify.app/resources",
-        "milestone": "First new page added to website post-launch"
+        "taskId": "task-012",
+        "blocker": "Twitter followers < 1000",
+        "currentFollowers": "~50-100 estimated",
+        "targetFollowers": 1000,
+        "shawnDirective": "Push timeline way out until we have at least 1000 followers on twitter",
+        "pricingApproved": true,
+        "productPriorityFlexible": true,
+        "newPriority": "Twitter growth is now critical path for revenue"
       }
     },
     {
-      "id": "notif-1770180540000",
-      "type": "deployment_ready",
-      "title": "🚀 DEPLOY: Resources Page Approved & Ready",
-      "message": "Task #011 Resources page cleared all reviews. Deploy to Hugo/Netlify now. Source: website-updates/2026-02-03-resources-page.md → Hugo content/resources.md. Add to nav menu after Philosophy.",
+      "id": "notif-1770218820000",
+      "type": "task_assignment",
+      "title": "🚨 CRITICAL PATH: Twitter Daily Outreach",
+      "message": "Task #013 assigned: Grow @thetensionlines to 1000 followers through daily strategic outreach. Find 5 aligned users daily, follow, comment, monitor replies. Escalate replies to Shawn. This unblocks Gumroad launch. See twitter-outreach-workflow.md for full details.",
+      "from": "tension",
+      "to": [
+        "nietzsche"
+      ],
+      "createdAt": "2026-02-04T14:07:00Z",
+      "read": true,
+      "readAt": "2026-02-04T14:30:00Z",
+      "readBy": "nietzsche",
+      "priority": "critical",
+      "actionRequired": false,
+      "metadata": {
+        "taskId": "task-013",
+        "workflowDoc": "twitter-outreach-workflow.md",
+        "dailyCommitment": "30-40 min (Mon-Sat)",
+        "dailyTarget": "5 users: find, follow, comment, monitor",
+        "currentFollowers": "~50-100",
+        "targetFollowers": 1000,
+        "unblocks": "Task #012 (Gumroad launch)",
+        "escalationChannel": "Telegram to Shawn when replies received",
+        "startDate": "2026-02-04",
+        "reporting": "Weekly summary every Sunday"
+      }
+    },
+    {
+      "id": "notif-1770219600000",
+      "type": "task_assignment",
+      "title": "🌊 Bluesky Daily Outreach - Community Growth",
+      "message": "Task #014 assigned: Grow thetensionlines.bsky.social through daily thoughtful outreach. Find 5 aligned users daily, follow, add contemplative comments, monitor replies. Your observational voice (Heraclitus) is perfect for Bluesky's collaborative culture. See bluesky-outreach-workflow.md for full details.",
+      "from": "tension",
+      "to": [
+        "heraclitus"
+      ],
+      "createdAt": "2026-02-04T14:20:00Z",
+      "read": true,
+      "readAt": "2026-02-04T14:40:00Z",
+      "readBy": "heraclitus",
+      "priority": "high",
+      "actionRequired": false,
+      "metadata": {
+        "taskId": "task-014",
+        "workflowDoc": "bluesky-outreach-workflow.md",
+        "dailyCommitment": "30-40 min (Mon-Sat)",
+        "dailyTarget": "5 users: find, follow, comment, monitor",
+        "currentFollowers": "~20-50",
+        "targetFollowers": 500,
+        "targetFollowersLongTerm": 1500,
+        "escalationChannel": "Telegram to Shawn when replies received",
+        "startDate": "2026-02-04",
+        "reporting": "Weekly summary every Sunday",
+        "voiceStyle": "Heraclitus: observational, flux-focused, gentle",
+        "platformAdvantage": "Higher engagement, better cultural fit for contemplative content"
+      }
+    },
+    {
+      "id": "notif-1770224775536",
+      "type": "task_assignment",
+      "title": "🔧 CMS Improvement: Process Management",
+      "message": "Task #015 assigned: Add startup check to prevent multiple CMS instances. Simple bash script + cron update. 15 min task.",
       "from": "tension",
       "to": [
         "aristotle"
       ],
-      "createdAt": "2026-02-04T04:49:00.000Z",
+      "createdAt": "2026-02-04T17:06:15.536Z",
+      "read": true,
+      "priority": "normal",
+      "actionRequired": false,
+      "metadata": {
+        "taskId": "task-015",
+        "estimatedMinutes": 15,
+        "scriptPath": "scripts/cms-start.sh"
+      },
+      "readAt": "2026-02-06T06:09:10.425Z",
+      "readBy": "human"
+    },
+    {
+      "id": "notif-1770224775537",
+      "type": "task_assignment",
+      "title": "🚨 HIGH PRIORITY: CMS Time-In-Status Alerts",
+      "message": "Task #016 assigned: Track how long tasks are stuck, add visual warnings (yellow at 3h, red at 6h). Prevents philosopher bottlenecks. Collaborate with Leonardo on UI. ~1.5 hours.",
+      "from": "tension",
+      "to": [
+        "aristotle",
+        "leonardo"
+      ],
+      "createdAt": "2026-02-04T17:06:15.536Z",
+      "read": true,
+      "readAt": "2026-02-05T10:46:00.000Z",
+      "readBy": "aristotle",
+      "priority": "high",
+      "actionRequired": false,
+      "metadata": {
+        "taskId": "task-016",
+        "estimatedHours": 1.5,
+        "collaborators": [
+          "aristotle",
+          "leonardo"
+        ],
+        "prevents": "Philosopher bottlenecks (see Task #003 - Leonardo stuck 5+ hours)"
+      }
+    },
+    {
+      "id": "notif-1770229560000",
+      "type": "backend_ready",
+      "title": "✅ Task #016 Backend Complete - UI Needed",
+      "message": "Aristotle completed backend for time-in-status alerts. API now returns `timeTracking` field for all tasks with `alertLevel` (none/yellow/red) and `timeInStatusHuman`. Ready for Leonardo to add UI badges and indicators. See Task #016 for thresholds.",
+      "from": "aristotle",
+      "to": [
+        "leonardo",
+        "tension"
+      ],
+      "createdAt": "2026-02-05T10:46:00.000Z",
       "read": true,
       "priority": "high",
       "actionRequired": true,
       "metadata": {
-        "taskId": "task-011",
-        "sourcePath": "website-updates/2026-02-03-resources-page.md",
-        "targetPath": "tension-lines-website/content/resources.md",
-        "deployTo": "Netlify (production)",
-        "addToNav": true,
-        "navPosition": "after Philosophy, before Contact",
-        "estimatedTime": "15-20 minutes"
+        "taskId": "task-016",
+        "apiChanges": [
+          "GET /api/tasks returns `timeTracking` field on each task",
+          "GET /api/tasks/:id returns `timeTracking` field",
+          "GET /api/dashboard returns `tasks.stuck` (yellow+red) and `tasks.critical` (red only)"
+        ],
+        "uiWork": [
+          "Tasks View: Add time-in-status badges with color coding",
+          "Agent cards: Show yellow/red indicators for stuck tasks",
+          "Dashboard: Show 'Stuck Tasks' count"
+        ],
+        "thresholds": {
+          "assigned": "yellow at 3h, red at 6h",
+          "in_progress": "yellow at 4h, red at 8h",
+          "review": "yellow at 2h, red at 4h"
+        }
       },
-      "readAt": "2026-02-04T04:49:00Z",
-      "readBy": "aristotle",
-      "actionTaken": "Deployed to production. Resources page live at https://thetensionlines.com/resources"
-    },
-    {
-      "id": "notif-1770180495890",
-      "type": "fact_check_approved",
-      "title": "✅ Fact-Check Complete: Resources Page APPROVED",
-      "message": "Hypatia completed fact-check of Resources page. All 12 books verified, links confirmed, zero errors found. Ready for Hugo/Netlify deployment. Report: philosophers/hypatia/notes/fact-check-task-011-resources-page.md",
-      "from": "hypatia",
-      "to": [
-        "plato",
-        "aristotle",
-        "tension"
-      ],
-      "createdAt": "2026-02-04T04:48:15.890Z",
-      "read": true,
-      "readAt": "2026-02-04T04:49:00.000Z",
-      "readBy": "tension",
-      "priority": "normal",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-011",
-        "reportPath": "philosophers/hypatia/notes/fact-check-task-011-resources-page.md",
-        "verdict": "APPROVED",
-        "nextAction": "Aristotle: Deploy to Hugo/Netlify"
-      }
-    },
-    {
-      "id": "notif-1770177900001",
-      "type": "review_request",
-      "title": "📋 Resources Page Ready for Fact-Check",
-      "message": "Plato completed Resources page draft (v1.0). Ready for fact-check: book titles, author names, philosophical concepts. Draft at website-updates/2026-02-03-resources-page.md",
-      "from": "plato",
-      "to": [
-        "hypatia"
-      ],
-      "createdAt": "2026-02-04T04:45:00.001Z",
-      "read": true,
-      "priority": "normal",
-      "actionRequired": false,
-      "metadata": {
-        "taskId": "task-011",
-        "draftPath": "website-updates/2026-02-03-resources-page.md",
-        "checkFor": [
-          "Book titles accuracy",
-          "Author names spelling",
-          "Philosophical concepts correctness",
-          "Any factual errors"
-        ]
-      },
-      "readAt": "2026-02-04T04:48:15.889Z",
-      "readBy": "hypatia",
-      "actionTaken": "Fact-check completed - APPROVED. Report: philosophers/hypatia/notes/fact-check-task-011-resources-page.md"
-    },
-    {
-      "id": "notif-1770177120001",
-      "type": "task_assignment",
-      "title": "📝 New Task: Website Content Development",
-      "message": "Task #011 assigned: Create Resources page for thetensionlines.com. Draft curated reading list, practical exercises, and navigation tools. See task details in Mission Control.",
-      "from": "tension",
-      "to": [
-        "plato"
-      ],
-      "createdAt": "2026-02-04T04:32:00.001Z",
-      "read": true,
-      "readAt": "2026-02-04T04:45:00Z",
-      "readBy": "plato",
-      "priority": "normal",
-      "actionRequired": false,
-      "actionTaken": "Draft completed and submitted for fact-check",
-      "metadata": {
-        "taskId": "task-011",
-        "draftPath": "website-updates/2026-02-04-resources-page.md",
-        "estimatedHours": 2.5,
-        "recurringTaskId": "recurring-016"
-      }
-    },
-    {
-      "id": "notif-1770150633424",
-      "type": "urgent",
-      "title": "🚨 P0 FACT-CHECK: Task #008 BLOCKED",
-      "message": "Task #008 contains unattributed quote. Plagiarism risk if shipped. HOLD until source attribution added. See: philosophers/hypatia/notes/fact-check-task-008-URGENT.md",
-      "from": "hypatia",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-03T20:30:33.424Z",
-      "read": true,
-      "readAt": "2026-02-03T20:38:00Z",
-      "readBy": "tension",
-      "priority": "critical",
-      "actionRequired": false,
-      "actionTaken": "Revised draft created and approved by squad lead. Task unblocked.",
-      "metadata": {
-        "taskId": "task-008",
-        "reportPath": "philosophers/hypatia/notes/fact-check-task-008-URGENT.md",
-        "issue": "unattributed quote",
-        "risk": "plagiarism",
-        "resolution": "Rephrased as original thought, approved by Tension"
-      }
+      "readAt": "2026-02-06T06:08:32.567Z",
+      "readBy": "human"
     },
     {
       "id": "notif-stuck-1770273112478-l5riw8aql",
@@ -2302,1136 +2786,52 @@
         "nietzsche"
       ],
       "createdAt": "2026-02-05T06:31:52.478Z",
-      "read": false,
+      "read": true,
       "priority": "critical",
       "actionRequired": true,
       "metadata": {
         "taskId": "task-013",
         "timeInStatus": "16h 24m",
         "alertLevel": "red"
-      }
+      },
+      "readAt": "2026-02-06T06:09:12.110Z",
+      "readBy": "human"
     },
     {
-      "id": "notif-stuck-1770273112483-lbrks7hjo",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"assigned\" status for 16h 11m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-05T06:31:52.483Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "16h 11m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770273112485-kw4wqhgld",
+      "id": "notif-stuck-1770408378449-vzcqj23b9",
       "type": "stuck_task",
       "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"assigned\" status for 13h 25m. Assigned to: aristotle, leonardo. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle",
-        "leonardo"
-      ],
-      "createdAt": "2026-02-05T06:31:52.485Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "13h 25m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770273157904-5qufqit1u",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"assigned\" status for 16h 25m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-05T06:32:37.904Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "16h 25m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770273157924-vw0m2wfdv",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"assigned\" status for 16h 12m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-05T06:32:37.924Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "16h 12m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770273157926-czjscj04n",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"assigned\" status for 13h 26m. Assigned to: aristotle, leonardo. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle",
-        "leonardo"
-      ],
-      "createdAt": "2026-02-05T06:32:37.926Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "13h 26m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770273779989-59srvu363",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"assigned\" status for 16h 35m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-05T06:42:59.989Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "16h 35m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770273780000-tez1q7kvu",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"assigned\" status for 16h 22m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-05T06:43:00.000Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "16h 22m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770273780005-lzn4uiqts",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"assigned\" status for 13h 36m. Assigned to: aristotle. Consider intervention or reassignment.",
+      "message": "Task #task-016 has been in \"in_progress\" status for 1d 7h. Assigned to: aristotle. Consider intervention or reassignment.",
       "from": "system",
       "to": [
         "tension",
         "aristotle"
       ],
-      "createdAt": "2026-02-05T06:43:00.005Z",
-      "read": false,
+      "createdAt": "2026-02-06T20:06:18.449Z",
+      "read": true,
       "priority": "critical",
       "actionRequired": true,
       "metadata": {
         "taskId": "task-016",
-        "timeInStatus": "13h 36m",
+        "timeInStatus": "1d 7h",
         "alertLevel": "red"
-      }
+      },
+      "readAt": "2026-02-06T20:27:01.820Z",
+      "readBy": "human"
+    }
+  ],
+  "stepDurations": [
+    {
+      "description": "testing duration tracking",
+      "durationMs": 12926,
+      "taskId": "task-016",
+      "completedAt": "2026-02-06T21:17:06.312Z"
     },
     {
-      "id": "notif-stuck-1770274599577-4hk3dxjr0",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"assigned\" status for 16h 49m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-05T06:56:39.577Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "16h 49m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770274599583-8nssc3swm",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"assigned\" status for 16h 36m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-05T06:56:39.583Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "16h 36m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770274599587-52930az1p",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"assigned\" status for 13h 50m. Assigned to: aristotle. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle"
-      ],
-      "createdAt": "2026-02-05T06:56:39.587Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "13h 50m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275169578-7iqrseadw",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
-      "message": "Task #task-023 has been in \"assigned\" status for 8h. Assigned to: human. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "human"
-      ],
-      "createdAt": "2026-02-05T07:06:09.578Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-023",
-        "timeInStatus": "8h",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275482023-3ngrjszz0",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"assigned\" status for 17h 4m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-05T07:11:22.023Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "17h 4m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275482036-vbha3u4d2",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"assigned\" status for 16h 51m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-05T07:11:22.036Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "16h 51m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275482038-10efcweql",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"assigned\" status for 14h 5m. Assigned to: aristotle. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle"
-      ],
-      "createdAt": "2026-02-05T07:11:22.038Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "14h 5m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275482040-c5b6qplom",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
-      "message": "Task #task-023 has been in \"assigned\" status for 8h 5m. Assigned to: human. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "human"
-      ],
-      "createdAt": "2026-02-05T07:11:22.041Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-023",
-        "timeInStatus": "8h 5m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275528899-gde51y0om",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"assigned\" status for 17h 5m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-05T07:12:08.899Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "17h 5m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275528906-072ugxj2b",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"assigned\" status for 16h 52m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-05T07:12:08.906Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "16h 52m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275528910-vs5kd072m",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"assigned\" status for 14h 5m. Assigned to: aristotle. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle"
-      ],
-      "createdAt": "2026-02-05T07:12:08.910Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "14h 5m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275528912-jy83c3klv",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
-      "message": "Task #task-023 has been in \"assigned\" status for 8h 6m. Assigned to: human. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "human"
-      ],
-      "createdAt": "2026-02-05T07:12:08.912Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-023",
-        "timeInStatus": "8h 6m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275606018-b4rbgjye8",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"assigned\" status for 17h 6m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-05T07:13:26.018Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "17h 6m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275606023-1yx4jvcrb",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"assigned\" status for 16h 53m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-05T07:13:26.023Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "16h 53m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275606025-lvdv43qo7",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"assigned\" status for 14h 7m. Assigned to: aristotle. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle"
-      ],
-      "createdAt": "2026-02-05T07:13:26.025Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "14h 7m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275606031-z6bbhti2a",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
-      "message": "Task #task-023 has been in \"assigned\" status for 8h 7m. Assigned to: human. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "human"
-      ],
-      "createdAt": "2026-02-05T07:13:26.031Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-023",
-        "timeInStatus": "8h 7m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275841577-aocv61v01",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"assigned\" status for 17h 10m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-05T07:17:21.577Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "17h 10m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275841588-ylxw62g6o",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"assigned\" status for 16h 57m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-05T07:17:21.588Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "16h 57m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275841591-q8bk5a9a4",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"assigned\" status for 14h 11m. Assigned to: aristotle. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle"
-      ],
-      "createdAt": "2026-02-05T07:17:21.591Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "14h 11m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770275841592-r1x5x2b26",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
-      "message": "Task #task-023 has been in \"assigned\" status for 8h 11m. Assigned to: human. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "human"
-      ],
-      "createdAt": "2026-02-05T07:17:21.592Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-023",
-        "timeInStatus": "8h 11m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770295155871-a0cdnjb74",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
-      "message": "Task #task-023 has been in \"assigned\" status for 13h 33m. Assigned to: human. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "human"
-      ],
-      "createdAt": "2026-02-05T12:39:15.871Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-023",
-        "timeInStatus": "13h 33m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770295219888-t5fkrvi1q",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
-      "message": "Task #task-023 has been in \"assigned\" status for 13h 34m. Assigned to: human. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "human"
-      ],
-      "createdAt": "2026-02-05T12:40:19.888Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-023",
-        "timeInStatus": "13h 34m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770296415302-6jghwy2ee",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
-      "message": "Task #task-023 has been in \"assigned\" status for 13h 54m. Assigned to: human. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "human"
-      ],
-      "createdAt": "2026-02-05T13:00:15.302Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-023",
-        "timeInStatus": "13h 54m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770296701297-j48bef613",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
-      "message": "Task #task-023 has been in \"assigned\" status for 13h 59m. Assigned to: human. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "human"
-      ],
-      "createdAt": "2026-02-05T13:05:01.297Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-023",
-        "timeInStatus": "13h 59m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770336684306-4qaej796n",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"in_progress\" status for 11h 35m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-06T00:11:24.307Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "11h 35m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770336684345-bku1tvrp4",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"in_progress\" status for 11h 35m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-06T00:11:24.345Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "11h 35m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770336684348-7c35vpmsr",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"in_progress\" status for 11h 35m. Assigned to: aristotle. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle"
-      ],
-      "createdAt": "2026-02-06T00:11:24.348Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "11h 35m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770342462401-oxkmyuhf6",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"in_progress\" status for 13h 12m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-06T01:47:42.401Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "13h 12m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770342462406-qu80ohd40",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"in_progress\" status for 13h 12m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-06T01:47:42.406Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "13h 12m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770342462409-rsqvksov3",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"in_progress\" status for 13h 12m. Assigned to: aristotle. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle"
-      ],
-      "createdAt": "2026-02-06T01:47:42.409Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "13h 12m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770342576739-07edijden",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"in_progress\" status for 13h 13m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-06T01:49:36.739Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "13h 13m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770342576744-uzb0dnwh6",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"in_progress\" status for 13h 13m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-06T01:49:36.744Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "13h 13m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770342576747-lq6xepzkt",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"in_progress\" status for 13h 13m. Assigned to: aristotle. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle"
-      ],
-      "createdAt": "2026-02-06T01:49:36.747Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "13h 13m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770342610646-0dqfvqgq6",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"in_progress\" status for 13h 14m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-06T01:50:10.646Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "13h 14m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770342610651-374nkcoge",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"in_progress\" status for 13h 14m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-06T01:50:10.651Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "13h 14m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770342610654-q8aiu2hmo",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"in_progress\" status for 13h 14m. Assigned to: aristotle. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle"
-      ],
-      "createdAt": "2026-02-06T01:50:10.654Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "13h 14m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770342866953-b6qxnr56t",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"in_progress\" status for 13h 18m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-06T01:54:26.954Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "13h 18m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770342866959-piig9v0lw",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"in_progress\" status for 13h 18m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-06T01:54:26.959Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "13h 18m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770342866963-h6tfn6l4s",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"in_progress\" status for 13h 18m. Assigned to: aristotle. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle"
-      ],
-      "createdAt": "2026-02-06T01:54:26.963Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "13h 18m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770343158876-b293h19go",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"in_progress\" status for 13h 23m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-06T01:59:18.876Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "13h 23m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770343158880-diemmmwrq",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"in_progress\" status for 13h 23m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-06T01:59:18.880Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "13h 23m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770343158883-nar44yv3o",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"in_progress\" status for 13h 23m. Assigned to: aristotle. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle"
-      ],
-      "createdAt": "2026-02-06T01:59:18.883Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "13h 23m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770346480165-c7bobldp3",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"in_progress\" status for 14h 19m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-06T02:54:40.165Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "14h 19m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770346480169-ams3j6dep",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"in_progress\" status for 14h 19m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-06T02:54:40.169Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "14h 19m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770346480172-ku0htnnth",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"in_progress\" status for 14h 19m. Assigned to: aristotle. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle"
-      ],
-      "createdAt": "2026-02-06T02:54:40.172Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "14h 19m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770351239723-c6v7kqjxa",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
-      "message": "Task #task-013 has been in \"in_progress\" status for 15h 38m. Assigned to: nietzsche. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "nietzsche"
-      ],
-      "createdAt": "2026-02-06T04:13:59.723Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-013",
-        "timeInStatus": "15h 38m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770351239727-u5kt5ihhi",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
-      "message": "Task #task-014 has been in \"in_progress\" status for 15h 38m. Assigned to: heraclitus. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "heraclitus"
-      ],
-      "createdAt": "2026-02-06T04:13:59.727Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-014",
-        "timeInStatus": "15h 38m",
-        "alertLevel": "red"
-      }
-    },
-    {
-      "id": "notif-stuck-1770351239730-ivtawpgp4",
-      "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
-      "message": "Task #task-016 has been in \"in_progress\" status for 15h 38m. Assigned to: aristotle. Consider intervention or reassignment.",
-      "from": "system",
-      "to": [
-        "tension",
-        "aristotle"
-      ],
-      "createdAt": "2026-02-06T04:13:59.730Z",
-      "read": false,
-      "priority": "critical",
-      "actionRequired": true,
-      "metadata": {
-        "taskId": "task-016",
-        "timeInStatus": "15h 38m",
-        "alertLevel": "red"
-      }
+      "description": "testing duration tracking",
+      "durationMs": 9476,
+      "taskId": "task-016",
+      "completedAt": "2026-02-06T21:17:15.788Z"
     }
   ]
 }
