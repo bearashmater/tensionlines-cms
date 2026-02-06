@@ -1,26 +1,33 @@
-# Wisdom for Modern Life - Project Tracker
+# TensionLines: Practical Wisdom - Project Tracker
 
-**Current Phase:** Phase 1 - Outlining
+**Current Phase:** Phase 0 - Ideation
+
+## Concept
+A practical self-help companion to the TensionLines philosophy book. Takes the theoretical framework and translates it into actionable exercises, daily practices, and real-life applications.
 
 ## Progress Overview
 
-### Phase 1: Outlining (In Progress)
-- [x] Define book concept and thesis
-- [x] Research target audience
+### Phase 0: Ideation (Current)
+- [x] Identify need for practical companion book
+- [ ] Define relationship to Book 1 (TensionLines)
+- [ ] Outline practical exercises
+- [ ] Identify target reader pain points
+- [ ] Gather case studies and examples
+
+### Phase 1: Outlining (Not Started)
 - [ ] Create chapter outline
-- [ ] Define key themes and exercises
-- [ ] Gather case studies
+- [ ] Define exercises per chapter
+- [ ] Map to Book 1 concepts
 
 ### Phase 2: First Draft (Not Started)
 - [ ] Write introduction
 - [ ] Write core chapters
 - [ ] Write conclusion
-- [ ] Create exercises and reflections
+- [ ] Test exercises with readers
 
 ### Phase 3: Revision (Not Started)
 - [ ] Structural edits
 - [ ] Content refinement
-- [ ] Test exercises with readers
 - [ ] Beta reader feedback
 
 ### Phase 4: Final Polish (Not Started)
@@ -28,21 +35,21 @@
 - [ ] Proofreading
 - [ ] Format for publication
 
+## Potential Chapter Topics
+- Identifying your tension lines
+- Daily practices for holding tension
+- When to lean which way
+- Common pole-flipping patterns in relationships
+- Work-life tension navigation
+- Decision-making in uncertainty
+
 ## Word Count Progress
 
 | Chapter | Target | Current | Status |
 |---------|--------|---------|--------|
-| Intro | 2,500 | 0 | Not Started |
-| Ch 1 | 4,000 | 0 | Not Started |
-| Ch 2 | 4,000 | 0 | Not Started |
-| Ch 3 | 4,000 | 0 | Not Started |
-| Ch 4 | 4,000 | 0 | Not Started |
-| Ch 5 | 4,000 | 0 | Not Started |
-| Ch 6 | 4,000 | 0 | Not Started |
-| Ch 7 | 4,000 | 0 | Not Started |
-| Ch 8 | 4,000 | 0 | Not Started |
-| Ch 9 | 4,000 | 0 | Not Started |
-| Ch 10 | 4,000 | 0 | Not Started |
-| Ch 11 | 4,000 | 0 | Not Started |
-| Ch 12 | 4,000 | 0 | Not Started |
-| **Total** | 50,500 | 0 | |
+| **Total** | 45,000 | 0 | |
+
+## Notes
+- Dependent on Book 1 (TensionLines) completion
+- Focus on exercises, not theory
+- Target audience: readers who want practical application

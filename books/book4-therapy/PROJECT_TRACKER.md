@@ -1,15 +1,23 @@
-# Philosophical Therapy - Project Tracker
+# TensionLines: Therapeutic Applications - Project Tracker
 
-**Current Phase:** Phase 1 - Outlining
+**Current Phase:** Phase 0 - Ideation
+
+## Concept
+Exploring how tension line philosophy applies to mental health, therapy, and psychological wellbeing. The therapeutic value of holding tension rather than seeking premature resolution.
 
 ## Progress Overview
 
-### Phase 1: Outlining (In Progress)
-- [x] Define book concept and thesis
-- [ ] Research target audience
+### Phase 0: Ideation (Current)
+- [x] Identify therapeutic application of TensionLines
+- [ ] Research dialectical approaches in therapy (DBT, etc.)
+- [ ] Connect to acceptance-based therapies (ACT)
+- [ ] Identify clinical tension lines (anxiety, depression patterns)
+- [ ] Consult with mental health professionals
+
+### Phase 1: Outlining (Not Started)
 - [ ] Create chapter outline
+- [ ] Map psychological polarities
 - [ ] Define therapeutic frameworks
-- [ ] Research philosophical counseling methods
 
 ### Phase 2: First Draft (Not Started)
 - [ ] Write introduction
@@ -21,23 +29,32 @@
 - [ ] Structural edits
 - [ ] Content refinement
 - [ ] Clinical review
-- [ ] Beta reader feedback
 
 ### Phase 4: Final Polish (Not Started)
 - [ ] Line editing
 - [ ] Proofreading
 - [ ] Format for publication
 
+## Potential Therapeutic Tension Lines
+- Acceptance ↔ Change
+- Safety ↔ Growth
+- Autonomy ↔ Connection
+- Control ↔ Surrender
+- Past ↔ Present
+- Thinking ↔ Feeling
+
+## Existing Connections
+- DBT (Dialectical Behavior Therapy) - already uses polarity concepts
+- ACT (Acceptance and Commitment Therapy) - holding difficult emotions
+- Existential therapy - navigating life's inherent tensions
+
 ## Word Count Progress
 
 | Chapter | Target | Current | Status |
 |---------|--------|---------|--------|
-| Intro | 3,000 | 0 | Not Started |
-| Ch 1 | 6,000 | 0 | Not Started |
-| Ch 2 | 6,000 | 0 | Not Started |
-| Ch 3 | 6,000 | 0 | Not Started |
-| Ch 4 | 6,000 | 0 | Not Started |
-| Ch 5 | 6,000 | 0 | Not Started |
-| Ch 6 | 6,000 | 0 | Not Started |
-| Ch 7 | 6,000 | 0 | Not Started |
 | **Total** | 45,000 | 0 | |
+
+## Notes
+- Requires professional consultation
+- Not a replacement for therapy
+- Focus on philosophical complement to clinical work
