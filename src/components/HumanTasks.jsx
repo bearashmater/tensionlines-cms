@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import useSWR from 'swr'
 import { getTasks, fetcher } from '../lib/api'
-import { CheckCircle, Clock, ExternalLink, AlertCircle, Copy, Check, Link, MessageSquare, Instagram, MessageCircle, Palette, Send, Plus, Trash2 } from 'lucide-react'
+import { CheckCircle, Clock, ExternalLink, AlertCircle, Copy, Check, Link, MessageSquare, Instagram, MessageCircle, Palette, Send, Plus, Trash2, Vote, MapPin, FileText, Image, Film } from 'lucide-react'
 
 export default function HumanTasks() {
   const { data: allTasks, error, mutate } = useSWR('/tasks', getTasks, {
@@ -454,6 +454,108 @@ function PostingQueueCard({ item, copiedId, updatingId, canPost, onCopy, onCanva
           </div>
           <div className="bg-white border border-neutral-200 rounded-lg p-4 whitespace-pre-wrap text-neutral-800 text-sm">
             {item.caption}
+          </div>
+        </div>
+      )}
+
+      {/* Rich Features Section */}
+      {(item.poll || item.location || item.textAttachment || item.image || item.gif) && (
+        <div className="mb-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+          <div className="flex items-center gap-2 text-purple-800 font-medium mb-3">
+            <Vote size={16} />
+            Add These Features
+          </div>
+          <div className="space-y-3">
+            {/* Poll */}
+            {item.poll && (
+              <div className="flex items-start gap-3 bg-white p-3 rounded-lg border border-purple-100">
+                <Vote className="text-purple-600 mt-0.5" size={18} />
+                <div className="flex-1">
+                  <span className="font-medium text-sm text-purple-900">Add Poll</span>
+                  {item.poll.type === 'yesno' ? (
+                    <div className="mt-2 flex gap-2">
+                      <span className="px-3 py-1 bg-green-100 text-green-800 rounded text-sm">
+                        Yes: {item.poll.yesLabel}
+                      </span>
+                      <span className="px-3 py-1 bg-red-100 text-red-800 rounded text-sm">
+                        No: {item.poll.noLabel}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {item.poll.options?.map((opt, i) => (
+                        <span key={i} className="px-3 py-1 bg-purple-100 text-purple-800 rounded text-sm">
+                          {opt}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Location */}
+            {item.location && (
+              <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-purple-100">
+                <MapPin className="text-purple-600" size={18} />
+                <div>
+                  <span className="font-medium text-sm text-purple-900">Add Location: </span>
+                  <span className="text-purple-700">{item.location}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Text Attachment */}
+            {item.textAttachment && (
+              <div className="bg-white p-3 rounded-lg border border-purple-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="text-purple-600" size={18} />
+                  <span className="font-medium text-sm text-purple-900">Add Text Attachment</span>
+                  <button
+                    onClick={() => onCopy(
+                      item.textAttachment.title + '\n\n' + item.textAttachment.body,
+                      `${item.id}-attachment`
+                    )}
+                    className="ml-auto flex items-center gap-1 px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
+                  >
+                    {copiedId === `${item.id}-attachment` ? <Check size={12} /> : <Copy size={12} />}
+                    Copy
+                  </button>
+                </div>
+                <div className="bg-neutral-50 p-3 rounded border border-neutral-200">
+                  <div className="font-semibold text-neutral-800 mb-1">{item.textAttachment.title}</div>
+                  <div className="text-sm text-neutral-700 whitespace-pre-wrap">{item.textAttachment.body}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Image */}
+            {item.image && (
+              <div className="bg-white p-3 rounded-lg border border-purple-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <Image className="text-purple-600" size={18} />
+                  <span className="font-medium text-sm text-purple-900">Add Image</span>
+                </div>
+                <p className="text-sm text-neutral-700">{item.image.description}</p>
+                {item.image.canvaInstructions && (
+                  <p className="text-xs text-amber-700 mt-2 italic">{item.image.canvaInstructions}</p>
+                )}
+              </div>
+            )}
+
+            {/* GIF */}
+            {item.gif && (
+              <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-purple-100">
+                <Film className="text-purple-600" size={18} />
+                <div>
+                  <span className="font-medium text-sm text-purple-900">Add GIF: </span>
+                  <span className="text-purple-700">Search "{item.gif.searchTerm}"</span>
+                  {item.gif.description && (
+                    <span className="text-neutral-500 text-sm ml-2">({item.gif.description})</span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
