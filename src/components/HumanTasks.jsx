@@ -3,6 +3,16 @@ import useSWR from 'swr'
 import { getTasks, fetcher } from '../lib/api'
 import { CheckCircle, Clock, ExternalLink, AlertCircle, Copy, Check, Link, MessageSquare, Instagram, MessageCircle, Palette, Send, Plus, Trash2, Vote, MapPin, FileText, Image, Film, Lightbulb } from 'lucide-react'
 
+// Security: Validate URLs to prevent javascript: and other malicious protocols
+function isValidHttpUrl(urlString) {
+  try {
+    const url = new URL(urlString)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 export default function HumanTasks() {
   const { data: allTasks, error, mutate } = useSWR('/tasks', getTasks, {
     refreshInterval: 30000
@@ -249,7 +259,7 @@ function TaskCard({ task, onComplete, completing, ideaStats }) {
         </div>
       )}
 
-      {directLink && (
+      {directLink && isValidHttpUrl(directLink) && (
         <div className="mb-4">
           <a
             href={directLink}

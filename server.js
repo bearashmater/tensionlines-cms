@@ -24,27 +24,63 @@ const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5173;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
-// Rate limiting - 100 requests per minute per IP
-const limiter = rateLimit({
+// Rate limiting - separate limits for read vs write operations
+const readLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 100,
+  max: 100,  // 100 reads per minute
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later' }
 });
 
+const writeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,  // 30 writes per minute (more restrictive)
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many write requests, please try again later' }
+});
+
+// Environment-aware CORS
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ||
+  ['http://localhost:5173', 'http://127.0.0.1:5173'];
+
+// Environment-aware CSP - stricter in production
+const cspConfig = IS_PRODUCTION
+  ? {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'blob:'],
+        fontSrc: ["'self'"],
+        connectSrc: ["'self'"]
+      }
+    }
+  : false;  // Disabled for Vite dev server in development
+
 // Middleware
 app.use(helmet({
-  contentSecurityPolicy: false,  // Disabled for Vite dev server compatibility
+  contentSecurityPolicy: cspConfig,
   crossOriginEmbedderPolicy: false
 }));
-app.use(limiter);
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
-  credentials: true
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '1mb' }));
+
+// Apply rate limiters based on method
+app.use((req, res, next) => {
+  if (['POST', 'PATCH', 'DELETE', 'PUT'].includes(req.method)) {
+    return writeLimiter(req, res, next);
+  }
+  return readLimiter(req, res, next);
+});
 
 // Base paths
 const BASE_DIR = path.resolve(__dirname, '..');
@@ -1725,20 +1761,30 @@ function getWeekNumber(d) {
 /**
  * Get all drafts
  */
+// Valid platforms and philosophers for whitelist validation
+const VALID_PLATFORMS = ['twitter', 'bluesky', 'threads', 'reddit', 'medium', 'instagram', 'newsletter', 'patreon'];
+const VALID_PHILOSOPHERS = ['socrates', 'aristotle', 'nietzsche', 'marcus', 'heraclitus', 'hypatia', 'diogenes', 'leonardo', 'plato', 'tension'];
+
 app.get('/api/drafts', (req, res) => {
   try {
     let drafts = getPhilosopherDrafts();
-    
-    // Filter by platform
+
+    // Filter by platform (with whitelist validation)
     if (req.query.platform) {
+      if (!VALID_PLATFORMS.includes(req.query.platform.toLowerCase())) {
+        return res.status(400).json({ error: 'Invalid platform parameter' });
+      }
       drafts = drafts.filter(d => d.platform === req.query.platform);
     }
-    
-    // Filter by philosopher
+
+    // Filter by philosopher (with whitelist validation)
     if (req.query.philosopher) {
+      if (!VALID_PHILOSOPHERS.includes(req.query.philosopher.toLowerCase())) {
+        return res.status(400).json({ error: 'Invalid philosopher parameter' });
+      }
       drafts = drafts.filter(d => d.philosopher === req.query.philosopher);
     }
-    
+
     res.json(drafts);
   } catch (error) {
     console.error(error); res.status(500).json({ error: 'Internal server error' });
