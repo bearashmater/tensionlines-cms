@@ -8,6 +8,8 @@
   "models": [
     {
       "name": "Ollama qwen2.5:3b",
+      "modelId": "qwen2.5:3b",
+      "provider": "ollama",
       "cost": 0,
       "requests": 6,
       "tokens": 24612,
@@ -15,13 +17,17 @@
     },
     {
       "name": "Claude Sonnet 4.5",
-      "cost": 1.48,
+      "modelId": "claude-sonnet-4-5",
+      "provider": "anthropic",
+      "cost": 1.4785,
       "requests": 38,
       "tokens": 1598320,
-      "total": 1.48
+      "total": 1.4785
     },
     {
       "name": "Claude Haiku 3.5",
+      "modelId": "claude-3-5-haiku-20241022",
+      "provider": "anthropic",
       "cost": 0,
       "requests": 1,
       "tokens": 0,
