@@ -3756,6 +3756,7 @@ function generateDailySummary() {
   console.log('[DailySummary] Generating morning briefing...');
   const mc = getMissionControl();
   const optimizations = getOptimizations();
+  const ideas = parseIdeasBank();
   const now = new Date();
   const yesterday = new Date(now - 24 * 60 * 60 * 1000);
 
@@ -3773,11 +3774,26 @@ function generateDailySummary() {
     return tracking.alertLevel === 'red';
   });
 
-  // Human tasks pending
-  const humanTasks = mc.tasks.filter(t =>
-    t.assigneeIds?.includes('human') &&
-    !['completed', 'shipped', 'deferred', 'blocked'].includes(t.status)
-  );
+  // Human tasks pending (with same logic as HumanTasks page)
+  // Check if weekly idea goal is met
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  weekStart.setHours(0, 0, 0, 0);
+  const weekStartStr = weekStart.toISOString().split('T')[0];
+  const thisWeekIdeas = ideas.filter(i => i.date && i.date >= weekStartStr);
+  const weeklyGoalMet = thisWeekIdeas.length >= 4;
+
+  const humanTasks = mc.tasks.filter(t => {
+    if (!t.assigneeIds?.includes('human')) return false;
+    if (['completed', 'shipped', 'deferred', 'blocked'].includes(t.status)) return false;
+
+    // Hide "Provide Weekly Idea Batch" if goal is met (matches HumanTasks page)
+    const isIdeaTask = t.title.toLowerCase().includes('idea') &&
+      (t.title.toLowerCase().includes('batch') || t.title.toLowerCase().includes('weekly'));
+    if (isIdeaTask && weeklyGoalMet) return false;
+
+    return true;
+  });
 
   // Pending optimization issues
   const pendingIssues = optimizations.findings.filter(f => f.status === 'pending');
