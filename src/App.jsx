@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
-import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Send } from 'lucide-react'
+import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target } from 'lucide-react'
 import { useState } from 'react'
 
 // Import navigation components
@@ -20,7 +20,6 @@ import RecurringTasks from './components/RecurringTasks'
 import CostDashboard from './components/CostDashboard'
 import HumanTasks from './components/HumanTasks'
 import SquadLeadDashboard from './components/SquadLeadDashboard'
-import ManualPostingQueue from './components/ManualPostingQueue'
 
 // Navigation structure with grouping
 const navGroups = [
@@ -48,7 +47,6 @@ const navGroups = [
     items: [
       { to: '/content', icon: <FileText size={20} />, label: 'Pipeline' },
       { to: '/ideas', icon: <Lightbulb size={20} />, label: 'Ideas Bank' },
-      { to: '/posting-queue', icon: <Send size={20} />, label: 'Posting Queue' },
       { to: '/book', icon: <Book size={20} />, label: 'Book Progress' }
     ]
   },
@@ -159,7 +157,6 @@ function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenu
             <Route path="/content" element={<ContentPipeline />} />
             <Route path="/ideas" element={<ContentPipeline />} />
             <Route path="/book" element={<BookProgress />} />
-            <Route path="/posting-queue" element={<ManualPostingQueue />} />
             <Route path="/book/:bookId/chapter/:chapterNum" element={<ChapterDetail />} />
             <Route path="/knowledge" element={<KnowledgeBase />} />
             <Route path="/analytics" element={<Analytics />} />

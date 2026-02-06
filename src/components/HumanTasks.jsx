@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import useSWR from 'swr'
-import { getTasks } from '../lib/api'
-import { CheckCircle, Clock, ExternalLink, AlertCircle, Copy, Check, Link, MessageSquare } from 'lucide-react'
+import { getTasks, fetcher } from '../lib/api'
+import { CheckCircle, Clock, ExternalLink, AlertCircle, Copy, Check, Link, MessageSquare, Instagram, MessageCircle, Palette, Send, Plus, Trash2 } from 'lucide-react'
 
 export default function HumanTasks() {
   const { data: allTasks, error, mutate } = useSWR('/tasks', getTasks, {
     refreshInterval: 30000
   })
-  
+  const { data: postingQueue, mutate: mutateQueue } = useSWR('/api/posting-queue', fetcher, {
+    refreshInterval: 30000
+  })
+
   const [completing, setCompleting] = useState(null)
 
   if (error) return <ErrorState />
@@ -66,11 +69,19 @@ export default function HumanTasks() {
         <AlertCircle className="text-gold" size={32} />
       </div>
 
+      {/* Posting Queue Section */}
+      {postingQueue && (
+        <PostingQueueSection
+          queue={postingQueue}
+          onUpdate={mutateQueue}
+        />
+      )}
+
       <div className="space-y-4">
         {sortedTasks.map(task => (
-          <TaskCard 
-            key={task.id} 
-            task={task} 
+          <TaskCard
+            key={task.id}
+            task={task}
             onComplete={handleComplete}
             completing={completing === task.id}
           />
@@ -273,6 +284,244 @@ function formatDescription(description) {
     .replace(/\n\n/g, '</p><p class="mt-3">')
     .replace(/^(.*)$/gm, '<p>$1</p>')
 }
+
+// ============================================================================
+// POSTING QUEUE SECTION
+// ============================================================================
+
+function PostingQueueSection({ queue, onUpdate }) {
+  const [copiedId, setCopiedId] = useState(null)
+  const [updatingId, setUpdatingId] = useState(null)
+
+  const handleCopy = async (text, id) => {
+    await navigator.clipboard.writeText(text)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  const handleMarkPosted = async (itemId) => {
+    setUpdatingId(itemId)
+    try {
+      await fetch(`/api/posting-queue/${itemId}/posted`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+      onUpdate()
+    } catch (err) {
+      console.error('Error marking as posted:', err)
+    }
+    setUpdatingId(null)
+  }
+
+  const handleCanvaDone = async (itemId) => {
+    setUpdatingId(itemId)
+    try {
+      await fetch(`/api/posting-queue/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ canvaComplete: true })
+      })
+      onUpdate()
+    } catch (err) {
+      console.error('Error updating:', err)
+    }
+    setUpdatingId(null)
+  }
+
+  const items = queue.queue || []
+  if (items.length === 0) return null
+
+  return (
+    <div className="space-y-4">
+      {items.map(item => (
+        <PostingQueueCard
+          key={item.id}
+          item={item}
+          copiedId={copiedId}
+          updatingId={updatingId}
+          canPost={item.platform === 'instagram' ? queue.canPostInstagram : queue.canPostThreads}
+          onCopy={handleCopy}
+          onCanvaDone={handleCanvaDone}
+          onMarkPosted={handleMarkPosted}
+        />
+      ))}
+    </div>
+  )
+}
+
+function PostingQueueCard({ item, copiedId, updatingId, canPost, onCopy, onCanvaDone, onMarkPosted }) {
+  const isThreads = item.platform === 'threads'
+  const isInstagram = item.platform === 'instagram'
+  const needsCanva = item.canvaRequired && !item.canvaComplete
+  const isReady = !item.canvaRequired || item.canvaComplete
+  const hasParts = item.parts && item.parts.length > 0
+
+  const priorityColors = isReady
+    ? 'border-l-green-500 bg-green-50'
+    : 'border-l-amber-500 bg-amber-50'
+
+  return (
+    <div className={`bg-white rounded-lg border-l-4 ${priorityColors} p-6 shadow-sm`}>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-4">
+        {isInstagram ? (
+          <Instagram className="text-pink-600" size={24} />
+        ) : (
+          <MessageCircle className="text-black" size={24} />
+        )}
+        <h3 className="text-xl font-serif font-semibold text-black">
+          {isInstagram ? 'Instagram Post' : 'Threads Thread'} Ready
+        </h3>
+        {hasParts && (
+          <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700">
+            {item.parts.length} parts
+          </span>
+        )}
+        {isReady ? (
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
+            READY TO POST
+          </span>
+        ) : (
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+            NEEDS CANVA
+          </span>
+        )}
+        <span className="text-sm text-neutral-500 ml-auto">
+          by {item.createdBy}
+        </span>
+      </div>
+
+      {/* Threaded Posts (multiple parts) */}
+      {hasParts && (
+        <div className="space-y-3 mb-4">
+          {item.parts.map((part, idx) => (
+            <div key={idx} className="border border-neutral-200 rounded-lg overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2 bg-neutral-100 border-b border-neutral-200">
+                <span className="font-semibold text-neutral-700">{part.label}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-neutral-500">{part.content.length} chars</span>
+                  <button
+                    onClick={() => onCopy(part.content, `${item.id}-part-${idx}`)}
+                    className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    {copiedId === `${item.id}-part-${idx}` ? <Check size={14} /> : <Copy size={14} />}
+                    {copiedId === `${item.id}-part-${idx}` ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+              <div className="p-4 whitespace-pre-wrap text-neutral-800 bg-white">
+                {part.content}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Single Content (non-threaded) */}
+      {!hasParts && item.content && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-neutral-600">
+              {isInstagram ? 'Quote for Image:' : 'Post Content:'}
+            </span>
+            <button
+              onClick={() => onCopy(item.content, `${item.id}-content`)}
+              className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              {copiedId === `${item.id}-content` ? <Check size={14} /> : <Copy size={14} />}
+              {copiedId === `${item.id}-content` ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+          <div className="bg-white border border-neutral-200 rounded-lg p-4 whitespace-pre-wrap text-neutral-800">
+            {item.content}
+          </div>
+        </div>
+      )}
+
+      {/* Caption for Instagram */}
+      {isInstagram && item.caption && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-neutral-600">Caption:</span>
+            <button
+              onClick={() => onCopy(item.caption, `${item.id}-caption`)}
+              className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              {copiedId === `${item.id}-caption` ? <Check size={14} /> : <Copy size={14} />}
+              {copiedId === `${item.id}-caption` ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+          <div className="bg-white border border-neutral-200 rounded-lg p-4 whitespace-pre-wrap text-neutral-800 text-sm">
+            {item.caption}
+          </div>
+        </div>
+      )}
+
+      {/* Canva Instructions */}
+      {needsCanva && item.canvaInstructions && (
+        <div className="mb-4 p-4 bg-amber-100 border border-amber-200 rounded-lg">
+          <div className="flex items-center gap-2 text-amber-800 font-medium mb-2">
+            <Palette size={16} />
+            Canva Instructions
+          </div>
+          <p className="text-sm text-amber-900 whitespace-pre-wrap">{item.canvaInstructions}</p>
+          <a
+            href="https://www.canva.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
+          >
+            <ExternalLink size={14} />
+            Open Canva
+          </a>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex items-center gap-3 pt-4 border-t border-neutral-200">
+        {needsCanva ? (
+          <button
+            onClick={() => onCanvaDone(item.id)}
+            disabled={updatingId === item.id}
+            className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 disabled:opacity-50"
+          >
+            <Palette size={18} />
+            {updatingId === item.id ? 'Updating...' : 'Canva Design Complete'}
+          </button>
+        ) : (
+          <>
+            <a
+              href={item.postUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+            >
+              <ExternalLink size={18} />
+              Open {isInstagram ? 'Instagram' : 'Threads'}
+            </a>
+            {canPost ? (
+              <button
+                onClick={() => onMarkPosted(item.id)}
+                disabled={updatingId === item.id}
+                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
+              >
+                <CheckCircle size={18} />
+                {updatingId === item.id ? 'Marking...' : 'Mark as Posted'}
+              </button>
+            ) : (
+              <span className="text-red-500 text-sm">Daily limit reached</span>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// LOADING & ERROR STATES
+// ============================================================================
 
 function LoadingState() {
   return (
