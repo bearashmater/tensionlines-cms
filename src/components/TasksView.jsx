@@ -1,7 +1,7 @@
 import useSWR, { mutate } from 'swr'
 import { getTasks, reopenTask, dispatchTask } from '../lib/api'
 import { formatDate, formatStatus, getStatusColor, getAlertLevelColor, truncate, formatDuration } from '../lib/formatters'
-import { ListTodo, RotateCcw, Clock, Search, X, Play, ChevronDown, CheckCircle2, Loader2, Circle, XCircle } from 'lucide-react'
+import { ListTodo, RotateCcw, Clock, Search, X, Play, ChevronDown, CheckCircle2, Loader2, Circle, XCircle, AlertTriangle } from 'lucide-react'
 import { useState } from 'react'
 
 // Infer category from task title
@@ -462,14 +462,30 @@ function StepStatusIcon({ status, size = 14 }) {
 
 // Client-side breakdown detection (mirrors backend logic, avoids extra API call)
 function detectBreakdowns(task) {
-  if (!task.steps || task.steps.length === 0) return 0
+  if (!task.steps || task.steps.length === 0) return []
 
   const now = Date.now()
-  let count = 0
+  const breakdowns = []
+  const estimateMs = task.metadata?.estimatedMinutes
+    ? task.metadata.estimatedMinutes * 60 * 1000 : null
+
+  // Dispatch with no progress
+  if (task.dispatchedAt && task.steps.length === 1
+      && task.steps[0].description === 'Dispatched'
+      && task.status === 'in_progress') {
+    const since = now - new Date(task.dispatchedAt).getTime()
+    const threshold = Math.min((task.metadata?.estimatedMinutes || 30) * 60000 * 0.15, 5 * 60000)
+    if (since > threshold) {
+      breakdowns.push({
+        type: 'dispatch_no_progress',
+        message: 'No agent activity since dispatch',
+        suggestions: ['Check if agent session is running', 'Re-dispatch or reassign']
+      })
+    }
+  }
 
   const defaultThreshold = 2 * 60 * 60 * 1000
   const gapThreshold = 30 * 60 * 1000
-  const silenceThreshold = 4 * 60 * 60 * 1000
 
   // Step too long
   task.steps.forEach(step => {
@@ -479,7 +495,13 @@ function detectBreakdowns(task) {
     let threshold = defaultThreshold
     if (desc.includes('draft') || desc.includes('writing')) threshold = 3 * 60 * 60 * 1000
     if (desc.includes('review') || desc.includes('final')) threshold = 1 * 60 * 60 * 1000
-    if (elapsed > threshold) count++
+    if (elapsed > threshold) {
+      breakdowns.push({
+        type: 'step_too_long',
+        message: `"${step.description}" running too long (${formatDuration(elapsed)})`,
+        suggestions: ['Break into smaller steps', 'Check if blocked']
+      })
+    }
   })
 
   // Gaps between steps
@@ -488,18 +510,33 @@ function detectBreakdowns(task) {
     const curr = task.steps[i]
     if (prev.completedAt && curr.startedAt) {
       const gap = new Date(curr.startedAt).getTime() - new Date(prev.completedAt).getTime()
-      if (gap > gapThreshold) count++
+      if (gap > gapThreshold) {
+        breakdowns.push({
+          type: 'gap_between_steps',
+          message: `${formatDuration(gap)} gap after "${prev.description}"`,
+          suggestions: ['Nudge agent']
+        })
+      }
     }
   }
 
-  // No recent steps on active task
+  // No recent steps on active task - dynamic threshold
   if (task.status === 'in_progress') {
     const lastStep = task.steps[task.steps.length - 1]
     const lastActivity = lastStep.completedAt || lastStep.startedAt
-    if (lastActivity && (now - new Date(lastActivity).getTime()) > silenceThreshold) count++
+    const silenceThreshold = estimateMs
+      ? Math.max(10 * 60 * 1000, estimateMs * 0.5)
+      : 4 * 60 * 60 * 1000
+    if (lastActivity && (now - new Date(lastActivity).getTime()) > silenceThreshold) {
+      breakdowns.push({
+        type: 'no_recent_steps',
+        message: 'No activity for extended period',
+        suggestions: ['Escalate to Tension', 'Reassign task']
+      })
+    }
   }
 
-  return count
+  return breakdowns
 }
 
 // Expected phases for ghost steps
@@ -518,6 +555,7 @@ function StepTimeline({ task }) {
   if (steps.length === 0) return null
 
   const now = Date.now()
+  const breakdowns = detectBreakdowns(task)
   const stepAverages = task._stepAverages || {}
   const currentStep = steps.find(s => s.status === 'in_progress')
   const completedSteps = steps.filter(s => s.status === 'completed')
@@ -618,6 +656,23 @@ function StepTimeline({ task }) {
             <ChevronDown size={12} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
           </button>
         </div>
+
+        {/* Diagnostics panel */}
+        {breakdowns.length > 0 && (
+          <div className="mt-2 p-2 rounded-md bg-red-50 border border-red-200">
+            {breakdowns.map((b, i) => (
+              <div key={i} className="mb-1 last:mb-0">
+                <div className="flex items-center gap-1 text-xs font-medium text-red-700">
+                  <AlertTriangle size={12} />
+                  {b.message}
+                </div>
+                {b.suggestions?.map((s, j) => (
+                  <div key={j} className="text-xs text-red-600 ml-4 mt-0.5">• {s}</div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Expanded step-by-step timeline */}
@@ -720,7 +775,7 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
   const statusColor = getStatusColor(task.status)
   const category = getTaskCategory(task)
   const isCompleted = ['completed', 'shipped'].includes(task.status)
-  const breakdownCount = detectBreakdowns(task)
+  const breakdownCount = detectBreakdowns(task).length
 
   const handleReopen = async () => {
     if (!confirm('Reopen this task? It will be marked as "assigned" and returned to the assignee.')) {

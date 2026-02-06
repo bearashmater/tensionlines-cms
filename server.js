@@ -1116,8 +1116,16 @@ function calculateTimeInStatus(task) {
   const msInStatus = now - statusStartTime;
   const hoursInStatus = msInStatus / (1000 * 60 * 60);
   
-  // Thresholds (in hours)
-  const thresholds = {
+  // Dynamic thresholds based on task estimate (in hours)
+  const estimatedMs = task.metadata?.estimatedMinutes
+    ? task.metadata.estimatedMinutes * 60 * 1000
+    : null;
+
+  const thresholds = estimatedMs ? {
+    assigned: { yellow: Math.max(15 * 60 * 1000, estimatedMs * 0.5) / 3600000, red: Math.max(30 * 60 * 1000, estimatedMs) / 3600000 },
+    in_progress: { yellow: Math.max(15 * 60 * 1000, estimatedMs * 1.5) / 3600000, red: Math.max(30 * 60 * 1000, estimatedMs * 2.5) / 3600000 },
+    review: { yellow: 2, red: 4 }
+  } : {
     assigned: { yellow: 3, red: 6 },
     in_progress: { yellow: 4, red: 8 },
     review: { yellow: 2, red: 4 }
@@ -3385,12 +3393,40 @@ function analyzeBreakdowns(task) {
 
   const now = new Date();
 
+  // Check for dispatch with no agent activity
+  if (task.dispatchedAt && task.steps) {
+    const onlyDispatched = task.steps.length === 1 && task.steps[0].description === 'Dispatched';
+    if (onlyDispatched && task.status === 'in_progress') {
+      const sinceDispatch = now - new Date(task.dispatchedAt);
+      const dispatchThreshold = Math.min(
+        (task.metadata?.estimatedMinutes || 30) * 60 * 1000 * 0.15,  // 15% of estimate
+        5 * 60 * 1000  // cap at 5 minutes
+      );
+      if (sinceDispatch > dispatchThreshold) {
+        breakdowns.push({
+          type: 'dispatch_no_progress',
+          duration: sinceDispatch,
+          threshold: dispatchThreshold,
+          suggestions: [
+            'No agent activity since dispatch — check if the agent session is running',
+            'Re-dispatch the task or assign to a different agent'
+          ]
+        });
+      }
+    }
+  }
+
   // Thresholds in ms
   const defaultStepThreshold = 2 * 60 * 60 * 1000; // 2h
   const draftingStepThreshold = 3 * 60 * 60 * 1000; // 3h
   const reviewStepThreshold = 1 * 60 * 60 * 1000; // 1h
   const gapThreshold = 30 * 60 * 1000; // 30min
-  const silenceThreshold = 4 * 60 * 60 * 1000; // 4h
+  const estimateMs = task.metadata?.estimatedMinutes
+    ? task.metadata.estimatedMinutes * 60 * 1000
+    : null;
+  const silenceThreshold = estimateMs
+    ? Math.max(10 * 60 * 1000, estimateMs * 0.5)  // 50% of estimate, min 10 min
+    : 4 * 60 * 60 * 1000;  // default 4h
 
   // Check each step for step_too_long
   task.steps.forEach(step => {
@@ -3528,7 +3564,7 @@ function checkStuckTasks() {
     const mc = getMissionControl();
     const activeTasks = mc.tasks.filter(t =>
       ['assigned', 'in_progress', 'review'].includes(t.status) &&
-      !t.metadata?.recurring  // Skip recurring/ongoing tasks
+      t.metadata?.recurring !== 'weekly'  // Only skip weekly human tasks (e.g. idea batch)
     );
 
     const tasksWithTracking = activeTasks.map(t => ({
@@ -3562,12 +3598,30 @@ function checkStuckTasks() {
         return;
       }
 
+      // Get diagnostics before creating notification
+      const breakdowns = analyzeBreakdowns(task);
+      const diagnosticMessages = breakdowns.map(b => {
+        if (b.type === 'dispatch_no_progress') return '⚠️ No agent activity since dispatch';
+        if (b.type === 'step_too_long') return `⚠️ "${b.stepDescription}" running too long`;
+        if (b.type === 'no_recent_steps') return '⚠️ No activity for extended period';
+        return `⚠️ ${b.type}`;
+      });
+      const allSuggestions = [...new Set(breakdowns.flatMap(b => b.suggestions || []))];
+
       // Create notification
+      const baseMessage = `Task #${task.id} has been in "${task.status}" status for ${task.timeTracking.timeInStatusHuman}. Assigned to: ${task.assigneeIds.join(', ')}.`;
+      const diagSection = diagnosticMessages.length > 0
+        ? `\n${diagnosticMessages.join('\n')}`
+        : '';
+      const suggestSection = allSuggestions.length > 0
+        ? `\n\nSuggested actions:\n${allSuggestions.map(s => '• ' + s).join('\n')}`
+        : '\nConsider intervention or reassignment.';
+
       const notification = {
         id: `notif-stuck-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: 'stuck_task',
         title: `🚨 Task Stuck: ${task.title}`,
-        message: `Task #${task.id} has been in "${task.status}" status for ${task.timeTracking.timeInStatusHuman}. Assigned to: ${task.assigneeIds.join(', ')}. Consider intervention or reassignment.`,
+        message: `${baseMessage}${diagSection}${suggestSection}`,
         from: 'system',
         to: ['tension', ...task.assigneeIds],
         createdAt: new Date().toISOString(),
@@ -3577,7 +3631,9 @@ function checkStuckTasks() {
         metadata: {
           taskId: task.id,
           timeInStatus: task.timeTracking.timeInStatusHuman,
-          alertLevel: 'red'
+          alertLevel: 'red',
+          diagnostics: breakdowns,
+          suggestions: allSuggestions
         }
       };
 
