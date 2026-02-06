@@ -139,6 +139,15 @@ function TaskCard({ task, onComplete, completing, ideaStats }) {
   // Extract links from description if no actionItems provided
   const extractedLinks = extractLinksFromDescription(task.description)
 
+  // Extract blockquote text from description for copy+open
+  const extractBlockquotes = (desc) => {
+    if (!desc) return []
+    return desc.split('\n')
+      .filter(line => line.startsWith('> '))
+      .map(line => line.replace(/^> /, ''))
+  }
+  const blockquotes = extractBlockquotes(task.description)
+
   const priorityColors = {
     high: 'border-l-red-500 bg-red-50',
     medium: 'border-l-yellow-500 bg-yellow-50',
@@ -217,44 +226,68 @@ function TaskCard({ task, onComplete, completing, ideaStats }) {
             Quick Actions
           </h4>
           <div className="space-y-3">
-            {(actionItems.length > 0 ? actionItems : extractedLinks).map((item, index) => (
-              <div key={index} className="bg-white p-3 rounded-md border border-blue-100">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-sm text-neutral-800">
-                    {item.label || item.name || `Link ${index + 1}`}
-                  </span>
-                  <a
-                    href={item.url || item.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    <ExternalLink size={14} />
-                    Open
-                  </a>
-                </div>
-                {item.suggestedComment && (
-                  <div className="mt-2">
-                    <div className="flex items-center gap-2 text-xs text-neutral-500 mb-1">
-                      <MessageSquare size={12} />
-                      Suggested comment:
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <p className="flex-1 text-sm bg-neutral-50 p-2 rounded border border-neutral-200 italic">
-                        "{item.suggestedComment}"
-                      </p>
+            {(actionItems.length > 0 ? actionItems : extractedLinks).map((item, index) => {
+              const copyText = blockquotes[index] || item.suggestedComment
+              const linkUrl = item.url || item.link
+
+              const handleCopyAndOpen = async () => {
+                if (copyText) {
+                  await navigator.clipboard.writeText(copyText)
+                  setCopiedIndex(index)
+                  setTimeout(() => setCopiedIndex(null), 3000)
+                }
+                window.open(linkUrl, '_blank', 'noopener,noreferrer')
+              }
+
+              return (
+                <div key={index} className="bg-white p-3 rounded-md border border-blue-100">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm text-neutral-800">
+                      {item.label || item.name || `Link ${index + 1}`}
+                    </span>
+                    {copyText ? (
                       <button
-                        onClick={() => handleCopy(item.suggestedComment, index)}
-                        className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-200 hover:bg-neutral-300 rounded transition-colors"
+                        onClick={handleCopyAndOpen}
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
                       >
-                        {copiedIndex === index ? <Check size={12} /> : <Copy size={12} />}
-                        {copiedIndex === index ? 'Copied!' : 'Copy'}
+                        {copiedIndex === index ? <Check size={14} /> : <><Copy size={14} /> <ExternalLink size={14} /></>}
+                        {copiedIndex === index ? 'Copied! Opening...' : 'Copy & Open'}
                       </button>
-                    </div>
+                    ) : (
+                      <a
+                        href={linkUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                      >
+                        <ExternalLink size={14} />
+                        Open
+                      </a>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                  {item.suggestedComment && !blockquotes[index] && (
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2 text-xs text-neutral-500 mb-1">
+                        <MessageSquare size={12} />
+                        Suggested comment:
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <p className="flex-1 text-sm bg-neutral-50 p-2 rounded border border-neutral-200 italic">
+                          "{item.suggestedComment}"
+                        </p>
+                        <button
+                          onClick={() => handleCopy(item.suggestedComment, index)}
+                          className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-200 hover:bg-neutral-300 rounded transition-colors"
+                        >
+                          {copiedIndex === index ? <Check size={12} /> : <Copy size={12} />}
+                          {copiedIndex === index ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
@@ -316,8 +349,11 @@ function extractLinksFromDescription(description) {
       const handle = url.split('/profile/')[1]?.split(/[?\s]/)[0]
       label = `@${handle}`
     } else if (url.includes('twitter.com/') || url.includes('x.com/')) {
-      const handle = url.split('/').pop()?.split('?')[0]
-      label = `@${handle}`
+      // Extract username (3rd segment), not tweet ID from /status/ URLs
+      const parts = url.split('/')
+      const domainIdx = parts.findIndex(p => p.includes('x.com') || p.includes('twitter.com'))
+      const handle = domainIdx >= 0 ? parts[domainIdx + 1]?.split('?')[0] : parts.pop()?.split('?')[0]
+      label = handle ? `@${handle}` : url
     } else if (url.includes('reddit.com/r/')) {
       const sub = url.match(/reddit\.com\/r\/([^\/]+)/)?.[1]
       label = `r/${sub}`
