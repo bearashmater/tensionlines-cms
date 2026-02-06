@@ -234,7 +234,7 @@
     {
       "id": "task-004",
       "title": "Remove Human Interaction Elements from Website",
-      "description": "PRIORITY: Update About and Contact pages to remove all speaking/workshops/consulting mentions.\n\n**Context:** Shawn wants full automation—no human interactions. AI team handles ALL responses.\n\n**Updated content:** See `website-updates/about-page-v2.md` and `website-updates/contact-page-v2.md`\n\n**Changes needed:**\n1. About page: Remove 'For speaking, workshops, or consulting' section\n2. Contact page: Remove 'speaking inquiry guidelines' section\n3. Both pages: Add Patreon and Reddit links\n4. Reframe email as 'questions about the philosophy' (not consulting)\n\n**Time:** 30-45 min\n\n**Deliverable:** Updated Hugo content files + deployed to Netlify\n\n**See also:** AUTOMATION_POLICY.md for full guidelines",
+      "description": "PRIORITY: Update About and Contact pages to remove all speaking/workshops/consulting mentions.\n\n**Context:** Shawn wants full automation\u2014no human interactions. AI team handles ALL responses.\n\n**Updated content:** See `website-updates/about-page-v2.md` and `website-updates/contact-page-v2.md`\n\n**Changes needed:**\n1. About page: Remove 'For speaking, workshops, or consulting' section\n2. Contact page: Remove 'speaking inquiry guidelines' section\n3. Both pages: Add Patreon and Reddit links\n4. Reframe email as 'questions about the philosophy' (not consulting)\n\n**Time:** 30-45 min\n\n**Deliverable:** Updated Hugo content files + deployed to Netlify\n\n**See also:** AUTOMATION_POLICY.md for full guidelines",
       "status": "completed",
       "assigneeIds": [
         "aristotle"
@@ -293,7 +293,7 @@
         "completedBy": "heraclitus",
         "duration": "12 minutes",
         "approach": "River metaphor (words as flowing rivers), transformation vs corruption, observational tone",
-        "structure": "3 posts (The River → The Transformation → The Dance)",
+        "structure": "3 posts (The River \u2192 The Transformation \u2192 The Dance)",
         "readyForReview": true,
         "reviewFeedback": "APPROVED. No BS detected. Metaphor tight (river throughout). Voice authentic (Heraclitus observational style). Platform appropriate (3 posts, contemplative tone for Bluesky). Ready to ship.",
         "reviewedBy": "diogenes",
@@ -306,7 +306,7 @@
     {
       "id": "task-006",
       "title": "Build TensionLines Content Management System (Full Stack)",
-      "description": "**COMPLETED:** Full-featured CMS deployed and in active use. Core features delivered: Dashboard, Book Progress (5-book series tracking with chapters), Ideas Bank parser, Tasks/Agents/Activities views, Global search, Chapter detail pages with linked ideas.\n\n**Delivered:**\n✅ Backend API with all endpoints\n✅ React frontend with 7+ views\n✅ Book progress tracking (all 5 books)\n✅ Chapter detail pages with outlines & linked ideas\n✅ Real-time data watching (30s refresh)\n✅ Search functionality\n✅ Documentation (README, ARCHITECTURE, USER_GUIDE, REQUIREMENTS_VALIDATION)\n✅ Daily automated review scheduled (9 AM cron)\n\n**Future enhancements (separate tasks):**\n- UI polish (loading states, empty states)\n- Mobile testing on real devices\n- Screenshots for documentation\n- Dark mode toggle\n- WebSocket real-time updates\n- Analytics dashboards (when data available)",
+      "description": "**COMPLETED:** Full-featured CMS deployed and in active use. Core features delivered: Dashboard, Book Progress (5-book series tracking with chapters), Ideas Bank parser, Tasks/Agents/Activities views, Global search, Chapter detail pages with linked ideas.\n\n**Delivered:**\n\u2705 Backend API with all endpoints\n\u2705 React frontend with 7+ views\n\u2705 Book progress tracking (all 5 books)\n\u2705 Chapter detail pages with outlines & linked ideas\n\u2705 Real-time data watching (30s refresh)\n\u2705 Search functionality\n\u2705 Documentation (README, ARCHITECTURE, USER_GUIDE, REQUIREMENTS_VALIDATION)\n\u2705 Daily automated review scheduled (9 AM cron)\n\n**Future enhancements (separate tasks):**\n- UI polish (loading states, empty states)\n- Mobile testing on real devices\n- Screenshots for documentation\n- Dark mode toggle\n- WebSocket real-time updates\n- Analytics dashboards (when data available)",
       "status": "completed",
       "assigneeIds": [
         "socrates",
@@ -386,7 +386,7 @@
     {
       "id": "task-008",
       "title": "Bluesky Post: Practice Inspires Theory",
-      "description": "SOURCE IDEA #003: Quote about practice→theory (advanced countries) vs theory→practice (developing countries).\n\n🚨 **BLOCKED BY HYPATIA - Unattributed quote requires source attribution before shipping**\n\n**Content ready:** Draft exists at content/drafts/2026-02-02-midday-posts.md\n\n**Post (4 paragraphs):**\n- Advanced countries: practice inspires theory. Others: theory inspires practice. Why transplanted ideas fail.\n- Can't skip the doing. Theory is residue of practice - import just residue, miss the movement.\n- Every borrowed framework without earning through practice = theory→practice. Reading dance description vs. dancing badly until you understand.\n- Movement precedes understanding. Must live the tension to know it.\n\n**BLOCKER:** Quote \"In advanced countries, practice inspires theory...\" needs attribution. See philosophers/hypatia/notes/fact-check-task-008-URGENT.md\n\n**Voice:** Heraclitus (observational, contemplative, flux-focused)\n**Platform:** Bluesky (thetensionlines.bsky.social)\n**Ship method:** bluesky-post.js script (working)\n\n**Resolution options:**\n1. Find original source + add attribution\n2. Rephrase as original thought (Hypatia provided template)\n3. Attribute to tradition/field\n\n**Goal:** Daily Bluesky content, core TensionLines principle (movement > theory)",
+      "description": "SOURCE IDEA #003: Quote about practice\u2192theory (advanced countries) vs theory\u2192practice (developing countries).\n\n\ud83d\udea8 **BLOCKED BY HYPATIA - Unattributed quote requires source attribution before shipping**\n\n**Content ready:** Draft exists at content/drafts/2026-02-02-midday-posts.md\n\n**Post (4 paragraphs):**\n- Advanced countries: practice inspires theory. Others: theory inspires practice. Why transplanted ideas fail.\n- Can't skip the doing. Theory is residue of practice - import just residue, miss the movement.\n- Every borrowed framework without earning through practice = theory\u2192practice. Reading dance description vs. dancing badly until you understand.\n- Movement precedes understanding. Must live the tension to know it.\n\n**BLOCKER:** Quote \"In advanced countries, practice inspires theory...\" needs attribution. See philosophers/hypatia/notes/fact-check-task-008-URGENT.md\n\n**Voice:** Heraclitus (observational, contemplative, flux-focused)\n**Platform:** Bluesky (thetensionlines.bsky.social)\n**Ship method:** bluesky-post.js script (working)\n\n**Resolution options:**\n1. Find original source + add attribution\n2. Rephrase as original thought (Hypatia provided template)\n3. Attribute to tradition/field\n\n**Goal:** Daily Bluesky content, core TensionLines principle (movement > theory)",
       "status": "shipped",
       "assigneeIds": [
         "heraclitus"
@@ -408,7 +408,7 @@
         "originalDraft": "content/drafts/2026-02-02-midday-posts.md",
         "scriptPath": "/Users/admin/clawd/scripts/bluesky-post.js",
         "skipReview": false,
-        "reason": "Hypatia fact-check → revised draft → Tension approved → ready to ship",
+        "reason": "Hypatia fact-check \u2192 revised draft \u2192 Tension approved \u2192 ready to ship",
         "priority": "high",
         "blocker": "RESOLVED - Revised draft approved by squad lead",
         "resolution": "Rephrased as original thought (Hypatia Option B)",
@@ -428,7 +428,7 @@
     {
       "id": "task-009",
       "title": "Twitter: The Sentence as Life Moment (Single Post - Repost)",
-      "description": "SOURCE IDEA #001: Life sentences - everything you say becomes quotable.\n\n**REPOST:** Originally posted as 7-tweet thread to @brownsl (wrong account), deleted, now condensed to single tweet for @thetensionlines.\n\n**Single Tweet (233 chars):**\n\"Everything you say becomes a sentence someone else might quote—maybe accurate, maybe twisted, maybe attributed to 'Unknown.' You can't control the retelling. You can only control the saying. Say things worth misquoting.\"\n\n**Voice:** Nietzsche (sharp, philosophical, personal)\n**Platform:** Twitter/X (@thetensionlines)\n**Format:** SINGLE TWEET (new policy)\n**Ship method:** Bird CLI (after account switch)\n\n**Prerequisites:** Shawn must log into @thetensionlines in Safari/Chrome first",
+      "description": "SOURCE IDEA #001: Life sentences - everything you say becomes quotable.\n\n**REPOST:** Originally posted as 7-tweet thread to @brownsl (wrong account), deleted, now condensed to single tweet for @thetensionlines.\n\n**Single Tweet (233 chars):**\n\"Everything you say becomes a sentence someone else might quote\u2014maybe accurate, maybe twisted, maybe attributed to 'Unknown.' You can't control the retelling. You can only control the saying. Say things worth misquoting.\"\n\n**Voice:** Nietzsche (sharp, philosophical, personal)\n**Platform:** Twitter/X (@thetensionlines)\n**Format:** SINGLE TWEET (new policy)\n**Ship method:** Bird CLI (after account switch)\n\n**Prerequisites:** Shawn must log into @thetensionlines in Safari/Chrome first",
       "status": "shipped",
       "assigneeIds": [
         "nietzsche"
@@ -446,7 +446,7 @@
         "skipReview": true,
         "reason": "Repost of deleted thread, condensed to single tweet per new policy",
         "priority": "high",
-        "blockedBy": "Twitter account switch required (@brownsl → @thetensionlines)",
+        "blockedBy": "Twitter account switch required (@brownsl \u2192 @thetensionlines)",
         "shippedBy": "nietzsche",
         "tweetUrl": "https://x.com/i/status/2019290266327544022",
         "note": "Account switch completed, tweet shipped successfully"
@@ -457,7 +457,7 @@
     {
       "id": "task-010",
       "title": "Twitter: The 4 Types (Single Post - Repost)",
-      "description": "SOURCE IDEA #002: Computer support taxonomy revealing 4 problem-solving mindsets.\n\n**REPOST:** Originally posted as 3-tweet thread to @brownsl (wrong account), deleted, now condensed to single tweet for @thetensionlines.\n\n**Single Tweet (231 chars):**\n\"When you stop seeking, you stop moving. The people stuck with tech problems aren't stuck because they lack knowledge—they stopped being curious. Curiosity is motion. Blame (external or internal) is where you die.\"\n\n**Voice:** Nietzsche (sharp, provocative)\n**Platform:** Twitter/X (@thetensionlines)\n**Format:** SINGLE TWEET (new policy)\n**Ship method:** Bird CLI (after account switch)\n\n**Prerequisites:** Shawn must log into @thetensionlines in Safari/Chrome first",
+      "description": "SOURCE IDEA #002: Computer support taxonomy revealing 4 problem-solving mindsets.\n\n**REPOST:** Originally posted as 3-tweet thread to @brownsl (wrong account), deleted, now condensed to single tweet for @thetensionlines.\n\n**Single Tweet (231 chars):**\n\"When you stop seeking, you stop moving. The people stuck with tech problems aren't stuck because they lack knowledge\u2014they stopped being curious. Curiosity is motion. Blame (external or internal) is where you die.\"\n\n**Voice:** Nietzsche (sharp, provocative)\n**Platform:** Twitter/X (@thetensionlines)\n**Format:** SINGLE TWEET (new policy)\n**Ship method:** Bird CLI (after account switch)\n\n**Prerequisites:** Shawn must log into @thetensionlines in Safari/Chrome first",
       "status": "shipped",
       "assigneeIds": [
         "nietzsche"
@@ -475,7 +475,7 @@
         "skipReview": true,
         "reason": "Repost of deleted thread, condensed to single tweet per new policy",
         "priority": "high",
-        "blockedBy": "Twitter account switch required (@brownsl → @thetensionlines)",
+        "blockedBy": "Twitter account switch required (@brownsl \u2192 @thetensionlines)",
         "shippedBy": "nietzsche",
         "tweetUrl": "https://x.com/i/status/2019290285147337115",
         "note": "Account switch completed, tweet shipped successfully"
@@ -537,7 +537,7 @@
     {
       "id": "task-012",
       "title": "Gumroad Digital Products Setup & Launch",
-      "description": "**NEW REVENUE STREAM:** Set up Gumroad account for selling digital products.\n\n🚨 **BLOCKED UNTIL 1000 TWITTER FOLLOWERS** (Shawn directive 2026-02-04)\n\n**Phase 1 Goals (when unblocked):**\n1. Product strategy (what to create, pricing, positioning)\n2. Create first 2-3 digital products (PDFs/guides)\n3. Set up Gumroad integration + website Products page\n4. Launch publicly and announce on all channels\n\n**Gumroad Account:** https://gumroad.com/thetensionlines (username: thetensionlines)\n\n**Approved Pricing (Shawn confirmed):**\n- \"The Polarity Map\" PDF Workbook ($7)\n- \"30-Day Practice-Before-Theory Challenge\" ($12)\n- \"TensionLines Field Guide\" ($15-20)\n\n**Product Priority:** Flexible - any product can be built first\n\n**Deliverables:**\n- Product strategy document (Socrates)\n- 2-3 digital products created (Plato + Leonardo design)\n- Gumroad listings configured (Aristotle)\n- Website /products page (Aristotle)\n- Dashboard updates (track revenue, downloads)\n- Mission Control recurring task (monthly product creation)\n\n**See:** GUMROAD_SETUP.md for full strategy and implementation plan\n\n**Timeline:** ON HOLD - Resume when Twitter hits 1000 followers\n\n**Success Metrics:** $50-150 revenue month 1, 10-20 customers, 4.5+ star ratings",
+      "description": "**NEW REVENUE STREAM:** Set up Gumroad account for selling digital products.\n\n\ud83d\udea8 **BLOCKED UNTIL 1000 TWITTER FOLLOWERS** (Shawn directive 2026-02-04)\n\n**Phase 1 Goals (when unblocked):**\n1. Product strategy (what to create, pricing, positioning)\n2. Create first 2-3 digital products (PDFs/guides)\n3. Set up Gumroad integration + website Products page\n4. Launch publicly and announce on all channels\n\n**Gumroad Account:** https://gumroad.com/thetensionlines (username: thetensionlines)\n\n**Approved Pricing (Shawn confirmed):**\n- \"The Polarity Map\" PDF Workbook ($7)\n- \"30-Day Practice-Before-Theory Challenge\" ($12)\n- \"TensionLines Field Guide\" ($15-20)\n\n**Product Priority:** Flexible - any product can be built first\n\n**Deliverables:**\n- Product strategy document (Socrates)\n- 2-3 digital products created (Plato + Leonardo design)\n- Gumroad listings configured (Aristotle)\n- Website /products page (Aristotle)\n- Dashboard updates (track revenue, downloads)\n- Mission Control recurring task (monthly product creation)\n\n**See:** GUMROAD_SETUP.md for full strategy and implementation plan\n\n**Timeline:** ON HOLD - Resume when Twitter hits 1000 followers\n\n**Success Metrics:** $50-150 revenue month 1, 10-20 customers, 4.5+ star ratings",
       "status": "blocked",
       "assigneeIds": [
         "aristotle",
@@ -586,7 +586,7 @@
     {
       "id": "task-013",
       "title": "Twitter Daily Outreach - Growth to 1000 Followers",
-      "description": "**CRITICAL PATH TO REVENUE:** Daily strategic outreach to grow @thetensionlines to 1000 followers.\n\n🎯 **Daily Workflow (30-40 min):**\n\n1. **FIND** (15-20 min): Identify 5 Twitter users aligned with TensionLines philosophy\n   - Philosophy enthusiasts, self-improvement seekers, writers\n   - Search: \"paradox\", \"tension between\", \"polarity\", \"movement over stillness\"\n   - Quality: 100-10K followers, thoughtful content, engaged community\n\n2. **FOLLOW** (2 min): Follow the 5 selected users via Bird CLI\n   - Log in `twitter-outreach/YYYY-MM-DD.json`\n\n3. **COMMENT** (10-15 min): Add ONE supportive comment to a recent post from each user\n   - Thoughtful, authentic, short (1-2 sentences)\n   - NO self-promotion\n   - Log comments in tracking file\n\n4. **MONITOR** (2x daily): Check for replies to your comments\n   - Morning: 9 AM\n   - Evening: 6 PM\n   - Use `bird mentions --limit 20`\n\n5. **ESCALATE**: When reply received, notify Shawn immediately via Telegram\n   - Screenshot or copy reply\n   - Log in `twitter-outreach/replies-queue.md`\n   - Shawn reviews and decides on response\n\n**Workflow Doc:** `twitter-outreach-workflow.md`\n\n**Tracking:**\n- Daily: `twitter-outreach/YYYY-MM-DD.json`\n- Weekly: `twitter-outreach/weekly-YYYY-MM-DD.md`\n- Replies: `twitter-outreach/replies-queue.md`\n\n**Goals:**\n- Week 1-4: 5 users/day × 28 days = 140 targeted users\n- Expected growth: +140-230 followers (1:1 to 1:1.6 conversion)\n- Timeline: 1000 followers in 8-12 weeks (realistic)\n\n**Success Metrics:**\n- Quality over quantity (aligned users, not bots)\n- Genuine engagement (not spam)\n- Build real connections\n- Unlock Gumroad launch at 1000 followers",
+      "description": "**CRITICAL PATH TO REVENUE:** Daily strategic outreach to grow @thetensionlines to 1000 followers.\n\n\ud83c\udfaf **Daily Workflow (30-40 min):**\n\n1. **FIND** (15-20 min): Identify 5 Twitter users aligned with TensionLines philosophy\n   - Philosophy enthusiasts, self-improvement seekers, writers\n   - Search: \"paradox\", \"tension between\", \"polarity\", \"movement over stillness\"\n   - Quality: 100-10K followers, thoughtful content, engaged community\n\n2. **FOLLOW** (2 min): Follow the 5 selected users via Bird CLI\n   - Log in `twitter-outreach/YYYY-MM-DD.json`\n\n3. **COMMENT** (10-15 min): Add ONE supportive comment to a recent post from each user\n   - Thoughtful, authentic, short (1-2 sentences)\n   - NO self-promotion\n   - Log comments in tracking file\n\n4. **MONITOR** (2x daily): Check for replies to your comments\n   - Morning: 9 AM\n   - Evening: 6 PM\n   - Use `bird mentions --limit 20`\n\n5. **ESCALATE**: When reply received, notify Shawn immediately via Telegram\n   - Screenshot or copy reply\n   - Log in `twitter-outreach/replies-queue.md`\n   - Shawn reviews and decides on response\n\n**Workflow Doc:** `twitter-outreach-workflow.md`\n\n**Tracking:**\n- Daily: `twitter-outreach/YYYY-MM-DD.json`\n- Weekly: `twitter-outreach/weekly-YYYY-MM-DD.md`\n- Replies: `twitter-outreach/replies-queue.md`\n\n**Goals:**\n- Week 1-4: 5 users/day \u00d7 28 days = 140 targeted users\n- Expected growth: +140-230 followers (1:1 to 1:1.6 conversion)\n- Timeline: 1000 followers in 8-12 weeks (realistic)\n\n**Success Metrics:**\n- Quality over quantity (aligned users, not bots)\n- Genuine engagement (not spam)\n- Build real connections\n- Unlock Gumroad launch at 1000 followers",
       "status": "in_progress",
       "assigneeIds": [
         "nietzsche"
@@ -631,7 +631,7 @@
     {
       "id": "task-014",
       "title": "Bluesky Daily Outreach - Community Growth",
-      "description": "**PARALLEL GROWTH STRATEGY:** Daily thoughtful outreach to grow thetensionlines.bsky.social.\n\n🚧 **WORKFLOW ADJUSTMENT (Feb 5):** Manual search required until browser automation available\n\n🎯 **Daily Workflow (30-40 min):**\n\n1. **FIND** (15-20 min): Identify 5 Bluesky users aligned with TensionLines philosophy\n   - Philosophy enthusiasts, contemplative writers, mindfulness practitioners\n   - Search: \"paradox\", \"tension\", \"flux\", \"change\", \"transformation\"\n   - Quality: 50-5K followers, reflective content, genuine conversations\n   - **Current Method:** Shawn manually searches https://bsky.app/search, shares results with Heraclitus\n\n2. **FOLLOW** (2 min): Follow the 5 selected users via Bluesky web/app\n   - Log in `bluesky-outreach/YYYY-MM-DD.json`\n\n3. **COMMENT** (10-15 min): Add ONE contemplative comment to a recent post from each user\n   - Observational, curious, collaborative\n   - Heraclitus voice: gentle, flux-focused, appreciating paradox\n   - NO self-promotion\n   - Log comments in tracking file\n\n4. **MONITOR** (2x daily): Check for replies and mentions\n   - Morning: 9 AM\n   - Evening: 6 PM\n   - Via Bluesky notifications\n\n5. **ESCALATE**: When reply received, notify Shawn immediately via Telegram\n   - Screenshot or copy reply\n   - Log in `bluesky-outreach/replies-queue.md`\n   - Shawn reviews and decides on response\n\n**Workflow Doc:** `bluesky-outreach-workflow.md`\n\n**Tracking:**\n- Daily: `bluesky-outreach/YYYY-MM-DD.json`\n- Weekly: `bluesky-outreach/weekly-YYYY-MM-DD.md`\n- Replies: `bluesky-outreach/replies-queue.md`\n\n**Goals:**\n- Week 1-4: 5 users/day × 28 days = 140 targeted users\n- Expected growth: +180-310 followers (higher engagement than Twitter)\n- Month 1 target: 500 followers\n- Long-term: 1500+ followers\n\n**Success Metrics:**\n- Quality over quantity (aligned users, thoughtful community)\n- Higher engagement rate expected (2-5% vs Twitter 1%)\n- Build contemplative community\n- Platform advantage: smaller, more engaged audience\n\n**Technical Limitation:** No Bluesky CLI or browser automation currently available. Manual search by Shawn required until tooling improves.",
+      "description": "**PARALLEL GROWTH STRATEGY:** Daily thoughtful outreach to grow thetensionlines.bsky.social.\n\n\ud83d\udea7 **WORKFLOW ADJUSTMENT (Feb 5):** Manual search required until browser automation available\n\n\ud83c\udfaf **Daily Workflow (30-40 min):**\n\n1. **FIND** (15-20 min): Identify 5 Bluesky users aligned with TensionLines philosophy\n   - Philosophy enthusiasts, contemplative writers, mindfulness practitioners\n   - Search: \"paradox\", \"tension\", \"flux\", \"change\", \"transformation\"\n   - Quality: 50-5K followers, reflective content, genuine conversations\n   - **Current Method:** Shawn manually searches https://bsky.app/search, shares results with Heraclitus\n\n2. **FOLLOW** (2 min): Follow the 5 selected users via Bluesky web/app\n   - Log in `bluesky-outreach/YYYY-MM-DD.json`\n\n3. **COMMENT** (10-15 min): Add ONE contemplative comment to a recent post from each user\n   - Observational, curious, collaborative\n   - Heraclitus voice: gentle, flux-focused, appreciating paradox\n   - NO self-promotion\n   - Log comments in tracking file\n\n4. **MONITOR** (2x daily): Check for replies and mentions\n   - Morning: 9 AM\n   - Evening: 6 PM\n   - Via Bluesky notifications\n\n5. **ESCALATE**: When reply received, notify Shawn immediately via Telegram\n   - Screenshot or copy reply\n   - Log in `bluesky-outreach/replies-queue.md`\n   - Shawn reviews and decides on response\n\n**Workflow Doc:** `bluesky-outreach-workflow.md`\n\n**Tracking:**\n- Daily: `bluesky-outreach/YYYY-MM-DD.json`\n- Weekly: `bluesky-outreach/weekly-YYYY-MM-DD.md`\n- Replies: `bluesky-outreach/replies-queue.md`\n\n**Goals:**\n- Week 1-4: 5 users/day \u00d7 28 days = 140 targeted users\n- Expected growth: +180-310 followers (higher engagement than Twitter)\n- Month 1 target: 500 followers\n- Long-term: 1500+ followers\n\n**Success Metrics:**\n- Quality over quantity (aligned users, thoughtful community)\n- Higher engagement rate expected (2-5% vs Twitter 1%)\n- Build contemplative community\n- Platform advantage: smaller, more engaged audience\n\n**Technical Limitation:** No Bluesky CLI or browser automation currently available. Manual search by Shawn required until tooling improves.",
       "status": "in_progress",
       "assigneeIds": [
         "heraclitus"
@@ -783,7 +783,7 @@
     {
       "id": "task-018",
       "title": "Bluesky: Manually Follow & Comment on 5 Users",
-      "description": "**Context:** Heraclitus found 5 quality Bluesky users aligned with TensionLines, but has no CLI/automation to follow/comment. Needs your manual execution.\n\n**Your Task:**\n1. Log into Bluesky: https://bsky.app (thetensionlines.bsky.social account)\n2. Visit each user profile below\n3. Click \"Follow\"\n4. Read their recent post, add ONE thoughtful comment (1-2 sentences, observational tone)\n5. Mark task complete when done\n\n**Users to follow/comment (Day 1 - Feb 4):**\n1. @bunny.bsky.social (1.9K followers) - Poet + Deleuzean philosophy\n   - https://bsky.app/profile/bunny.bsky.social\n2. @orthonormalist.bsky.social (1.1K followers) - Transhumanist thinker\n   - https://bsky.app/profile/orthonormalist.bsky.social\n\n**Users to follow/comment (Day 2 - Feb 5):**\n3. @lovephilosophy.substack.com (Andrea Hiott) - Says \"Paradox is the portal\" ⭐⭐⭐⭐⭐\n   - https://bsky.app/profile/lovephilosophy.substack.com\n4. @mindandlife.bsky.social (Mind & Life Institute) - Contemplative science\n   - https://bsky.app/profile/mindandlife.bsky.social\n5. @clio.bsky.social (Clio) - Philosophy + transformation\n   - https://bsky.app/profile/clio.bsky.social\n\n**Comment Style:**\n- Observational, curious, collaborative (Heraclitus voice)\n- NO self-promotion\n- Example: \"This resonates. The paradox isn't a problem to solve - it's the space where understanding lives.\"\n\n**Time:** 15-20 minutes",
+      "description": "**Context:** Heraclitus found 5 quality Bluesky users aligned with TensionLines, but has no CLI/automation to follow/comment. Needs your manual execution.\n\n**Your Task:**\n1. Log into Bluesky: https://bsky.app (thetensionlines.bsky.social account)\n2. Visit each user profile below\n3. Click \"Follow\"\n4. Read their recent post, add ONE thoughtful comment (1-2 sentences, observational tone)\n5. Mark task complete when done\n\n**Users to follow/comment (Day 1 - Feb 4):**\n1. @bunny.bsky.social (1.9K followers) - Poet + Deleuzean philosophy\n   - https://bsky.app/profile/bunny.bsky.social\n2. @orthonormalist.bsky.social (1.1K followers) - Transhumanist thinker\n   - https://bsky.app/profile/orthonormalist.bsky.social\n\n**Users to follow/comment (Day 2 - Feb 5):**\n3. @lovephilosophy.substack.com (Andrea Hiott) - Says \"Paradox is the portal\" \u2b50\u2b50\u2b50\u2b50\u2b50\n   - https://bsky.app/profile/lovephilosophy.substack.com\n4. @mindandlife.bsky.social (Mind & Life Institute) - Contemplative science\n   - https://bsky.app/profile/mindandlife.bsky.social\n5. @clio.bsky.social (Clio) - Philosophy + transformation\n   - https://bsky.app/profile/clio.bsky.social\n\n**Comment Style:**\n- Observational, curious, collaborative (Heraclitus voice)\n- NO self-promotion\n- Example: \"This resonates. The paradox isn't a problem to solve - it's the space where understanding lives.\"\n\n**Time:** 15-20 minutes",
       "status": "completed",
       "assigneeIds": [
         "human"
@@ -862,7 +862,7 @@
     {
       "id": "task-020",
       "title": "Investigate CMS Process Kill Issue (18 Kills Today)",
-      "description": "**Problem:** CMS server (http://localhost:3001) keeps dying every ~26 minutes. 18 SIGKILL/SIGTERM events today.\n\n**What's Happening:**\n- Process: `node server.js` (CMS backend)\n- Signal: SIGKILL (external force kill) or SIGTERM (clean shutdown)\n- Frequency: Every ~26-30 minutes\n- Impact: CMS dashboard goes offline, Tension restarts manually\n\n**Your Task:**\n1. Open macOS Activity Monitor\n2. Search for \"node\" processes\n3. Check if any process manager is killing long-running Node processes\n4. Look for:\n   - launchd limits\n   - System resource constraints\n   - Third-party process managers\n5. Check system logs: Console.app → search for \"node\" or \"3001\"\n6. Report findings (what's sending SIGKILL/SIGTERM?)\n\n**Not Related To:**\n- LLM cost management (separate system)\n- Duplicate instances (Task #015 fixed that)\n\n**Time:** 15-20 minutes\n\n**Priority:** Medium (annoying but Tension handles restarts)",
+      "description": "**Problem:** CMS server (http://localhost:3001) keeps dying every ~26 minutes. 18 SIGKILL/SIGTERM events today.\n\n**What's Happening:**\n- Process: `node server.js` (CMS backend)\n- Signal: SIGKILL (external force kill) or SIGTERM (clean shutdown)\n- Frequency: Every ~26-30 minutes\n- Impact: CMS dashboard goes offline, Tension restarts manually\n\n**Your Task:**\n1. Open macOS Activity Monitor\n2. Search for \"node\" processes\n3. Check if any process manager is killing long-running Node processes\n4. Look for:\n   - launchd limits\n   - System resource constraints\n   - Third-party process managers\n5. Check system logs: Console.app \u2192 search for \"node\" or \"3001\"\n6. Report findings (what's sending SIGKILL/SIGTERM?)\n\n**Not Related To:**\n- LLM cost management (separate system)\n- Duplicate instances (Task #015 fixed that)\n\n**Time:** 15-20 minutes\n\n**Priority:** Medium (annoying but Tension handles restarts)",
       "status": "completed",
       "completedAt": "2026-02-05T06:00:00Z",
       "completedBy": "human",
@@ -893,7 +893,7 @@
     },
     {
       "id": "task-021",
-      "title": "Twitter Account Switch (@brownsl → @thetensionlines)",
+      "title": "Twitter Account Switch (@brownsl \u2192 @thetensionlines)",
       "description": "**Problem:** Tasks #009 and #010 blocked. Bird CLI authenticated to @brownsl but should be @thetensionlines.\n\n**Your Task:**\n1. Open Safari or Chrome\n2. Go to: https://twitter.com\n3. Log out of @brownsl account\n4. Log into @thetensionlines account\n5. Leave browser window open (Bird CLI uses browser cookies)\n6. Verify by checking: https://twitter.com/home (should show @thetensionlines feed)\n7. Mark task complete\n\n**What This Unlocks:**\n- Nietzsche can post Tasks #009 & #010 (repost tweets to correct account)\n- Future Twitter content ships to right account\n\n**Time:** 3 minutes",
       "status": "completed",
       "assigneeIds": [
@@ -921,7 +921,7 @@
     {
       "id": "task-022",
       "title": "Bluesky: Repost Thread (TensionLines Mission)",
-      "description": "**Context:** Heraclitus identified Bluesky posts forming a cohesive thread about TensionLines philosophy.\n\n**Your Task:**\n1. Log into Bluesky: https://bsky.app (thetensionlines.bsky.social account)\n2. Post the THREAD INTRO first (explains why these connect)\n3. Quote-repost each post IN ORDER, spaced 30-60 seconds apart\n4. Use thread numbering (1/3, 2/3, 3/3)\n5. Mark task complete when done\n\n**Thread Flow:**\nIntro → paradox → holding tension → embracing uncertainty\n\n**Repost Guidelines:**\n- PREFER single posts. When in doubt, don't thread.\n- Only thread if posts genuinely build on each other\n- If threading: 3 posts max, start with honest intro\n- Keep commentary observational, not preachy\n- Post naturally, not all at once\n\n**Time:** 5-10 minutes",
+      "description": "**Context:** Heraclitus identified Bluesky posts forming a cohesive thread about TensionLines philosophy.\n\n**Your Task:**\n1. Log into Bluesky: https://bsky.app (thetensionlines.bsky.social account)\n2. Post the THREAD INTRO first (explains why these connect)\n3. Quote-repost each post IN ORDER, spaced 30-60 seconds apart\n4. Use thread numbering (1/3, 2/3, 3/3)\n5. Mark task complete when done\n\n**Thread Flow:**\nIntro \u2192 paradox \u2192 holding tension \u2192 embracing uncertainty\n\n**Repost Guidelines:**\n- PREFER single posts. When in doubt, don't thread.\n- Only thread if posts genuinely build on each other\n- If threading: 3 posts max, start with honest intro\n- Keep commentary observational, not preachy\n- Post naturally, not all at once\n\n**Time:** 5-10 minutes",
       "status": "completed",
       "assigneeIds": [
         "human"
@@ -981,6 +981,91 @@
         ]
       },
       "completedAt": "2026-02-05T13:07:11.810450Z"
+    },
+    {
+      "id": "task-024",
+      "title": "Configure Social Channels (Threads, Instagram)",
+      "description": "**HUMAN REQUIRED:** Set up channel configuration for @thetensionlines accounts.\n\n**Blocked content:**\n- Daily social posting cron jobs return 'Unknown channel' errors\n- Threads and Instagram content drafted but can't be posted\n\n**What's needed:**\n1. Configure Threads channel in OpenClaw\n2. Configure Instagram channel in OpenClaw\n3. Test posting to both platforms\n\n**See:** memory/2026-02-05.md for drafted content waiting to post\n\n**Unblocks:** Automated daily social posting on all platforms",
+      "status": "inbox",
+      "assigneeIds": [
+        "human"
+      ],
+      "llm": null,
+      "rationale": "Requires human account access and platform authentication",
+      "reviewerIds": [
+        "tension"
+      ],
+      "createdBy": "tension",
+      "createdAt": "2026-02-06T02:12:34.415180Z",
+      "metadata": {
+        "priority": "high",
+        "category": "infrastructure",
+        "blocksContent": true,
+        "platforms": [
+          "threads",
+          "instagram"
+        ]
+      }
+    },
+    {
+      "id": "task-025",
+      "title": "Review Book 1 Chapter Outlines",
+      "description": "**HUMAN REQUIRED:** Review and approve TensionLines book chapter structure.\n\n**Current structure (5 chapters):**\n1. Chapter 1: The Buzz (Introduction) - Ecclesiastes, Exodus anchors\n2. Chapter 2: The Tension Line - Pole-flipping, case studies\n3. Chapter 3: Multiple Lines, One Life - Navigating simultaneous tensions\n4. Chapter 4: When Tension Collapses - Haidt, false reconciliation\n5. Chapter 5: The Pull (Transcendence) - Sensing the season\n\n**14 ideas mapped to chapters** (see ideas-bank.md)\n\n**Core thesis:** 'Stop trying to get rid of inconsistent principles. Accept the tension and buzz in it.'\n\n**Review for:**\n- Does chapter flow make sense?\n- Missing topics?\n- Chapter order correct?\n- Approve to move to drafting phase\n\n**See:** books/book1-philosophy/PROJECT_TRACKER.md",
+      "status": "inbox",
+      "assigneeIds": [
+        "human"
+      ],
+      "llm": null,
+      "rationale": "Strategic direction requires human approval before agents invest in drafting",
+      "reviewerIds": [],
+      "createdBy": "tension",
+      "createdAt": "2026-02-06T02:12:34.415372Z",
+      "metadata": {
+        "priority": "medium",
+        "category": "book",
+        "book": "book1-philosophy",
+        "phase": "outline-review"
+      }
+    },
+    {
+      "id": "task-026",
+      "title": "Provide Weekly Idea Batch for Content Pipeline",
+      "description": "**HUMAN REQUIRED:** Feed raw ideas into the content system.\n\n**Current process:**\n- Shawn sends '!' thoughts via Telegram\n- Tension captures and organizes in ideas-bank.md\n- Ideas get mapped to book chapters and social content\n\n**This week's stats:**\n- 14 ideas captured total\n- 6 used for social posts\n- 8 organized into book chapters\n- ~5 new ideas per day keeps pipeline full\n\n**Idea format:**\n- Raw thoughts, quotes, observations\n- Can be rough - Tension will organize\n- Tag with '!' in Telegram to trigger capture\n\n**Goal:** Keep content pipeline flowing with fresh philosophical insights\n\n**Recurring:** Weekly check-in on idea flow",
+      "status": "in_progress",
+      "assigneeIds": [
+        "human"
+      ],
+      "llm": null,
+      "rationale": "Original ideas must come from human - AI organizes and develops",
+      "reviewerIds": [],
+      "createdBy": "tension",
+      "createdAt": "2026-02-06T02:12:34.415375Z",
+      "metadata": {
+        "priority": "high",
+        "category": "content",
+        "recurring": "weekly",
+        "ideasThisWeek": 14
+      }
+    },
+    {
+      "id": "task-027",
+      "title": "Approve Gumroad Products Before Launch",
+      "description": "**HUMAN REQUIRED:** Final approval on digital products before going live.\n\n**Status:** BLOCKED until Twitter reaches 1000 followers (Shawn directive 2026-02-04)\n\n**Approved pricing:**\n- 'The Polarity Map' PDF Workbook ($7)\n- '30-Day Practice-Before-Theory Challenge' ($12)\n- 'TensionLines Field Guide' ($15-20)\n\n**When unblocked, review:**\n1. Product content quality\n2. Pricing confirmation\n3. Gumroad listing copy\n4. Website /products page\n5. Launch announcement copy\n\n**Gumroad account:** https://gumroad.com/thetensionlines\n\n**Blocked by:** task-013 (Twitter growth to 1000 followers)\n\n**See:** Task #012 for full Gumroad setup details",
+      "status": "blocked",
+      "assigneeIds": [
+        "human"
+      ],
+      "llm": null,
+      "rationale": "Revenue decisions require human approval",
+      "reviewerIds": [],
+      "createdBy": "tension",
+      "createdAt": "2026-02-06T02:12:34.415377Z",
+      "metadata": {
+        "priority": "low",
+        "category": "revenue",
+        "blockedBy": "task-013",
+        "blockedReason": "Waiting for 1000 Twitter followers"
+      }
     }
   ],
   "messages": [],
@@ -1371,7 +1456,7 @@
       "agentId": "human",
       "taskId": "task-021",
       "timestamp": "2026-02-05T05:51:15.297Z",
-      "description": "Completed: Twitter Account Switch (@brownsl → @thetensionlines)",
+      "description": "Completed: Twitter Account Switch (@brownsl \u2192 @thetensionlines)",
       "metadata": {
         "completedBy": "human"
       }
@@ -1393,7 +1478,7 @@
       "agentId": "hypatia",
       "taskId": null,
       "timestamp": "2026-02-05T05:15:25.677Z",
-      "description": "🚨 FACT-CHECK ALERT: Reddit post draft contains unattributed quote (same issue as Task #008). BLOCKED until revised. See: philosophers/hypatia/notes/fact-check-reddit-2026-02-04-ALERT.md",
+      "description": "\ud83d\udea8 FACT-CHECK ALERT: Reddit post draft contains unattributed quote (same issue as Task #008). BLOCKED until revised. See: philosophers/hypatia/notes/fact-check-reddit-2026-02-04-ALERT.md",
       "metadata": {
         "severity": "high",
         "targetFile": "content/drafts/reddit-daily-2026-02-04.md",
@@ -1423,7 +1508,7 @@
       "agentId": "heraclitus",
       "taskId": "task-014",
       "timestamp": "2026-02-04T19:10:28.331Z",
-      "description": "Completed Day 2 Bluesky outreach: Found 3 quality users (Andrea Hiott ★★★★★, Mind & Life, Clio). Morning monitoring: no replies yet (Day 1 recommendations not executed). Refined search strategy working well.",
+      "description": "Completed Day 2 Bluesky outreach: Found 3 quality users (Andrea Hiott \u2605\u2605\u2605\u2605\u2605, Mind & Life, Clio). Morning monitoring: no replies yet (Day 1 recommendations not executed). Refined search strategy working well.",
       "metadata": {
         "date": "2026-02-05",
         "usersTargeted": 3,
@@ -1806,7 +1891,7 @@
     {
       "id": "notif-1770229560000",
       "type": "backend_ready",
-      "title": "✅ Task #016 Backend Complete - UI Needed",
+      "title": "\u2705 Task #016 Backend Complete - UI Needed",
       "message": "Aristotle completed backend for time-in-status alerts. API now returns `timeTracking` field for all tasks with `alertLevel` (none/yellow/red) and `timeInStatusHuman`. Ready for Leonardo to add UI badges and indicators. See Task #016 for thresholds.",
       "from": "aristotle",
       "to": [
@@ -1839,7 +1924,7 @@
     {
       "id": "notif-1770224775537",
       "type": "task_assignment",
-      "title": "🚨 HIGH PRIORITY: CMS Time-In-Status Alerts",
+      "title": "\ud83d\udea8 HIGH PRIORITY: CMS Time-In-Status Alerts",
       "message": "Task #016 assigned: Track how long tasks are stuck, add visual warnings (yellow at 3h, red at 6h). Prevents philosopher bottlenecks. Collaborate with Leonardo on UI. ~1.5 hours.",
       "from": "tension",
       "to": [
@@ -1865,7 +1950,7 @@
     {
       "id": "notif-1770224775536",
       "type": "task_assignment",
-      "title": "🔧 CMS Improvement: Process Management",
+      "title": "\ud83d\udd27 CMS Improvement: Process Management",
       "message": "Task #015 assigned: Add startup check to prevent multiple CMS instances. Simple bash script + cron update. 15 min task.",
       "from": "tension",
       "to": [
@@ -1884,7 +1969,7 @@
     {
       "id": "notif-1770219600000",
       "type": "task_assignment",
-      "title": "🌊 Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83c\udf0a Bluesky Daily Outreach - Community Growth",
       "message": "Task #014 assigned: Grow thetensionlines.bsky.social through daily thoughtful outreach. Find 5 aligned users daily, follow, add contemplative comments, monitor replies. Your observational voice (Heraclitus) is perfect for Bluesky's collaborative culture. See bluesky-outreach-workflow.md for full details.",
       "from": "tension",
       "to": [
@@ -1914,7 +1999,7 @@
     {
       "id": "notif-1770218820000",
       "type": "task_assignment",
-      "title": "🚨 CRITICAL PATH: Twitter Daily Outreach",
+      "title": "\ud83d\udea8 CRITICAL PATH: Twitter Daily Outreach",
       "message": "Task #013 assigned: Grow @thetensionlines to 1000 followers through daily strategic outreach. Find 5 aligned users daily, follow, comment, monitor replies. Escalate replies to Shawn. This unblocks Gumroad launch. See twitter-outreach-workflow.md for full details.",
       "from": "tension",
       "to": [
@@ -1942,7 +2027,7 @@
     {
       "id": "notif-1770214620000",
       "type": "task_blocked",
-      "title": "⏸️ Task #012 BLOCKED: Gumroad Launch on Hold",
+      "title": "\u23f8\ufe0f Task #012 BLOCKED: Gumroad Launch on Hold",
       "message": "Shawn directive: Push Gumroad launch until Twitter hits 1000 followers. Pricing approved ($7/$12/$15-20), product priority flexible. Focus all efforts on Twitter growth first.",
       "from": "tension",
       "to": [
@@ -1969,7 +2054,7 @@
     {
       "id": "notif-1770188219593",
       "type": "task_assignment",
-      "title": "🚀 NEW REVENUE STREAM: Gumroad Digital Products",
+      "title": "\ud83d\ude80 NEW REVENUE STREAM: Gumroad Digital Products",
       "message": "Task #012 assigned: Set up Gumroad for selling digital products. Phase 1: Create 2-3 products, launch in 3 weeks. See GUMROAD_SETUP.md for full plan.",
       "from": "tension",
       "to": [
@@ -2001,7 +2086,7 @@
     {
       "id": "notif-1770180664935",
       "type": "task_completed",
-      "title": "✅ Resources Page LIVE",
+      "title": "\u2705 Resources Page LIVE",
       "message": "Aristotle deployed Resources page to production. Live at https://thetensionlines.com/resources. Task #011 complete.",
       "from": "aristotle",
       "to": [
@@ -2025,8 +2110,8 @@
     {
       "id": "notif-1770180540000",
       "type": "deployment_ready",
-      "title": "🚀 DEPLOY: Resources Page Approved & Ready",
-      "message": "Task #011 Resources page cleared all reviews. Deploy to Hugo/Netlify now. Source: website-updates/2026-02-03-resources-page.md → Hugo content/resources.md. Add to nav menu after Philosophy.",
+      "title": "\ud83d\ude80 DEPLOY: Resources Page Approved & Ready",
+      "message": "Task #011 Resources page cleared all reviews. Deploy to Hugo/Netlify now. Source: website-updates/2026-02-03-resources-page.md \u2192 Hugo content/resources.md. Add to nav menu after Philosophy.",
       "from": "tension",
       "to": [
         "aristotle"
@@ -2051,7 +2136,7 @@
     {
       "id": "notif-1770180495890",
       "type": "fact_check_approved",
-      "title": "✅ Fact-Check Complete: Resources Page APPROVED",
+      "title": "\u2705 Fact-Check Complete: Resources Page APPROVED",
       "message": "Hypatia completed fact-check of Resources page. All 12 books verified, links confirmed, zero errors found. Ready for Hugo/Netlify deployment. Report: philosophers/hypatia/notes/fact-check-task-011-resources-page.md",
       "from": "hypatia",
       "to": [
@@ -2075,7 +2160,7 @@
     {
       "id": "notif-1770177900001",
       "type": "review_request",
-      "title": "📋 Resources Page Ready for Fact-Check",
+      "title": "\ud83d\udccb Resources Page Ready for Fact-Check",
       "message": "Plato completed Resources page draft (v1.0). Ready for fact-check: book titles, author names, philosophical concepts. Draft at website-updates/2026-02-03-resources-page.md",
       "from": "plato",
       "to": [
@@ -2102,7 +2187,7 @@
     {
       "id": "notif-1770177120001",
       "type": "task_assignment",
-      "title": "📝 New Task: Website Content Development",
+      "title": "\ud83d\udcdd New Task: Website Content Development",
       "message": "Task #011 assigned: Create Resources page for thetensionlines.com. Draft curated reading list, practical exercises, and navigation tools. See task details in Mission Control.",
       "from": "tension",
       "to": [
@@ -2125,7 +2210,7 @@
     {
       "id": "notif-1770150633424",
       "type": "urgent",
-      "title": "🚨 P0 FACT-CHECK: Task #008 BLOCKED",
+      "title": "\ud83d\udea8 P0 FACT-CHECK: Task #008 BLOCKED",
       "message": "Task #008 contains unattributed quote. Plagiarism risk if shipped. HOLD until source attribution added. See: philosophers/hypatia/notes/fact-check-task-008-URGENT.md",
       "from": "hypatia",
       "to": [
@@ -2150,7 +2235,7 @@
     {
       "id": "notif-stuck-1770273112478-l5riw8aql",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "title": "\ud83d\udea8 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
       "message": "Task #task-013 has been in \"assigned\" status for 16h 24m. Assigned to: nietzsche. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2170,7 +2255,7 @@
     {
       "id": "notif-stuck-1770273112483-lbrks7hjo",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83d\udea8 Task Stuck: Bluesky Daily Outreach - Community Growth",
       "message": "Task #task-014 has been in \"assigned\" status for 16h 11m. Assigned to: heraclitus. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2190,7 +2275,7 @@
     {
       "id": "notif-stuck-1770273112485-kw4wqhgld",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
+      "title": "\ud83d\udea8 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
       "message": "Task #task-016 has been in \"assigned\" status for 13h 25m. Assigned to: aristotle, leonardo. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2211,7 +2296,7 @@
     {
       "id": "notif-stuck-1770273157904-5qufqit1u",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "title": "\ud83d\udea8 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
       "message": "Task #task-013 has been in \"assigned\" status for 16h 25m. Assigned to: nietzsche. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2231,7 +2316,7 @@
     {
       "id": "notif-stuck-1770273157924-vw0m2wfdv",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83d\udea8 Task Stuck: Bluesky Daily Outreach - Community Growth",
       "message": "Task #task-014 has been in \"assigned\" status for 16h 12m. Assigned to: heraclitus. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2251,7 +2336,7 @@
     {
       "id": "notif-stuck-1770273157926-czjscj04n",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
+      "title": "\ud83d\udea8 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
       "message": "Task #task-016 has been in \"assigned\" status for 13h 26m. Assigned to: aristotle, leonardo. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2272,7 +2357,7 @@
     {
       "id": "notif-stuck-1770273779989-59srvu363",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "title": "\ud83d\udea8 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
       "message": "Task #task-013 has been in \"assigned\" status for 16h 35m. Assigned to: nietzsche. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2292,7 +2377,7 @@
     {
       "id": "notif-stuck-1770273780000-tez1q7kvu",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83d\udea8 Task Stuck: Bluesky Daily Outreach - Community Growth",
       "message": "Task #task-014 has been in \"assigned\" status for 16h 22m. Assigned to: heraclitus. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2312,7 +2397,7 @@
     {
       "id": "notif-stuck-1770273780005-lzn4uiqts",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
+      "title": "\ud83d\udea8 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
       "message": "Task #task-016 has been in \"assigned\" status for 13h 36m. Assigned to: aristotle. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2332,7 +2417,7 @@
     {
       "id": "notif-stuck-1770274599577-4hk3dxjr0",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "title": "\ud83d\udea8 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
       "message": "Task #task-013 has been in \"assigned\" status for 16h 49m. Assigned to: nietzsche. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2352,7 +2437,7 @@
     {
       "id": "notif-stuck-1770274599583-8nssc3swm",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83d\udea8 Task Stuck: Bluesky Daily Outreach - Community Growth",
       "message": "Task #task-014 has been in \"assigned\" status for 16h 36m. Assigned to: heraclitus. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2372,7 +2457,7 @@
     {
       "id": "notif-stuck-1770274599587-52930az1p",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
+      "title": "\ud83d\udea8 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
       "message": "Task #task-016 has been in \"assigned\" status for 13h 50m. Assigned to: aristotle. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2392,7 +2477,7 @@
     {
       "id": "notif-stuck-1770275169578-7iqrseadw",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
+      "title": "\ud83d\udea8 Task Stuck: Provide profile picture for CMS",
       "message": "Task #task-023 has been in \"assigned\" status for 8h. Assigned to: human. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2412,7 +2497,7 @@
     {
       "id": "notif-stuck-1770275482023-3ngrjszz0",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "title": "\ud83d\udea8 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
       "message": "Task #task-013 has been in \"assigned\" status for 17h 4m. Assigned to: nietzsche. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2432,7 +2517,7 @@
     {
       "id": "notif-stuck-1770275482036-vbha3u4d2",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83d\udea8 Task Stuck: Bluesky Daily Outreach - Community Growth",
       "message": "Task #task-014 has been in \"assigned\" status for 16h 51m. Assigned to: heraclitus. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2452,7 +2537,7 @@
     {
       "id": "notif-stuck-1770275482038-10efcweql",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
+      "title": "\ud83d\udea8 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
       "message": "Task #task-016 has been in \"assigned\" status for 14h 5m. Assigned to: aristotle. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2472,7 +2557,7 @@
     {
       "id": "notif-stuck-1770275482040-c5b6qplom",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
+      "title": "\ud83d\udea8 Task Stuck: Provide profile picture for CMS",
       "message": "Task #task-023 has been in \"assigned\" status for 8h 5m. Assigned to: human. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2492,7 +2577,7 @@
     {
       "id": "notif-stuck-1770275528899-gde51y0om",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "title": "\ud83d\udea8 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
       "message": "Task #task-013 has been in \"assigned\" status for 17h 5m. Assigned to: nietzsche. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2512,7 +2597,7 @@
     {
       "id": "notif-stuck-1770275528906-072ugxj2b",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83d\udea8 Task Stuck: Bluesky Daily Outreach - Community Growth",
       "message": "Task #task-014 has been in \"assigned\" status for 16h 52m. Assigned to: heraclitus. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2532,7 +2617,7 @@
     {
       "id": "notif-stuck-1770275528910-vs5kd072m",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
+      "title": "\ud83d\udea8 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
       "message": "Task #task-016 has been in \"assigned\" status for 14h 5m. Assigned to: aristotle. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2552,7 +2637,7 @@
     {
       "id": "notif-stuck-1770275528912-jy83c3klv",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
+      "title": "\ud83d\udea8 Task Stuck: Provide profile picture for CMS",
       "message": "Task #task-023 has been in \"assigned\" status for 8h 6m. Assigned to: human. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2572,7 +2657,7 @@
     {
       "id": "notif-stuck-1770275606018-b4rbgjye8",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "title": "\ud83d\udea8 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
       "message": "Task #task-013 has been in \"assigned\" status for 17h 6m. Assigned to: nietzsche. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2592,7 +2677,7 @@
     {
       "id": "notif-stuck-1770275606023-1yx4jvcrb",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83d\udea8 Task Stuck: Bluesky Daily Outreach - Community Growth",
       "message": "Task #task-014 has been in \"assigned\" status for 16h 53m. Assigned to: heraclitus. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2612,7 +2697,7 @@
     {
       "id": "notif-stuck-1770275606025-lvdv43qo7",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
+      "title": "\ud83d\udea8 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
       "message": "Task #task-016 has been in \"assigned\" status for 14h 7m. Assigned to: aristotle. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2632,7 +2717,7 @@
     {
       "id": "notif-stuck-1770275606031-z6bbhti2a",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
+      "title": "\ud83d\udea8 Task Stuck: Provide profile picture for CMS",
       "message": "Task #task-023 has been in \"assigned\" status for 8h 7m. Assigned to: human. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2652,7 +2737,7 @@
     {
       "id": "notif-stuck-1770275841577-aocv61v01",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "title": "\ud83d\udea8 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
       "message": "Task #task-013 has been in \"assigned\" status for 17h 10m. Assigned to: nietzsche. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2672,7 +2757,7 @@
     {
       "id": "notif-stuck-1770275841588-ylxw62g6o",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83d\udea8 Task Stuck: Bluesky Daily Outreach - Community Growth",
       "message": "Task #task-014 has been in \"assigned\" status for 16h 57m. Assigned to: heraclitus. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2692,7 +2777,7 @@
     {
       "id": "notif-stuck-1770275841591-q8bk5a9a4",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
+      "title": "\ud83d\udea8 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
       "message": "Task #task-016 has been in \"assigned\" status for 14h 11m. Assigned to: aristotle. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2712,7 +2797,7 @@
     {
       "id": "notif-stuck-1770275841592-r1x5x2b26",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
+      "title": "\ud83d\udea8 Task Stuck: Provide profile picture for CMS",
       "message": "Task #task-023 has been in \"assigned\" status for 8h 11m. Assigned to: human. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2732,7 +2817,7 @@
     {
       "id": "notif-stuck-1770295155871-a0cdnjb74",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
+      "title": "\ud83d\udea8 Task Stuck: Provide profile picture for CMS",
       "message": "Task #task-023 has been in \"assigned\" status for 13h 33m. Assigned to: human. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2752,7 +2837,7 @@
     {
       "id": "notif-stuck-1770295219888-t5fkrvi1q",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
+      "title": "\ud83d\udea8 Task Stuck: Provide profile picture for CMS",
       "message": "Task #task-023 has been in \"assigned\" status for 13h 34m. Assigned to: human. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2772,7 +2857,7 @@
     {
       "id": "notif-stuck-1770296415302-6jghwy2ee",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
+      "title": "\ud83d\udea8 Task Stuck: Provide profile picture for CMS",
       "message": "Task #task-023 has been in \"assigned\" status for 13h 54m. Assigned to: human. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2792,7 +2877,7 @@
     {
       "id": "notif-stuck-1770296701297-j48bef613",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Provide profile picture for CMS",
+      "title": "\ud83d\udea8 Task Stuck: Provide profile picture for CMS",
       "message": "Task #task-023 has been in \"assigned\" status for 13h 59m. Assigned to: human. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2812,7 +2897,7 @@
     {
       "id": "notif-stuck-1770336684306-4qaej796n",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "title": "\ud83d\udea8 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
       "message": "Task #task-013 has been in \"in_progress\" status for 11h 35m. Assigned to: nietzsche. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2832,7 +2917,7 @@
     {
       "id": "notif-stuck-1770336684345-bku1tvrp4",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83d\udea8 Task Stuck: Bluesky Daily Outreach - Community Growth",
       "message": "Task #task-014 has been in \"in_progress\" status for 11h 35m. Assigned to: heraclitus. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2852,7 +2937,7 @@
     {
       "id": "notif-stuck-1770336684348-7c35vpmsr",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
+      "title": "\ud83d\udea8 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
       "message": "Task #task-016 has been in \"in_progress\" status for 11h 35m. Assigned to: aristotle. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2872,7 +2957,7 @@
     {
       "id": "notif-stuck-1770342462401-oxkmyuhf6",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "title": "\ud83d\udea8 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
       "message": "Task #task-013 has been in \"in_progress\" status for 13h 12m. Assigned to: nietzsche. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2892,7 +2977,7 @@
     {
       "id": "notif-stuck-1770342462406-qu80ohd40",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83d\udea8 Task Stuck: Bluesky Daily Outreach - Community Growth",
       "message": "Task #task-014 has been in \"in_progress\" status for 13h 12m. Assigned to: heraclitus. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2912,7 +2997,7 @@
     {
       "id": "notif-stuck-1770342462409-rsqvksov3",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
+      "title": "\ud83d\udea8 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
       "message": "Task #task-016 has been in \"in_progress\" status for 13h 12m. Assigned to: aristotle. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2932,7 +3017,7 @@
     {
       "id": "notif-stuck-1770342576739-07edijden",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "title": "\ud83d\udea8 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
       "message": "Task #task-013 has been in \"in_progress\" status for 13h 13m. Assigned to: nietzsche. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2952,7 +3037,7 @@
     {
       "id": "notif-stuck-1770342576744-uzb0dnwh6",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83d\udea8 Task Stuck: Bluesky Daily Outreach - Community Growth",
       "message": "Task #task-014 has been in \"in_progress\" status for 13h 13m. Assigned to: heraclitus. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2972,7 +3057,7 @@
     {
       "id": "notif-stuck-1770342576747-lq6xepzkt",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
+      "title": "\ud83d\udea8 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
       "message": "Task #task-016 has been in \"in_progress\" status for 13h 13m. Assigned to: aristotle. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -2992,7 +3077,7 @@
     {
       "id": "notif-stuck-1770342610646-0dqfvqgq6",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "title": "\ud83d\udea8 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
       "message": "Task #task-013 has been in \"in_progress\" status for 13h 14m. Assigned to: nietzsche. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -3012,7 +3097,7 @@
     {
       "id": "notif-stuck-1770342610651-374nkcoge",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83d\udea8 Task Stuck: Bluesky Daily Outreach - Community Growth",
       "message": "Task #task-014 has been in \"in_progress\" status for 13h 14m. Assigned to: heraclitus. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -3032,7 +3117,7 @@
     {
       "id": "notif-stuck-1770342610654-q8aiu2hmo",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
+      "title": "\ud83d\udea8 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
       "message": "Task #task-016 has been in \"in_progress\" status for 13h 14m. Assigned to: aristotle. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -3052,7 +3137,7 @@
     {
       "id": "notif-stuck-1770342866953-b6qxnr56t",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "title": "\ud83d\udea8 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
       "message": "Task #task-013 has been in \"in_progress\" status for 13h 18m. Assigned to: nietzsche. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -3072,7 +3157,7 @@
     {
       "id": "notif-stuck-1770342866959-piig9v0lw",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83d\udea8 Task Stuck: Bluesky Daily Outreach - Community Growth",
       "message": "Task #task-014 has been in \"in_progress\" status for 13h 18m. Assigned to: heraclitus. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -3092,7 +3177,7 @@
     {
       "id": "notif-stuck-1770342866963-h6tfn6l4s",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
+      "title": "\ud83d\udea8 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
       "message": "Task #task-016 has been in \"in_progress\" status for 13h 18m. Assigned to: aristotle. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -3112,7 +3197,7 @@
     {
       "id": "notif-stuck-1770343158876-b293h19go",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
+      "title": "\ud83d\udea8 Task Stuck: Twitter Daily Outreach - Growth to 1000 Followers",
       "message": "Task #task-013 has been in \"in_progress\" status for 13h 23m. Assigned to: nietzsche. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -3132,7 +3217,7 @@
     {
       "id": "notif-stuck-1770343158880-diemmmwrq",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: Bluesky Daily Outreach - Community Growth",
+      "title": "\ud83d\udea8 Task Stuck: Bluesky Daily Outreach - Community Growth",
       "message": "Task #task-014 has been in \"in_progress\" status for 13h 23m. Assigned to: heraclitus. Consider intervention or reassignment.",
       "from": "system",
       "to": [
@@ -3152,7 +3237,7 @@
     {
       "id": "notif-stuck-1770343158883-nar44yv3o",
       "type": "stuck_task",
-      "title": "🚨 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
+      "title": "\ud83d\udea8 Task Stuck: CMS Time-In-Status Alerts & Visual Indicators",
       "message": "Task #task-016 has been in \"in_progress\" status for 13h 23m. Assigned to: aristotle. Consider intervention or reassignment.",
       "from": "system",
       "to": [
