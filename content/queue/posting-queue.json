@@ -1,5 +1,16 @@
 {
-  "queue": [],
+  "queue": [
+    {
+      "id": "post-1770447469209",
+      "createdAt": "2026-02-07T06:57:49.209Z",
+      "status": "ready",
+      "platform": "instagram",
+      "content": "",
+      "caption": "",
+      "parts": [],
+      "canvaComplete": false
+    }
+  ],
   "posted": [
     {
       "id": "post-1738900000002",
@@ -63,6 +74,16 @@
           "end": 22
         },
         "minHoursBetweenPosts": 3
+      },
+      "bluesky": {
+        "enabled": true,
+        "maxPostsPerDay": 5,
+        "requiresCanva": false,
+        "safeHours": {
+          "start": 8,
+          "end": 22
+        },
+        "minHoursBetweenPosts": 2
       }
     },
     "warmupMode": true,

@@ -8,9 +8,10 @@
       "category": "content",
       "priority": "high",
       "effort": "medium",
-      "status": "proposed",
+      "status": "completed",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
+      "completedAt": "2026-02-07T15:17:00.000Z",
       "targetQuarter": "Q1-2026",
       "agents": [
         "heraclitus"
@@ -23,8 +24,14 @@
       ],
       "votes": 0,
       "voters": [],
-      "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "comments": [
+        {
+          "author": "claude",
+          "text": "Implemented: @atproto/api integration with lazy-auth BskyAgent, POST /api/posting-queue/:id/publish endpoint, GET /api/bluesky/status health check, and full UI support in ManualPostingQueue.jsx with publish button, status feedback, and connection indicator.",
+          "createdAt": "2026-02-07T15:17:00.000Z"
+        }
+      ],
+      "updatedAt": "2026-02-07T15:17:00.000Z"
     },
     {
       "id": "need-003",
@@ -520,11 +527,11 @@
     }
   },
   "stats": {
-    "total": 18,
+    "total": 17,
     "byStatus": {
-      "proposed": 17,
+      "proposed": 15,
       "planned": 0,
-      "in_progress": 0,
+      "in_progress": 1,
       "completed": 1,
       "deferred": 0
     },
@@ -533,6 +540,6 @@
       "medium": 7,
       "low": 5
     },
-    "lastUpdated": "2026-02-07T06:50:20.518Z"
+    "lastUpdated": "2026-02-07T15:06:56.132Z"
   }
 }
