@@ -42,9 +42,9 @@ const navGroups = [
   {
     title: 'Queues',
     items: [
-      { to: '/posting-queue', icon: <Send size={20} />, label: 'Posting Queue' },
-      { to: '/reply-queue', icon: <Reply size={20} />, label: 'Reply Queue' },
-      { to: '/comments', icon: <MessageSquarePlus size={20} />, label: 'Comment Queue' }
+      { to: '/posting-queue', icon: <Send size={20} />, label: 'Posting' },
+      { to: '/reply-queue', icon: <Reply size={20} />, label: 'Replies' },
+      { to: '/comments', icon: <MessageSquarePlus size={20} />, label: 'Comments' }
     ]
   },
   {
