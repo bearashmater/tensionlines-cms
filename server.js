@@ -3224,6 +3224,14 @@ app.post('/api/tasks/:id/dispatch', (req, res) => {
     const now = new Date().toISOString();
     const isRetry = task.status === 'in_progress';
 
+    // On retry, restore original agent if task was reassigned to human
+    if (isRetry && task.assigneeIds?.includes('human') && task.metadata?.reassignedFrom?.length > 0) {
+      task.assigneeIds = [...task.metadata.reassignedFrom];
+      delete task.metadata.reassignedFrom;
+      delete task.metadata.reassignedAt;
+      delete task.metadata.reassignReason;
+    }
+
     task.status = 'in_progress';
     if (!isRetry) task.startedAt = now;
     task.dispatchedAt = now;
