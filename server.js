@@ -21,9 +21,20 @@ import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { createServer as createViteServer } from 'vite';
+import { BskyAgent, RichText } from '@atproto/api';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Load .env file for Bluesky credentials
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf8');
+  for (const line of envContent.split('\n')) {
+    const match = line.match(/^([^#=]+)=(.*)$/);
+    if (match) process.env[match[1].trim()] = match[2].trim();
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -1840,6 +1851,38 @@ app.get('/api/llm-stats', (req, res) => {
 // POSTING QUEUE
 // ============================================================================
 
+// ============================================================================
+// BLUESKY SERVICE
+// ============================================================================
+
+let bskyAgent = null;
+
+async function getBskyAgent() {
+  if (bskyAgent) return bskyAgent;
+  const handle = process.env.BLUESKY_HANDLE;
+  const password = process.env.BLUESKY_APP_PASSWORD;
+  if (!handle || !password) throw new Error('Bluesky credentials not configured');
+
+  bskyAgent = new BskyAgent({ service: 'https://bsky.social' });
+  await bskyAgent.login({ identifier: handle, password });
+  console.log(`[Bluesky] Connected as ${handle}`);
+  return bskyAgent;
+}
+
+async function postToBluesky(text) {
+  const agent = await getBskyAgent();
+  const rt = new RichText({ text });
+  await rt.detectFacets(agent);
+  const result = await agent.post({
+    text: rt.text,
+    facets: rt.facets,
+    createdAt: new Date().toISOString()
+  });
+  const rkey = result.uri.split('/').pop();
+  const postUrl = `https://bsky.app/profile/${process.env.BLUESKY_HANDLE}/post/${rkey}`;
+  return { uri: result.uri, cid: result.cid, postUrl };
+}
+
 const POSTING_QUEUE_FILE = path.join(BASE_DIR, 'content', 'queue', 'posting-queue.json');
 
 function getPostingQueue() {
@@ -1871,18 +1914,21 @@ app.get('/api/posting-queue', (req, res) => {
     // Count posts per platform today
     const postsToday = {
       instagram: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'instagram').length,
-      threads: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'threads').length
+      threads: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'threads').length,
+      bluesky: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'bluesky').length
     };
 
     // Check rate limits
     const instagramSettings = settings.platforms?.instagram || { maxPostsPerDay: 2 };
     const threadsSettings = settings.platforms?.threads || { maxPostsPerDay: 3 };
+    const blueskySettings = settings.platforms?.bluesky || { maxPostsPerDay: 5 };
 
     res.json({
       ...queue,
       postsToday,
       canPostInstagram: postsToday.instagram < instagramSettings.maxPostsPerDay,
-      canPostThreads: postsToday.threads < threadsSettings.maxPostsPerDay
+      canPostThreads: postsToday.threads < threadsSettings.maxPostsPerDay,
+      canPostBluesky: postsToday.bluesky < blueskySettings.maxPostsPerDay
     });
   } catch (error) {
     console.error('Error getting posting queue:', error);
@@ -1899,7 +1945,7 @@ app.post('/api/posting-queue', (req, res) => {
     const { platform, content, caption, parts, canvaComplete } = req.body;
 
     // Validate required fields
-    if (!platform || !['instagram', 'threads'].includes(platform)) {
+    if (!platform || !['instagram', 'threads', 'bluesky'].includes(platform)) {
       return res.status(400).json({ error: 'Invalid platform' });
     }
 
@@ -2003,6 +2049,70 @@ app.post('/api/posting-queue/:id/posted', (req, res) => {
   } catch (error) {
     console.error('Error marking as posted:', error);
     res.status(500).json({ error: 'Failed to mark as posted' });
+  }
+});
+
+/**
+ * Publish a Bluesky post directly via API
+ */
+app.post('/api/posting-queue/:id/publish', async (req, res) => {
+  try {
+    const queue = getPostingQueue();
+    const idx = queue.queue.findIndex(item => item.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Item not found' });
+
+    const item = queue.queue[idx];
+    if (item.platform !== 'bluesky') {
+      return res.status(400).json({ error: 'Only Bluesky posts can be auto-published' });
+    }
+
+    const result = await postToBluesky(item.content);
+
+    item.status = 'posted';
+    item.postedAt = new Date().toISOString();
+    item.postUrl = result.postUrl;
+    item.bskyUri = result.uri;
+
+    queue.queue.splice(idx, 1);
+    if (!queue.posted) queue.posted = [];
+    queue.posted.unshift(item);
+    savePostingQueue(queue);
+
+    console.log(`[Bluesky] Published: ${result.postUrl}`);
+    res.json({ success: true, item, postUrl: result.postUrl });
+  } catch (error) {
+    // Mark as failed but keep in queue for retry
+    const queue = getPostingQueue();
+    const item = queue.queue.find(i => i.id === req.params.id);
+    if (item) {
+      item.status = 'failed';
+      item.lastError = error.message;
+      item.lastAttempt = new Date().toISOString();
+      savePostingQueue(queue);
+    }
+    console.error('[Bluesky] Publish failed:', error.message);
+    res.status(500).json({ error: 'Failed to publish', message: error.message });
+  }
+});
+
+/**
+ * Bluesky connection status
+ */
+app.get('/api/bluesky/status', async (req, res) => {
+  try {
+    const agent = await getBskyAgent();
+    const profile = await agent.getProfile({ actor: process.env.BLUESKY_HANDLE });
+    res.json({
+      connected: true,
+      handle: profile.data.handle,
+      displayName: profile.data.displayName,
+      followersCount: profile.data.followersCount,
+      followsCount: profile.data.followsCount,
+      postsCount: profile.data.postsCount
+    });
+  } catch (error) {
+    bskyAgent = null; // Reset so next attempt re-authenticates
+    res.json({ connected: false, error: error.message });
   }
 });
 

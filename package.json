@@ -19,6 +19,7 @@
   "author": "Aristotle",
   "license": "MIT",
   "dependencies": {
+    "@atproto/api": "^0.18.20",
     "chokidar": "^3.5.3",
     "cors": "^2.8.5",
     "express": "^4.18.2",

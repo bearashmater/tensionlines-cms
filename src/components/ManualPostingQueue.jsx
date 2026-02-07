@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import { fetcher } from '../lib/api'
 import {
@@ -12,14 +12,44 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle,
-  X
+  X,
+  Send,
+  RefreshCw,
+  CloudOff,
+  Cloud
 } from 'lucide-react'
+
+// Bluesky icon as inline SVG since lucide doesn't have one
+function BlueskyIcon({ size = 16, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.862 13.862c-.478.478-1.12.69-1.746.69-.626 0-1.268-.212-1.746-.69L12 14.492l-1.37 1.37c-.478.478-1.12.69-1.746.69-.626 0-1.268-.212-1.746-.69-.964-.964-.964-2.528 0-3.492L9.508 10l-2.37-2.37c-.964-.964-.964-2.528 0-3.492.964-.964 2.528-.964 3.492 0L12 5.508l1.37-1.37c.964-.964 2.528-.964 3.492 0 .964.964.964 2.528 0 3.492L14.492 10l2.37 2.37c.964.964.964 2.528 0 3.492z"/>
+    </svg>
+  )
+}
+
+function getPlatformIcon(platform, size = 16) {
+  switch (platform) {
+    case 'instagram': return <Instagram size={size} className="text-pink-600" />
+    case 'threads': return <MessageCircle size={size} className="text-black" />
+    case 'bluesky': return <BlueskyIcon size={size} className="text-blue-500" />
+    default: return null
+  }
+}
 
 export default function ManualPostingQueue() {
   const [showAddModal, setShowAddModal] = useState(false)
+  const [bskyStatus, setBskyStatus] = useState(null)
   const { data, error, isLoading, mutate } = useSWR('/api/posting-queue', fetcher, {
     refreshInterval: 30000
   })
+
+  useEffect(() => {
+    fetch('/api/bluesky/status')
+      .then(r => r.json())
+      .then(setBskyStatus)
+      .catch(() => setBskyStatus({ connected: false }))
+  }, [])
 
   if (error) {
     return (
@@ -39,8 +69,20 @@ export default function ManualPostingQueue() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-black">Manual Posting Queue</h1>
-          <p className="text-neutral-600 mt-1">Instagram & Threads - Safe manual posting</p>
+          <h1 className="text-3xl font-serif font-bold text-black">Posting Queue</h1>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-neutral-600">Instagram, Threads & Bluesky</p>
+            {bskyStatus && (
+              <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
+                bskyStatus.connected
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'bg-red-50 text-red-600'
+              }`}>
+                {bskyStatus.connected ? <Cloud size={12} /> : <CloudOff size={12} />}
+                Bluesky {bskyStatus.connected ? 'connected' : 'disconnected'}
+              </span>
+            )}
+          </div>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
@@ -52,7 +94,7 @@ export default function ManualPostingQueue() {
       </div>
 
       {/* Daily Limits */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <PlatformStatus
           platform="instagram"
           icon={<Instagram size={24} />}
@@ -67,6 +109,14 @@ export default function ManualPostingQueue() {
           postsToday={data.postsToday?.threads || 0}
           maxPosts={data.settings?.platforms?.threads?.maxPostsPerDay || 3}
           canPost={data.canPostThreads}
+          warmupMode={data.settings?.warmupMode}
+        />
+        <PlatformStatus
+          platform="bluesky"
+          icon={<BlueskyIcon size={24} className="text-current" />}
+          postsToday={data.postsToday?.bluesky || 0}
+          maxPosts={data.settings?.platforms?.bluesky?.maxPostsPerDay || 5}
+          canPost={data.canPostBluesky}
           warmupMode={data.settings?.warmupMode}
         />
       </div>
@@ -96,14 +146,18 @@ export default function ManualPostingQueue() {
             <div className="p-8 text-center text-neutral-500">
               <Clock className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
               <p>No items in queue</p>
-              <p className="text-sm mt-1">Add content to post to Instagram or Threads</p>
+              <p className="text-sm mt-1">Add content to post to Instagram, Threads or Bluesky</p>
             </div>
           ) : (
             data.queue.map(item => (
               <QueueItem
                 key={item.id}
                 item={item}
-                canPost={item.platform === 'instagram' ? data.canPostInstagram : data.canPostThreads}
+                canPost={
+                  item.platform === 'instagram' ? data.canPostInstagram :
+                  item.platform === 'bluesky' ? data.canPostBluesky :
+                  data.canPostThreads
+                }
                 onUpdate={mutate}
               />
             ))
@@ -172,6 +226,8 @@ function PlatformStatus({ platform, icon, postsToday, maxPosts, canPost, warmupM
 
 function QueueItem({ item, canPost, onUpdate }) {
   const [isUpdating, setIsUpdating] = useState(false)
+  const [publishStatus, setPublishStatus] = useState(null) // 'publishing' | 'success' | 'error'
+  const [publishError, setPublishError] = useState(null)
 
   const handleMarkPosted = async () => {
     setIsUpdating(true)
@@ -186,6 +242,28 @@ function QueueItem({ item, canPost, onUpdate }) {
       console.error('Error marking as posted:', err)
     }
     setIsUpdating(false)
+  }
+
+  const handlePublishBluesky = async () => {
+    setPublishStatus('publishing')
+    setPublishError(null)
+    try {
+      const res = await fetch(`/api/posting-queue/${item.id}/publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const result = await res.json()
+      if (res.ok) {
+        setPublishStatus('success')
+        setTimeout(() => onUpdate(), 1500)
+      } else {
+        setPublishStatus('error')
+        setPublishError(result.message || 'Unknown error')
+      }
+    } catch (err) {
+      setPublishStatus('error')
+      setPublishError(err.message)
+    }
   }
 
   const handleCanvaComplete = async () => {
@@ -216,24 +294,26 @@ function QueueItem({ item, canPost, onUpdate }) {
   }
 
   const isReady = !item.canvaRequired || item.canvaComplete
+  const isFailed = item.status === 'failed'
 
   return (
-    <div className={`p-4 ${isReady ? '' : 'bg-amber-50'}`}>
+    <div className={`p-4 ${isFailed ? 'bg-red-50' : isReady ? '' : 'bg-amber-50'}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
-            {item.platform === 'instagram' ? (
-              <Instagram size={16} className="text-pink-600" />
-            ) : (
-              <MessageCircle size={16} className="text-black" />
-            )}
+            {getPlatformIcon(item.platform)}
             <span className="text-sm font-medium capitalize">{item.platform}</span>
             {item.canvaRequired && !item.canvaComplete && (
               <span className="px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded">
                 Needs Canva
               </span>
             )}
-            {isReady && (
+            {isFailed && (
+              <span className="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded" title={item.lastError}>
+                Failed
+              </span>
+            )}
+            {isReady && !isFailed && (
               <span className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">
                 Ready
               </span>
@@ -245,9 +325,32 @@ function QueueItem({ item, canPost, onUpdate }) {
               Caption: {item.caption}
             </p>
           )}
+          {isFailed && item.lastError && (
+            <p className="text-xs text-red-600 mt-2">Error: {item.lastError}</p>
+          )}
           <p className="text-xs text-neutral-400 mt-2">
             Added {new Date(item.createdAt).toLocaleString()}
           </p>
+
+          {/* Publishing status feedback */}
+          {publishStatus === 'publishing' && (
+            <div className="flex items-center gap-2 mt-2 text-sm text-blue-600">
+              <RefreshCw size={14} className="animate-spin" />
+              Publishing to Bluesky...
+            </div>
+          )}
+          {publishStatus === 'success' && (
+            <div className="flex items-center gap-2 mt-2 text-sm text-green-600">
+              <CheckCircle size={14} />
+              Published successfully!
+            </div>
+          )}
+          {publishStatus === 'error' && (
+            <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
+              <AlertTriangle size={14} />
+              {publishError}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -261,7 +364,23 @@ function QueueItem({ item, canPost, onUpdate }) {
               Canva Done
             </button>
           )}
-          {isReady && canPost && (
+          {/* Bluesky gets a real Publish button */}
+          {item.platform === 'bluesky' && isReady && canPost && (
+            <button
+              onClick={handlePublishBluesky}
+              disabled={publishStatus === 'publishing'}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+            >
+              {publishStatus === 'publishing' ? (
+                <RefreshCw size={14} className="animate-spin" />
+              ) : (
+                <Send size={14} />
+              )}
+              {isFailed ? 'Retry' : 'Publish to Bluesky'}
+            </button>
+          )}
+          {/* Non-bluesky platforms get manual Mark Posted */}
+          {item.platform !== 'bluesky' && isReady && canPost && (
             <button
               onClick={handleMarkPosted}
               disabled={isUpdating}
@@ -289,17 +408,15 @@ function QueueItem({ item, canPost, onUpdate }) {
 }
 
 function PostedItem({ item }) {
+  const contentText = item.content || (item.parts?.[0]?.content) || ''
+
   return (
     <div className="p-3 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <CheckCircle size={16} className="text-green-500" />
-        {item.platform === 'instagram' ? (
-          <Instagram size={14} className="text-pink-600" />
-        ) : (
-          <MessageCircle size={14} className="text-black" />
-        )}
+        {getPlatformIcon(item.platform, 14)}
         <span className="text-sm text-neutral-700 truncate max-w-md">
-          {item.content.substring(0, 60)}...
+          {contentText.substring(0, 60)}{contentText.length > 60 ? '...' : ''}
         </span>
       </div>
       <div className="flex items-center gap-2 text-xs text-neutral-500">
@@ -385,6 +502,18 @@ function AddToQueueModal({ onClose, onAdd }) {
                 <MessageCircle size={20} />
                 Threads
               </button>
+              <button
+                type="button"
+                onClick={() => setPlatform('bluesky')}
+                className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${
+                  platform === 'bluesky'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-neutral-200 hover:border-neutral-300'
+                }`}
+              >
+                <BlueskyIcon size={20} />
+                Bluesky
+              </button>
             </div>
           </div>
 
@@ -396,11 +525,20 @@ function AddToQueueModal({ onClose, onAdd }) {
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder={platform === 'instagram' ? 'The quote or text that will go on the image...' : 'Your Threads post content...'}
+              placeholder={
+                platform === 'instagram' ? 'The quote or text that will go on the image...' :
+                platform === 'bluesky' ? 'Your Bluesky post content (300 chars max)...' :
+                'Your Threads post content...'
+              }
               rows={4}
               className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200"
               required
             />
+            {platform === 'bluesky' && (
+              <p className={`text-xs mt-1 ${content.length > 300 ? 'text-red-600' : 'text-neutral-400'}`}>
+                {content.length} / 300 characters
+              </p>
+            )}
           </div>
 
           {/* Caption (for Instagram) */}
@@ -423,6 +561,13 @@ function AddToQueueModal({ onClose, onAdd }) {
             <p className="text-sm text-amber-600 flex items-center gap-2">
               <Palette size={14} />
               You'll need to create this in Canva before posting
+            </p>
+          )}
+
+          {platform === 'bluesky' && (
+            <p className="text-sm text-blue-600 flex items-center gap-2">
+              <Send size={14} />
+              Bluesky posts are published automatically via API
             </p>
           )}
 
