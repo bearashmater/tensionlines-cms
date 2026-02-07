@@ -3217,22 +3217,23 @@ app.post('/api/tasks/:id/dispatch', (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
 
-    if (task.status !== 'assigned') {
-      return res.status(400).json({ error: 'Only assigned tasks can be dispatched' });
+    if (task.status !== 'assigned' && task.status !== 'in_progress') {
+      return res.status(400).json({ error: 'Only assigned or in-progress tasks can be dispatched' });
     }
 
     const now = new Date().toISOString();
+    const isRetry = task.status === 'in_progress';
 
     task.status = 'in_progress';
-    task.startedAt = now;
+    if (!isRetry) task.startedAt = now;
     task.dispatchedAt = now;
     task.dispatchedBy = 'human';
 
-    // Create initial "Dispatched" step
+    // Create dispatch/retry step
     if (!task.steps) task.steps = [];
     task.steps.push({
       id: `step-${Date.now()}`,
-      description: 'Dispatched',
+      description: isRetry ? 'Re-dispatched (retry)' : 'Dispatched',
       status: 'completed',
       startedAt: now,
       completedAt: now,
@@ -3242,11 +3243,11 @@ app.post('/api/tasks/:id/dispatch', (req, res) => {
     // Log activity
     data.activities.unshift({
       id: `activity-${Date.now()}`,
-      type: 'task_dispatched',
+      type: isRetry ? 'task_retried' : 'task_dispatched',
       agentId: 'human',
       taskId: id,
       timestamp: now,
-      description: `Dispatched: ${task.title}`,
+      description: `${isRetry ? 'Retried' : 'Dispatched'}: ${task.title}`,
       metadata: { dispatchedBy: 'human' }
     });
 

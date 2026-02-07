@@ -1,7 +1,7 @@
 import useSWR, { mutate } from 'swr'
-import { getTasks, reopenTask, dispatchTask } from '../lib/api'
+import { getTasks, reopenTask, dispatchTask, reassignTask } from '../lib/api'
 import { formatDate, formatStatus, getStatusColor, getAlertLevelColor, truncate, formatDuration } from '../lib/formatters'
-import { ListTodo, RotateCcw, Clock, Search, X, Play, ChevronDown, CheckCircle2, Loader2, Circle, XCircle, AlertTriangle } from 'lucide-react'
+import { ListTodo, RotateCcw, Clock, Search, X, Play, ChevronDown, CheckCircle2, Loader2, Circle, XCircle, AlertTriangle, UserPlus } from 'lucide-react'
 import { useState } from 'react'
 
 // Infer category from task title
@@ -539,6 +539,16 @@ function detectBreakdowns(task) {
   return breakdowns
 }
 
+function detectPostingIssue(task) {
+  const text = ((task.title || '') + ' ' + (task.description || '') + ' ' + (task.metadata?.category || '')).toLowerCase()
+  const postingKeywords = ['post', 'tweet', 'reply', 'publish', 'bluesky', 'threads', 'twitter', 'outreach', 'comment', 'social']
+  const blockKeywords = ['error 226', 'blocked', 'auth', 'manual', 'browser', "can't post", 'cannot post', 'write blocked']
+  const isPostingTask = postingKeywords.some(k => text.includes(k))
+  const hasBlockSignal = blockKeywords.some(k => text.includes(k))
+  const hasBreakdowns = detectBreakdowns(task).length > 0
+  return isPostingTask && (hasBlockSignal || hasBreakdowns)
+}
+
 // Expected phases for ghost steps
 const EXPECTED_PHASES = ['Research/Planning', 'Drafting', 'Review', 'Final Polish']
 
@@ -772,10 +782,14 @@ function StepTimeline({ task }) {
 function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
   const [reopening, setReopening] = useState(false)
   const [dispatching, setDispatching] = useState(false)
+  const [retrying, setRetrying] = useState(false)
+  const [sendingToHuman, setSendingToHuman] = useState(false)
   const statusColor = getStatusColor(task.status)
   const category = getTaskCategory(task)
   const isCompleted = ['completed', 'shipped'].includes(task.status)
+  const isHumanTask = task.assigneeIds?.includes('human')
   const breakdownCount = detectBreakdowns(task).length
+  const isPostingIssue = detectPostingIssue(task)
 
   const handleReopen = async () => {
     if (!confirm('Reopen this task? It will be marked as "assigned" and returned to the assignee.')) {
@@ -802,6 +816,31 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
       alert('Failed to dispatch task. Please try again.')
     }
     setDispatching(false)
+  }
+
+  const handleRetry = async () => {
+    setRetrying(true)
+    try {
+      await dispatchTask(task.id)
+      mutate('/tasks')
+    } catch (err) {
+      console.error('Error retrying task:', err)
+      alert('Failed to retry task. Please try again.')
+    }
+    setRetrying(false)
+  }
+
+  const handleSendToHuman = async () => {
+    if (!confirm('Reassign this task to Shawn (Human) for manual action?')) return
+    setSendingToHuman(true)
+    try {
+      await reassignTask(task.id, 'human', 'Posting issue — reassigned to human for manual action')
+      mutate('/tasks')
+    } catch (err) {
+      console.error('Error reassigning task:', err)
+      alert('Failed to reassign task. Please try again.')
+    }
+    setSendingToHuman(false)
   }
 
   // Calculate progress
@@ -851,6 +890,11 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
             {breakdownCount > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
                 {breakdownCount} breakdown{breakdownCount !== 1 ? 's' : ''}
+              </span>
+            )}
+            {isPostingIssue && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                posting issue
               </span>
             )}
             <span className="text-xs text-neutral-500">{task.id}</span>
@@ -931,6 +975,32 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
             >
               <Play size={14} className={dispatching ? 'animate-pulse' : ''} />
               {dispatching ? 'Dispatching...' : 'Dispatch'}
+            </button>
+          )}
+
+          {/* Retry button for stuck in_progress tasks */}
+          {task.status === 'in_progress' && (
+            <button
+              onClick={handleRetry}
+              disabled={retrying}
+              className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-white rounded-md hover:from-amber-500 hover:to-yellow-600 transition-all disabled:opacity-50 font-medium shadow-sm"
+              title="Retry — re-dispatch this task to the agent"
+            >
+              <RotateCcw size={14} className={retrying ? 'animate-spin' : ''} />
+              {retrying ? 'Retrying...' : 'Retry'}
+            </button>
+          )}
+
+          {/* Send to Human button for posting issues or stuck in_progress tasks */}
+          {(isPostingIssue || task.status === 'in_progress') && !isHumanTask && (
+            <button
+              onClick={handleSendToHuman}
+              disabled={sendingToHuman}
+              className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium shadow-sm"
+              title="Reassign to Shawn for manual action"
+            >
+              <UserPlus size={14} />
+              {sendingToHuman ? 'Sending...' : 'Send to Human'}
             </button>
           )}
 
