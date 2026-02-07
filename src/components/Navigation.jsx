@@ -59,7 +59,8 @@ export function Breadcrumbs({ location }) {
     'knowledge': 'Knowledge Base',
     'analytics': 'Analytics',
     'search': 'Search',
-    'chapter': 'Chapter'
+    'chapter': 'Chapter',
+    'posting-queue': 'Posting Queue'
   }
 
   if (pathSegments.length === 0) {
