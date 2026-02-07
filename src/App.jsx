@@ -34,12 +34,17 @@ const navGroups = [
     title: 'Overview',
     items: [
       { to: '/', icon: <Home size={20} />, label: 'Dashboard' },
-      { to: '/posting-queue', icon: <Send size={20} />, label: 'Posting Queue' },
-      { to: '/reply-queue', icon: <Reply size={20} />, label: 'Reply Queue' },
-      { to: '/comments', icon: <MessageSquarePlus size={20} />, label: 'Comments' },
       { to: '/human-tasks', icon: <AlertTriangle size={20} />, label: 'Your Tasks', priority: true },
       { to: '/notifications', icon: <Bell size={20} />, label: 'Notifications' },
       { to: '/costs', icon: <DollarSign size={20} />, label: 'Cost Management', priority: true }
+    ]
+  },
+  {
+    title: 'Queues',
+    items: [
+      { to: '/posting-queue', icon: <Send size={20} />, label: 'Posting Queue' },
+      { to: '/reply-queue', icon: <Reply size={20} />, label: 'Reply Queue' },
+      { to: '/comments', icon: <MessageSquarePlus size={20} />, label: 'Comment Queue' }
     ]
   },
   {
