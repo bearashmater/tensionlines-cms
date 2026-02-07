@@ -96,6 +96,7 @@ const BOOKS_DIR = path.join(BASE_DIR, 'books');
 const POSTING_SCHEDULE = path.join(BASE_DIR, 'POSTING_SCHEDULE.md');
 const REPOST_CANDIDATES_FILE = path.join(BASE_DIR, 'content', 'repost-candidates.json');
 const FUTURE_NEEDS_FILE = path.join(BASE_DIR, 'mission-control', 'future-needs.json');
+const ANALYTICS_DATA_FILE = path.join(BASE_DIR, 'mission-control', 'analytics-data.json');
 
 // Cache for frequently accessed data - invalidated by chokidar watcher
 let cache = {
@@ -108,6 +109,7 @@ let cache = {
   recurringTasks: null,
   repostCandidates: null,
   futureNeeds: null,
+  analyticsData: null,
   lastUpdate: null
 };
 
@@ -130,6 +132,8 @@ function invalidateCache(filePath) {
     cache.repostCandidates = null;
   } else if (filePath.includes('future-needs')) {
     cache.futureNeeds = null;
+  } else if (filePath.includes('analytics-data')) {
+    cache.analyticsData = null;
   }
   cache.lastUpdate = new Date().toISOString();
 }
@@ -3957,6 +3961,345 @@ app.get('/api/tasks/:id/breakdown', (req, res) => {
 });
 
 // ============================================================================
+// ANALYTICS DASHBOARD
+// ============================================================================
+
+const VALID_ANALYTICS_PLATFORMS = ['substack', 'twitter', 'instagram', 'threads', 'bluesky', 'medium', 'reddit', 'patreon', 'website'];
+
+const PLATFORM_PRIMARY_METRIC = {
+  substack: 'subscribers',
+  twitter: 'followers',
+  instagram: 'followers',
+  threads: 'followers',
+  bluesky: 'followers',
+  medium: 'followers',
+  reddit: 'karma',
+  patreon: 'patrons',
+  website: 'monthlyVisitors'
+};
+
+function getAnalyticsData() {
+  if (cache.analyticsData) return cache.analyticsData;
+  if (fs.existsSync(ANALYTICS_DATA_FILE)) {
+    try {
+      const content = fs.readFileSync(ANALYTICS_DATA_FILE, 'utf8');
+      cache.analyticsData = JSON.parse(content);
+      return cache.analyticsData;
+    } catch (e) {
+      console.error('Error reading analytics data:', e);
+    }
+  }
+  return {
+    platforms: {},
+    revenue: { monthlyTarget: 500, yearlyTarget: 6000, entries: [] },
+    goals: [],
+    lastUpdated: null
+  };
+}
+
+function saveAnalyticsData(data) {
+  data.lastUpdated = new Date().toISOString();
+  fs.writeFileSync(ANALYTICS_DATA_FILE, JSON.stringify(data, null, 2));
+  cache.analyticsData = null;
+}
+
+/**
+ * GET /api/analytics — Full dashboard data with computed summary
+ */
+app.get('/api/analytics', (req, res) => {
+  try {
+    const data = getAnalyticsData();
+    const engagement = getEngagementData();
+
+    // Compute totalAudience
+    let totalAudience = 0;
+    for (const [platform, info] of Object.entries(data.platforms || {})) {
+      const primaryKey = PLATFORM_PRIMARY_METRIC[platform];
+      if (primaryKey && info.current) {
+        totalAudience += info.current[primaryKey] || 0;
+      }
+    }
+
+    // Compute weeklyGrowth from history snapshots
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    let previousTotal = 0;
+    for (const [platform, info] of Object.entries(data.platforms || {})) {
+      const primaryKey = PLATFORM_PRIMARY_METRIC[platform];
+      if (primaryKey && info.history && info.history.length > 0) {
+        const oldSnapshot = info.history.find(h => h.date <= sevenDaysAgo);
+        if (oldSnapshot) {
+          previousTotal += oldSnapshot[primaryKey] || 0;
+        }
+      }
+    }
+    const weeklyGrowth = previousTotal > 0 ? ((totalAudience - previousTotal) / previousTotal * 100) : 0;
+
+    // Compute monthlyRevenue
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const currentEntry = (data.revenue?.entries || []).find(e => e.month === currentMonth);
+    let monthlyRevenue = 0;
+    if (currentEntry) {
+      monthlyRevenue = (currentEntry.substack || 0) + (currentEntry.gumroad || 0) +
+        (currentEntry.patreon || 0) + (currentEntry.amazon || 0) + (currentEntry.other || 0);
+    }
+
+    // Previous month revenue for change calculation
+    const prevMonth = now.getMonth() === 0
+      ? `${now.getFullYear() - 1}-12`
+      : `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}`;
+    const prevEntry = (data.revenue?.entries || []).find(e => e.month === prevMonth);
+    let prevMonthlyRevenue = 0;
+    if (prevEntry) {
+      prevMonthlyRevenue = (prevEntry.substack || 0) + (prevEntry.gumroad || 0) +
+        (prevEntry.patreon || 0) + (prevEntry.amazon || 0) + (prevEntry.other || 0);
+    }
+
+    // Compute contentThisWeek from engagement data
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentPosts = (engagement.posts || []).filter(p => new Date(p.publishedAt) >= weekAgo);
+    const contentThisWeek = recentPosts.length;
+
+    // Previous week content count
+    const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+    const prevWeekPosts = (engagement.posts || []).filter(p => {
+      const d = new Date(p.publishedAt);
+      return d >= twoWeeksAgo && d < weekAgo;
+    });
+
+    // Substack subscribers specifically
+    const substackSubs = data.platforms?.substack?.current?.subscribers || 0;
+
+    const summary = {
+      totalAudience,
+      totalAudienceChange: previousTotal > 0 ? totalAudience - previousTotal : 0,
+      substackSubscribers: substackSubs,
+      weeklyGrowth: Math.round(weeklyGrowth * 100) / 100,
+      weeklyGrowthChange: totalAudience - previousTotal,
+      monthlyRevenue,
+      monthlyRevenueChange: monthlyRevenue - prevMonthlyRevenue,
+      contentThisWeek,
+      contentThisWeekChange: contentThisWeek - prevWeekPosts.length
+    };
+
+    res.json({
+      summary,
+      platforms: data.platforms || {},
+      revenue: data.revenue || { monthlyTarget: 500, yearlyTarget: 6000, entries: [] },
+      goals: data.goals || [],
+      lastUpdated: data.lastUpdated
+    });
+  } catch (error) {
+    console.error('Error getting analytics:', error);
+    res.status(500).json({ error: 'Failed to get analytics data' });
+  }
+});
+
+/**
+ * PATCH /api/analytics/platforms/:platform — Update current metrics for a platform
+ */
+app.patch('/api/analytics/platforms/:platform', (req, res) => {
+  try {
+    const { platform } = req.params;
+    if (!VALID_ANALYTICS_PLATFORMS.includes(platform)) {
+      return res.status(400).json({ error: `Invalid platform. Must be one of: ${VALID_ANALYTICS_PLATFORMS.join(', ')}` });
+    }
+
+    const data = getAnalyticsData();
+    if (!data.platforms) data.platforms = {};
+    if (!data.platforms[platform]) {
+      data.platforms[platform] = { current: {}, history: [] };
+    }
+
+    // Update current metrics
+    const updates = req.body;
+    data.platforms[platform].current = { ...data.platforms[platform].current, ...updates };
+
+    // Auto-push daily snapshot to history (max 1 per day, 365 cap)
+    const today = new Date().toISOString().split('T')[0];
+    const history = data.platforms[platform].history || [];
+    const todayIdx = history.findIndex(h => h.date === today);
+    const snapshot = { date: today, ...data.platforms[platform].current };
+
+    if (todayIdx >= 0) {
+      history[todayIdx] = snapshot;
+    } else {
+      history.push(snapshot);
+    }
+
+    // Cap at 365 entries
+    if (history.length > 365) {
+      history.splice(0, history.length - 365);
+    }
+    data.platforms[platform].history = history;
+
+    saveAnalyticsData(data);
+    res.json({ success: true, platform, current: data.platforms[platform].current });
+  } catch (error) {
+    console.error('Error updating platform metrics:', error);
+    res.status(500).json({ error: 'Failed to update platform metrics' });
+  }
+});
+
+/**
+ * PATCH /api/analytics/revenue/target — Update revenue targets
+ */
+app.patch('/api/analytics/revenue/target', (req, res) => {
+  try {
+    const data = getAnalyticsData();
+    if (!data.revenue) data.revenue = { monthlyTarget: 500, yearlyTarget: 6000, entries: [] };
+
+    const { monthlyTarget, yearlyTarget } = req.body;
+    if (monthlyTarget !== undefined) data.revenue.monthlyTarget = monthlyTarget;
+    if (yearlyTarget !== undefined) data.revenue.yearlyTarget = yearlyTarget;
+
+    saveAnalyticsData(data);
+    res.json({ success: true, revenue: data.revenue });
+  } catch (error) {
+    console.error('Error updating revenue target:', error);
+    res.status(500).json({ error: 'Failed to update revenue target' });
+  }
+});
+
+/**
+ * POST /api/analytics/revenue — Upsert monthly revenue entry
+ */
+app.post('/api/analytics/revenue', (req, res) => {
+  try {
+    const data = getAnalyticsData();
+    if (!data.revenue) data.revenue = { monthlyTarget: 500, yearlyTarget: 6000, entries: [] };
+    if (!data.revenue.entries) data.revenue.entries = [];
+
+    const { month, substack = 0, gumroad = 0, patreon = 0, amazon = 0, other = 0 } = req.body;
+    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({ error: 'Month must be in YYYY-MM format' });
+    }
+
+    const existingIdx = data.revenue.entries.findIndex(e => e.month === month);
+    const entry = { month, substack, gumroad, patreon, amazon, other };
+
+    if (existingIdx >= 0) {
+      data.revenue.entries[existingIdx] = entry;
+    } else {
+      data.revenue.entries.push(entry);
+      data.revenue.entries.sort((a, b) => a.month.localeCompare(b.month));
+    }
+
+    saveAnalyticsData(data);
+    res.json({ success: true, entry });
+  } catch (error) {
+    console.error('Error recording revenue:', error);
+    res.status(500).json({ error: 'Failed to record revenue' });
+  }
+});
+
+/**
+ * POST /api/analytics/goals — Create a new goal or milestone
+ */
+app.post('/api/analytics/goals', (req, res) => {
+  try {
+    const data = getAnalyticsData();
+    if (!data.goals) data.goals = [];
+
+    const { type, title, target, value } = req.body;
+    if (!type || !title) {
+      return res.status(400).json({ error: 'Type and title are required' });
+    }
+    if (!['progress', 'status', 'milestone'].includes(type)) {
+      return res.status(400).json({ error: 'Type must be progress, status, or milestone' });
+    }
+
+    // Generate ID
+    const prefix = type === 'milestone' ? 'ms' : 'goal';
+    const existing = data.goals.filter(g => g.id.startsWith(prefix));
+    const maxNum = existing.reduce((max, g) => {
+      const num = parseInt(g.id.split('-')[1]) || 0;
+      return num > max ? num : max;
+    }, 0);
+    const id = `${prefix}-${String(maxNum + 1).padStart(3, '0')}`;
+
+    const goal = {
+      id,
+      type,
+      title,
+      createdAt: new Date().toISOString()
+    };
+
+    if (type === 'progress') {
+      goal.target = target || 0;
+      goal.current = 0;
+    } else if (type === 'status') {
+      goal.value = value || '';
+    } else if (type === 'milestone') {
+      goal.achieved = false;
+    }
+
+    data.goals.push(goal);
+    saveAnalyticsData(data);
+    res.json({ success: true, goal });
+  } catch (error) {
+    console.error('Error creating goal:', error);
+    res.status(500).json({ error: 'Failed to create goal' });
+  }
+});
+
+/**
+ * PATCH /api/analytics/goals/:id — Update a goal
+ */
+app.patch('/api/analytics/goals/:id', (req, res) => {
+  try {
+    const data = getAnalyticsData();
+    if (!data.goals) data.goals = [];
+
+    const { id } = req.params;
+    const goalIdx = data.goals.findIndex(g => g.id === id);
+    if (goalIdx < 0) {
+      return res.status(404).json({ error: 'Goal not found' });
+    }
+
+    const updates = req.body;
+    const goal = data.goals[goalIdx];
+
+    // Only allow updating appropriate fields
+    if (updates.title !== undefined) goal.title = updates.title;
+    if (updates.current !== undefined) goal.current = updates.current;
+    if (updates.target !== undefined) goal.target = updates.target;
+    if (updates.value !== undefined) goal.value = updates.value;
+    if (updates.achieved !== undefined) goal.achieved = updates.achieved;
+
+    data.goals[goalIdx] = goal;
+    saveAnalyticsData(data);
+    res.json({ success: true, goal });
+  } catch (error) {
+    console.error('Error updating goal:', error);
+    res.status(500).json({ error: 'Failed to update goal' });
+  }
+});
+
+/**
+ * DELETE /api/analytics/goals/:id — Remove a goal
+ */
+app.delete('/api/analytics/goals/:id', (req, res) => {
+  try {
+    const data = getAnalyticsData();
+    if (!data.goals) data.goals = [];
+
+    const { id } = req.params;
+    const goalIdx = data.goals.findIndex(g => g.id === id);
+    if (goalIdx < 0) {
+      return res.status(404).json({ error: 'Goal not found' });
+    }
+
+    data.goals.splice(goalIdx, 1);
+    saveAnalyticsData(data);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting goal:', error);
+    res.status(500).json({ error: 'Failed to delete goal' });
+  }
+});
+
+// ============================================================================
 // FILE WATCHING (Real-time updates)
 // ============================================================================
 
@@ -3971,7 +4314,8 @@ const watcher = chokidar.watch([
   `${BOOKS_DIR}/*/outline/MASTER_OUTLINE.md`,
   `${BOOKS_DIR}/*/chapters/*.md`,
   REPOST_CANDIDATES_FILE,
-  FUTURE_NEEDS_FILE
+  FUTURE_NEEDS_FILE,
+  ANALYTICS_DATA_FILE
 ], {
   ignored: /(^|[\/\\])\../, // ignore dotfiles
   persistent: true
