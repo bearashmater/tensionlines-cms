@@ -14,7 +14,7 @@ export default function RecurringTasks() {
 
   const fetchTasks = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/recurring-tasks');
+      const res = await fetch('/api/recurring-tasks');
       const data = await res.json();
       setTasks(data.recurringTasks || []);
       setLoading(false);

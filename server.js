@@ -1891,17 +1891,23 @@ app.get('/api/posting-queue', (req, res) => {
 app.post('/api/posting-queue', (req, res) => {
   try {
     const queue = getPostingQueue();
+    const { platform, content, caption, parts, canvaComplete } = req.body;
+
+    // Validate required fields
+    if (!platform || !['instagram', 'threads'].includes(platform)) {
+      return res.status(400).json({ error: 'Invalid platform' });
+    }
+
     const item = {
       id: `post-${Date.now()}`,
       createdAt: new Date().toISOString(),
       status: 'ready',
-      ...req.body
+      platform,
+      content: content || '',
+      caption: caption || '',
+      parts: Array.isArray(parts) ? parts : [],
+      canvaComplete: canvaComplete === true
     };
-
-    // Validate required fields
-    if (!item.platform || !['instagram', 'threads'].includes(item.platform)) {
-      return res.status(400).json({ error: 'Invalid platform' });
-    }
 
     queue.queue.push(item);
     savePostingQueue(queue);
@@ -4206,7 +4212,16 @@ function getBackupsList() {
  * Restore from a backup file
  */
 function restoreFromBackup(backupFilename) {
+  // Validate filename: no path separators, no traversal
+  if (!backupFilename || typeof backupFilename !== 'string' ||
+      !/^[a-zA-Z0-9._-]+$/.test(backupFilename)) {
+    throw new Error('Invalid backup filename');
+  }
   const backupPath = path.join(BACKUPS_DIR, backupFilename);
+  const resolved = path.resolve(backupPath);
+  if (!resolved.startsWith(path.resolve(BACKUPS_DIR))) {
+    throw new Error('Invalid backup filename');
+  }
   if (!fs.existsSync(backupPath)) {
     throw new Error('Backup file not found');
   }
@@ -5005,6 +5020,12 @@ app.get('/api/optimizations/findings', (req, res) => {
 app.patch('/api/optimizations/findings/:id', (req, res) => {
   try {
     const { status, resolution } = req.body;
+
+    const validFindingStatuses = ['pending', 'resolved', 'dismissed', 'in_progress'];
+    if (!status || !validFindingStatuses.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${validFindingStatuses.join(', ')}` });
+    }
+
     const optimizations = getOptimizations();
 
     const findingIndex = optimizations.findings.findIndex(f => f.id === req.params.id);

@@ -230,13 +230,15 @@ function TaskCard({ task, onComplete, completing, ideaStats }) {
               const copyText = blockquotes[index] || item.suggestedComment
               const linkUrl = item.url || item.link
 
+              const safeUrl = isValidHttpUrl(linkUrl) ? linkUrl : null
+
               const handleCopyAndOpen = async () => {
                 if (copyText) {
                   await navigator.clipboard.writeText(copyText)
                   setCopiedIndex(index)
                   setTimeout(() => setCopiedIndex(null), 3000)
                 }
-                window.open(linkUrl, '_blank', 'noopener,noreferrer')
+                if (safeUrl) window.open(safeUrl, '_blank', 'noopener,noreferrer')
               }
 
               return (
@@ -255,7 +257,7 @@ function TaskCard({ task, onComplete, completing, ideaStats }) {
                       </button>
                     ) : (
                       <a
-                        href={linkUrl}
+                        href={safeUrl || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"

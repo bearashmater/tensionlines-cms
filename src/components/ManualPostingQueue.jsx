@@ -304,7 +304,7 @@ function PostedItem({ item }) {
       </div>
       <div className="flex items-center gap-2 text-xs text-neutral-500">
         <span>{new Date(item.postedAt).toLocaleDateString()}</span>
-        {item.postUrl && (
+        {item.postUrl && /^https?:\/\//.test(item.postUrl) && (
           <a
             href={item.postUrl}
             target="_blank"
