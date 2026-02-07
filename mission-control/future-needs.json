@@ -520,12 +520,12 @@
     }
   },
   "stats": {
-    "total": 17,
+    "total": 18,
     "byStatus": {
       "proposed": 17,
       "planned": 0,
       "in_progress": 0,
-      "completed": 0,
+      "completed": 1,
       "deferred": 0
     },
     "byPriority": {
