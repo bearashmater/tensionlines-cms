@@ -1,0 +1,137 @@
+{
+  "platforms": {
+    "substack": {
+      "current": {
+        "subscribers": 0,
+        "freeSubscribers": 0,
+        "paidSubscribers": 0,
+        "openRate": 0,
+        "posts": 0
+      },
+      "history": []
+    },
+    "twitter": {
+      "current": {
+        "followers": 42,
+        "following": 10,
+        "tweets": 5,
+        "impressions": 0,
+        "engagement": 0
+      },
+      "history": [
+        {
+          "date": "2026-02-07",
+          "followers": 42,
+          "following": 10,
+          "tweets": 5,
+          "impressions": 0,
+          "engagement": 0
+        }
+      ]
+    },
+    "instagram": {
+      "current": {
+        "followers": 0,
+        "following": 0,
+        "posts": 0,
+        "reels": 0
+      },
+      "history": []
+    },
+    "threads": {
+      "current": {
+        "followers": 0,
+        "posts": 0,
+        "likes": 0
+      },
+      "history": []
+    },
+    "bluesky": {
+      "current": {
+        "followers": 0,
+        "following": 0,
+        "posts": 0
+      },
+      "history": []
+    },
+    "medium": {
+      "current": {
+        "followers": 0,
+        "articles": 0,
+        "views": 0
+      },
+      "history": []
+    },
+    "reddit": {
+      "current": {
+        "karma": 0,
+        "posts": 0,
+        "members": 0
+      },
+      "history": []
+    },
+    "patreon": {
+      "current": {
+        "patrons": 0,
+        "monthlyRevenue": 0,
+        "posts": 0
+      },
+      "history": []
+    },
+    "website": {
+      "current": {
+        "monthlyVisitors": 0,
+        "pageViews": 0,
+        "avgSessionDuration": 0
+      },
+      "history": []
+    }
+  },
+  "revenue": {
+    "monthlyTarget": 500,
+    "yearlyTarget": 6000,
+    "entries": [
+      {
+        "month": "2026-02",
+        "substack": 25,
+        "gumroad": 10,
+        "patreon": 0,
+        "amazon": 0,
+        "other": 0
+      }
+    ]
+  },
+  "goals": [
+    {
+      "id": "goal-001",
+      "type": "progress",
+      "title": "1,000 Substack Subscribers",
+      "target": 1000,
+      "current": 0,
+      "createdAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "goal-002",
+      "type": "status",
+      "title": "Book Status",
+      "value": "Outlining",
+      "createdAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "goal-003",
+      "type": "progress",
+      "title": "Monthly Revenue Target",
+      "target": 500,
+      "current": 0,
+      "createdAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "ms-001",
+      "type": "milestone",
+      "title": "First Gumroad Product",
+      "achieved": false,
+      "createdAt": "2026-02-07T00:00:00.000Z"
+    }
+  ],
+  "lastUpdated": "2026-02-07T14:38:08.097Z"
+}

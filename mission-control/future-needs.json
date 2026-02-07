@@ -1,42 +1,6 @@
 {
   "needs": [
     {
-      "id": "need-001",
-      "title": "Task Creation API",
-      "description": "Add POST /api/tasks endpoint for programmatic task creation with full field validation.",
-      "useCase": "No POST /api/tasks endpoint exists. We had to write directly to database.json to create outreach tasks. Every agent and automation needs this.",
-      "category": "infrastructure",
-      "priority": "high",
-      "effort": "small",
-      "status": "completed",
-      "proposedBy": "claude",
-      "proposedAt": "2026-02-07T00:00:00.000Z",
-      "targetQuarter": "Q1-2026",
-      "agents": [
-        "aristotle",
-        "tension"
-      ],
-      "dependencies": [],
-      "acceptanceCriteria": [
-        "POST /api/tasks creates a task with full field validation",
-        "Returns created task with generated ID",
-        "Validates required fields: title, description, assignee"
-      ],
-      "votes": 1,
-      "voters": [
-        "shawn"
-      ],
-      "comments": [
-        {
-          "id": "comment-1770446009405",
-          "text": "This is critical for automation",
-          "author": "shawn",
-          "createdAt": "2026-02-07T06:33:29.405Z"
-        }
-      ],
-      "updatedAt": "2026-02-07T06:46:10.965Z"
-    },
-    {
       "id": "need-002",
       "title": "Automated Bluesky Posting",
       "description": "Integrate Bluesky posting into the CMS with API-driven publishing.",
@@ -127,9 +91,10 @@
       "category": "growth",
       "priority": "high",
       "effort": "small",
-      "status": "proposed",
+      "status": "completed",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
+      "completedAt": "2026-02-07T14:38:00.000Z",
       "targetQuarter": "Q1-2026",
       "agents": [
         "marcus",
@@ -143,8 +108,14 @@
       ],
       "votes": 0,
       "voters": [],
-      "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "comments": [
+        {
+          "by": "claude",
+          "at": "2026-02-07T14:38:00.000Z",
+          "text": "Completed via Analytics Dashboard. Platform metrics PATCH auto-snapshots daily history (365-day cap). Growth chart with 7d/30d/90d/All toggle. Progress goals track milestones like 1000 subscribers. See /analytics."
+        }
+      ],
+      "updatedAt": "2026-02-07T14:38:00.000Z"
     },
     {
       "id": "need-006",
@@ -544,19 +515,19 @@
     }
   },
   "stats": {
-    "total": 18,
+    "total": 17,
     "byStatus": {
       "proposed": 17,
       "planned": 0,
       "in_progress": 0,
-      "completed": 1,
+      "completed": 0,
       "deferred": 0
     },
     "byPriority": {
-      "high": 6,
+      "high": 5,
       "medium": 7,
       "low": 5
     },
-    "lastUpdated": "2026-02-07T06:46:10.966Z"
+    "lastUpdated": "2026-02-07T06:50:20.518Z"
   }
 }
