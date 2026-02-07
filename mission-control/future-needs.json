@@ -1,0 +1,562 @@
+{
+  "needs": [
+    {
+      "id": "need-001",
+      "title": "Task Creation API",
+      "description": "Add POST /api/tasks endpoint for programmatic task creation with full field validation.",
+      "useCase": "No POST /api/tasks endpoint exists. We had to write directly to database.json to create outreach tasks. Every agent and automation needs this.",
+      "category": "infrastructure",
+      "priority": "high",
+      "effort": "small",
+      "status": "completed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q1-2026",
+      "agents": [
+        "aristotle",
+        "tension"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "POST /api/tasks creates a task with full field validation",
+        "Returns created task with generated ID",
+        "Validates required fields: title, description, assignee"
+      ],
+      "votes": 1,
+      "voters": [
+        "shawn"
+      ],
+      "comments": [
+        {
+          "id": "comment-1770446009405",
+          "text": "This is critical for automation",
+          "author": "shawn",
+          "createdAt": "2026-02-07T06:33:29.405Z"
+        }
+      ],
+      "updatedAt": "2026-02-07T06:46:10.965Z"
+    },
+    {
+      "id": "need-002",
+      "title": "Automated Bluesky Posting",
+      "description": "Integrate Bluesky posting into the CMS with API-driven publishing.",
+      "useCase": "Heraclitus has no way to publish to Bluesky. Script exists at scripts/bluesky-post.js but no CMS integration. Need API-driven posting.",
+      "category": "content",
+      "priority": "high",
+      "effort": "medium",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q1-2026",
+      "agents": [
+        "heraclitus"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "CMS can publish posts to Bluesky via API",
+        "Posting queue supports Bluesky as a platform",
+        "Success/failure status visible in CMS"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-003",
+      "title": "Content Repurposing Engine",
+      "description": "Automatically adapt one idea into platform-specific posts for Twitter, Bluesky, Instagram, Reddit, and Medium.",
+      "useCase": "One idea should become 5 platform-adapted posts (Twitter thread, Bluesky post, Instagram card, Reddit comment, Medium paragraph). Currently manual per-platform rewriting.",
+      "category": "content",
+      "priority": "medium",
+      "effort": "large",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q2-2026",
+      "agents": [
+        "nietzsche",
+        "heraclitus",
+        "hypatia"
+      ],
+      "dependencies": [
+        "need-002"
+      ],
+      "acceptanceCriteria": [
+        "Given one idea, generates drafts for 5 platforms",
+        "Each draft respects platform character limits and conventions",
+        "Agent voice is preserved per-platform"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-004",
+      "title": "Content Calendar View",
+      "description": "Interactive visual calendar showing scheduled content across all platforms.",
+      "useCase": "POSTING_SCHEDULE.md exists but no interactive calendar. Need visual week/month view of what's scheduled where.",
+      "category": "content",
+      "priority": "medium",
+      "effort": "medium",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q1-2026",
+      "agents": [
+        "aristotle"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Week and month views showing scheduled posts",
+        "Color-coded by platform and agent",
+        "Click to view/edit scheduled content",
+        "Drag to reschedule"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-005",
+      "title": "Follower Growth Tracker",
+      "description": "Track daily follower counts across Twitter, Bluesky, and Reddit with progress toward milestones.",
+      "useCase": "Currently follower counts noted manually in outreach JSONs. Need daily snapshots across Twitter, Bluesky, Reddit to track progress toward 1000-follower Gumroad unlock.",
+      "category": "growth",
+      "priority": "high",
+      "effort": "small",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q1-2026",
+      "agents": [
+        "marcus",
+        "tension"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Daily automated snapshot of follower counts per platform",
+        "CMS dashboard widget showing progress toward 1000 followers",
+        "Historical chart of follower growth over time"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-006",
+      "title": "Reply & Mention Monitor",
+      "description": "Monitor incoming replies and mentions across platforms with CMS alerts.",
+      "useCase": "No system watches for incoming replies to our outreach comments. Replies from Days 1-4 targets could be missed. Need periodic scanning + CMS alerts.",
+      "category": "growth",
+      "priority": "high",
+      "effort": "medium",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q1-2026",
+      "agents": [
+        "diogenes",
+        "nietzsche"
+      ],
+      "dependencies": [
+        "need-011"
+      ],
+      "acceptanceCriteria": [
+        "Periodic scan for new replies to our tweets/posts",
+        "CMS notification for each new reply or mention",
+        "Queue for drafting responses to incoming engagement"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-007",
+      "title": "Outreach Effectiveness Dashboard",
+      "description": "Aggregate analytics showing which outreach strategies generate the most engagement.",
+      "useCase": "20 users targeted across 4 days. No aggregate view of which user types, themes, or times of day generate engagement. Need follow-back rate, reply rate, engagement patterns.",
+      "category": "growth",
+      "priority": "medium",
+      "effort": "medium",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q2-2026",
+      "agents": [
+        "tension",
+        "aristotle"
+      ],
+      "dependencies": [
+        "need-005",
+        "need-006"
+      ],
+      "acceptanceCriteria": [
+        "Dashboard showing follow-back rate, reply rate by target type",
+        "Time-of-day and day-of-week engagement heatmap",
+        "Top-performing outreach themes identified"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-008",
+      "title": "Audience Segmentation",
+      "description": "Understand and categorize who engages with our content by topic interest and behavior.",
+      "useCase": "No understanding of who's engaging. Which topics resonate with which audience segments? Needed for targeted content strategy.",
+      "category": "growth",
+      "priority": "low",
+      "effort": "large",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q3-2026",
+      "agents": [
+        "aristotle",
+        "marcus"
+      ],
+      "dependencies": [
+        "need-007"
+      ],
+      "acceptanceCriteria": [
+        "Audience segments defined by engagement patterns",
+        "Content recommendations per segment",
+        "Segment growth tracking over time"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-009",
+      "title": "Weekly Performance Report",
+      "description": "Automated weekly rollup of all key metrics, generated every Monday.",
+      "useCase": "No automated weekly rollup. Need: posts published, engagement totals, follower delta, top-performing content, agent productivity, cost summary. Auto-generated every Monday.",
+      "category": "analytics",
+      "priority": "medium",
+      "effort": "medium",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q1-2026",
+      "agents": [
+        "tension",
+        "aristotle"
+      ],
+      "dependencies": [
+        "need-005"
+      ],
+      "acceptanceCriteria": [
+        "Auto-generated report every Monday morning",
+        "Includes: posts published, engagement totals, follower delta",
+        "Top-performing content and agent productivity summary",
+        "Cost summary with week-over-week comparison"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-010",
+      "title": "Engagement Trend Charts",
+      "description": "Time-series visualizations of engagement growth by platform over weeks and months.",
+      "useCase": "engagement-data.json exists but Analytics view is basic. Need time-series charts showing engagement growth by platform over weeks/months.",
+      "category": "analytics",
+      "priority": "low",
+      "effort": "medium",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q2-2026",
+      "agents": [
+        "aristotle"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Line charts showing engagement over time per platform",
+        "Selectable date ranges (week, month, quarter)",
+        "Overlay comparison between platforms"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-011",
+      "title": "Bird CLI Write Access Fix",
+      "description": "Resolve Twitter error 226 blocking all automated posting via Bird CLI.",
+      "useCase": "Twitter error 226 blocks all automated posting. Need strategy to resolve (token refresh, new auth, alternative API). This is the #1 blocker for Nietzsche's autonomous operation.",
+      "category": "infrastructure",
+      "priority": "high",
+      "effort": "small",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q1-2026",
+      "agents": [
+        "nietzsche",
+        "tension"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Bird CLI can successfully post tweets",
+        "Error 226 resolved or alternative posting method found",
+        "Automated posting pipeline functional end-to-end"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-012",
+      "title": "WebSocket Real-Time Updates",
+      "description": "Replace 30s polling with WebSocket connections for instant CMS updates.",
+      "useCase": "CMS uses 30s polling. WebSocket would make dashboard, notifications, and task updates instant. Phase 2 infrastructure.",
+      "category": "infrastructure",
+      "priority": "low",
+      "effort": "large",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q3-2026",
+      "agents": [
+        "tension"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "WebSocket server running alongside Express",
+        "Dashboard, notifications, and task views update in real-time",
+        "Graceful fallback to polling if WebSocket disconnects"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-013",
+      "title": "Agent Communication Protocol",
+      "description": "Structured inter-agent messaging system with CMS visibility.",
+      "useCase": "No formal inter-agent messaging. Hypatia blocked a Diogenes draft but communication was through file notes. Need structured alerts agent-to-agent with CMS visibility.",
+      "category": "infrastructure",
+      "priority": "medium",
+      "effort": "medium",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q2-2026",
+      "agents": [
+        "hypatia",
+        "diogenes",
+        "tension"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Agent-to-agent message sending via API",
+        "Messages visible in CMS with sender/recipient",
+        "Notification triggers for urgent inter-agent alerts"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-014",
+      "title": "Website Deployment to Netlify",
+      "description": "Deploy the Hugo site to Netlify for public web presence.",
+      "useCase": "Hugo site built, GitHub repo exists, FINISH_DEPLOYMENT.md has steps. Just needs execution. Unlocks public web presence.",
+      "category": "infrastructure",
+      "priority": "high",
+      "effort": "small",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q1-2026",
+      "agents": [
+        "tension"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Hugo site deployed to Netlify",
+        "Custom domain configured",
+        "Auto-deploy from GitHub pushes working"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-015",
+      "title": "Gumroad Product Pipeline",
+      "description": "Tooling and templates ready for product launch when follower milestone is reached.",
+      "useCase": "Task-012 blocked until 1000 followers. Need tooling ready for when it unblocks: product page templates, pricing strategy, launch announcement drafts, CMS integration for tracking sales.",
+      "category": "monetization",
+      "priority": "medium",
+      "effort": "medium",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q2-2026",
+      "agents": [
+        "marcus",
+        "tension"
+      ],
+      "dependencies": [
+        "need-005"
+      ],
+      "acceptanceCriteria": [
+        "Product page templates ready",
+        "Pricing strategy documented",
+        "Launch announcement drafts prepared",
+        "CMS integration for tracking Gumroad sales"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-016",
+      "title": "Patreon Integration",
+      "description": "API integration for subscriber tracking, content gating, and tier management.",
+      "useCase": "Marcus manages Patreon manually. API integration would enable subscriber tracking, content gating, tier management from within CMS.",
+      "category": "monetization",
+      "priority": "low",
+      "effort": "medium",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q3-2026",
+      "agents": [
+        "marcus"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Patreon API connected to CMS",
+        "Subscriber count and tier breakdown visible",
+        "Content gating rules manageable from CMS"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-017",
+      "title": "Writing Style Guide Enforcement",
+      "description": "Automated consistency checking against agent SOUL.md voice definitions.",
+      "useCase": "Each agent has voice defined in SOUL.md but no automated consistency checking. Need a review step that catches off-brand content before it ships.",
+      "category": "governance",
+      "priority": "medium",
+      "effort": "medium",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q2-2026",
+      "agents": [
+        "hypatia",
+        "tension"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Automated voice consistency check on draft content",
+        "Flags content that deviates from agent's SOUL.md voice",
+        "Review step in publishing pipeline before content ships"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-018",
+      "title": "Auto-Approval Thresholds",
+      "description": "Define rules for low-risk content that can ship without manual Shawn approval.",
+      "useCase": "Shawn is single approval bottleneck for all public content. Define thresholds where low-risk content (reposts, standard replies) can ship without manual approval.",
+      "category": "governance",
+      "priority": "low",
+      "effort": "small",
+      "status": "proposed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T00:00:00.000Z",
+      "targetQuarter": "Q2-2026",
+      "agents": [
+        "hypatia",
+        "tension"
+      ],
+      "dependencies": [
+        "need-017"
+      ],
+      "acceptanceCriteria": [
+        "Risk levels defined for content types (repost, reply, original)",
+        "Low-risk content auto-approved with audit log",
+        "High-risk content still requires manual approval",
+        "Override mechanism for Shawn to adjust thresholds"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T00:00:00.000Z"
+    }
+  ],
+  "categories": {
+    "content": {
+      "label": "Content & Publishing",
+      "color": "blue",
+      "icon": "FileText"
+    },
+    "growth": {
+      "label": "Growth & Outreach",
+      "color": "green",
+      "icon": "TrendingUp"
+    },
+    "analytics": {
+      "label": "Analytics & Insights",
+      "color": "purple",
+      "icon": "BarChart3"
+    },
+    "infrastructure": {
+      "label": "Automation & Infrastructure",
+      "color": "orange",
+      "icon": "Zap"
+    },
+    "monetization": {
+      "label": "Monetization",
+      "color": "gold",
+      "icon": "DollarSign"
+    },
+    "governance": {
+      "label": "Quality & Governance",
+      "color": "red",
+      "icon": "Shield"
+    }
+  },
+  "stats": {
+    "total": 18,
+    "byStatus": {
+      "proposed": 17,
+      "planned": 0,
+      "in_progress": 0,
+      "completed": 1,
+      "deferred": 0
+    },
+    "byPriority": {
+      "high": 6,
+      "medium": 7,
+      "low": 5
+    },
+    "lastUpdated": "2026-02-07T06:46:10.966Z"
+  }
+}
