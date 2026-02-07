@@ -2160,6 +2160,42 @@ function saveReplyQueue(data) {
 }
 
 /**
+ * When a reply is published/posted, mark the linked task as completed
+ */
+function completeLinkedTask(taskId, platform) {
+  if (!taskId) return;
+  try {
+    const data = getMissionControl();
+    const task = data.tasks.find(t => t.id === taskId);
+    if (!task || task.status === 'completed' || task.status === 'shipped') return;
+
+    task.status = 'completed';
+    task.completedAt = new Date().toISOString();
+    task.completedBy = platform === 'bluesky' ? 'reply-queue-auto' : 'human';
+
+    data.activities.unshift({
+      id: `activity-${Date.now()}`,
+      type: 'task_completed',
+      agentId: task.completedBy,
+      taskId,
+      timestamp: new Date().toISOString(),
+      description: `Completed: ${task.title}`,
+      metadata: {
+        completedBy: task.completedBy,
+        source: 'reply-queue',
+        platform
+      }
+    });
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(data, null, 2));
+    cache.missionControl = null;
+    console.log(`[ReplyQueue] Marked task ${taskId} as completed`);
+  } catch (err) {
+    console.error(`[ReplyQueue] Failed to complete task ${taskId}:`, err.message);
+  }
+}
+
+/**
  * Resolve a bsky.app URL to uri + cid + author + text
  */
 async function resolveBskyUrl(url) {
@@ -2244,7 +2280,7 @@ app.get('/api/reply-queue', (req, res) => {
 app.post('/api/reply-queue', (req, res) => {
   try {
     const data = getReplyQueue();
-    const { platform, targetUrl, targetAuthor, targetText, replyText } = req.body;
+    const { platform, targetUrl, targetAuthor, targetText, replyText, taskId } = req.body;
 
     if (!platform || !['bluesky', 'twitter'].includes(platform)) {
       return res.status(400).json({ error: 'Invalid platform (bluesky or twitter)' });
@@ -2262,6 +2298,7 @@ app.post('/api/reply-queue', (req, res) => {
       targetAuthor: targetAuthor || '',
       targetText: targetText || '',
       replyText,
+      taskId: taskId || null,
       targetUri: null,
       targetCid: null
     };
@@ -2285,7 +2322,7 @@ app.patch('/api/reply-queue/:id', (req, res) => {
     const item = data.queue.find(i => i.id === id);
     if (!item) return res.status(404).json({ error: 'Item not found' });
 
-    const allowedFields = ['replyText', 'targetUrl', 'targetAuthor', 'targetText'];
+    const allowedFields = ['replyText', 'targetUrl', 'targetAuthor', 'targetText', 'taskId'];
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
         item[field] = req.body[field];
@@ -2343,6 +2380,7 @@ app.post('/api/reply-queue/:id/posted', (req, res) => {
     data.queue.splice(index, 1);
 
     saveReplyQueue(data);
+    completeLinkedTask(item.taskId, item.platform);
     res.json({ success: true, item });
   } catch (error) {
     console.error('Error marking reply as posted:', error);
@@ -2408,6 +2446,7 @@ app.post('/api/reply-queue/:id/publish', async (req, res) => {
     saveReplyQueue(data);
 
     console.log(`[Bluesky] Reply published: ${result.postUrl}`);
+    completeLinkedTask(item.taskId, item.platform);
     res.json({ success: true, item, postUrl: result.postUrl });
   } catch (error) {
     // Mark as failed but keep in queue for retry

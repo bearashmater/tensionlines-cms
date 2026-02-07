@@ -294,6 +294,11 @@ function ReplyItem({ item, canReply, onUpdate }) {
                 Ready
               </span>
             )}
+            {item.taskId && (
+              <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded">
+                {item.taskId}
+              </span>
+            )}
           </div>
 
           {/* Target context */}
