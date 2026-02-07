@@ -17,6 +17,7 @@ import os from 'os';
 import matter from 'gray-matter';
 import chokidar from 'chokidar';
 import cron from 'node-cron';
+import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { createServer as createViteServer } from 'vite';
@@ -5250,6 +5251,90 @@ cron.schedule('0 0 * * 1', () => {
 });
 
 console.log('[Cron] Weekly idea task reset scheduled for Monday 00:00 PST');
+
+/**
+ * Daily automated follower snapshot at 6 AM PST
+ * Pulls Twitter metrics via Bird CLI and saves to analytics data
+ */
+const BIRD_CLI = '/opt/homebrew/bin/bird';
+
+function snapshotTwitterMetrics() {
+  try {
+    if (!fs.existsSync(BIRD_CLI)) {
+      console.log('[Cron] Bird CLI not found, skipping Twitter snapshot');
+      return;
+    }
+
+    const opts = { timeout: 30000, encoding: 'utf8' };
+
+    // Get follower count (--all wraps in { users: [...] })
+    let followers = 0;
+    try {
+      const parsed = JSON.parse(execSync(`${BIRD_CLI} followers --all --json 2>/dev/null`, opts));
+      followers = Array.isArray(parsed) ? parsed.length : (parsed.users || []).length;
+    } catch (e) {
+      console.error('[Cron] Failed to fetch followers:', e.message);
+    }
+
+    // Get following count
+    let following = 0;
+    try {
+      const parsed = JSON.parse(execSync(`${BIRD_CLI} following --all --json 2>/dev/null`, opts));
+      following = Array.isArray(parsed) ? parsed.length : (parsed.users || []).length;
+    } catch (e) {
+      console.error('[Cron] Failed to fetch following:', e.message);
+    }
+
+    // Get tweet count
+    let tweets = 0;
+    try {
+      const parsed = JSON.parse(execSync(`${BIRD_CLI} user-tweets thetensionlines --json 2>/dev/null`, opts));
+      tweets = Array.isArray(parsed) ? parsed.length : 0;
+    } catch (e) {
+      console.error('[Cron] Failed to fetch tweets:', e.message);
+    }
+
+    // Save to analytics
+    const data = getAnalyticsData();
+    if (!data.platforms) data.platforms = {};
+    if (!data.platforms.twitter) data.platforms.twitter = { current: {}, history: [] };
+
+    data.platforms.twitter.current = {
+      ...data.platforms.twitter.current,
+      followers,
+      following,
+      tweets
+    };
+
+    // Auto-push daily snapshot
+    const today = new Date().toISOString().split('T')[0];
+    const history = data.platforms.twitter.history || [];
+    const todayIdx = history.findIndex(h => h.date === today);
+    const snapshot = { date: today, ...data.platforms.twitter.current };
+
+    if (todayIdx >= 0) {
+      history[todayIdx] = snapshot;
+    } else {
+      history.push(snapshot);
+    }
+    if (history.length > 365) history.splice(0, history.length - 365);
+    data.platforms.twitter.history = history;
+
+    saveAnalyticsData(data);
+    console.log(`[Cron] Twitter snapshot: ${followers} followers, ${following} following, ${tweets} tweets`);
+  } catch (err) {
+    console.error('[Cron] Twitter snapshot failed:', err);
+  }
+}
+
+cron.schedule('0 6 * * *', () => {
+  console.log('[Cron] Running daily Twitter metrics snapshot...');
+  snapshotTwitterMetrics();
+}, {
+  timezone: 'America/Los_Angeles'
+});
+
+console.log('[Cron] Daily Twitter metrics snapshot scheduled for 6:00 AM PST');
 
 // ============================================================================
 // OPTIMIZATION API ENDPOINTS
