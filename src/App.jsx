@@ -15,7 +15,7 @@ import Analytics from './components/Analytics'
 import SearchView from './components/SearchView'
 import BookProgress from './components/BookProgress'
 import ChapterDetail from './components/ChapterDetail'
-import PostingSchedule from './components/PostingSchedule'
+import ContentCalendar from './components/ContentCalendar'
 import RecurringTasks from './components/RecurringTasks'
 import CostDashboard from './components/CostDashboard'
 import HumanTasks from './components/HumanTasks'
@@ -53,7 +53,7 @@ const navGroups = [
       { to: '/agents', icon: <Users size={20} />, label: 'Team' },
       { to: '/tasks', icon: <ListTodo size={20} />, label: 'Tasks' },
       { to: '/recurring', icon: <Repeat size={20} />, label: 'Recurring Tasks' },
-      { to: '/schedule', icon: <Calendar size={20} />, label: 'Schedule' },
+      { to: '/schedule', icon: <Calendar size={20} />, label: 'Calendar' },
       { to: '/squad-lead', icon: <Target size={20} />, label: 'Squad Lead' },
       { to: '/optimization', icon: <Zap size={20} />, label: 'Optimization' },
       { to: '/future-needs', icon: <Compass size={20} />, label: 'Future Needs' },
@@ -173,7 +173,7 @@ function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenu
             <Route path="/agents" element={<AgentsView />} />
             <Route path="/tasks" element={<TasksView />} />
             <Route path="/recurring" element={<RecurringTasks />} />
-            <Route path="/schedule" element={<PostingSchedule />} />
+            <Route path="/schedule" element={<ContentCalendar />} />
             <Route path="/content" element={<ContentPipeline />} />
             <Route path="/ideas" element={<ContentPipeline />} />
             <Route path="/posting-queue" element={<ManualPostingQueue />} />

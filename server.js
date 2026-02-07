@@ -1956,23 +1956,35 @@ app.get('/api/posting-queue', (req, res) => {
 app.post('/api/posting-queue', (req, res) => {
   try {
     const queue = getPostingQueue();
-    const { platform, content, caption, parts, canvaComplete } = req.body;
+    const { platform, content, caption, parts, canvaComplete, scheduledFor } = req.body;
 
     // Validate required fields
     if (!platform || !['instagram', 'threads', 'bluesky'].includes(platform)) {
       return res.status(400).json({ error: 'Invalid platform' });
     }
 
+    // Validate scheduledFor if provided
+    if (scheduledFor !== undefined && scheduledFor !== null) {
+      const d = new Date(scheduledFor);
+      if (isNaN(d.getTime())) {
+        return res.status(400).json({ error: 'Invalid scheduledFor date' });
+      }
+    }
+
     const item = {
       id: `post-${Date.now()}`,
       createdAt: new Date().toISOString(),
-      status: 'ready',
+      status: scheduledFor ? 'scheduled' : 'ready',
       platform,
       content: content || '',
       caption: caption || '',
       parts: Array.isArray(parts) ? parts : [],
       canvaComplete: canvaComplete === true
     };
+
+    if (scheduledFor) {
+      item.scheduledFor = new Date(scheduledFor).toISOString();
+    }
 
     queue.queue.push(item);
     savePostingQueue(queue);
@@ -2005,11 +2017,91 @@ app.patch('/api/posting-queue/:id', (req, res) => {
       }
     }
 
+    // Handle scheduledFor separately
+    if (req.body.scheduledFor !== undefined) {
+      if (req.body.scheduledFor === null) {
+        delete item.scheduledFor;
+        if (item.status === 'scheduled') {
+          item.status = 'ready';
+        }
+      } else {
+        const d = new Date(req.body.scheduledFor);
+        if (isNaN(d.getTime())) {
+          return res.status(400).json({ error: 'Invalid scheduledFor date' });
+        }
+        item.scheduledFor = d.toISOString();
+        item.status = 'scheduled';
+      }
+    }
+
     savePostingQueue(queue);
     res.json({ success: true, item });
   } catch (error) {
     console.error('Error updating posting queue item:', error);
     res.status(500).json({ error: 'Failed to update item' });
+  }
+});
+
+/**
+ * Get calendar view of scheduled and posted items
+ * Query params: start (ISO date), end (ISO date)
+ */
+app.get('/api/calendar', (req, res) => {
+  try {
+    const { start, end } = req.query;
+    if (!start || !end) {
+      return res.status(400).json({ error: 'start and end query params required' });
+    }
+
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return res.status(400).json({ error: 'Invalid date format' });
+    }
+
+    const startStr = start.split('T')[0];
+    const endStr = end.split('T')[0];
+    const queue = getPostingQueue();
+    const byDate = {};
+    const unscheduled = [];
+
+    // Process queue items
+    for (const item of (queue.queue || [])) {
+      if (item.scheduledFor) {
+        const dateKey = item.scheduledFor.split('T')[0];
+        if (dateKey >= startStr && dateKey <= endStr) {
+          if (!byDate[dateKey]) byDate[dateKey] = [];
+          byDate[dateKey].push({ ...item, _source: 'queue' });
+        }
+      } else {
+        unscheduled.push({ ...item, _source: 'queue' });
+      }
+    }
+
+    // Process posted items
+    for (const item of (queue.posted || [])) {
+      if (item.postedAt) {
+        const dateKey = item.postedAt.split('T')[0];
+        if (dateKey >= startStr && dateKey <= endStr) {
+          if (!byDate[dateKey]) byDate[dateKey] = [];
+          byDate[dateKey].push({ ...item, _source: 'posted' });
+        }
+      }
+    }
+
+    // Sort items within each date by time
+    for (const dateKey of Object.keys(byDate)) {
+      byDate[dateKey].sort((a, b) => {
+        const timeA = a.scheduledFor || a.postedAt || '';
+        const timeB = b.scheduledFor || b.postedAt || '';
+        return timeA.localeCompare(timeB);
+      });
+    }
+
+    res.json({ byDate, unscheduled });
+  } catch (error) {
+    console.error('Error getting calendar:', error);
+    res.status(500).json({ error: 'Failed to get calendar data' });
   }
 });
 

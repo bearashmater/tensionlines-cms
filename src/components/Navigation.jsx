@@ -52,7 +52,7 @@ export function Breadcrumbs({ location }) {
     'agents': 'Team',
     'tasks': 'Tasks',
     'recurring': 'Recurring Tasks',
-    'schedule': 'Schedule',
+    'schedule': 'Content Calendar',
     'content': 'Content Pipeline',
     'ideas': 'Ideas Bank',
     'book': 'Book Progress',
