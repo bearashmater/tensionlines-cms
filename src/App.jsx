@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell, Zap, Compass, Send, Reply, Sparkles, MessageSquarePlus } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // Import navigation components
 import { NavGroup, Breadcrumbs } from './components/Navigation'
@@ -197,6 +197,37 @@ function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenu
 
 // Sidebar Component
 function Sidebar({ location, onClose, showCloseButton = false }) {
+  const [queueCounts, setQueueCounts] = useState({})
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const [posting, replies, comments] = await Promise.all([
+          fetch('/api/posting-queue').then(r => r.json()).catch(() => null),
+          fetch('/api/reply-queue').then(r => r.json()).catch(() => null),
+          fetch('/api/comment-queue').then(r => r.json()).catch(() => null)
+        ])
+        setQueueCounts({
+          '/posting-queue': posting?.queue?.filter(i => i.status === 'ready' || i.status === 'scheduled')?.length || 0,
+          '/reply-queue': replies?.queue?.length || 0,
+          '/comments': comments?.queue?.filter(i => i.status === 'ready')?.length || 0
+        })
+      } catch (e) { /* silent */ }
+    }
+    fetchCounts()
+    const interval = setInterval(fetchCounts, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Inject badges into nav groups
+  const groupsWithBadges = navGroups.map(group => ({
+    ...group,
+    items: group.items.map(item => ({
+      ...item,
+      badge: queueCounts[item.to] || 0
+    }))
+  }))
+
   return (
     <div className="h-full px-3 py-4 overflow-y-auto flex flex-col">
       {/* Logo */}
@@ -217,7 +248,7 @@ function Sidebar({ location, onClose, showCloseButton = false }) {
 
       {/* Navigation */}
       <nav className="space-y-6 flex-1">
-        {navGroups.map((group, idx) => (
+        {groupsWithBadges.map((group, idx) => (
           <NavGroup
             key={idx}
             title={group.title}

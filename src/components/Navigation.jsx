@@ -4,38 +4,38 @@ import { ChevronRight } from 'lucide-react'
 /**
  * NavLink - Sidebar navigation link with active state
  */
-export function NavLink({ to, icon, label, isActive, onClick, external }) {
+export function NavLink({ to, icon, label, badge, isActive, onClick, external }) {
   const className = `flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
     isActive
       ? 'bg-gold text-black font-medium shadow-sm'
       : 'text-neutral-700 hover:bg-neutral-100 hover:text-black'
   }`
 
+  const content = (
+    <>
+      <span className={isActive ? 'text-black' : 'text-neutral-600'}>
+        {icon}
+      </span>
+      <span className="flex-1">{label}</span>
+      {badge > 0 && (
+        <span className="px-1.5 py-0.5 text-xs bg-neutral-200 text-neutral-700 rounded-full min-w-[20px] text-center">
+          {badge}
+        </span>
+      )}
+    </>
+  )
+
   if (external) {
     return (
-      <a
-        href={to}
-        onClick={onClick}
-        className={className}
-      >
-        <span className={isActive ? 'text-black' : 'text-neutral-600'}>
-          {icon}
-        </span>
-        <span>{label}</span>
+      <a href={to} onClick={onClick} className={className}>
+        {content}
       </a>
     )
   }
 
   return (
-    <Link
-      to={to}
-      onClick={onClick}
-      className={className}
-    >
-      <span className={isActive ? 'text-black' : 'text-neutral-600'}>
-        {icon}
-      </span>
-      <span>{label}</span>
+    <Link to={to} onClick={onClick} className={className}>
+      {content}
     </Link>
   )
 }
@@ -61,7 +61,8 @@ export function Breadcrumbs({ location }) {
     'search': 'Search',
     'chapter': 'Chapter',
     'posting-queue': 'Posting Queue',
-    'reply-queue': 'Reply Queue'
+    'reply-queue': 'Reply Queue',
+    'comments': 'Comment Queue'
   }
 
   if (pathSegments.length === 0) {
@@ -114,6 +115,7 @@ export function NavGroup({ title, items, currentPath, onItemClick }) {
             to={item.to}
             icon={item.icon}
             label={item.label}
+            badge={item.badge}
             isActive={currentPath === item.to}
             onClick={onItemClick}
             external={item.external}
