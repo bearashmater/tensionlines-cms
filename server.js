@@ -2139,6 +2139,292 @@ app.get('/api/bluesky/status', async (req, res) => {
 });
 
 // ============================================================================
+// REPLY QUEUE
+// ============================================================================
+
+const REPLY_QUEUE_FILE = path.join(BASE_DIR, 'content', 'queue', 'reply-queue.json');
+
+function getReplyQueue() {
+  try {
+    if (fs.existsSync(REPLY_QUEUE_FILE)) {
+      return JSON.parse(fs.readFileSync(REPLY_QUEUE_FILE, 'utf8'));
+    }
+  } catch (err) {
+    console.error('Error reading reply queue:', err);
+  }
+  return { queue: [], posted: [], settings: { platforms: { bluesky: { maxRepliesPerDay: 5, minMinutesBetweenReplies: 15 }, twitter: { maxRepliesPerDay: 5, minMinutesBetweenReplies: 15 } } } };
+}
+
+function saveReplyQueue(data) {
+  fs.writeFileSync(REPLY_QUEUE_FILE, JSON.stringify(data, null, 2));
+}
+
+/**
+ * Resolve a bsky.app URL to uri + cid + author + text
+ */
+async function resolveBskyUrl(url) {
+  const match = url.match(/bsky\.app\/profile\/([^/]+)\/post\/([^/?]+)/);
+  if (!match) throw new Error('Invalid Bluesky URL format');
+  const [, handle, rkey] = match;
+
+  const agent = await getBskyAgent();
+
+  // Resolve handle to DID
+  const resolved = await agent.resolveHandle({ handle });
+  const did = resolved.data.did;
+
+  // Construct AT URI and fetch post
+  const uri = `at://${did}/app.bsky.feed.post/${rkey}`;
+  const postRes = await agent.getPosts({ uris: [uri] });
+  const post = postRes.data.posts[0];
+  if (!post) throw new Error('Post not found');
+
+  return {
+    targetUri: post.uri,
+    targetCid: post.cid,
+    targetAuthor: post.author.handle,
+    targetText: post.record?.text || ''
+  };
+}
+
+/**
+ * Post a reply to Bluesky
+ */
+async function replyToBluesky(text, parentUri, parentCid) {
+  const agent = await getBskyAgent();
+  const rt = new RichText({ text });
+  await rt.detectFacets(agent);
+  const result = await agent.post({
+    text: rt.text,
+    facets: rt.facets,
+    reply: {
+      root: { uri: parentUri, cid: parentCid },
+      parent: { uri: parentUri, cid: parentCid }
+    },
+    createdAt: new Date().toISOString()
+  });
+  const rkey = result.uri.split('/').pop();
+  const postUrl = `https://bsky.app/profile/${process.env.BLUESKY_HANDLE}/post/${rkey}`;
+  return { uri: result.uri, cid: result.cid, postUrl };
+}
+
+/**
+ * Get reply queue with rate limit status
+ */
+app.get('/api/reply-queue', (req, res) => {
+  try {
+    const data = getReplyQueue();
+    const settings = data.settings || {};
+    const posted = data.posted || [];
+    const today = new Date().toISOString().split('T')[0];
+
+    const repliesToday = {
+      bluesky: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'bluesky').length,
+      twitter: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'twitter').length
+    };
+
+    const bskySettings = settings.platforms?.bluesky || { maxRepliesPerDay: 5 };
+    const twitterSettings = settings.platforms?.twitter || { maxRepliesPerDay: 5 };
+
+    res.json({
+      ...data,
+      repliesToday,
+      canReplyBluesky: repliesToday.bluesky < bskySettings.maxRepliesPerDay,
+      canReplyTwitter: repliesToday.twitter < twitterSettings.maxRepliesPerDay
+    });
+  } catch (error) {
+    console.error('Error getting reply queue:', error);
+    res.status(500).json({ error: 'Failed to get reply queue' });
+  }
+});
+
+/**
+ * Add item to reply queue
+ */
+app.post('/api/reply-queue', (req, res) => {
+  try {
+    const data = getReplyQueue();
+    const { platform, targetUrl, targetAuthor, targetText, replyText } = req.body;
+
+    if (!platform || !['bluesky', 'twitter'].includes(platform)) {
+      return res.status(400).json({ error: 'Invalid platform (bluesky or twitter)' });
+    }
+    if (!targetUrl || !replyText) {
+      return res.status(400).json({ error: 'targetUrl and replyText are required' });
+    }
+
+    const item = {
+      id: `reply-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      status: 'ready',
+      platform,
+      targetUrl,
+      targetAuthor: targetAuthor || '',
+      targetText: targetText || '',
+      replyText,
+      targetUri: null,
+      targetCid: null
+    };
+
+    data.queue.push(item);
+    saveReplyQueue(data);
+    res.json({ success: true, item });
+  } catch (error) {
+    console.error('Error adding to reply queue:', error);
+    res.status(500).json({ error: 'Failed to add to reply queue' });
+  }
+});
+
+/**
+ * Edit reply queue item
+ */
+app.patch('/api/reply-queue/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = getReplyQueue();
+    const item = data.queue.find(i => i.id === id);
+    if (!item) return res.status(404).json({ error: 'Item not found' });
+
+    const allowedFields = ['replyText', 'targetUrl', 'targetAuthor', 'targetText'];
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        item[field] = req.body[field];
+      }
+    }
+    // Clear resolved data if URL changed
+    if (req.body.targetUrl) {
+      item.targetUri = null;
+      item.targetCid = null;
+    }
+
+    saveReplyQueue(data);
+    res.json({ success: true, item });
+  } catch (error) {
+    console.error('Error updating reply queue item:', error);
+    res.status(500).json({ error: 'Failed to update item' });
+  }
+});
+
+/**
+ * Delete reply queue item
+ */
+app.delete('/api/reply-queue/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = getReplyQueue();
+    const index = data.queue.findIndex(i => i.id === id);
+    if (index === -1) return res.status(404).json({ error: 'Item not found' });
+
+    data.queue.splice(index, 1);
+    saveReplyQueue(data);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting reply queue item:', error);
+    res.status(500).json({ error: 'Failed to delete item' });
+  }
+});
+
+/**
+ * Mark reply as manually posted (Twitter)
+ */
+app.post('/api/reply-queue/:id/posted', (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = getReplyQueue();
+    const index = data.queue.findIndex(i => i.id === id);
+    if (index === -1) return res.status(404).json({ error: 'Item not found' });
+
+    const item = data.queue[index];
+    item.postedAt = new Date().toISOString();
+    item.status = 'posted';
+
+    if (!data.posted) data.posted = [];
+    data.posted.unshift(item);
+    data.queue.splice(index, 1);
+
+    saveReplyQueue(data);
+    res.json({ success: true, item });
+  } catch (error) {
+    console.error('Error marking reply as posted:', error);
+    res.status(500).json({ error: 'Failed to mark as posted' });
+  }
+});
+
+/**
+ * Auto-publish a Bluesky reply
+ */
+app.post('/api/reply-queue/:id/publish', async (req, res) => {
+  try {
+    const data = getReplyQueue();
+    const idx = data.queue.findIndex(i => i.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Item not found' });
+
+    const item = data.queue[idx];
+    if (item.platform !== 'bluesky') {
+      return res.status(400).json({ error: 'Only Bluesky replies can be auto-published' });
+    }
+
+    // Rate limit checks
+    const settings = data.settings?.platforms?.bluesky || {};
+    const maxPerDay = settings.maxRepliesPerDay || 5;
+    const minMinutes = settings.minMinutesBetweenReplies || 15;
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const posted = data.posted || [];
+    const bskyPostedToday = posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'bluesky');
+
+    if (bskyPostedToday.length >= maxPerDay) {
+      return res.status(429).json({ error: `Daily limit reached (${maxPerDay} replies/day)` });
+    }
+
+    if (bskyPostedToday.length > 0) {
+      const lastPostedAt = new Date(bskyPostedToday[0].postedAt);
+      const minutesSinceLast = (now - lastPostedAt) / (1000 * 60);
+      if (minutesSinceLast < minMinutes) {
+        const waitMins = Math.ceil(minMinutes - minutesSinceLast);
+        return res.status(429).json({ error: `Too soon — wait ${waitMins} more minutes (${minMinutes}min minimum between replies)` });
+      }
+    }
+
+    // Resolve target URL if not already resolved
+    if (!item.targetUri || !item.targetCid) {
+      const resolved = await resolveBskyUrl(item.targetUrl);
+      item.targetUri = resolved.targetUri;
+      item.targetCid = resolved.targetCid;
+      if (!item.targetAuthor) item.targetAuthor = resolved.targetAuthor;
+      if (!item.targetText) item.targetText = resolved.targetText;
+    }
+
+    const result = await replyToBluesky(item.replyText, item.targetUri, item.targetCid);
+
+    item.status = 'posted';
+    item.postedAt = new Date().toISOString();
+    item.postUrl = result.postUrl;
+    item.replyUri = result.uri;
+
+    data.queue.splice(idx, 1);
+    if (!data.posted) data.posted = [];
+    data.posted.unshift(item);
+    saveReplyQueue(data);
+
+    console.log(`[Bluesky] Reply published: ${result.postUrl}`);
+    res.json({ success: true, item, postUrl: result.postUrl });
+  } catch (error) {
+    // Mark as failed but keep in queue for retry
+    const data = getReplyQueue();
+    const item = data.queue.find(i => i.id === req.params.id);
+    if (item) {
+      item.status = 'failed';
+      item.lastError = error.message;
+      item.lastAttempt = new Date().toISOString();
+      saveReplyQueue(data);
+    }
+    console.error('[Bluesky] Reply publish failed:', error.message);
+    res.status(500).json({ error: 'Failed to publish reply', message: error.message });
+  }
+});
+
+// ============================================================================
 // REPOST CANDIDATES
 // ============================================================================
 

@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
-import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell, Zap, Compass, Send } from 'lucide-react'
+import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell, Zap, Compass, Send, Reply } from 'lucide-react'
 import { useState } from 'react'
 
 // Import navigation components
@@ -24,6 +24,7 @@ import NotificationsView from './components/NotificationsView'
 import OptimizationDashboard from './components/OptimizationDashboard'
 import FutureNeeds from './components/FutureNeeds'
 import ManualPostingQueue from './components/ManualPostingQueue'
+import ReplyQueue from './components/ReplyQueue'
 
 // Navigation structure with grouping
 const navGroups = [
@@ -31,6 +32,8 @@ const navGroups = [
     title: 'Overview',
     items: [
       { to: '/', icon: <Home size={20} />, label: 'Dashboard' },
+      { to: '/posting-queue', icon: <Send size={20} />, label: 'Posting Queue' },
+      { to: '/reply-queue', icon: <Reply size={20} />, label: 'Reply Queue' },
       { to: '/human-tasks', icon: <AlertTriangle size={20} />, label: 'Your Tasks', priority: true },
       { to: '/notifications', icon: <Bell size={20} />, label: 'Notifications' },
       { to: '/costs', icon: <DollarSign size={20} />, label: 'Cost Management', priority: true }
@@ -54,7 +57,6 @@ const navGroups = [
     items: [
       { to: '/content', icon: <FileText size={20} />, label: 'Pipeline' },
       { to: '/ideas', icon: <Lightbulb size={20} />, label: 'Ideas Bank' },
-      { to: '/posting-queue', icon: <Send size={20} />, label: 'Posting Queue' },
       { to: '/book', icon: <Book size={20} />, label: 'Book Progress' }
     ]
   },
@@ -166,6 +168,7 @@ function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenu
             <Route path="/content" element={<ContentPipeline />} />
             <Route path="/ideas" element={<ContentPipeline />} />
             <Route path="/posting-queue" element={<ManualPostingQueue />} />
+            <Route path="/reply-queue" element={<ReplyQueue />} />
             <Route path="/book" element={<BookProgress />} />
             <Route path="/book/:bookId/chapter/:chapterNum" element={<ChapterDetail />} />
             <Route path="/knowledge" element={<KnowledgeBase />} />

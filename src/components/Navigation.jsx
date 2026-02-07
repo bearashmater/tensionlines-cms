@@ -60,7 +60,8 @@ export function Breadcrumbs({ location }) {
     'analytics': 'Analytics',
     'search': 'Search',
     'chapter': 'Chapter',
-    'posting-queue': 'Posting Queue'
+    'posting-queue': 'Posting Queue',
+    'reply-queue': 'Reply Queue'
   }
 
   if (pathSegments.length === 0) {
