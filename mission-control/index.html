@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mission Control - TensionLines</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+  </style>
+</head>
+<body class="bg-neutral-100 min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-neutral-900">Mission Control</h1>
+        <p class="text-neutral-500">Task overview and agent status</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <span id="lastUpdate" class="text-sm text-neutral-500"></span>
+        <button onclick="loadData()" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700">
+          Refresh
+        </button>
+        <a href="/" class="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-300">
+          Back to CMS
+        </a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div id="stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-lg p-4 border border-neutral-200">
+        <div class="text-sm text-neutral-500">Total Agents</div>
+        <div id="statAgents" class="text-3xl font-bold text-blue-600">-</div>
+      </div>
+      <div class="bg-white rounded-lg p-4 border border-neutral-200">
+        <div class="text-sm text-neutral-500">Active Tasks</div>
+        <div id="statActive" class="text-3xl font-bold text-green-600">-</div>
+      </div>
+      <div class="bg-white rounded-lg p-4 border border-neutral-200">
+        <div class="text-sm text-neutral-500">Completed</div>
+        <div id="statCompleted" class="text-3xl font-bold text-purple-600">-</div>
+      </div>
+      <div class="bg-white rounded-lg p-4 border border-neutral-200">
+        <div class="text-sm text-neutral-500">Total Tasks</div>
+        <div id="statTotal" class="text-3xl font-bold text-neutral-600">-</div>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Agents -->
+      <div class="bg-white rounded-lg border border-neutral-200">
+        <div class="px-4 py-3 border-b border-neutral-200">
+          <h2 class="font-semibold text-neutral-900">Agents</h2>
+        </div>
+        <div id="agentsList" class="divide-y divide-neutral-100 max-h-96 overflow-y-auto">
+          <div class="p-4 text-center text-neutral-400">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Active Tasks / Agent Tasks -->
+      <div class="lg:col-span-2 bg-white rounded-lg border border-neutral-200">
+        <div class="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
+          <h2 id="tasksHeader" class="font-semibold text-neutral-900">Active Tasks</h2>
+          <button id="clearAgentFilter" onclick="clearAgentFilter()" class="hidden px-3 py-1 text-sm bg-neutral-100 text-neutral-600 rounded-md hover:bg-neutral-200 transition-colors">
+            &larr; All Active Tasks
+          </button>
+        </div>
+        <div id="tasksList" class="divide-y divide-neutral-100 max-h-[600px] overflow-y-auto">
+          <div class="p-4 text-center text-neutral-400">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="mt-6 bg-white rounded-lg border border-neutral-200">
+      <div class="px-4 py-3 border-b border-neutral-200">
+        <h2 class="font-semibold text-neutral-900">Recent Activity</h2>
+      </div>
+      <div id="activityList" class="divide-y divide-neutral-100 max-h-64 overflow-y-auto">
+        <div class="p-4 text-center text-neutral-400">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Detail Modal -->
+  <div id="taskModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4" onclick="if(event.target===this)closeModal()">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
+      <div id="taskModalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    let allTasks = [];
+    let allAgents = [];
+    let selectedAgentId = null;
+
+    function selectAgent(agentId) {
+      selectedAgentId = agentId;
+      window.location.hash = 'agent=' + agentId;
+      renderAgentsList();
+      renderTasksList();
+    }
+
+    function clearAgentFilter() {
+      selectedAgentId = null;
+      window.location.hash = '';
+      renderAgentsList();
+      renderTasksList();
+    }
+
+    function renderAgentsList() {
+      const agentsList = document.getElementById('agentsList');
+      agentsList.innerHTML = allAgents.map(agent => {
+        const isSelected = selectedAgentId === agent.id;
+        const agentTaskCount = allTasks.filter(t =>
+          t.assigneeIds?.includes(agent.id) && !['completed', 'shipped'].includes(t.status)
+        ).length;
+        return `
+          <div class="px-4 py-3 flex items-center gap-3 cursor-pointer transition-colors ${isSelected ? 'bg-amber-50 border-l-4 border-l-amber-500' : 'hover:bg-neutral-50 border-l-4 border-l-transparent'}" onclick="selectAgent('${agent.id}')">
+            ${agent.avatarUrl
+              ? `<img src="${agent.avatarUrl}" class="w-10 h-10 rounded-full object-cover" alt="${agent.name}">`
+              : `<div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-medium">${agent.name.charAt(0)}</div>`
+            }
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-neutral-900 truncate">${agent.name}</div>
+              <div class="text-sm text-neutral-500 truncate">${agent.role}</div>
+            </div>
+            <div class="flex items-center gap-2">
+              ${agentTaskCount > 0 ? `<span class="text-xs font-medium px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">${agentTaskCount}</span>` : ''}
+              <div class="w-2 h-2 rounded-full ${agent.status === 'active' ? 'bg-green-500' : 'bg-neutral-300'}"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTasksList() {
+      const tasksList = document.getElementById('tasksList');
+      const header = document.getElementById('tasksHeader');
+      const clearBtn = document.getElementById('clearAgentFilter');
+
+      const statusColors = {
+        'inbox': 'bg-neutral-100 text-neutral-600',
+        'assigned': 'bg-blue-100 text-blue-700',
+        'in_progress': 'bg-amber-100 text-amber-700',
+        'review': 'bg-purple-100 text-purple-700',
+        'deferred': 'bg-neutral-100 text-neutral-500',
+        'completed': 'bg-green-100 text-green-700',
+        'shipped': 'bg-emerald-100 text-emerald-700'
+      };
+      const alertColors = {
+        'red': 'border-l-red-500 bg-red-50',
+        'yellow': 'border-l-yellow-500 bg-yellow-50',
+        'none': 'border-l-transparent'
+      };
+
+      let tasksToShow;
+      if (selectedAgentId) {
+        const agent = allAgents.find(a => a.id === selectedAgentId);
+        const agentName = agent ? agent.name : selectedAgentId;
+        header.textContent = agentName + "'s Tasks";
+        clearBtn.classList.remove('hidden');
+
+        // Show all non-completed tasks for this agent, sorted by status priority
+        const statusOrder = { 'in_progress': 0, 'review': 1, 'assigned': 2, 'inbox': 3, 'deferred': 4 };
+        tasksToShow = allTasks
+          .filter(t => t.assigneeIds?.includes(selectedAgentId) && !['completed', 'shipped'].includes(t.status))
+          .sort((a, b) => (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99));
+      } else {
+        header.textContent = 'Active Tasks';
+        clearBtn.classList.add('hidden');
+        tasksToShow = allTasks.filter(t => ['assigned', 'in_progress', 'review'].includes(t.status));
+      }
+
+      if (tasksToShow.length === 0) {
+        tasksList.innerHTML = `<div class="p-4 text-center text-neutral-400">${selectedAgentId ? 'No pending tasks for this agent' : 'No active tasks'}</div>`;
+        return;
+      }
+
+      tasksList.innerHTML = tasksToShow.map(task => {
+        const alertLevel = task.timeTracking?.alertLevel || 'none';
+        const breakdownCount = detectBreakdowns(task).length;
+        const isPosting = detectPostingIssue(task);
+
+        return `
+          <div class="px-4 py-3 border-l-4 ${alertColors[alertLevel]} cursor-pointer hover:bg-neutral-50 transition-colors" onclick="openTaskDetail('${task.id}')">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1 min-w-0">
+                <div class="font-medium text-neutral-900">${task.title}</div>
+                <div class="text-sm text-neutral-500 mt-1 flex items-center gap-2 flex-wrap">
+                  ${selectedAgentId ? '' : `<span>Assigned to: ${(task.assigneeIds || []).map(a => a === 'human' ? 'Shawn' : a).join(', ')}</span>`}
+                  ${breakdownCount > 0 ? `<span class="px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">${breakdownCount} breakdown${breakdownCount > 1 ? 's' : ''}</span>` : ''}
+                  ${isPosting ? '<span class="px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">posting issue</span>' : ''}
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                ${task.timeTracking?.timeInStatusHuman
+                  ? `<span class="text-xs text-neutral-500">${task.timeTracking.timeInStatusHuman}</span>`
+                  : ''}
+                <span class="px-2 py-1 rounded text-xs font-medium ${statusColors[task.status] || 'bg-neutral-100 text-neutral-600'}">
+                  ${task.status.replace('_', ' ')}
+                </span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-neutral-400"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+            ${renderStepProgress(task)}
+            ${renderBreakdowns(task)}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function closeModal() {
+      document.getElementById('taskModal').classList.add('hidden');
+      document.getElementById('taskModal').classList.remove('flex');
+    }
+
+    function openTaskDetail(taskId) {
+      const task = allTasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const modal = document.getElementById('taskModal');
+      const content = document.getElementById('taskModalContent');
+
+      const breakdowns = detectBreakdowns(task);
+      const isPostingIssue = detectPostingIssue(task);
+      const isHumanTask = task.assigneeIds?.includes('human');
+      const statusColors = {
+        'assigned': 'bg-blue-100 text-blue-700',
+        'in_progress': 'bg-amber-100 text-amber-700',
+        'review': 'bg-purple-100 text-purple-700'
+      };
+
+      content.innerHTML = `
+        <div class="p-6">
+          <!-- Header -->
+          <div class="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-mono text-neutral-400">${task.id}</span>
+                <span class="px-2 py-0.5 rounded text-xs font-medium ${statusColors[task.status] || 'bg-neutral-100 text-neutral-600'}">
+                  ${task.status.replace('_', ' ')}
+                </span>
+                ${task.metadata?.priority === 'critical' ? '<span class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">CRITICAL</span>' : ''}
+              </div>
+              <h2 class="text-xl font-bold text-neutral-900">${task.title}</h2>
+            </div>
+            <button onclick="closeModal()" class="text-neutral-400 hover:text-neutral-600 text-2xl leading-none">&times;</button>
+          </div>
+
+          <!-- Assignee & Timing -->
+          <div class="flex flex-wrap gap-4 text-sm text-neutral-500 mb-4 pb-4 border-b border-neutral-200">
+            <span>Assigned to: <strong class="text-neutral-700">${(task.assigneeIds || []).map(a => a === 'human' ? 'Shawn' : a).join(', ')}</strong></span>
+            ${task.dispatchedAt ? `<span>Dispatched: <strong class="text-neutral-700">${getTimeAgo(task.dispatchedAt)}</strong></span>` : ''}
+            ${task.startedAt ? `<span>Started: <strong class="text-neutral-700">${getTimeAgo(task.startedAt)}</strong></span>` : ''}
+            ${task.timeTracking?.timeInStatusHuman ? `<span>In status: <strong class="text-neutral-700">${task.timeTracking.timeInStatusHuman}</strong></span>` : ''}
+          </div>
+
+          <!-- Description -->
+          <div class="mb-4">
+            <h3 class="text-sm font-semibold text-neutral-700 mb-2">Description</h3>
+            <div class="text-sm text-neutral-600 whitespace-pre-wrap bg-neutral-50 rounded-lg p-3 border border-neutral-200 max-h-48 overflow-y-auto">${escapeHtml(task.description || 'No description')}</div>
+          </div>
+
+          <!-- Steps Timeline -->
+          ${renderDetailSteps(task)}
+
+          <!-- Breakdowns / Diagnosis -->
+          ${renderDetailBreakdowns(breakdowns, task)}
+
+          <!-- Action Buttons -->
+          <div class="flex flex-wrap gap-3 mt-6 pt-4 border-t border-neutral-200">
+            ${task.status === 'in_progress' ? `
+              <button onclick="retryTask('${task.id}')" class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-white rounded-lg hover:from-amber-500 hover:to-yellow-600 font-medium shadow-sm transition-all">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                Retry Agent
+              </button>
+            ` : ''}
+            ${(isPostingIssue || task.status === 'in_progress') && !isHumanTask ? `
+              <button onclick="sendToHuman('${task.id}')" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm transition-all">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                Send to Human
+              </button>
+            ` : ''}
+            <button onclick="closeModal()" class="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-300 transition-all">
+              Close
+            </button>
+          </div>
+        </div>
+      `;
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function detectPostingIssue(task) {
+      const text = ((task.title || '') + ' ' + (task.description || '') + ' ' + (task.metadata?.category || '')).toLowerCase();
+      const postingKeywords = ['post', 'tweet', 'reply', 'publish', 'bluesky', 'threads', 'twitter', 'outreach', 'comment', 'social'];
+      const blockKeywords = ['error 226', 'blocked', 'auth', 'manual', 'browser', 'can\'t post', 'cannot post', 'write blocked'];
+
+      const isPostingTask = postingKeywords.some(k => text.includes(k));
+      const hasBlockSignal = blockKeywords.some(k => text.includes(k));
+
+      // Also check if there are breakdowns on a posting task
+      const breakdowns = detectBreakdowns(task);
+      const hasBreakdowns = breakdowns.length > 0;
+
+      return isPostingTask && (hasBlockSignal || hasBreakdowns);
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function renderDetailSteps(task) {
+      if (!task.steps || task.steps.length === 0) return '<div class="text-sm text-neutral-400 mb-4">No steps recorded</div>';
+
+      const stepsHtml = task.steps.map((step, i) => {
+        const isComplete = step.status === 'completed';
+        const isActive = step.status === 'in_progress';
+        const elapsed = step.startedAt ? Date.now() - new Date(step.startedAt).getTime() : 0;
+        const duration = step.completedAt && step.startedAt
+          ? new Date(step.completedAt).getTime() - new Date(step.startedAt).getTime() : null;
+
+        return `
+          <div class="flex gap-3 ${i < task.steps.length - 1 ? 'pb-3' : ''}">
+            <div class="flex flex-col items-center">
+              <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
+                ${isComplete ? 'bg-emerald-100 text-emerald-700' : isActive ? 'bg-amber-100 text-amber-700' : 'bg-neutral-100 text-neutral-500'}">
+                ${isComplete ? '&#10003;' : isActive ? '&#9679;' : (i + 1)}
+              </div>
+              ${i < task.steps.length - 1 ? '<div class="w-0.5 flex-1 bg-neutral-200 mt-1"></div>' : ''}
+            </div>
+            <div class="flex-1 min-w-0 pb-1">
+              <div class="text-sm font-medium ${isActive ? 'text-amber-700' : 'text-neutral-700'}">${escapeHtml(step.description || 'Step ' + (i+1))}</div>
+              <div class="text-xs text-neutral-400 mt-0.5">
+                ${step.agentId ? step.agentId + ' &bull; ' : ''}
+                ${isActive ? '<span class="text-amber-600">Running ' + formatDuration(elapsed) + '</span>' : ''}
+                ${isComplete && duration ? 'Took ' + formatDuration(duration) : ''}
+                ${isComplete && step.completedAt ? ' &bull; ' + getTimeAgo(step.completedAt) : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="mb-4">
+          <h3 class="text-sm font-semibold text-neutral-700 mb-2">Steps Timeline</h3>
+          <div class="bg-neutral-50 rounded-lg p-3 border border-neutral-200">
+            ${stepsHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDetailBreakdowns(breakdowns, task) {
+      if (breakdowns.length === 0) {
+        return `
+          <div class="mb-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+            <div class="flex items-center gap-2 text-sm font-medium text-emerald-700">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              No breakdowns detected — task appears healthy
+            </div>
+          </div>
+        `;
+      }
+
+      const isPosting = detectPostingIssue(task);
+
+      const diagnosisHtml = breakdowns.map(b => {
+        let icon = '&#9888;';
+        let diagnosis = '';
+
+        if (b.type === 'dispatch_no_progress') {
+          diagnosis = 'The agent was dispatched but hasn\'t started working. The agent session may have ended or the task wasn\'t picked up.';
+        } else if (b.type === 'step_too_long') {
+          diagnosis = 'A step has been running much longer than expected. The agent may be stuck, waiting for input, or the session may have crashed.';
+        } else if (b.type === 'no_recent_steps') {
+          diagnosis = 'No new activity has been recorded for an extended period. The agent may have lost connection or encountered a blocking error.';
+        }
+
+        return `
+          <div class="mb-3 last:mb-0">
+            <div class="flex items-start gap-2">
+              <span class="text-red-500 mt-0.5">${icon}</span>
+              <div class="flex-1">
+                <div class="text-sm font-medium text-red-700">${b.message}</div>
+                <div class="text-xs text-neutral-600 mt-1">${diagnosis}</div>
+                ${(b.suggestions || []).map(s => `<div class="text-xs text-neutral-500 mt-0.5">&bull; ${s}</div>`).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="mb-2">
+          <h3 class="text-sm font-semibold text-red-700 mb-2">Breakdowns Detected (${breakdowns.length})</h3>
+          <div class="p-3 rounded-lg bg-red-50 border border-red-200">
+            ${diagnosisHtml}
+          </div>
+          ${isPosting ? `
+            <div class="mt-2 p-3 rounded-lg bg-blue-50 border border-blue-200">
+              <div class="flex items-start gap-2">
+                <span class="text-blue-500 mt-0.5">&#128073;</span>
+                <div>
+                  <div class="text-sm font-medium text-blue-700">This looks like a posting issue</div>
+                  <div class="text-xs text-neutral-600 mt-1">The agent may not be able to post directly (e.g. Twitter error 226, auth issues). Use "Send to Human" to reassign this task for manual posting.</div>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    async function retryTask(taskId) {
+      try {
+        const res = await fetch('/api/tasks/' + taskId + '/dispatch', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          closeModal();
+          loadData();
+        } else {
+          alert('Retry failed: ' + (data.error || 'Unknown error'));
+        }
+      } catch (e) {
+        alert('Retry failed: ' + e.message);
+      }
+    }
+
+    async function sendToHuman(taskId) {
+      if (!confirm('Reassign this task to Shawn (Human) for manual action?')) return;
+      try {
+        const res = await fetch('/api/tasks/' + taskId + '/reassign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newAssigneeId: 'human', reason: 'Posting issue — reassigned to human for manual action' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          closeModal();
+          loadData();
+        } else {
+          alert('Reassign failed: ' + (data.error || 'Unknown error'));
+        }
+      } catch (e) {
+        alert('Reassign failed: ' + e.message);
+      }
+    }
+
+    async function loadData() {
+      try {
+        const response = await fetch('/api/dashboard');
+        const dashboard = await response.json();
+
+        const agentsResponse = await fetch('/api/agents');
+        const agents = await agentsResponse.json();
+
+        const tasksResponse = await fetch('/api/tasks');
+        const tasks = await tasksResponse.json();
+        allTasks = tasks;
+
+        const activitiesResponse = await fetch('/api/activities?limit=20');
+        const activitiesData = await activitiesResponse.json();
+
+        // Update stats
+        document.getElementById('statAgents').textContent = dashboard.agents.total;
+        document.getElementById('statActive').textContent = dashboard.tasks.inProgress;
+        document.getElementById('statCompleted').textContent = dashboard.tasks.completed;
+        document.getElementById('statTotal').textContent = dashboard.tasks.total;
+        document.getElementById('lastUpdate').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+
+        // Store data and render
+        allAgents = agents;
+        renderAgentsList();
+        renderTasksList();
+
+        // Render activities
+        const activityList = document.getElementById('activityList');
+        const activities = activitiesData.activities || [];
+
+        if (activities.length === 0) {
+          activityList.innerHTML = '<div class="p-4 text-center text-neutral-400">No recent activity</div>';
+        } else {
+          activityList.innerHTML = activities.slice(0, 10).map(activity => {
+            const timeAgo = getTimeAgo(activity.timestamp);
+            return `
+              <div class="px-4 py-2 flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full bg-neutral-400 flex-shrink-0"></div>
+                <div class="flex-1 min-w-0 text-sm text-neutral-700 truncate">${activity.description}</div>
+                <div class="text-xs text-neutral-400 flex-shrink-0">${timeAgo}</div>
+              </div>
+            `;
+          }).join('');
+        }
+
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        document.getElementById('agentsList').innerHTML = '<div class="p-4 text-center text-red-500">Failed to load data</div>';
+      }
+    }
+
+    function formatDuration(ms) {
+      if (ms < 60000) return '<1m';
+      const mins = Math.floor(ms / 60000);
+      if (mins < 60) return mins + 'm';
+      const hrs = Math.floor(mins / 60);
+      const remMins = mins % 60;
+      if (hrs < 24) return remMins > 0 ? hrs + 'h ' + remMins + 'm' : hrs + 'h';
+      const days = Math.floor(hrs / 24);
+      const remHrs = hrs % 24;
+      return remHrs > 0 ? days + 'd ' + remHrs + 'h' : days + 'd';
+    }
+
+    function detectBreakdowns(task) {
+      if (!task.steps || task.steps.length === 0) return [];
+      const now = Date.now();
+      const breakdowns = [];
+      const estimateMs = task.metadata?.estimatedMinutes
+        ? task.metadata.estimatedMinutes * 60 * 1000 : null;
+
+      // Dispatch with no progress
+      if (task.dispatchedAt && task.steps.length === 1
+          && task.steps[0].description === 'Dispatched'
+          && task.status === 'in_progress') {
+        const since = now - new Date(task.dispatchedAt).getTime();
+        const threshold = Math.min((task.metadata?.estimatedMinutes || 30) * 60000 * 0.15, 5 * 60000);
+        if (since > threshold) {
+          breakdowns.push({
+            type: 'dispatch_no_progress',
+            message: 'No agent activity since dispatch (' + formatDuration(since) + ')',
+            suggestions: ['Check if agent session is running', 'Re-dispatch or reassign']
+          });
+        }
+      }
+
+      // Step too long
+      task.steps.forEach(step => {
+        if (step.status !== 'in_progress' || !step.startedAt) return;
+        const elapsed = now - new Date(step.startedAt).getTime();
+        const desc = (step.description || '').toLowerCase();
+        let threshold = 2 * 60 * 60 * 1000;
+        if (desc.includes('draft') || desc.includes('writing')) threshold = 3 * 60 * 60 * 1000;
+        if (desc.includes('review') || desc.includes('final')) threshold = 1 * 60 * 60 * 1000;
+        if (elapsed > threshold) {
+          breakdowns.push({
+            type: 'step_too_long',
+            message: '"' + step.description + '" running too long (' + formatDuration(elapsed) + ')',
+            suggestions: ['Break into smaller steps', 'Check if blocked']
+          });
+        }
+      });
+
+      // Silence - dynamic threshold
+      if (task.status === 'in_progress') {
+        const lastStep = task.steps[task.steps.length - 1];
+        const lastActivity = lastStep.completedAt || lastStep.startedAt;
+        const silenceThreshold = estimateMs
+          ? Math.max(10 * 60 * 1000, estimateMs * 0.5)
+          : 4 * 60 * 60 * 1000;
+        if (lastActivity && (now - new Date(lastActivity).getTime()) > silenceThreshold) {
+          breakdowns.push({
+            type: 'no_recent_steps',
+            message: 'No activity for extended period',
+            suggestions: ['Escalate to Tension', 'Reassign task']
+          });
+        }
+      }
+
+      return breakdowns;
+    }
+
+    function renderBreakdowns(task) {
+      const breakdowns = detectBreakdowns(task);
+      if (breakdowns.length === 0) return '';
+
+      return `
+        <div class="mt-2 p-2 rounded-md bg-red-50 border border-red-200">
+          ${breakdowns.map(b => `
+            <div class="mb-1 last:mb-0">
+              <div class="flex items-center gap-1 text-xs font-medium text-red-700">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                ${b.message}
+              </div>
+              ${(b.suggestions || []).map(s => `
+                <div class="text-xs text-red-600 ml-4 mt-0.5">&bull; ${s}</div>
+              `).join('')}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderStepProgress(task) {
+      if (!task.steps || task.steps.length === 0) return '';
+      const steps = task.steps;
+      const completed = steps.filter(s => s.status === 'completed').length;
+      const total = steps.length;
+      const currentStep = steps.find(s => s.status === 'in_progress');
+      const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      let currentLine = '';
+      if (currentStep) {
+        const elapsed = Date.now() - new Date(currentStep.startedAt).getTime();
+        currentLine = `
+          <div class="flex items-center gap-1 text-xs text-yellow-700 mt-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            <span>${currentStep.description}</span>
+            <span class="text-yellow-500">${formatDuration(elapsed)}</span>
+          </div>
+        `;
+      } else if (completed === total && total > 0) {
+        currentLine = `
+          <div class="flex items-center gap-1 text-xs text-emerald-600 mt-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            All steps complete
+          </div>
+        `;
+      }
+
+      return `
+        <div class="mt-2">
+          <div class="flex items-center gap-2 text-xs text-neutral-500">
+            <span>Steps: ${completed}/${total}</span>
+            <div class="flex-1 bg-neutral-200 rounded-full h-1.5">
+              <div class="bg-emerald-500 rounded-full h-1.5" style="width: ${pct}%"></div>
+            </div>
+          </div>
+          ${currentLine}
+        </div>
+      `;
+    }
+
+    function getTimeAgo(timestamp) {
+      const now = new Date();
+      const then = new Date(timestamp);
+      const diffMs = now - then;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) return 'just now';
+      if (diffMins < 60) return diffMins + 'm ago';
+      if (diffHours < 24) return diffHours + 'h ago';
+      return diffDays + 'd ago';
+    }
+
+    // Check URL hash for agent selection (e.g. #agent=aristotle)
+    function checkHash() {
+      const hash = window.location.hash;
+      const match = hash.match(/agent=([a-zA-Z0-9_-]+)/);
+      if (match) {
+        selectedAgentId = match[1];
+      }
+    }
+    window.addEventListener('hashchange', () => {
+      checkHash();
+      renderAgentsList();
+      renderTasksList();
+    });
+
+    // Load data on page load
+    checkHash();
+    loadData();
+
+    // Auto-refresh every 30 seconds
+    setInterval(loadData, 30000);
+  </script>
+</body>
+</html>
