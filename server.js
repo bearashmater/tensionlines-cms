@@ -2106,6 +2106,164 @@ app.get('/api/calendar', (req, res) => {
 });
 
 /**
+ * Outreach Analytics - aggregated view of Twitter outreach effectiveness
+ */
+app.get('/api/outreach-analytics', (req, res) => {
+  try {
+    const TWITTER_OUTREACH_DIR = path.join(BASE_DIR, 'twitter-outreach');
+
+    // Theme extraction from reason field
+    function extractTheme(reason) {
+      if (!reason) return 'Philosophy (General)';
+      const r = reason.toLowerCase();
+      if (/religion|faith|ethics/.test(r)) return 'Religion & Ethics';
+      if (/polarity|paradox|opposites/.test(r)) return 'Polarity & Paradox';
+      if (/identity|meaning|self|emotional/.test(r)) return 'Identity & Meaning';
+      if (/movement|stillness|paralysis/.test(r)) return 'Movement & Stillness';
+      if (/art|artist|writer|writing|creative/.test(r)) return 'Creative Expression';
+      if (/practical|action|steps|coaching/.test(r)) return 'Practical Wisdom';
+      return 'Philosophy (General)';
+    }
+
+    // Time slot from UTC hour
+    function getTimeSlot(dateStr) {
+      if (!dateStr) return null;
+      const hour = new Date(dateStr).getUTCHours();
+      if (hour >= 5 && hour <= 11) return 'morning';
+      if (hour >= 12 && hour <= 16) return 'afternoon';
+      if (hour >= 17 && hour <= 20) return 'evening';
+      return 'night';
+    }
+
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    // Read outreach JSON files
+    let outreachFiles = [];
+    if (fs.existsSync(TWITTER_OUTREACH_DIR)) {
+      outreachFiles = fs.readdirSync(TWITTER_OUTREACH_DIR)
+        .filter(f => f.endsWith('.json'))
+        .sort();
+    }
+
+    const allTargets = [];
+    const byDay = [];
+    const heatmap = {
+      morning:   { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 },
+      afternoon: { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 },
+      evening:   { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 },
+      night:     { Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0 }
+    };
+    const themeCounts = {};
+
+    for (const file of outreachFiles) {
+      try {
+        const data = JSON.parse(fs.readFileSync(path.join(TWITTER_OUTREACH_DIR, file), 'utf-8'));
+        const date = data.date;
+        const dateObj = new Date(date + 'T12:00:00Z');
+        const label = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const users = data.users || [];
+
+        let dayFollowBacks = 0;
+        let dayReplies = 0;
+        let dayTimeSlot = null;
+
+        for (const user of users) {
+          const theme = extractTheme(user.reason);
+          const timeSlot = getTimeSlot(user.commentedAt);
+          if (!dayTimeSlot && timeSlot) dayTimeSlot = timeSlot;
+
+          if (user.followedBack) dayFollowBacks++;
+          if (user.replied) dayReplies++;
+
+          // Heatmap
+          if (timeSlot && user.commentedAt) {
+            const dayOfWeek = dayNames[new Date(user.commentedAt).getUTCDay()];
+            heatmap[timeSlot][dayOfWeek]++;
+          }
+
+          // Theme aggregation
+          if (!themeCounts[theme]) {
+            themeCounts[theme] = { theme, count: 0, replies: 0, followBacks: 0 };
+          }
+          themeCounts[theme].count++;
+          if (user.replied) themeCounts[theme].replies++;
+          if (user.followedBack) themeCounts[theme].followBacks++;
+
+          allTargets.push({
+            username: user.username,
+            date,
+            theme,
+            replied: !!user.replied,
+            followedBack: !!user.followedBack,
+            commentedAt: user.commentedAt || null,
+            reason: user.reason || ''
+          });
+        }
+
+        byDay.push({
+          date,
+          label,
+          targets: users.length,
+          followBacks: dayFollowBacks,
+          replies: dayReplies,
+          timeSlot: dayTimeSlot
+        });
+      } catch (e) {
+        // Skip malformed files
+      }
+    }
+
+    // Theme array with reply rates
+    const themes = Object.values(themeCounts)
+      .map(t => ({ ...t, replyRate: t.count > 0 ? Math.round((t.replies / t.count) * 100) : 0 }))
+      .sort((a, b) => b.count - a.count);
+
+    // Read engagement inbox
+    let engagement = { bluesky: [], twitter: [] };
+    try {
+      const inbox = JSON.parse(fs.readFileSync(ENGAGEMENT_INBOX_FILE, 'utf-8'));
+      engagement.bluesky = (inbox.bluesky?.items || []).map(item => ({
+        author: item.authorHandle || item.authorDisplayName,
+        text: item.postText,
+        status: item.status,
+        indexedAt: item.indexedAt,
+        postUrl: item.postUrl
+      }));
+      engagement.twitter = (inbox.twitter?.items || []).map(item => ({
+        author: item.authorHandle || item.authorDisplayName,
+        text: item.postText,
+        status: item.status,
+        indexedAt: item.indexedAt,
+        postUrl: item.postUrl
+      }));
+    } catch (e) {
+      // No engagement data
+    }
+
+    const totalTargets = allTargets.length;
+    const totalFollowBacks = allTargets.filter(t => t.followedBack).length;
+    const totalReplies = allTargets.filter(t => t.replied).length;
+
+    const summary = {
+      totalTargets,
+      followBackRate: totalTargets > 0 ? Math.round((totalFollowBacks / totalTargets) * 100) : 0,
+      replyRate: totalTargets > 0 ? Math.round((totalReplies / totalTargets) * 100) : 0,
+      totalDays: byDay.length,
+      avgTargetsPerDay: byDay.length > 0 ? Math.round(totalTargets / byDay.length) : 0,
+      blueskyEngagement: engagement.bluesky.length
+    };
+
+    // Sort targets newest first
+    allTargets.sort((a, b) => b.date.localeCompare(a.date));
+
+    res.json({ summary, byDay, heatmap, themes, targets: allTargets, engagement });
+  } catch (error) {
+    console.error('Error getting outreach analytics:', error);
+    res.status(500).json({ error: 'Failed to get outreach analytics' });
+  }
+});
+
+/**
  * Delete posting queue item
  */
 app.delete('/api/posting-queue/:id', (req, res) => {

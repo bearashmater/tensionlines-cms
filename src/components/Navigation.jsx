@@ -62,7 +62,8 @@ export function Breadcrumbs({ location }) {
     'chapter': 'Chapter',
     'posting-queue': 'Posting Queue',
     'reply-queue': 'Reply Queue',
-    'comments': 'Comment Queue'
+    'comments': 'Comment Queue',
+    'outreach': 'Outreach Effectiveness'
   }
 
   if (pathSegments.length === 0) {
