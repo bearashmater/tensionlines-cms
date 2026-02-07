@@ -1,0 +1,18 @@
+{
+  "queue": [],
+  "posted": [],
+  "settings": {
+    "platforms": {
+      "bluesky": {
+        "enabled": true,
+        "maxRepliesPerDay": 5,
+        "minMinutesBetweenReplies": 15
+      },
+      "twitter": {
+        "enabled": true,
+        "maxRepliesPerDay": 5,
+        "minMinutesBetweenReplies": 15
+      }
+    }
+  }
+}
