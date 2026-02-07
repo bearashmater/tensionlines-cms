@@ -656,7 +656,7 @@
       "description": "**PARALLEL GROWTH STRATEGY:** Daily thoughtful outreach to grow thetensionlines.bsky.social.\n\n🚧 **WORKFLOW ADJUSTMENT (Feb 5):** Manual search required until browser automation available\n\n🎯 **Daily Workflow (30-40 min):**\n\n1. **FIND** (15-20 min): Identify 5 Bluesky users aligned with TensionLines philosophy\n   - Philosophy enthusiasts, contemplative writers, mindfulness practitioners\n   - Search: \"paradox\", \"tension\", \"flux\", \"change\", \"transformation\"\n   - Quality: 50-5K followers, reflective content, genuine conversations\n   - **Current Method:** Shawn manually searches https://bsky.app/search, shares results with Heraclitus\n\n2. **FOLLOW** (2 min): Follow the 5 selected users via Bluesky web/app\n   - Log in `bluesky-outreach/YYYY-MM-DD.json`\n\n3. **COMMENT** (10-15 min): Add ONE contemplative comment to a recent post from each user\n   - Observational, curious, collaborative\n   - Heraclitus voice: gentle, flux-focused, appreciating paradox\n   - NO self-promotion\n   - Log comments in tracking file\n\n4. **MONITOR** (2x daily): Check for replies and mentions\n   - Morning: 9 AM\n   - Evening: 6 PM\n   - Via Bluesky notifications\n\n5. **ESCALATE**: When reply received, notify Shawn immediately via Telegram\n   - Screenshot or copy reply\n   - Log in `bluesky-outreach/replies-queue.md`\n   - Shawn reviews and decides on response\n\n**Workflow Doc:** `bluesky-outreach-workflow.md`\n\n**Tracking:**\n- Daily: `bluesky-outreach/YYYY-MM-DD.json`\n- Weekly: `bluesky-outreach/weekly-YYYY-MM-DD.md`\n- Replies: `bluesky-outreach/replies-queue.md`\n\n**Goals:**\n- Week 1-4: 5 users/day × 28 days = 140 targeted users\n- Expected growth: +180-310 followers (higher engagement than Twitter)\n- Month 1 target: 500 followers\n- Long-term: 1500+ followers\n\n**Success Metrics:**\n- Quality over quantity (aligned users, thoughtful community)\n- Higher engagement rate expected (2-5% vs Twitter 1%)\n- Build contemplative community\n- Platform advantage: smaller, more engaged audience\n\n**Technical Limitation:** No Bluesky CLI or browser automation currently available. Manual search by Shawn required until tooling improves.",
       "status": "in_progress",
       "assigneeIds": [
-        "human"
+        "heraclitus"
       ],
       "llm": "haiku",
       "rationale": "Daily routine outreach - search profiles, draft simple comments, log activity (repetitive task)",
@@ -692,16 +692,11 @@
         "escalationChannel": "Telegram to Shawn",
         "reportingFrequency": "Weekly summary every Sunday",
         "platformAdvantage": "Higher engagement, better cultural fit for contemplative content",
-        "voiceStyle": "Heraclitus: observational, flux-focused, gentle",
-        "reassignedAt": "2026-02-07T01:31:00.422Z",
-        "reassignedFrom": [
-          "heraclitus"
-        ],
-        "reassignReason": "Posting issue — reassigned to human for manual action"
+        "voiceStyle": "Heraclitus: observational, flux-focused, gentle"
       },
       "dueDate": "2026-02-07T06:49:00.000Z",
       "startedAt": "2026-02-05T12:35:38.821882Z",
-      "dispatchedAt": "2026-02-06T23:58:58.106Z",
+      "dispatchedAt": "2026-02-07T02:36:37.622Z",
       "dispatchedBy": "human",
       "steps": [
         {
@@ -710,6 +705,22 @@
           "status": "completed",
           "startedAt": "2026-02-06T23:58:58.106Z",
           "completedAt": "2026-02-06T23:58:58.106Z",
+          "agentId": "human"
+        },
+        {
+          "id": "step-1770429492428",
+          "description": "Re-dispatched (retry)",
+          "status": "completed",
+          "startedAt": "2026-02-07T01:58:12.428Z",
+          "completedAt": "2026-02-07T01:58:12.428Z",
+          "agentId": "human"
+        },
+        {
+          "id": "step-1770431797622",
+          "description": "Re-dispatched (retry)",
+          "status": "completed",
+          "startedAt": "2026-02-07T02:36:37.622Z",
+          "completedAt": "2026-02-07T02:36:37.622Z",
           "agentId": "human"
         }
       ]
@@ -1405,6 +1416,28 @@
   ],
   "messages": [],
   "activities": [
+    {
+      "id": "activity-1770431797622",
+      "type": "task_retried",
+      "agentId": "human",
+      "taskId": "task-014",
+      "timestamp": "2026-02-07T02:36:37.622Z",
+      "description": "Retried: Bluesky Daily Outreach - Community Growth",
+      "metadata": {
+        "dispatchedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770429492428",
+      "type": "task_retried",
+      "agentId": "human",
+      "taskId": "task-014",
+      "timestamp": "2026-02-07T01:58:12.428Z",
+      "description": "Retried: Bluesky Daily Outreach - Community Growth",
+      "metadata": {
+        "dispatchedBy": "human"
+      }
+    },
     {
       "id": "activity-1770427860422",
       "type": "task_reassigned",
