@@ -22,6 +22,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { createServer as createViteServer } from 'vite';
 import { BskyAgent, RichText } from '@atproto/api';
+import Anthropic from '@anthropic-ai/sdk';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -109,6 +110,18 @@ const POSTING_SCHEDULE = path.join(BASE_DIR, 'POSTING_SCHEDULE.md');
 const REPOST_CANDIDATES_FILE = path.join(BASE_DIR, 'content', 'repost-candidates.json');
 const FUTURE_NEEDS_FILE = path.join(BASE_DIR, 'mission-control', 'future-needs.json');
 const ANALYTICS_DATA_FILE = path.join(BASE_DIR, 'mission-control', 'analytics-data.json');
+const ENGAGEMENT_INBOX_FILE = path.join(BASE_DIR, 'content', 'queue', 'engagement-inbox.json');
+const COMMENT_QUEUE_FILE = path.join(BASE_DIR, 'content', 'queue', 'comment-queue.json');
+
+// Claude API client (lazy — only created when ANTHROPIC_API_KEY is set)
+let anthropicClient = null;
+function getAnthropicClient() {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  if (!anthropicClient) {
+    anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  }
+  return anthropicClient;
+}
 
 // Cache for frequently accessed data - invalidated by chokidar watcher
 let cache = {
@@ -122,6 +135,7 @@ let cache = {
   repostCandidates: null,
   futureNeeds: null,
   analyticsData: null,
+  engagementInbox: null,
   lastUpdate: null
 };
 
@@ -2139,6 +2153,214 @@ app.get('/api/bluesky/status', async (req, res) => {
 });
 
 // ============================================================================
+// CONTENT REPURPOSING ENGINE
+// ============================================================================
+
+const PLATFORM_SPECS = {
+  twitter: { label: 'Twitter', limit: 280, format: 'Punchy, standalone thought. Can be a thread of max 3 tweets separated by ---. Each tweet must be ≤280 characters.' },
+  bluesky: { label: 'Bluesky', limit: 300, format: 'Conversational, observation-style. Single post. Must be ≤300 characters.' },
+  instagram: { label: 'Instagram', limit: 2200, format: 'Two parts: 1) "cardText" — a bold quote for a Canva image card, under 100 characters. 2) "caption" — a longer reflection with relevant hashtags, up to ~2200 characters.' },
+  reddit: { label: 'Reddit', limit: 300, format: 'Discussion-starter. Return "title" (compelling question or statement) and "body" (thoughtful, ~300 words, no hashtags). Invites conversation.' },
+  medium: { label: 'Medium', limit: 200, format: 'Essay paragraph. Rich, flowing prose. Could be a section opener. ~200 words.' }
+};
+
+/**
+ * Generate platform-specific drafts from an idea using Claude API
+ */
+app.post('/api/repurpose', async (req, res) => {
+  try {
+    const client = getAnthropicClient();
+    if (!client) {
+      return res.status(501).json({ error: 'Anthropic API key not configured. Add ANTHROPIC_API_KEY to cms/.env' });
+    }
+
+    const { ideaId, rawText, platforms = ['twitter', 'bluesky', 'instagram', 'reddit', 'medium'], philosopher = 'nietzsche' } = req.body;
+
+    // Resolve source text
+    let sourceText = '';
+    let sourceIdea = null;
+    if (ideaId) {
+      const ideas = parseIdeasBank();
+      sourceIdea = ideas.find(i => i.id === ideaId || `#${i.id}` === ideaId);
+      if (!sourceIdea) {
+        return res.status(404).json({ error: `Idea ${ideaId} not found` });
+      }
+      // Build rich source from idea fields
+      const parts = [];
+      if (sourceIdea.quote) parts.push(`Quote: "${sourceIdea.quote}"`);
+      if (sourceIdea.tension) parts.push(`Tension: ${sourceIdea.tension}`);
+      if (sourceIdea.paradox) parts.push(`Paradox: ${sourceIdea.paradox}`);
+      if (sourceIdea.notes) parts.push(`Notes: ${sourceIdea.notes}`);
+      if (sourceIdea.text && !sourceIdea.quote) parts.push(sourceIdea.text);
+      sourceText = parts.join('\n\n');
+    } else if (rawText) {
+      sourceText = rawText;
+    } else {
+      return res.status(400).json({ error: 'Provide either ideaId or rawText' });
+    }
+
+    // Read philosopher SOUL.md for voice
+    let soulContent = '';
+    const soulPath = path.join(PHILOSOPHERS_DIR, philosopher, 'SOUL.md');
+    if (fs.existsSync(soulPath)) {
+      soulContent = fs.readFileSync(soulPath, 'utf8');
+      // Trim to first 2000 chars to stay within reasonable prompt size
+      if (soulContent.length > 2000) soulContent = soulContent.substring(0, 2000) + '\n...(truncated)';
+    }
+
+    // Build platform instructions
+    const validPlatforms = platforms.filter(p => PLATFORM_SPECS[p]);
+    if (validPlatforms.length === 0) {
+      return res.status(400).json({ error: 'No valid platforms specified' });
+    }
+    const platformInstructions = validPlatforms.map(p => {
+      const spec = PLATFORM_SPECS[p];
+      return `### ${spec.label}\n${spec.format}`;
+    }).join('\n\n');
+
+    const systemPrompt = `You are a social media content writer for TensionLines — a philosophy brand that makes deep ideas accessible and provocative for modern audiences.
+
+${soulContent ? `## Voice & Personality (from the philosopher's SOUL.md):\n${soulContent}\n` : ''}
+## Rules:
+- Write in the philosopher's distinctive voice — not academic, but sharp, alive, and contemporary.
+- Never use generic motivational language. Be specific. Be surprising.
+- Each platform draft should feel native to that platform, not just reformatted.
+- Respect character limits strictly.
+- Return ONLY valid JSON, no markdown fences.`;
+
+    const userPrompt = `Take this idea and create a draft for each platform listed below.
+
+## Source Idea:
+${sourceText}
+
+## Platforms:
+${platformInstructions}
+
+## Output Format:
+Return a JSON object where each key is the platform name. For most platforms, the value has a "content" field. Exceptions:
+- **instagram**: { "cardText": "...", "caption": "..." }
+- **reddit**: { "title": "...", "body": "..." }
+- **twitter**: { "content": "..." } (if a thread, separate tweets with ---)
+
+Example structure:
+{
+  "twitter": { "content": "tweet text here" },
+  "bluesky": { "content": "post text here" },
+  "instagram": { "cardText": "short quote", "caption": "longer caption with #hashtags" },
+  "reddit": { "title": "Discussion title", "body": "Discussion body..." },
+  "medium": { "content": "Essay paragraph..." }
+}
+
+Only include the platforms requested: ${validPlatforms.join(', ')}`;
+
+    const message = await client.messages.create({
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 2048,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }]
+    });
+
+    // Parse response
+    const responseText = message.content[0]?.text || '';
+    let drafts;
+    try {
+      // Strip markdown fences if present
+      const cleaned = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      drafts = JSON.parse(cleaned);
+    } catch (parseErr) {
+      return res.status(502).json({ error: 'Failed to parse Claude response as JSON', raw: responseText });
+    }
+
+    // Add char counts and validate
+    for (const platform of validPlatforms) {
+      if (!drafts[platform]) continue;
+      const draft = drafts[platform];
+      if (draft.content) {
+        draft.charCount = draft.content.length;
+      }
+      if (draft.cardText) {
+        draft.cardTextCharCount = draft.cardText.length;
+      }
+      if (draft.caption) {
+        draft.captionCharCount = draft.caption.length;
+      }
+      if (draft.title) {
+        draft.titleCharCount = draft.title.length;
+      }
+      if (draft.body) {
+        draft.bodyWordCount = draft.body.split(/\s+/).length;
+      }
+    }
+
+    res.json({
+      drafts,
+      sourceIdea: sourceIdea ? { id: sourceIdea.id, quote: sourceIdea.quote, date: sourceIdea.date } : null,
+      philosopher,
+      model: 'claude-sonnet-4-5-20250929',
+      usage: message.usage
+    });
+  } catch (error) {
+    console.error('Repurpose error:', error);
+    if (error.status === 401) {
+      return res.status(502).json({ error: 'Invalid Anthropic API key' });
+    }
+    res.status(502).json({ error: 'Claude API call failed', details: error.message });
+  }
+});
+
+/**
+ * Push approved repurposed drafts to the posting queue
+ */
+app.post('/api/repurpose/queue', (req, res) => {
+  try {
+    const { drafts } = req.body;
+    if (!Array.isArray(drafts) || drafts.length === 0) {
+      return res.status(400).json({ error: 'Provide an array of drafts' });
+    }
+
+    const queue = getPostingQueue();
+    const added = [];
+
+    for (const draft of drafts) {
+      const { platform, content, caption, cardText, title, body, ideaId, philosopher } = draft;
+      if (!platform) continue;
+
+      const item = {
+        id: `post-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        createdAt: new Date().toISOString(),
+        status: 'ready',
+        platform,
+        content: content || title || cardText || '',
+        caption: caption || '',
+        parts: [],
+        createdBy: philosopher || 'unknown',
+        ideaId: ideaId || '',
+        source: 'repurpose-engine'
+      };
+
+      // For reddit, store title + body in content
+      if (platform === 'reddit' && title && body) {
+        item.content = `${title}\n\n${body}`;
+      }
+      // For instagram, store cardText separately
+      if (platform === 'instagram' && cardText) {
+        item.content = cardText;
+        item.caption = caption || '';
+      }
+
+      queue.queue.push(item);
+      added.push(item);
+    }
+
+    savePostingQueue(queue);
+    res.json({ success: true, added, count: added.length });
+  } catch (error) {
+    console.error('Repurpose queue error:', error);
+    res.status(500).json({ error: 'Failed to add drafts to queue' });
+  }
+});
+
+// ============================================================================
 // REPLY QUEUE
 // ============================================================================
 
@@ -2462,6 +2684,846 @@ app.post('/api/reply-queue/:id/publish', async (req, res) => {
     res.status(500).json({ error: 'Failed to publish reply', message: error.message });
   }
 });
+
+// ============================================================================
+// COMMENT QUEUE (Proactive outreach — commenting on other people's posts)
+// ============================================================================
+
+function getCommentQueue() {
+  try {
+    if (fs.existsSync(COMMENT_QUEUE_FILE)) {
+      return JSON.parse(fs.readFileSync(COMMENT_QUEUE_FILE, 'utf8'));
+    }
+  } catch (err) {
+    console.error('Error reading comment queue:', err);
+  }
+  return {
+    queue: [], posted: [],
+    settings: {
+      platforms: {
+        bluesky: { enabled: true, maxCommentsPerDay: 5, minMinutesBetweenComments: 15 },
+        twitter: { enabled: true, maxCommentsPerDay: 5, minMinutesBetweenComments: 15 }
+      },
+      scanKeywords: ['philosophy', 'stoicism', 'nietzsche', 'existentialism', 'meaning of life', 'paradox', 'tension', 'self-knowledge'],
+      scanEnabled: true
+    }
+  };
+}
+
+function saveCommentQueue(data) {
+  fs.writeFileSync(COMMENT_QUEUE_FILE, JSON.stringify(data, null, 2));
+}
+
+/**
+ * Get comment queue with rate limit status
+ */
+app.get('/api/comment-queue', (req, res) => {
+  try {
+    const data = getCommentQueue();
+    const settings = data.settings || {};
+    const posted = data.posted || [];
+    const today = new Date().toISOString().split('T')[0];
+
+    const commentsToday = {
+      bluesky: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'bluesky').length,
+      twitter: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'twitter').length
+    };
+
+    const bskySettings = settings.platforms?.bluesky || { maxCommentsPerDay: 5 };
+    const twitterSettings = settings.platforms?.twitter || { maxCommentsPerDay: 5 };
+
+    res.json({
+      ...data,
+      commentsToday,
+      canCommentBluesky: commentsToday.bluesky < bskySettings.maxCommentsPerDay,
+      canCommentTwitter: commentsToday.twitter < twitterSettings.maxCommentsPerDay
+    });
+  } catch (error) {
+    console.error('Error getting comment queue:', error);
+    res.status(500).json({ error: 'Failed to get comment queue' });
+  }
+});
+
+/**
+ * Add item to comment queue manually
+ */
+app.post('/api/comment-queue', async (req, res) => {
+  try {
+    const data = getCommentQueue();
+    const { platform, targetUrl, targetText, commentText, philosopher } = req.body;
+
+    if (!platform || !['bluesky', 'twitter'].includes(platform)) {
+      return res.status(400).json({ error: 'Invalid platform (bluesky or twitter)' });
+    }
+    if (!targetUrl) {
+      return res.status(400).json({ error: 'targetUrl is required' });
+    }
+
+    const item = {
+      id: `comment-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      status: commentText ? 'ready' : 'draft',
+      platform,
+      targetUrl,
+      targetAuthor: '',
+      targetText: targetText || '',
+      commentText: commentText || '',
+      philosopher: philosopher || 'nietzsche',
+      source: 'manual',
+      targetUri: null,
+      targetCid: null
+    };
+
+    // Try to resolve Bluesky URL for metadata
+    if (platform === 'bluesky' && targetUrl.includes('bsky.app')) {
+      try {
+        const resolved = await resolveBskyUrl(targetUrl);
+        item.targetUri = resolved.targetUri;
+        item.targetCid = resolved.targetCid;
+        if (!item.targetAuthor) item.targetAuthor = resolved.targetAuthor;
+        if (!item.targetText) item.targetText = resolved.targetText;
+      } catch (e) {
+        console.log('[CommentQueue] Could not resolve Bluesky URL (will retry on publish):', e.message);
+      }
+    }
+
+    data.queue.push(item);
+    saveCommentQueue(data);
+    res.json({ success: true, item });
+  } catch (error) {
+    console.error('Error adding to comment queue:', error);
+    res.status(500).json({ error: 'Failed to add to comment queue' });
+  }
+});
+
+/**
+ * Manual trigger for comment scan (must be before :id routes)
+ */
+app.post('/api/comment-queue/scan', async (req, res) => {
+  try {
+    const result = await scanForCommentableContent();
+    res.json(result);
+  } catch (error) {
+    console.error('[CommentQueue] Manual scan error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * Edit comment queue item
+ */
+app.patch('/api/comment-queue/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = getCommentQueue();
+    const item = data.queue.find(i => i.id === id);
+    if (!item) return res.status(404).json({ error: 'Item not found' });
+
+    const allowedFields = ['commentText', 'targetUrl', 'targetAuthor', 'targetText', 'philosopher', 'status'];
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        item[field] = req.body[field];
+      }
+    }
+
+    // If comment text was added/changed, upgrade from draft to ready
+    if (req.body.commentText && item.status === 'draft') {
+      item.status = 'ready';
+    }
+
+    // Clear resolved data if URL changed
+    if (req.body.targetUrl) {
+      item.targetUri = null;
+      item.targetCid = null;
+    }
+
+    saveCommentQueue(data);
+    res.json({ success: true, item });
+  } catch (error) {
+    console.error('Error updating comment queue item:', error);
+    res.status(500).json({ error: 'Failed to update item' });
+  }
+});
+
+/**
+ * Delete comment queue item
+ */
+app.delete('/api/comment-queue/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = getCommentQueue();
+    const index = data.queue.findIndex(i => i.id === id);
+    if (index === -1) return res.status(404).json({ error: 'Item not found' });
+
+    data.queue.splice(index, 1);
+    saveCommentQueue(data);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting comment queue item:', error);
+    res.status(500).json({ error: 'Failed to delete item' });
+  }
+});
+
+/**
+ * Mark comment as manually posted (Twitter)
+ */
+app.post('/api/comment-queue/:id/posted', (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = getCommentQueue();
+    const index = data.queue.findIndex(i => i.id === id);
+    if (index === -1) return res.status(404).json({ error: 'Item not found' });
+
+    const item = data.queue[index];
+    item.postedAt = new Date().toISOString();
+    item.status = 'posted';
+
+    if (!data.posted) data.posted = [];
+    data.posted.unshift(item);
+    data.queue.splice(index, 1);
+
+    saveCommentQueue(data);
+    res.json({ success: true, item });
+  } catch (error) {
+    console.error('Error marking comment as posted:', error);
+    res.status(500).json({ error: 'Failed to mark as posted' });
+  }
+});
+
+/**
+ * Auto-publish a Bluesky comment (uses replyToBluesky — comments ARE replies on Bluesky)
+ */
+app.post('/api/comment-queue/:id/publish', async (req, res) => {
+  try {
+    const data = getCommentQueue();
+    const idx = data.queue.findIndex(i => i.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Item not found' });
+
+    const item = data.queue[idx];
+    if (item.platform !== 'bluesky') {
+      return res.status(400).json({ error: 'Only Bluesky comments can be auto-published' });
+    }
+    if (!item.commentText) {
+      return res.status(400).json({ error: 'Comment text is empty — generate or write one first' });
+    }
+
+    // Rate limit checks
+    const settings = data.settings?.platforms?.bluesky || {};
+    const maxPerDay = settings.maxCommentsPerDay || 5;
+    const minMinutes = settings.minMinutesBetweenComments || 15;
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const posted = data.posted || [];
+    const bskyPostedToday = posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'bluesky');
+
+    if (bskyPostedToday.length >= maxPerDay) {
+      return res.status(429).json({ error: `Daily limit reached (${maxPerDay} comments/day)` });
+    }
+
+    if (bskyPostedToday.length > 0) {
+      const lastPostedAt = new Date(bskyPostedToday[0].postedAt);
+      const minutesSinceLast = (now - lastPostedAt) / (1000 * 60);
+      if (minutesSinceLast < minMinutes) {
+        const waitMins = Math.ceil(minMinutes - minutesSinceLast);
+        return res.status(429).json({ error: `Too soon — wait ${waitMins} more minutes (${minMinutes}min minimum between comments)` });
+      }
+    }
+
+    // Resolve target URL if not already resolved
+    if (!item.targetUri || !item.targetCid) {
+      const resolved = await resolveBskyUrl(item.targetUrl);
+      item.targetUri = resolved.targetUri;
+      item.targetCid = resolved.targetCid;
+      if (!item.targetAuthor) item.targetAuthor = resolved.targetAuthor;
+      if (!item.targetText) item.targetText = resolved.targetText;
+    }
+
+    const result = await replyToBluesky(item.commentText, item.targetUri, item.targetCid);
+
+    item.status = 'posted';
+    item.postedAt = new Date().toISOString();
+    item.postUrl = result.postUrl;
+    item.commentUri = result.uri;
+
+    data.queue.splice(idx, 1);
+    if (!data.posted) data.posted = [];
+    data.posted.unshift(item);
+    saveCommentQueue(data);
+
+    console.log(`[CommentQueue] Comment published: ${result.postUrl}`);
+    res.json({ success: true, item, postUrl: result.postUrl });
+  } catch (error) {
+    // Mark as failed but keep in queue for retry
+    const data = getCommentQueue();
+    const item = data.queue.find(i => i.id === req.params.id);
+    if (item) {
+      item.status = 'failed';
+      item.lastError = error.message;
+      item.lastAttempt = new Date().toISOString();
+      saveCommentQueue(data);
+    }
+    console.error('[CommentQueue] Publish failed:', error.message);
+    res.status(500).json({ error: 'Failed to publish comment', message: error.message });
+  }
+});
+
+/**
+ * Generate a comment using Claude (Sonnet) in a philosopher's voice
+ */
+app.post('/api/comment-queue/:id/generate', async (req, res) => {
+  try {
+    const client = getAnthropicClient();
+    if (!client) {
+      return res.status(501).json({ error: 'Anthropic API key not configured. Add ANTHROPIC_API_KEY to cms/.env' });
+    }
+
+    const data = getCommentQueue();
+    const item = data.queue.find(i => i.id === req.params.id);
+    if (!item) return res.status(404).json({ error: 'Item not found' });
+
+    const philosopher = item.philosopher || 'nietzsche';
+
+    // Read philosopher SOUL.md for voice
+    let soulContent = '';
+    const soulPath = path.join(PHILOSOPHERS_DIR, philosopher, 'SOUL.md');
+    if (fs.existsSync(soulPath)) {
+      soulContent = fs.readFileSync(soulPath, 'utf8');
+      if (soulContent.length > 2000) soulContent = soulContent.substring(0, 2000) + '\n...(truncated)';
+    }
+
+    const systemPrompt = `You are a philosopher commenting on someone else's social media post. You write as ${philosopher} — through the TensionLines brand.
+
+${soulContent ? `## Voice & Personality:\n${soulContent}\n` : ''}
+## Rules:
+- Write a thoughtful, authentic comment that adds to the conversation.
+- Be genuinely engaging — NOT self-promotional. Don't mention TensionLines or your own content.
+- Match the tone of the original post — if it's casual, be casual. If it's deep, go deeper.
+- Be concise. This is a comment, not an essay. One to three sentences.
+- Never use generic motivational language. Be specific. Be surprising.
+- ${item.platform === 'bluesky' ? 'Must be ≤300 characters.' : 'Keep it tweet-length, under 280 characters.'}
+- Return ONLY the comment text, nothing else. No quotes, no labels.`;
+
+    const userPrompt = `Write a comment on this ${item.platform === 'bluesky' ? 'Bluesky' : 'Twitter'} post by @${item.targetAuthor || 'someone'}:
+
+"${item.targetText}"
+
+Write a single comment that would naturally fit in this conversation.`;
+
+    const message = await client.messages.create({
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 512,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }]
+    });
+
+    const commentText = (message.content[0]?.text || '').trim();
+    if (!commentText) {
+      return res.status(502).json({ error: 'Claude returned empty response' });
+    }
+
+    item.commentText = commentText;
+    item.status = 'ready';
+    item.generatedAt = new Date().toISOString();
+    item.generatedModel = 'claude-sonnet-4-5-20250929';
+    saveCommentQueue(data);
+
+    console.log(`[CommentQueue] Generated comment for ${item.id} (${commentText.length} chars)`);
+    res.json({ success: true, item, usage: message.usage });
+  } catch (error) {
+    console.error('[CommentQueue] Generate failed:', error);
+    if (error.status === 401) {
+      return res.status(502).json({ error: 'Invalid Anthropic API key' });
+    }
+    res.status(502).json({ error: 'Claude API call failed', details: error.message });
+  }
+});
+
+/**
+ * Scan Bluesky for commentable philosophy-related posts
+ */
+async function scanForCommentableContent() {
+  console.log('[CommentQueue] Starting scan for commentable content...');
+  const data = getCommentQueue();
+  const settings = data.settings || {};
+
+  if (settings.scanEnabled === false) {
+    console.log('[CommentQueue] Scanning disabled in settings');
+    return { success: true, added: 0, message: 'Scanning disabled' };
+  }
+
+  const keywords = settings.scanKeywords || ['philosophy', 'stoicism', 'nietzsche', 'existentialism'];
+
+  try {
+    const agent = await getBskyAgent();
+    const existingUrls = new Set([
+      ...data.queue.map(i => i.targetUrl),
+      ...data.posted.map(i => i.targetUrl)
+    ]);
+
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    let candidates = [];
+
+    // Search each keyword
+    for (const keyword of keywords.slice(0, 4)) {
+      try {
+        const searchRes = await agent.app.bsky.feed.searchPosts({
+          q: keyword,
+          limit: 25,
+          sort: 'top'
+        });
+
+        for (const post of (searchRes.data?.posts || [])) {
+          const postUrl = `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`;
+
+          // Skip: own posts, already queued, older than 24h
+          if (post.author.handle === process.env.BLUESKY_HANDLE) continue;
+          if (existingUrls.has(postUrl)) continue;
+          const postDate = new Date(post.record?.createdAt || post.indexedAt);
+          if (postDate < oneDayAgo) continue;
+
+          const engagement = {
+            likes: post.likeCount || 0,
+            replies: post.replyCount || 0,
+            reposts: post.repostCount || 0
+          };
+          const score = engagement.likes + (engagement.replies * 2) + engagement.reposts;
+
+          candidates.push({
+            uri: post.uri,
+            cid: post.cid,
+            url: postUrl,
+            author: post.author.handle,
+            text: post.record?.text || '',
+            engagement,
+            score,
+            postDate
+          });
+
+          existingUrls.add(postUrl);
+        }
+      } catch (searchErr) {
+        console.error(`[CommentQueue] Search failed for "${keyword}":`, searchErr.message);
+      }
+    }
+
+    // Sort by engagement score and take top 10
+    candidates.sort((a, b) => b.score - a.score);
+    candidates = candidates.slice(0, 10);
+
+    // Add to queue as drafts
+    let added = 0;
+    for (const c of candidates) {
+      data.queue.push({
+        id: `comment-${Date.now()}-${added}`,
+        createdAt: new Date().toISOString(),
+        status: 'draft',
+        platform: 'bluesky',
+        targetUrl: c.url,
+        targetAuthor: c.author,
+        targetText: c.text,
+        commentText: '',
+        philosopher: 'nietzsche',
+        source: 'scan',
+        targetUri: c.uri,
+        targetCid: c.cid,
+        engagement: c.engagement
+      });
+      added++;
+    }
+
+    if (added > 0) {
+      saveCommentQueue(data);
+    }
+
+    console.log(`[CommentQueue] Scan complete: ${added} new candidates from ${candidates.length + (data.queue.length - added)} total found`);
+    return { success: true, added, message: `Found ${added} new posts` };
+  } catch (error) {
+    console.error('[CommentQueue] Scan error:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+// Comment queue scan cron: 3x daily at prime engagement hours (10 AM, 2 PM, 6 PM PST)
+cron.schedule('0 10,14,18 * * *', async () => {
+  try {
+    await scanForCommentableContent();
+  } catch (e) {
+    console.error('[CommentQueue] Scheduled scan failed:', e.message);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[CommentQueue] Scan scheduled: 10 AM, 2 PM, 6 PM PST daily');
+
+// ============================================================================
+// ENGAGEMENT INBOX (Reply & Mention Monitor)
+// ============================================================================
+
+function getEngagementInbox() {
+  if (cache.engagementInbox) return cache.engagementInbox;
+  try {
+    if (fs.existsSync(ENGAGEMENT_INBOX_FILE)) {
+      cache.engagementInbox = JSON.parse(fs.readFileSync(ENGAGEMENT_INBOX_FILE, 'utf8'));
+      return cache.engagementInbox;
+    }
+  } catch (err) {
+    console.error('Error reading engagement inbox:', err);
+  }
+  return {
+    bluesky: { lastScannedAt: null, items: [] },
+    twitter: { lastScannedAt: null, items: [] },
+    settings: {
+      bluesky: { scanIntervalMinutes: 15, autoScan: true },
+      twitter: { autoScan: false }
+    }
+  };
+}
+
+function saveEngagementInbox(data) {
+  fs.writeFileSync(ENGAGEMENT_INBOX_FILE, JSON.stringify(data, null, 2));
+  cache.engagementInbox = null;
+}
+
+function createEngagementNotification(item) {
+  try {
+    const mc = getMissionControl();
+    const notifType = item.type === 'reply' ? 'engagement_reply' : 'engagement_mention';
+    const title = item.type === 'reply'
+      ? `Reply from @${item.authorHandle}`
+      : `Mentioned by @${item.authorHandle}`;
+
+    mc.notifications.unshift({
+      id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      type: notifType,
+      title,
+      message: item.postText || '(no text)',
+      from: 'engagement-monitor',
+      read: false,
+      createdAt: new Date().toISOString(),
+      priority: 'medium',
+      actionRequired: true,
+      metadata: {
+        platform: item.platform,
+        engagementId: item.id,
+        authorHandle: item.authorHandle,
+        postUrl: item.postUrl,
+        postUri: item.postUri || null,
+        postCid: item.postCid || null,
+        ourPostUrl: item.ourPostUrl || null
+      }
+    });
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+    cache.missionControl = null;
+  } catch (err) {
+    console.error('[Engagement] Failed to create notification:', err.message);
+  }
+}
+
+async function scanBlueskyEngagement() {
+  console.log('[Engagement] Scanning Bluesky notifications...');
+  try {
+    const agent = await getBskyAgent();
+    const response = await agent.listNotifications({ limit: 50 });
+    const notifications = response.data.notifications || [];
+
+    const relevant = notifications.filter(n => n.reason === 'reply' || n.reason === 'mention');
+    if (relevant.length === 0) {
+      console.log('[Engagement] No new Bluesky replies/mentions found');
+    }
+
+    const inbox = getEngagementInbox();
+    const existingIds = new Set(inbox.bluesky.items.map(i => i.id));
+    let newCount = 0;
+
+    for (const notif of relevant) {
+      const itemId = `bsky-${notif.uri}`;
+      if (existingIds.has(itemId)) continue;
+
+      const authorHandle = notif.author?.handle || 'unknown';
+      const authorDisplayName = notif.author?.displayName || authorHandle;
+      const postText = notif.record?.text || '';
+      const rkey = notif.uri.split('/').pop();
+      const postUrl = `https://bsky.app/profile/${authorHandle}/post/${rkey}`;
+
+      // Build our post URL if this is a reply
+      let ourPostUrl = null;
+      if (notif.reason === 'reply' && notif.record?.reply?.parent?.uri) {
+        const ourRkey = notif.record.reply.parent.uri.split('/').pop();
+        ourPostUrl = `https://bsky.app/profile/${process.env.BLUESKY_HANDLE}/post/${ourRkey}`;
+      }
+
+      const item = {
+        id: itemId,
+        platform: 'bluesky',
+        type: notif.reason === 'reply' ? 'reply' : 'mention',
+        authorHandle,
+        authorDisplayName,
+        postText,
+        postUrl,
+        postUri: notif.uri,
+        postCid: notif.cid,
+        ourPostUrl,
+        indexedAt: notif.indexedAt,
+        scannedAt: new Date().toISOString(),
+        status: 'new'
+      };
+
+      inbox.bluesky.items.unshift(item);
+      createEngagementNotification(item);
+      newCount++;
+    }
+
+    // Cap at 200 items
+    if (inbox.bluesky.items.length > 200) {
+      inbox.bluesky.items = inbox.bluesky.items.slice(0, 200);
+    }
+
+    inbox.bluesky.lastScannedAt = new Date().toISOString();
+    saveEngagementInbox(inbox);
+
+    console.log(`[Engagement] Bluesky scan complete: ${newCount} new items found`);
+    return { success: true, newCount, total: inbox.bluesky.items.length };
+  } catch (err) {
+    console.error('[Engagement] Bluesky scan failed:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+function scanTwitterEngagement() {
+  console.log('[Engagement] Scanning Twitter mentions...');
+  try {
+    if (!fs.existsSync(BIRD_CLI)) {
+      return { success: false, error: 'Bird CLI not found' };
+    }
+
+    const opts = { timeout: 30000, encoding: 'utf8' };
+    let mentions = [];
+    try {
+      const raw = execSync(`${BIRD_CLI} mentions --json 2>/dev/null`, opts);
+      mentions = JSON.parse(raw);
+      if (!Array.isArray(mentions)) mentions = mentions.tweets || mentions.data || [];
+    } catch (e) {
+      console.error('[Engagement] Bird mentions command failed:', e.message);
+      return { success: false, error: `Bird CLI error: ${e.message}` };
+    }
+
+    const inbox = getEngagementInbox();
+    const existingIds = new Set(inbox.twitter.items.map(i => i.id));
+    let newCount = 0;
+
+    for (const tweet of mentions) {
+      const tweetId = tweet.id || tweet.id_str;
+      if (!tweetId) continue;
+      const itemId = `twitter-${tweetId}`;
+      if (existingIds.has(itemId)) continue;
+
+      const authorHandle = tweet.user?.screen_name || tweet.author?.username || 'unknown';
+      const authorDisplayName = tweet.user?.name || tweet.author?.name || authorHandle;
+      const postText = tweet.text || tweet.full_text || '';
+      const postUrl = `https://x.com/${authorHandle}/status/${tweetId}`;
+
+      // Check if this is a reply to us or a mention
+      const isReply = tweet.in_reply_to_screen_name?.toLowerCase() === 'thetensionlines' ||
+                      tweet.in_reply_to_user_id != null;
+
+      let ourPostUrl = null;
+      if (isReply && tweet.in_reply_to_status_id_str) {
+        ourPostUrl = `https://x.com/thetensionlines/status/${tweet.in_reply_to_status_id_str}`;
+      }
+
+      const item = {
+        id: itemId,
+        platform: 'twitter',
+        type: isReply ? 'reply' : 'mention',
+        authorHandle,
+        authorDisplayName,
+        postText,
+        postUrl,
+        postUri: null,
+        postCid: null,
+        ourPostUrl,
+        indexedAt: tweet.created_at || new Date().toISOString(),
+        scannedAt: new Date().toISOString(),
+        status: 'new'
+      };
+
+      inbox.twitter.items.unshift(item);
+      createEngagementNotification(item);
+      newCount++;
+    }
+
+    // Cap at 200 items
+    if (inbox.twitter.items.length > 200) {
+      inbox.twitter.items = inbox.twitter.items.slice(0, 200);
+    }
+
+    inbox.twitter.lastScannedAt = new Date().toISOString();
+    saveEngagementInbox(inbox);
+
+    console.log(`[Engagement] Twitter scan complete: ${newCount} new items found`);
+    return { success: true, newCount, total: inbox.twitter.items.length };
+  } catch (err) {
+    console.error('[Engagement] Twitter scan failed:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+// --- Engagement API Routes ---
+
+/**
+ * GET /api/engagement - List engagement items with optional filters
+ */
+app.get('/api/engagement', (req, res) => {
+  try {
+    const inbox = getEngagementInbox();
+    const { platform, status } = req.query;
+
+    let items = [
+      ...inbox.bluesky.items.map(i => ({ ...i })),
+      ...inbox.twitter.items.map(i => ({ ...i }))
+    ];
+
+    if (platform) {
+      items = items.filter(i => i.platform === platform);
+    }
+    if (status) {
+      items = items.filter(i => i.status === status);
+    }
+
+    // Sort by indexedAt descending
+    items.sort((a, b) => new Date(b.indexedAt) - new Date(a.indexedAt));
+
+    const stats = {
+      bluesky: {
+        total: inbox.bluesky.items.length,
+        new: inbox.bluesky.items.filter(i => i.status === 'new').length,
+        lastScannedAt: inbox.bluesky.lastScannedAt
+      },
+      twitter: {
+        total: inbox.twitter.items.length,
+        new: inbox.twitter.items.filter(i => i.status === 'new').length,
+        lastScannedAt: inbox.twitter.lastScannedAt
+      }
+    };
+
+    res.json({ items, stats, settings: inbox.settings });
+  } catch (err) {
+    console.error('Error getting engagement inbox:', err);
+    res.status(500).json({ error: 'Failed to get engagement inbox' });
+  }
+});
+
+/**
+ * POST /api/engagement/scan - Trigger a scan
+ */
+app.post('/api/engagement/scan', async (req, res) => {
+  try {
+    const { platform } = req.body;
+    const results = {};
+
+    if (!platform || platform === 'bluesky') {
+      results.bluesky = await scanBlueskyEngagement();
+    }
+    if (!platform || platform === 'twitter') {
+      results.twitter = scanTwitterEngagement();
+    }
+
+    res.json({ success: true, results });
+  } catch (err) {
+    console.error('Error scanning engagement:', err);
+    res.status(500).json({ error: 'Scan failed', message: err.message });
+  }
+});
+
+/**
+ * PATCH /api/engagement/:id - Update item status
+ */
+app.patch('/api/engagement/:id', (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!['new', 'seen', 'replied', 'dismissed'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be: new, seen, replied, dismissed' });
+    }
+
+    const inbox = getEngagementInbox();
+    const id = req.params.id;
+
+    // Find in bluesky or twitter items
+    let item = inbox.bluesky.items.find(i => i.id === id);
+    if (!item) item = inbox.twitter.items.find(i => i.id === id);
+    if (!item) return res.status(404).json({ error: 'Engagement item not found' });
+
+    item.status = status;
+    if (status === 'seen' || status === 'replied' || status === 'dismissed') {
+      item.updatedAt = new Date().toISOString();
+    }
+    saveEngagementInbox(inbox);
+
+    res.json({ success: true, item });
+  } catch (err) {
+    console.error('Error updating engagement item:', err);
+    res.status(500).json({ error: 'Failed to update engagement item' });
+  }
+});
+
+/**
+ * POST /api/engagement/:id/draft-reply - Create reply queue item from engagement
+ */
+app.post('/api/engagement/:id/draft-reply', (req, res) => {
+  try {
+    const inbox = getEngagementInbox();
+    const id = req.params.id;
+
+    let item = inbox.bluesky.items.find(i => i.id === id);
+    if (!item) item = inbox.twitter.items.find(i => i.id === id);
+    if (!item) return res.status(404).json({ error: 'Engagement item not found' });
+
+    // Create reply queue entry
+    const replyQueue = getReplyQueue();
+    const replyItem = {
+      id: `reply-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      status: 'ready',
+      platform: item.platform,
+      targetUrl: item.postUrl,
+      targetAuthor: item.authorHandle,
+      targetText: item.postText,
+      replyText: '',
+      taskId: null,
+      targetUri: item.postUri || null,
+      targetCid: item.postCid || null,
+      engagementId: item.id
+    };
+
+    replyQueue.queue.unshift(replyItem);
+    saveReplyQueue(replyQueue);
+
+    // Mark engagement item as replied
+    item.status = 'replied';
+    item.updatedAt = new Date().toISOString();
+    saveEngagementInbox(inbox);
+
+    res.json({ success: true, replyItem });
+  } catch (err) {
+    console.error('Error creating draft reply from engagement:', err);
+    res.status(500).json({ error: 'Failed to create draft reply' });
+  }
+});
+
+// Auto-scan Bluesky every 15 minutes
+let engagementScanInterval = null;
+setTimeout(() => {
+  console.log('[Engagement] Initial Bluesky scan in 60 seconds...');
+  setTimeout(async () => {
+    try { await scanBlueskyEngagement(); } catch (e) { console.error('[Engagement] Initial scan failed:', e.message); }
+  }, 60000);
+
+  const intervalMinutes = 15;
+  engagementScanInterval = setInterval(async () => {
+    try { await scanBlueskyEngagement(); } catch (e) { console.error('[Engagement] Auto-scan failed:', e.message); }
+  }, intervalMinutes * 60 * 1000);
+  console.log(`[Engagement] Bluesky auto-scan scheduled every ${intervalMinutes} minutes`);
+}, 1000);
 
 // ============================================================================
 // REPOST CANDIDATES
@@ -2797,7 +3859,33 @@ app.post('/api/notifications/mark-all-read', (req, res) => {
 app.get('/api/ideas', (req, res) => {
   try {
     const ideas = parseIdeasBank();
-    res.json(ideas);
+
+    // Count how many times each idea has been repurposed (posting queue + tasks)
+    const counts = {};
+    try {
+      const queue = getPostingQueue();
+      const allItems = [...(queue.queue || []), ...(queue.posted || [])];
+      for (const item of allItems) {
+        if (item.ideaId) {
+          counts[item.ideaId] = (counts[item.ideaId] || 0) + 1;
+        }
+      }
+    } catch (e) { /* ignore */ }
+    try {
+      const mc = JSON.parse(fs.readFileSync(MISSION_CONTROL_DB, 'utf8'));
+      for (const task of mc.tasks || []) {
+        if (task.ideaId && task.type === 'content') {
+          counts[task.ideaId] = (counts[task.ideaId] || 0) + 1;
+        }
+      }
+    } catch (e) { /* ignore */ }
+
+    const enriched = ideas.map(idea => ({
+      ...idea,
+      repurposeCount: counts[idea.id] || 0
+    }));
+
+    res.json(enriched);
   } catch (error) {
     console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
