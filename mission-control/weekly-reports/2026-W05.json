@@ -1,0 +1,83 @@
+{
+  "weekId": "2026-W05",
+  "weekStart": "2026-01-26",
+  "weekEnd": "2026-02-01",
+  "generatedAt": "2026-02-07T23:31:27.734Z",
+  "partial": false,
+  "content": {
+    "postsPublished": 0,
+    "byPlatform": {},
+    "byPhilosopher": {},
+    "topPosts": []
+  },
+  "engagement": {
+    "totalLikes": 0,
+    "totalComments": 0,
+    "totalShares": 0,
+    "avgEngagementRate": 0,
+    "inboxActivity": {
+      "blueskyReplies": 0,
+      "twitterReplies": 0
+    }
+  },
+  "followers": {
+    "platforms": {},
+    "totalDelta": 0
+  },
+  "agents": {
+    "totalCompleted": 0,
+    "totalCreated": 0,
+    "avgCompletionMs": 0,
+    "byAgent": []
+  },
+  "costs": {
+    "totalSpent": 0,
+    "dailyBudget": 2,
+    "byDay": [
+      {
+        "label": "Mon",
+        "cost": 0
+      },
+      {
+        "label": "Tue",
+        "cost": 0
+      },
+      {
+        "label": "Wed",
+        "cost": 0
+      },
+      {
+        "label": "Thu",
+        "cost": 0
+      },
+      {
+        "label": "Fri",
+        "cost": 0
+      },
+      {
+        "label": "Sat",
+        "cost": 0
+      },
+      {
+        "label": "Sun",
+        "cost": 0
+      }
+    ],
+    "byModel": [
+      {
+        "name": "Claude Sonnet 4.5",
+        "cost": 0
+      },
+      {
+        "name": "Ollama qwen2.5:3b",
+        "cost": 0
+      }
+    ]
+  },
+  "outreach": {
+    "targetsContacted": 0,
+    "followBackRate": 0,
+    "replyRate": 0
+  },
+  "comparison": null
+}
