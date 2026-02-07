@@ -5760,6 +5760,13 @@ app.patch('/api/future-needs/:id', (req, res) => {
     }
     need.updatedAt = new Date().toISOString();
 
+    // Set completedAt when marking as completed, clear it when reopening
+    if (updates.status === 'completed' && !need.completedAt) {
+      need.completedAt = new Date().toISOString();
+    } else if (updates.status && updates.status !== 'completed') {
+      delete need.completedAt;
+    }
+
     data.needs[idx] = need;
     saveFutureNeeds(data);
     res.json(need);

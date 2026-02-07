@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import useSWR from 'swr'
-import { Compass, ChevronDown, ChevronUp, ThumbsUp, MessageSquare, Plus, X, FileText, TrendingUp, BarChart3, Zap, DollarSign, Shield, Clock, ArrowRight } from 'lucide-react'
+import { Compass, ChevronDown, ChevronUp, ThumbsUp, MessageSquare, Plus, X, FileText, TrendingUp, BarChart3, Zap, DollarSign, Shield, Clock, ArrowRight, CheckCircle2, Trophy } from 'lucide-react'
 
 const fetcher = (url) => fetch(url).then(r => r.json())
 
@@ -43,10 +43,11 @@ export default function FutureNeeds() {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [commentText, setCommentText] = useState('')
   const [commentingId, setCommentingId] = useState(null)
+  const [showCompleted, setShowCompleted] = useState(false)
 
   const queryParts = []
   if (categoryFilter !== 'all') queryParts.push(`category=${categoryFilter}`)
-  if (statusFilter !== 'all') queryParts.push(`status=${statusFilter}`)
+  if (statusFilter !== 'all' && statusFilter !== 'completed') queryParts.push(`status=${statusFilter}`)
   if (priorityFilter !== 'all') queryParts.push(`priority=${priorityFilter}`)
   if (effortFilter !== 'all') queryParts.push(`effort=${effortFilter}`)
   queryParts.push(`sort=${sortBy}`)
@@ -54,6 +55,12 @@ export default function FutureNeeds() {
 
   const { data, mutate } = useSWR(`/api/future-needs?${queryString}`, fetcher, { refreshInterval: 30000 })
   const { data: stats, mutate: mutateStats } = useSWR('/api/future-needs/stats', fetcher, { refreshInterval: 30000 })
+
+  // Split active vs completed needs
+  const activeNeeds = (data?.needs || []).filter(n => n.status !== 'completed')
+  const completedNeeds = (data?.needs || []).filter(n => n.status === 'completed')
+  // If user clicked the "Completed" status filter, show only completed
+  const showingCompletedFilter = statusFilter === 'completed'
 
   const updateStatus = async (id, newStatus) => {
     try {
@@ -215,30 +222,81 @@ export default function FutureNeeds() {
         </span>
       </div>
 
-      {/* Needs List */}
-      <div className="space-y-3">
-        {data.needs.map(need => (
-          <NeedCard
-            key={need.id}
-            need={need}
-            expanded={expandedId === need.id}
-            onToggle={() => setExpandedId(expandedId === need.id ? null : need.id)}
-            onStatusChange={updateStatus}
-            onVote={toggleVote}
-            onDelete={deleteNeed}
-            commentingId={commentingId}
-            setCommentingId={setCommentingId}
-            commentText={commentText}
-            setCommentText={setCommentText}
-            onAddComment={addComment}
-          />
-        ))}
-        {data.needs.length === 0 && (
-          <div className="text-center py-12 text-neutral-500">
-            No needs match the current filters.
-          </div>
-        )}
-      </div>
+      {/* Active Needs List */}
+      {!showingCompletedFilter && (
+        <div className="space-y-3">
+          {activeNeeds.map(need => (
+            <NeedCard
+              key={need.id}
+              need={need}
+              expanded={expandedId === need.id}
+              onToggle={() => setExpandedId(expandedId === need.id ? null : need.id)}
+              onStatusChange={updateStatus}
+              onVote={toggleVote}
+              onDelete={deleteNeed}
+              commentingId={commentingId}
+              setCommentingId={setCommentingId}
+              commentText={commentText}
+              setCommentText={setCommentText}
+              onAddComment={addComment}
+            />
+          ))}
+          {activeNeeds.length === 0 && (
+            <div className="text-center py-12 text-neutral-500">
+              No active needs match the current filters.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Completed Roadmap */}
+      {(completedNeeds.length > 0 || showingCompletedFilter) && (
+        <div>
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            className="flex items-center gap-2 w-full text-left group"
+          >
+            <div className="flex items-center gap-2 flex-1">
+              <Trophy size={18} className="text-gold" />
+              <h2 className="text-lg font-serif font-bold text-black">
+                Completed ({completedNeeds.length})
+              </h2>
+              <div className="flex-1 border-t border-neutral-200 ml-2" />
+            </div>
+            {showCompleted || showingCompletedFilter
+              ? <ChevronUp size={18} className="text-neutral-400" />
+              : <ChevronDown size={18} className="text-neutral-400" />
+            }
+          </button>
+
+          {(showCompleted || showingCompletedFilter) && (
+            <div className="mt-3 space-y-2">
+              {completedNeeds.map(need => (
+                <div key={need.id} className="bg-white rounded-lg border border-green-200 bg-green-50/30 p-4 flex items-center gap-3">
+                  <CheckCircle2 size={20} className="text-green-500 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-black">{need.title}</h3>
+                    <p className="text-sm text-neutral-500 truncate">{need.description}</p>
+                    {need.completedAt && (
+                      <span className="text-xs text-neutral-400">
+                        Completed {new Date(need.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    )}
+                  </div>
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${CATEGORY_CONFIG[need.category]?.color || 'bg-neutral-100 text-neutral-700'}`}>
+                    {need.category}
+                  </span>
+                </div>
+              ))}
+              {completedNeeds.length === 0 && showingCompletedFilter && (
+                <div className="text-center py-8 text-neutral-500">
+                  No completed needs yet.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Create Modal */}
       {showCreateForm && (
@@ -261,8 +319,8 @@ function NeedCard({ need, expanded, onToggle, onStatusChange, onVote, onDelete, 
   const statusActions = {
     proposed: [{ label: 'Plan', target: 'planned' }, { label: 'Defer', target: 'deferred' }],
     planned: [{ label: 'Start', target: 'in_progress' }, { label: 'Defer', target: 'deferred' }],
-    in_progress: [{ label: 'Complete', target: 'completed' }, { label: 'Defer', target: 'deferred' }],
-    completed: [],
+    in_progress: [{ label: 'Defer', target: 'deferred' }],
+    completed: [{ label: 'Reopen', target: 'proposed' }],
     deferred: [{ label: 'Reopen', target: 'proposed' }]
   }
 
@@ -347,6 +405,14 @@ function NeedCard({ need, expanded, onToggle, onStatusChange, onVote, onDelete, 
 
           {/* Status Actions */}
           <div className="flex items-center gap-2 flex-wrap">
+            {need.status !== 'completed' && (
+              <button
+                onClick={() => onStatusChange(need.id, 'completed')}
+                className="px-3 py-1 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1"
+              >
+                <CheckCircle2 size={14} /> Complete
+              </button>
+            )}
             {actions.map(a => (
               <button
                 key={a.target}
