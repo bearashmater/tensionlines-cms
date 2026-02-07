@@ -95,6 +95,7 @@ const PHILOSOPHERS_DIR = path.join(BASE_DIR, 'philosophers');
 const BOOKS_DIR = path.join(BASE_DIR, 'books');
 const POSTING_SCHEDULE = path.join(BASE_DIR, 'POSTING_SCHEDULE.md');
 const REPOST_CANDIDATES_FILE = path.join(BASE_DIR, 'content', 'repost-candidates.json');
+const FUTURE_NEEDS_FILE = path.join(BASE_DIR, 'mission-control', 'future-needs.json');
 
 // Cache for frequently accessed data - invalidated by chokidar watcher
 let cache = {
@@ -106,6 +107,7 @@ let cache = {
   postingSchedule: null,
   recurringTasks: null,
   repostCandidates: null,
+  futureNeeds: null,
   lastUpdate: null
 };
 
@@ -126,6 +128,8 @@ function invalidateCache(filePath) {
     cache.recurringTasks = null;
   } else if (filePath.includes('repost-candidates')) {
     cache.repostCandidates = null;
+  } else if (filePath.includes('future-needs')) {
+    cache.futureNeeds = null;
   }
   cache.lastUpdate = new Date().toISOString();
 }
@@ -1267,7 +1271,8 @@ function getStepAverages(data) {
 }
 
 // Valid filter values
-const VALID_STATUSES = ['assigned', 'in_progress', 'review', 'completed', 'shipped', 'blocked'];
+const VALID_STATUSES = ['pending', 'assigned', 'in_progress', 'review', 'completed', 'shipped', 'blocked', 'deferred'];
+const VALID_TASK_PRIORITIES = ['critical', 'high', 'medium', 'low'];
 const MAX_FILTER_LENGTH = 100;
 
 /**
@@ -1354,6 +1359,162 @@ app.get('/api/tasks/:id', (req, res) => {
     res.json(taskWithTracking);
   } catch (error) {
     console.error(error); res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Create a new task
+ */
+app.post('/api/tasks', (req, res) => {
+  try {
+    const { title, description, assigneeIds, status, llm, rationale, reviewerIds, metadata, createdBy } = req.body;
+
+    // ── Required field validation ──
+    if (!title || typeof title !== 'string' || title.trim().length === 0) {
+      return res.status(400).json({ error: 'title is required and must be a non-empty string' });
+    }
+    if (title.length > 500) {
+      return res.status(400).json({ error: 'title must be 500 characters or fewer' });
+    }
+
+    if (!description || typeof description !== 'string' || description.trim().length === 0) {
+      return res.status(400).json({ error: 'description is required and must be a non-empty string' });
+    }
+    if (description.length > 50000) {
+      return res.status(400).json({ error: 'description must be 50000 characters or fewer' });
+    }
+
+    if (!assigneeIds || !Array.isArray(assigneeIds) || assigneeIds.length === 0) {
+      return res.status(400).json({ error: 'assigneeIds is required and must be a non-empty array of agent IDs' });
+    }
+    // Validate each assignee is a safe string
+    for (const aid of assigneeIds) {
+      if (typeof aid !== 'string' || !/^[a-zA-Z0-9_-]{1,50}$/.test(aid)) {
+        return res.status(400).json({ error: `Invalid assigneeId: "${aid}". Must be alphanumeric/hyphens/underscores, 1-50 chars.` });
+      }
+    }
+
+    // ── Optional field validation ──
+    const taskStatus = status || 'pending';
+    if (!VALID_STATUSES.includes(taskStatus)) {
+      return res.status(400).json({ error: `Invalid status "${taskStatus}". Must be one of: ${VALID_STATUSES.join(', ')}` });
+    }
+
+    const validLlms = ['sonnet', 'haiku', 'opus', 'ollama'];
+    if (llm !== undefined && llm !== null && !validLlms.includes(llm)) {
+      return res.status(400).json({ error: `Invalid llm "${llm}". Must be one of: ${validLlms.join(', ')} (or null)` });
+    }
+
+    if (rationale !== undefined && typeof rationale !== 'string') {
+      return res.status(400).json({ error: 'rationale must be a string' });
+    }
+
+    if (reviewerIds !== undefined) {
+      if (!Array.isArray(reviewerIds)) {
+        return res.status(400).json({ error: 'reviewerIds must be an array' });
+      }
+      for (const rid of reviewerIds) {
+        if (typeof rid !== 'string' || !/^[a-zA-Z0-9_-]{1,50}$/.test(rid)) {
+          return res.status(400).json({ error: `Invalid reviewerId: "${rid}"` });
+        }
+      }
+    }
+
+    if (metadata !== undefined && (typeof metadata !== 'object' || Array.isArray(metadata) || metadata === null)) {
+      return res.status(400).json({ error: 'metadata must be a plain object' });
+    }
+
+    // Validate metadata.priority if provided
+    if (metadata?.priority && !VALID_TASK_PRIORITIES.includes(metadata.priority)) {
+      return res.status(400).json({ error: `Invalid metadata.priority "${metadata.priority}". Must be one of: ${VALID_TASK_PRIORITIES.join(', ')}` });
+    }
+
+    const creator = createdBy || 'system';
+    if (typeof creator !== 'string' || !/^[a-zA-Z0-9_-]{1,50}$/.test(creator)) {
+      return res.status(400).json({ error: 'Invalid createdBy value' });
+    }
+
+    // ── Generate next task ID ──
+    const data = getMissionControl();
+    let maxNum = 0;
+    for (const t of data.tasks) {
+      const match = t.id.match(/^task-(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) maxNum = num;
+      }
+    }
+    const nextNum = maxNum + 1;
+    const newId = `task-${String(nextNum).padStart(3, '0')}`;
+
+    // ── Build task object ──
+    const now = new Date().toISOString();
+    const newTask = {
+      id: newId,
+      title: title.trim(),
+      description: description.trim(),
+      status: taskStatus,
+      assigneeIds,
+      createdBy: creator,
+      createdAt: now,
+      llm: llm !== undefined ? llm : null,
+      rationale: rationale || '',
+      reviewerIds: reviewerIds || [],
+      metadata: metadata || {}
+    };
+
+    // Set startedAt if status implies work has begun
+    if (['in_progress', 'review'].includes(taskStatus)) {
+      newTask.startedAt = now;
+    }
+
+    // ── Persist ──
+    data.tasks.push(newTask);
+
+    // Log activity
+    data.activities.unshift({
+      id: `activity-${Date.now()}`,
+      type: 'task_created',
+      agentId: creator,
+      taskId: newId,
+      timestamp: now,
+      description: `Created task: ${newTask.title}`,
+      metadata: {
+        assigneeIds,
+        status: taskStatus,
+        priority: metadata?.priority || null
+      }
+    });
+
+    // Create notification for assignees
+    data.notifications.unshift({
+      id: `notif-${Date.now()}`,
+      type: 'task_assigned',
+      title: 'New Task Assigned',
+      message: `**${newTask.title}**\n\nAssigned to: ${assigneeIds.join(', ')}\nPriority: ${metadata?.priority || 'not set'}\n\n${description.substring(0, 200)}${description.length > 200 ? '...' : ''}`,
+      read: false,
+      createdAt: now,
+      metadata: {
+        taskId: newId,
+        assigneeIds,
+        createdBy: creator
+      }
+    });
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(data, null, 2));
+    cache.missionControl = null;
+
+    // Return the task with time tracking
+    res.status(201).json({
+      success: true,
+      task: {
+        ...newTask,
+        timeTracking: calculateTimeInStatus(newTask)
+      }
+    });
+  } catch (error) {
+    console.error('Error creating task:', error);
+    res.status(500).json({ error: 'Failed to create task' });
   }
 });
 
@@ -3803,7 +3964,8 @@ const watcher = chokidar.watch([
   `${BOOKS_DIR}/*/PROJECT_TRACKER.md`,
   `${BOOKS_DIR}/*/outline/MASTER_OUTLINE.md`,
   `${BOOKS_DIR}/*/chapters/*.md`,
-  REPOST_CANDIDATES_FILE
+  REPOST_CANDIDATES_FILE,
+  FUTURE_NEEDS_FILE
 ], {
   ignored: /(^|[\/\\])\../, // ignore dotfiles
   persistent: true
@@ -4917,6 +5079,327 @@ app.get('/api/optimizations/stats', (req, res) => {
       },
       lastRunDate: optimizations.runs[0]?.date || null
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ============================================================================
+// FUTURE NEEDS
+// ============================================================================
+
+const VALID_NEED_STATUSES = ['proposed', 'planned', 'in_progress', 'completed', 'deferred'];
+const VALID_NEED_PRIORITIES = ['high', 'medium', 'low'];
+const VALID_NEED_EFFORTS = ['small', 'medium', 'large'];
+const VALID_NEED_CATEGORIES = ['content', 'growth', 'analytics', 'infrastructure', 'monetization', 'governance'];
+
+function getFutureNeeds() {
+  if (cache.futureNeeds) return cache.futureNeeds;
+  try {
+    if (fs.existsSync(FUTURE_NEEDS_FILE)) {
+      cache.futureNeeds = JSON.parse(fs.readFileSync(FUTURE_NEEDS_FILE, 'utf8'));
+      return cache.futureNeeds;
+    }
+  } catch (err) {
+    console.error('Error reading future needs:', err);
+  }
+  return { needs: [], categories: {}, stats: { total: 0, byStatus: {}, byPriority: {}, lastUpdated: new Date().toISOString() } };
+}
+
+function saveFutureNeeds(data) {
+  // Recalculate stats
+  const needs = data.needs || [];
+  data.stats = {
+    total: needs.length,
+    byStatus: {
+      proposed: needs.filter(n => n.status === 'proposed').length,
+      planned: needs.filter(n => n.status === 'planned').length,
+      in_progress: needs.filter(n => n.status === 'in_progress').length,
+      completed: needs.filter(n => n.status === 'completed').length,
+      deferred: needs.filter(n => n.status === 'deferred').length
+    },
+    byPriority: {
+      high: needs.filter(n => n.priority === 'high').length,
+      medium: needs.filter(n => n.priority === 'medium').length,
+      low: needs.filter(n => n.priority === 'low').length
+    },
+    lastUpdated: new Date().toISOString()
+  };
+  fs.writeFileSync(FUTURE_NEEDS_FILE, JSON.stringify(data, null, 2));
+  cache.futureNeeds = null;
+}
+
+/**
+ * List all future needs with optional filters
+ */
+app.get('/api/future-needs', (req, res) => {
+  try {
+    const data = getFutureNeeds();
+    let needs = [...data.needs];
+
+    // Filter by category
+    if (req.query.category) {
+      needs = needs.filter(n => n.category === req.query.category);
+    }
+    // Filter by priority
+    if (req.query.priority) {
+      needs = needs.filter(n => n.priority === req.query.priority);
+    }
+    // Filter by status
+    if (req.query.status) {
+      needs = needs.filter(n => n.status === req.query.status);
+    }
+    // Filter by effort
+    if (req.query.effort) {
+      needs = needs.filter(n => n.effort === req.query.effort);
+    }
+
+    // Sort
+    const sortBy = req.query.sort || 'priority';
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    const effortOrder = { small: 0, medium: 1, large: 2 };
+
+    if (sortBy === 'priority') {
+      needs.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+    } else if (sortBy === 'votes') {
+      needs.sort((a, b) => b.votes - a.votes);
+    } else if (sortBy === 'effort') {
+      needs.sort((a, b) => effortOrder[a.effort] - effortOrder[b.effort]);
+    } else if (sortBy === 'newest') {
+      needs.sort((a, b) => new Date(b.proposedAt) - new Date(a.proposedAt));
+    }
+
+    res.json({ needs, categories: data.categories, total: needs.length });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Get future needs stats
+ */
+app.get('/api/future-needs/stats', (req, res) => {
+  try {
+    const data = getFutureNeeds();
+    const byCategory = {};
+    for (const cat of VALID_NEED_CATEGORIES) {
+      byCategory[cat] = data.needs.filter(n => n.category === cat).length;
+    }
+    res.json({
+      ...data.stats,
+      byCategory,
+      categories: data.categories
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Get single future need
+ */
+app.get('/api/future-needs/:id', (req, res) => {
+  try {
+    const data = getFutureNeeds();
+    const need = data.needs.find(n => n.id === req.params.id);
+    if (!need) {
+      return res.status(404).json({ error: 'Need not found' });
+    }
+    res.json(need);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Create new future need
+ */
+app.post('/api/future-needs', (req, res) => {
+  try {
+    const data = getFutureNeeds();
+    const { title, description, useCase, category, priority, effort, agents, dependencies, acceptanceCriteria, targetQuarter } = req.body;
+
+    if (!title || !description) {
+      return res.status(400).json({ error: 'title and description are required' });
+    }
+    if (category && !VALID_NEED_CATEGORIES.includes(category)) {
+      return res.status(400).json({ error: `Invalid category. Valid: ${VALID_NEED_CATEGORIES.join(', ')}` });
+    }
+    if (priority && !VALID_NEED_PRIORITIES.includes(priority)) {
+      return res.status(400).json({ error: `Invalid priority. Valid: ${VALID_NEED_PRIORITIES.join(', ')}` });
+    }
+    if (effort && !VALID_NEED_EFFORTS.includes(effort)) {
+      return res.status(400).json({ error: `Invalid effort. Valid: ${VALID_NEED_EFFORTS.join(', ')}` });
+    }
+
+    // Generate next ID
+    const maxNum = data.needs.reduce((max, n) => {
+      const num = parseInt(n.id.replace('need-', ''));
+      return num > max ? num : max;
+    }, 0);
+    const newId = `need-${String(maxNum + 1).padStart(3, '0')}`;
+
+    const newNeed = {
+      id: newId,
+      title,
+      description,
+      useCase: useCase || '',
+      category: category || 'infrastructure',
+      priority: priority || 'medium',
+      effort: effort || 'medium',
+      status: 'proposed',
+      proposedBy: req.body.proposedBy || 'shawn',
+      proposedAt: new Date().toISOString(),
+      targetQuarter: targetQuarter || '',
+      agents: agents || [],
+      dependencies: dependencies || [],
+      acceptanceCriteria: acceptanceCriteria || [],
+      votes: 0,
+      voters: [],
+      comments: [],
+      updatedAt: new Date().toISOString()
+    };
+
+    data.needs.push(newNeed);
+    saveFutureNeeds(data);
+    res.status(201).json(newNeed);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Update a future need
+ */
+app.patch('/api/future-needs/:id', (req, res) => {
+  try {
+    const data = getFutureNeeds();
+    const idx = data.needs.findIndex(n => n.id === req.params.id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Need not found' });
+    }
+
+    const updates = req.body;
+    const need = data.needs[idx];
+
+    // Validate status if provided
+    if (updates.status && !VALID_NEED_STATUSES.includes(updates.status)) {
+      return res.status(400).json({ error: `Invalid status. Valid: ${VALID_NEED_STATUSES.join(', ')}` });
+    }
+    if (updates.priority && !VALID_NEED_PRIORITIES.includes(updates.priority)) {
+      return res.status(400).json({ error: `Invalid priority. Valid: ${VALID_NEED_PRIORITIES.join(', ')}` });
+    }
+    if (updates.effort && !VALID_NEED_EFFORTS.includes(updates.effort)) {
+      return res.status(400).json({ error: `Invalid effort. Valid: ${VALID_NEED_EFFORTS.join(', ')}` });
+    }
+    if (updates.category && !VALID_NEED_CATEGORIES.includes(updates.category)) {
+      return res.status(400).json({ error: `Invalid category. Valid: ${VALID_NEED_CATEGORIES.join(', ')}` });
+    }
+
+    // Apply allowed updates
+    const allowedFields = ['title', 'description', 'useCase', 'category', 'priority', 'effort', 'status', 'targetQuarter', 'agents', 'dependencies', 'acceptanceCriteria'];
+    for (const field of allowedFields) {
+      if (updates[field] !== undefined) {
+        need[field] = updates[field];
+      }
+    }
+    need.updatedAt = new Date().toISOString();
+
+    data.needs[idx] = need;
+    saveFutureNeeds(data);
+    res.json(need);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Toggle vote on a need
+ */
+app.post('/api/future-needs/:id/vote', (req, res) => {
+  try {
+    const data = getFutureNeeds();
+    const need = data.needs.find(n => n.id === req.params.id);
+    if (!need) {
+      return res.status(404).json({ error: 'Need not found' });
+    }
+
+    const voter = req.body.voter || 'anonymous';
+    const voterIdx = need.voters.indexOf(voter);
+
+    if (voterIdx >= 0) {
+      // Unvote
+      need.voters.splice(voterIdx, 1);
+      need.votes = Math.max(0, need.votes - 1);
+    } else {
+      // Vote
+      need.voters.push(voter);
+      need.votes += 1;
+    }
+    need.updatedAt = new Date().toISOString();
+
+    saveFutureNeeds(data);
+    res.json({ votes: need.votes, voters: need.voters });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Add comment to a need
+ */
+app.post('/api/future-needs/:id/comments', (req, res) => {
+  try {
+    const data = getFutureNeeds();
+    const need = data.needs.find(n => n.id === req.params.id);
+    if (!need) {
+      return res.status(404).json({ error: 'Need not found' });
+    }
+
+    const { text, author } = req.body;
+    if (!text) {
+      return res.status(400).json({ error: 'text is required' });
+    }
+
+    const comment = {
+      id: `comment-${Date.now()}`,
+      text,
+      author: author || 'shawn',
+      createdAt: new Date().toISOString()
+    };
+
+    need.comments.push(comment);
+    need.updatedAt = new Date().toISOString();
+
+    saveFutureNeeds(data);
+    res.status(201).json(comment);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Delete a future need
+ */
+app.delete('/api/future-needs/:id', (req, res) => {
+  try {
+    const data = getFutureNeeds();
+    const idx = data.needs.findIndex(n => n.id === req.params.id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Need not found' });
+    }
+
+    data.needs.splice(idx, 1);
+    saveFutureNeeds(data);
+    res.json({ success: true });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });

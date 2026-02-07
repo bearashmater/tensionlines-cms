@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
-import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell, Zap } from 'lucide-react'
+import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell, Zap, Compass } from 'lucide-react'
 import { useState } from 'react'
 
 // Import navigation components
@@ -22,6 +22,7 @@ import HumanTasks from './components/HumanTasks'
 import SquadLeadDashboard from './components/SquadLeadDashboard'
 import NotificationsView from './components/NotificationsView'
 import OptimizationDashboard from './components/OptimizationDashboard'
+import FutureNeeds from './components/FutureNeeds'
 
 // Navigation structure with grouping
 const navGroups = [
@@ -43,6 +44,7 @@ const navGroups = [
       { to: '/schedule', icon: <Calendar size={20} />, label: 'Schedule' },
       { to: '/squad-lead', icon: <Target size={20} />, label: 'Squad Lead' },
       { to: '/optimization', icon: <Zap size={20} />, label: 'Optimization' },
+      { to: '/future-needs', icon: <Compass size={20} />, label: 'Future Needs' },
       { to: '/mission-control/', icon: <Rocket size={20} />, label: 'Mission Control', external: true }
     ]
   },
@@ -168,6 +170,7 @@ function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenu
             <Route path="/search" element={<SearchView />} />
             <Route path="/squad-lead" element={<SquadLeadDashboard />} />
             <Route path="/optimization" element={<OptimizationDashboard />} />
+            <Route path="/future-needs" element={<FutureNeeds />} />
           </Routes>
         </main>
       </div>

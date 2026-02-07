@@ -76,6 +76,13 @@ export async function getTask(id) {
   return apiFetch(`/tasks/${id}`)
 }
 
+export async function createTask(data) {
+  return apiFetch('/tasks', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+}
+
 // ============================================================================
 // ACTIVITIES
 // ============================================================================
@@ -220,4 +227,55 @@ export async function getTaskBreakdown(id) {
 
 export async function getStepAverages() {
   return apiFetch('/step-averages')
+}
+
+// ============================================================================
+// FUTURE NEEDS
+// ============================================================================
+
+export async function getFutureNeeds(filters = {}) {
+  const params = new URLSearchParams(filters)
+  return apiFetch(`/future-needs?${params}`)
+}
+
+export async function getFutureNeedsStats() {
+  return apiFetch('/future-needs/stats')
+}
+
+export async function getFutureNeed(id) {
+  return apiFetch(`/future-needs/${id}`)
+}
+
+export async function createFutureNeed(data) {
+  return apiFetch('/future-needs', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+}
+
+export async function updateFutureNeed(id, data) {
+  return apiFetch(`/future-needs/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data)
+  })
+}
+
+export async function voteFutureNeed(id, voter) {
+  return apiFetch(`/future-needs/${id}/vote`, {
+    method: 'POST',
+    body: JSON.stringify({ voter })
+  })
+}
+
+export async function commentFutureNeed(id, text, author) {
+  return apiFetch(`/future-needs/${id}/comments`, {
+    method: 'POST',
+    body: JSON.stringify({ text, author })
+  })
+}
+
+export async function deleteFutureNeed(id) {
+  return apiFetch(`/future-needs/${id}`, {
+    method: 'DELETE'
+  })
 }
