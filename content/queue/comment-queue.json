@@ -1,0 +1,29 @@
+{
+  "queue": [],
+  "posted": [],
+  "settings": {
+    "platforms": {
+      "bluesky": {
+        "enabled": true,
+        "maxCommentsPerDay": 5,
+        "minMinutesBetweenComments": 15
+      },
+      "twitter": {
+        "enabled": true,
+        "maxCommentsPerDay": 5,
+        "minMinutesBetweenComments": 15
+      }
+    },
+    "scanKeywords": [
+      "philosophy",
+      "stoicism",
+      "nietzsche",
+      "existentialism",
+      "meaning of life",
+      "paradox",
+      "tension",
+      "self-knowledge"
+    ],
+    "scanEnabled": true
+  }
+}
