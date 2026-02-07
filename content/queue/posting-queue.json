@@ -77,7 +77,7 @@
       },
       "bluesky": {
         "enabled": true,
-        "maxPostsPerDay": 5,
+        "maxPostsPerDay": 3,
         "requiresCanva": false,
         "safeHours": {
           "start": 8,
