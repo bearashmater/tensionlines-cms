@@ -2066,6 +2066,28 @@ app.post('/api/posting-queue/:id/publish', async (req, res) => {
       return res.status(400).json({ error: 'Only Bluesky posts can be auto-published' });
     }
 
+    // Server-side rate limit enforcement
+    const settings = queue.settings?.platforms?.bluesky || {};
+    const maxPerDay = settings.maxPostsPerDay || 3;
+    const minHours = settings.minHoursBetweenPosts || 2;
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const posted = queue.posted || [];
+    const bskyPostedToday = posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'bluesky');
+
+    if (bskyPostedToday.length >= maxPerDay) {
+      return res.status(429).json({ error: `Daily limit reached (${maxPerDay} posts/day)` });
+    }
+
+    if (bskyPostedToday.length > 0) {
+      const lastPostedAt = new Date(bskyPostedToday[0].postedAt);
+      const hoursSinceLast = (now - lastPostedAt) / (1000 * 60 * 60);
+      if (hoursSinceLast < minHours) {
+        const waitMins = Math.ceil((minHours * 60) - (hoursSinceLast * 60));
+        return res.status(429).json({ error: `Too soon — wait ${waitMins} more minutes (${minHours}h minimum between posts)` });
+      }
+    }
+
     const result = await postToBluesky(item.content);
 
     item.status = 'posted';
