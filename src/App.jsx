@@ -28,6 +28,7 @@ import ReplyQueue from './components/ReplyQueue'
 import RepurposeEngine from './components/RepurposeEngine'
 import CommentQueue from './components/CommentQueue'
 import OutreachDashboard from './components/OutreachDashboard'
+import WeeklyReport from './components/WeeklyReport'
 
 // Navigation structure with grouping
 const navGroups = [
@@ -75,6 +76,7 @@ const navGroups = [
     items: [
       { to: '/knowledge', icon: <Activity size={20} />, label: 'Knowledge' },
       { to: '/analytics', icon: <BarChart3 size={20} />, label: 'Analytics' },
+      { to: '/weekly-report', icon: <Calendar size={20} />, label: 'Weekly Report' },
       { to: '/outreach', icon: <Target size={20} />, label: 'Outreach' },
       { to: '/search', icon: <Search size={20} />, label: 'Search' }
     ]
@@ -190,6 +192,7 @@ function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenu
             <Route path="/squad-lead" element={<SquadLeadDashboard />} />
             <Route path="/optimization" element={<OptimizationDashboard />} />
             <Route path="/future-needs" element={<FutureNeeds />} />
+            <Route path="/weekly-report" element={<WeeklyReport />} />
             <Route path="/outreach" element={<OutreachDashboard />} />
           </Routes>
         </main>

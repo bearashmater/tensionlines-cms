@@ -112,6 +112,7 @@ const FUTURE_NEEDS_FILE = path.join(BASE_DIR, 'mission-control', 'future-needs.j
 const ANALYTICS_DATA_FILE = path.join(BASE_DIR, 'mission-control', 'analytics-data.json');
 const ENGAGEMENT_INBOX_FILE = path.join(BASE_DIR, 'content', 'queue', 'engagement-inbox.json');
 const COMMENT_QUEUE_FILE = path.join(BASE_DIR, 'content', 'queue', 'comment-queue.json');
+const WEEKLY_REPORTS_DIR = path.join(BASE_DIR, 'mission-control', 'weekly-reports');
 
 // Claude API client (lazy — only created when ANTHROPIC_API_KEY is set)
 let anthropicClient = null;
@@ -179,6 +180,70 @@ function getMissionControl() {
   const content = fs.readFileSync(MISSION_CONTROL_DB, 'utf8');
   cache.missionControl = JSON.parse(content);
   return cache.missionControl;
+}
+
+// ============================================================================
+// WEEKLY REPORT HELPERS
+// ============================================================================
+
+function getISOWeekId(date) {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  // Set to nearest Thursday (ISO weeks are defined by Thursday)
+  d.setUTCDate(d.getUTCDate() + 3 - ((d.getUTCDay() + 6) % 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+  const weekNo = 1 + Math.round(((d.getTime() - yearStart.getTime()) / 86400000 - 3 + ((yearStart.getUTCDay() + 6) % 7)) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+}
+
+function getWeekBounds(weekId) {
+  const [yearStr, weekStr] = weekId.split('-W');
+  const year = parseInt(yearStr);
+  const week = parseInt(weekStr);
+  // Jan 4 is always in week 1
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const dayOfWeek = jan4.getUTCDay() || 7;
+  const monday = new Date(jan4);
+  monday.setUTCDate(jan4.getUTCDate() - dayOfWeek + 1 + (week - 1) * 7);
+  const sunday = new Date(monday);
+  sunday.setUTCDate(monday.getUTCDate() + 6);
+  sunday.setUTCHours(23, 59, 59, 999);
+  return { start: monday, end: sunday };
+}
+
+function getPreviousWeekId(weekId) {
+  const { start } = getWeekBounds(weekId);
+  const prev = new Date(start);
+  prev.setUTCDate(prev.getUTCDate() - 7);
+  return getISOWeekId(prev);
+}
+
+function getNextWeekId(weekId) {
+  const { start } = getWeekBounds(weekId);
+  const next = new Date(start);
+  next.setUTCDate(next.getUTCDate() + 7);
+  return getISOWeekId(next);
+}
+
+function readWeeklyReport(weekId) {
+  const filePath = path.join(WEEKLY_REPORTS_DIR, `${weekId}.json`);
+  if (fs.existsSync(filePath)) {
+    try {
+      return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    } catch (e) {
+      console.error(`Error reading weekly report ${weekId}:`, e);
+    }
+  }
+  return null;
+}
+
+function saveWeeklyReport(weekId, data) {
+  if (!fs.existsSync(WEEKLY_REPORTS_DIR)) {
+    fs.mkdirSync(WEEKLY_REPORTS_DIR, { recursive: true });
+  }
+  fs.writeFileSync(
+    path.join(WEEKLY_REPORTS_DIR, `${weekId}.json`),
+    JSON.stringify(data, null, 2)
+  );
 }
 
 /**
@@ -2260,6 +2325,314 @@ app.get('/api/outreach-analytics', (req, res) => {
   } catch (error) {
     console.error('Error getting outreach analytics:', error);
     res.status(500).json({ error: 'Failed to get outreach analytics' });
+  }
+});
+
+// ============================================================================
+// WEEKLY REPORT GENERATOR
+// ============================================================================
+
+function generateWeeklyReport(weekId) {
+  const { start: weekStart, end: weekEnd } = getWeekBounds(weekId);
+  const now = new Date();
+  const partial = now < weekEnd;
+  const prevWeekId = getPreviousWeekId(weekId);
+
+  // Helper: check if a date string falls within the week
+  function inWeek(dateStr) {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    return d >= weekStart && d <= weekEnd;
+  }
+
+  // --- Source 1: Posts Published ---
+  let postsPublished = 0;
+  const byPlatform = {};
+  const byPhilosopher = {};
+  const topPosts = [];
+  try {
+    const queue = getPostingQueue();
+    const posted = (queue.posted || []).filter(p => inWeek(p.postedAt));
+    postsPublished = posted.length;
+    for (const p of posted) {
+      const plat = p.platform || 'unknown';
+      if (!byPlatform[plat]) byPlatform[plat] = { posts: 0 };
+      byPlatform[plat].posts++;
+      if (p.createdBy) {
+        if (!byPhilosopher[p.createdBy]) byPhilosopher[p.createdBy] = { posts: 0 };
+        byPhilosopher[p.createdBy].posts++;
+      }
+      topPosts.push({
+        platform: plat,
+        content: (p.content || p.text || '').slice(0, 200),
+        url: p.url || p.postUrl || null,
+        engagement: (p.likes || 0) + (p.comments || 0) + (p.shares || 0),
+        postedAt: p.postedAt
+      });
+    }
+    topPosts.sort((a, b) => b.engagement - a.engagement);
+  } catch (e) {
+    console.error('[WeeklyReport] Posts error:', e.message);
+  }
+
+  // --- Source 2: Engagement ---
+  let totalLikes = 0, totalComments = 0, totalShares = 0, totalImpressions = 0;
+  let avgEngagementRate = 0;
+  const inboxActivity = { blueskyReplies: 0, twitterReplies: 0 };
+  try {
+    const engData = getEngagementData();
+    const weekPosts = (engData.posts || []).filter(p => inWeek(p.publishedAt));
+    for (const p of weekPosts) {
+      totalLikes += p.likes || 0;
+      totalComments += p.comments || 0;
+      totalShares += p.shares || 0;
+      totalImpressions += p.impressions || 0;
+    }
+    if (weekPosts.length > 0 && totalImpressions > 0) {
+      avgEngagementRate = Math.round(((totalLikes + totalComments + totalShares) / totalImpressions) * 10000) / 100;
+    }
+  } catch (e) {
+    console.error('[WeeklyReport] Engagement error:', e.message);
+  }
+  try {
+    const inbox = getEngagementInbox();
+    inboxActivity.blueskyReplies = (inbox.bluesky?.items || []).filter(i => inWeek(i.indexedAt)).length;
+    inboxActivity.twitterReplies = (inbox.twitter?.items || []).filter(i => inWeek(i.indexedAt)).length;
+  } catch (e) { /* no inbox data */ }
+
+  // --- Source 3: Follower Delta ---
+  const followerPlatforms = {};
+  let totalFollowerDelta = 0;
+  try {
+    const analytics = getAnalyticsData();
+    for (const [platform, info] of Object.entries(analytics.platforms || {})) {
+      const history = info.history || [];
+      if (history.length === 0) continue;
+      // Find closest snapshots to week boundaries
+      let startSnap = null, endSnap = null;
+      for (const snap of history) {
+        const snapDate = new Date(snap.date);
+        if (snapDate <= weekStart || !startSnap) startSnap = snap;
+        if (snapDate <= weekEnd) endSnap = snap;
+      }
+      if (!startSnap || !endSnap) continue;
+      const startVal = startSnap.followers || 0;
+      const endVal = endSnap.followers || 0;
+      if (startVal === 0 && endVal === 0) continue;
+      const delta = endVal - startVal;
+      followerPlatforms[platform] = { start: startVal, end: endVal, delta };
+      totalFollowerDelta += delta;
+    }
+  } catch (e) {
+    console.error('[WeeklyReport] Follower error:', e.message);
+  }
+
+  // --- Source 4: Agent Productivity ---
+  let totalCompleted = 0, totalCreated = 0;
+  const agentCounts = {};
+  let avgCompletionMs = 0;
+  try {
+    const mc = getMissionControl();
+    const completedTasks = (mc.tasks || []).filter(t => inWeek(t.completedAt));
+    const createdTasks = (mc.tasks || []).filter(t => inWeek(t.createdAt));
+    totalCompleted = completedTasks.length;
+    totalCreated = createdTasks.length;
+    let completionTimeSum = 0, completionTimeCount = 0;
+    for (const t of completedTasks) {
+      const assignees = t.assigneeIds || [];
+      for (const aid of assignees) {
+        if (!agentCounts[aid]) agentCounts[aid] = { completed: 0 };
+        agentCounts[aid].completed++;
+      }
+      if (t.createdAt && t.completedAt) {
+        completionTimeSum += new Date(t.completedAt) - new Date(t.createdAt);
+        completionTimeCount++;
+      }
+    }
+    if (completionTimeCount > 0) {
+      avgCompletionMs = Math.round(completionTimeSum / completionTimeCount);
+    }
+    // Map agent IDs to names
+    const agentMap = {};
+    for (const a of (mc.agents || [])) {
+      agentMap[a.id] = a.name || a.id;
+    }
+    var byAgent = Object.entries(agentCounts)
+      .map(([id, data]) => ({ id, name: agentMap[id] || id, completed: data.completed }))
+      .sort((a, b) => b.completed - a.completed);
+  } catch (e) {
+    console.error('[WeeklyReport] Agent error:', e.message);
+    var byAgent = [];
+  }
+
+  // --- Source 5: Cost Summary ---
+  let totalSpent = 0, dailyBudget = 2;
+  let costByDay = [];
+  let costByModel = [];
+  try {
+    const costFilePath = path.join(BASE_DIR, 'cost-tracking/daily-costs.json');
+    if (fs.existsSync(costFilePath)) {
+      const costs = JSON.parse(fs.readFileSync(costFilePath, 'utf8'));
+      dailyBudget = costs.daily?.budget || 2;
+      costByDay = (costs.weekly || []).map(d => ({ label: d.date || d.label, cost: d.cost || 0 }));
+      totalSpent = costByDay.reduce((sum, d) => sum + d.cost, 0);
+      costByModel = (costs.models || []).map(m => ({ name: m.name, cost: m.cost || m.total || 0 }));
+    }
+  } catch (e) {
+    console.error('[WeeklyReport] Cost error:', e.message);
+  }
+
+  // --- Source 6: Outreach ---
+  let targetsContacted = 0, outreachFollowBacks = 0, outreachReplies = 0;
+  try {
+    const TWITTER_OUTREACH_DIR = path.join(BASE_DIR, 'twitter-outreach');
+    if (fs.existsSync(TWITTER_OUTREACH_DIR)) {
+      const files = fs.readdirSync(TWITTER_OUTREACH_DIR).filter(f => f.endsWith('.json'));
+      for (const file of files) {
+        const data = JSON.parse(fs.readFileSync(path.join(TWITTER_OUTREACH_DIR, file), 'utf-8'));
+        if (!inWeek(data.date ? data.date + 'T12:00:00Z' : null)) continue;
+        const users = data.users || [];
+        targetsContacted += users.length;
+        outreachFollowBacks += users.filter(u => u.followedBack).length;
+        outreachReplies += users.filter(u => u.replied).length;
+      }
+    }
+  } catch (e) {
+    console.error('[WeeklyReport] Outreach error:', e.message);
+  }
+
+  // --- Week-over-Week Comparison ---
+  let comparison = null;
+  const prevReport = readWeeklyReport(prevWeekId);
+  if (prevReport) {
+    comparison = {
+      postsPublished: postsPublished - (prevReport.content?.postsPublished || 0),
+      totalEngagement: (totalLikes + totalComments + totalShares) -
+        ((prevReport.engagement?.totalLikes || 0) + (prevReport.engagement?.totalComments || 0) + (prevReport.engagement?.totalShares || 0)),
+      followerDelta: totalFollowerDelta - (prevReport.followers?.totalDelta || 0),
+      totalCost: totalSpent - (prevReport.costs?.totalSpent || 0),
+      tasksCompleted: totalCompleted - (prevReport.agents?.totalCompleted || 0)
+    };
+  }
+
+  const report = {
+    weekId,
+    weekStart: weekStart.toISOString().split('T')[0],
+    weekEnd: weekEnd.toISOString().split('T')[0],
+    generatedAt: now.toISOString(),
+    partial,
+    content: {
+      postsPublished,
+      byPlatform,
+      byPhilosopher,
+      topPosts: topPosts.slice(0, 5)
+    },
+    engagement: {
+      totalLikes,
+      totalComments,
+      totalShares,
+      avgEngagementRate,
+      inboxActivity
+    },
+    followers: {
+      platforms: followerPlatforms,
+      totalDelta: totalFollowerDelta
+    },
+    agents: {
+      totalCompleted,
+      totalCreated,
+      avgCompletionMs,
+      byAgent
+    },
+    costs: {
+      totalSpent: Math.round(totalSpent * 100) / 100,
+      dailyBudget,
+      byDay: costByDay,
+      byModel: costByModel
+    },
+    outreach: {
+      targetsContacted,
+      followBackRate: targetsContacted > 0 ? Math.round((outreachFollowBacks / targetsContacted) * 100) : 0,
+      replyRate: targetsContacted > 0 ? Math.round((outreachReplies / targetsContacted) * 100) : 0
+    },
+    comparison
+  };
+
+  // Only save completed weeks
+  if (!partial) {
+    saveWeeklyReport(weekId, report);
+  }
+
+  return report;
+}
+
+// ============================================================================
+// WEEKLY REPORT API ENDPOINTS
+// ============================================================================
+
+/**
+ * GET /api/weekly-report — Get report for a specific week (or current)
+ */
+app.get('/api/weekly-report', (req, res) => {
+  try {
+    const weekId = req.query.week || getISOWeekId(new Date());
+    // Try stored report first
+    let report = readWeeklyReport(weekId);
+    if (!report) {
+      report = generateWeeklyReport(weekId);
+    }
+    res.json(report);
+  } catch (error) {
+    console.error('Error getting weekly report:', error);
+    res.status(500).json({ error: 'Failed to get weekly report' });
+  }
+});
+
+/**
+ * GET /api/weekly-report/list — List all stored reports
+ */
+app.get('/api/weekly-report/list', (req, res) => {
+  try {
+    if (!fs.existsSync(WEEKLY_REPORTS_DIR)) {
+      return res.json([]);
+    }
+    const files = fs.readdirSync(WEEKLY_REPORTS_DIR)
+      .filter(f => f.endsWith('.json'))
+      .sort()
+      .reverse();
+    const list = files.map(f => {
+      try {
+        const data = JSON.parse(fs.readFileSync(path.join(WEEKLY_REPORTS_DIR, f), 'utf8'));
+        return {
+          weekId: data.weekId,
+          weekStart: data.weekStart,
+          weekEnd: data.weekEnd,
+          generatedAt: data.generatedAt
+        };
+      } catch (e) {
+        return null;
+      }
+    }).filter(Boolean);
+    res.json(list);
+  } catch (error) {
+    console.error('Error listing weekly reports:', error);
+    res.status(500).json({ error: 'Failed to list reports' });
+  }
+});
+
+/**
+ * POST /api/weekly-report/generate — Force-regenerate a report
+ */
+app.post('/api/weekly-report/generate', (req, res) => {
+  try {
+    const weekId = req.body.week || getISOWeekId(new Date());
+    const report = generateWeeklyReport(weekId);
+    // Force save even if partial (user explicitly requested)
+    saveWeeklyReport(weekId, report);
+    res.json(report);
+  } catch (error) {
+    console.error('Error generating weekly report:', error);
+    res.status(500).json({ error: 'Failed to generate report' });
   }
 });
 
@@ -7130,6 +7503,25 @@ cron.schedule('0 6 * * *', () => {
 });
 
 console.log('[Cron] Daily Twitter metrics snapshot scheduled for 6:00 AM PST');
+
+// Weekly report generation — every Monday at 7 AM PST, generate previous week's report
+cron.schedule('0 7 * * 1', () => {
+  try {
+    const prevWeekId = getPreviousWeekId(getISOWeekId(new Date()));
+    const existing = readWeeklyReport(prevWeekId);
+    if (existing) {
+      console.log(`[Cron] Weekly report for ${prevWeekId} already exists, skipping.`);
+      return;
+    }
+    console.log(`[Cron] Generating weekly report for ${prevWeekId}...`);
+    const report = generateWeeklyReport(prevWeekId);
+    saveWeeklyReport(prevWeekId, report);
+    console.log(`[Cron] Weekly report saved: ${report.content.postsPublished} posts, ${report.agents.totalCompleted} tasks completed, $${report.costs.totalSpent} spent`);
+  } catch (err) {
+    console.error('[Cron] Weekly report generation failed:', err);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[Cron] Weekly report generation scheduled for Monday 7:00 AM PST');
 
 // ============================================================================
 // OPTIMIZATION API ENDPOINTS
