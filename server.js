@@ -94,6 +94,7 @@ const MEMORY_DIR = path.join(BASE_DIR, 'memory');
 const PHILOSOPHERS_DIR = path.join(BASE_DIR, 'philosophers');
 const BOOKS_DIR = path.join(BASE_DIR, 'books');
 const POSTING_SCHEDULE = path.join(BASE_DIR, 'POSTING_SCHEDULE.md');
+const REPOST_CANDIDATES_FILE = path.join(BASE_DIR, 'content', 'repost-candidates.json');
 
 // Cache for frequently accessed data - invalidated by chokidar watcher
 let cache = {
@@ -104,6 +105,7 @@ let cache = {
   booksProgress: null,
   postingSchedule: null,
   recurringTasks: null,
+  repostCandidates: null,
   lastUpdate: null
 };
 
@@ -122,6 +124,8 @@ function invalidateCache(filePath) {
     cache.postingSchedule = null;
   } else if (filePath.includes('recurring-tasks')) {
     cache.recurringTasks = null;
+  } else if (filePath.includes('repost-candidates')) {
+    cache.repostCandidates = null;
   }
   cache.lastUpdate = new Date().toISOString();
 }
@@ -1827,6 +1831,258 @@ app.post('/api/posting-queue/:id/posted', (req, res) => {
   } catch (error) {
     console.error('Error marking as posted:', error);
     res.status(500).json({ error: 'Failed to mark as posted' });
+  }
+});
+
+// ============================================================================
+// REPOST CANDIDATES
+// ============================================================================
+
+function getRepostCandidates() {
+  if (cache.repostCandidates) return cache.repostCandidates;
+  try {
+    if (fs.existsSync(REPOST_CANDIDATES_FILE)) {
+      cache.repostCandidates = JSON.parse(fs.readFileSync(REPOST_CANDIDATES_FILE, 'utf8'));
+      return cache.repostCandidates;
+    }
+  } catch (err) {
+    console.error('Error reading repost candidates:', err);
+  }
+  return { candidates: [], converted: [], settings: { maxPerDay: 5 } };
+}
+
+function saveRepostCandidates(data) {
+  fs.writeFileSync(REPOST_CANDIDATES_FILE, JSON.stringify(data, null, 2));
+  cache.repostCandidates = null;
+}
+
+/**
+ * Get pending repost candidates
+ */
+app.get('/api/repost-candidates', (req, res) => {
+  try {
+    const data = getRepostCandidates();
+    const pending = data.candidates.filter(c => c.status === 'pending');
+    res.json({
+      candidates: pending,
+      convertedCount: data.converted.length,
+      settings: data.settings
+    });
+  } catch (error) {
+    console.error('Error getting repost candidates:', error);
+    res.status(500).json({ error: 'Failed to get repost candidates' });
+  }
+});
+
+/**
+ * Submit a new repost candidate
+ */
+app.post('/api/repost-candidates', (req, res) => {
+  try {
+    const { url, platform, submittedBy, author, originalText, commentary, reason, action } = req.body;
+
+    // Validate required fields
+    if (!url || !platform || !submittedBy || !commentary) {
+      return res.status(400).json({
+        error: 'Missing required fields: url, platform, submittedBy, commentary'
+      });
+    }
+
+    const validActions = ['retweet', 'quote', 'reply', 'repost', 'share'];
+    if (action && !validActions.includes(action)) {
+      return res.status(400).json({ error: `Invalid action. Must be one of: ${validActions.join(', ')}` });
+    }
+
+    const data = getRepostCandidates();
+    const candidate = {
+      id: `repost-${Date.now()}`,
+      platform,
+      submittedBy,
+      url,
+      author: author || null,
+      originalText: originalText || null,
+      commentary,
+      reason: reason || null,
+      action: action || 'quote',
+      status: 'pending',
+      submittedAt: new Date().toISOString()
+    };
+
+    data.candidates.push(candidate);
+    saveRepostCandidates(data);
+
+    console.log(`[Repost] New candidate from ${submittedBy}: ${url}`);
+    res.json({ success: true, candidate });
+  } catch (error) {
+    console.error('Error adding repost candidate:', error);
+    res.status(500).json({ error: 'Failed to add repost candidate' });
+  }
+});
+
+/**
+ * Reject/remove a repost candidate
+ */
+app.delete('/api/repost-candidates/:id', (req, res) => {
+  try {
+    const data = getRepostCandidates();
+    const index = data.candidates.findIndex(c => c.id === req.params.id);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Candidate not found' });
+    }
+    data.candidates.splice(index, 1);
+    saveRepostCandidates(data);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error removing repost candidate:', error);
+    res.status(500).json({ error: 'Failed to remove repost candidate' });
+  }
+});
+
+/**
+ * Convert pending repost candidates into human tasks
+ */
+function convertRepostCandidates() {
+  console.log('[RepostCuration] Converting pending candidates to tasks...');
+
+  const data = getRepostCandidates();
+  const pending = data.candidates.filter(c => c.status === 'pending');
+
+  if (pending.length === 0) {
+    console.log('[RepostCuration] No pending candidates to convert');
+    return { converted: 0 };
+  }
+
+  const maxPerDay = data.settings.maxPerDay || 5;
+  const toConvert = pending.slice(0, maxPerDay);
+
+  const mc = getMissionControl();
+
+  // Find highest existing task number
+  let highestNum = 0;
+  mc.tasks.forEach(t => {
+    const match = t.id.match(/^task-(\d+)/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (num > highestNum) highestNum = num;
+    }
+  });
+  const baseNum = highestNum + 1;
+  const baseId = `task-${String(baseNum).padStart(3, '0')}`;
+  const suffixes = ['', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
+
+  const now = new Date().toISOString();
+  const convertedTasks = [];
+
+  toConvert.forEach((candidate, index) => {
+    const taskId = index === 0 ? baseId : `${baseId}${suffixes[index] || String.fromCharCode(97 + index)}`;
+
+    // Build action label
+    const actionLabels = {
+      retweet: 'Retweet',
+      quote: 'Quote tweet',
+      reply: 'Reply to',
+      repost: 'Repost',
+      share: 'Share'
+    };
+    const actionLabel = actionLabels[candidate.action] || 'Share';
+    const authorDisplay = candidate.author || 'this post';
+
+    // Build description in task-033 format
+    let description = `${actionLabel} ${authorDisplay} on ${candidate.platform}.\n`;
+
+    if (candidate.originalText) {
+      description += `\n**They said:** "${candidate.originalText}"\n`;
+    }
+
+    if (candidate.reason) {
+      description += `\n**Why:** ${candidate.reason}\n`;
+    }
+
+    description += `\n${candidate.url}\n`;
+    description += `\n> ${candidate.commentary}`;
+
+    const task = {
+      id: taskId,
+      title: `${actionLabel} ${authorDisplay}`,
+      description,
+      status: 'assigned',
+      assigneeIds: ['human'],
+      llm: null,
+      rationale: `Repost candidate from ${candidate.submittedBy}`,
+      reviewerIds: [],
+      createdBy: candidate.submittedBy,
+      createdAt: now,
+      startedAt: now,
+      dispatchedAt: now,
+      dispatchedBy: 'system',
+      steps: [{
+        id: `step-${Date.now()}-${index}`,
+        description: `Submitted by ${candidate.submittedBy}`,
+        status: 'completed',
+        startedAt: candidate.submittedAt,
+        completedAt: now,
+        agentId: candidate.submittedBy
+      }],
+      metadata: {
+        priority: 'medium',
+        category: 'social',
+        platform: candidate.platform,
+        repostCandidate: true,
+        repostAction: candidate.action,
+        candidateId: candidate.id,
+        originalText: candidate.originalText || null,
+        estimatedMinutes: 2,
+        tags: [candidate.platform, 'repost', candidate.action, 'social'],
+        actionItems: [{
+          label: actionLabel,
+          url: candidate.url,
+          suggestedComment: candidate.commentary
+        }]
+      }
+    };
+
+    mc.tasks.push(task);
+    convertedTasks.push(task);
+
+    // Mark candidate as converted
+    candidate.status = 'converted';
+    candidate.convertedAt = now;
+    candidate.taskId = taskId;
+  });
+
+  // Move converted candidates to the converted array
+  data.candidates = data.candidates.filter(c => c.status === 'pending');
+  data.converted.push(...toConvert);
+
+  // Log activity
+  mc.activities.unshift({
+    id: `act-${Date.now()}`,
+    type: 'repost_conversion',
+    agentId: 'system',
+    message: `Converted ${convertedTasks.length} repost candidates into human tasks`,
+    taskIds: convertedTasks.map(t => t.id),
+    timestamp: now
+  });
+
+  // Save both files
+  fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+  cache.missionControl = null;
+  saveRepostCandidates(data);
+
+  console.log(`[RepostCuration] Created ${convertedTasks.length} tasks: ${convertedTasks.map(t => t.id).join(', ')}`);
+  return { converted: convertedTasks.length, tasks: convertedTasks.map(t => t.id) };
+}
+
+/**
+ * Manually trigger repost candidate conversion
+ */
+app.post('/api/repost-candidates/convert', (req, res) => {
+  try {
+    const result = convertRepostCandidates();
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Error converting repost candidates:', error);
+    res.status(500).json({ error: 'Failed to convert repost candidates' });
   }
 });
 
@@ -3546,7 +3802,8 @@ const watcher = chokidar.watch([
   `${PHILOSOPHERS_DIR}/*/drafts/*.md`,
   `${BOOKS_DIR}/*/PROJECT_TRACKER.md`,
   `${BOOKS_DIR}/*/outline/MASTER_OUTLINE.md`,
-  `${BOOKS_DIR}/*/chapters/*.md`
+  `${BOOKS_DIR}/*/chapters/*.md`,
+  REPOST_CANDIDATES_FILE
 ], {
   ignored: /(^|[\/\\])\../, // ignore dotfiles
   persistent: true
@@ -4427,6 +4684,23 @@ cron.schedule('0 8 * * *', () => {
 });
 
 console.log('[Cron] Daily summary scheduled for 8:00 AM PST');
+
+/**
+ * Schedule daily repost candidate conversion at 9 AM PST
+ * Runs after the 8 AM summary so Shawn sees the briefing first
+ */
+cron.schedule('0 9 * * *', () => {
+  console.log('[Cron] Converting repost candidates...');
+  try {
+    convertRepostCandidates();
+  } catch (err) {
+    console.error('[Cron] Repost conversion failed:', err);
+  }
+}, {
+  timezone: 'America/Los_Angeles'
+});
+
+console.log('[Cron] Repost candidate conversion scheduled for 9:00 AM PST');
 
 /**
  * Weekly Monday reset: Set idea batch task back to assigned
