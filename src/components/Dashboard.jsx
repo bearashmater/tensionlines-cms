@@ -194,7 +194,7 @@ export default function Dashboard() {
           value={dashboard.tasks.stuck || 0}
           subtitle={dashboard.tasks.critical > 0 ? `${dashboard.tasks.critical} critical` : undefined}
           bgColor={dashboard.tasks.critical > 0 ? 'bg-red-50' : 'bg-accent-tertiary'}
-          to="/tasks"
+          to="/tasks?view=stuck"
         />
         <MetricCard
           icon={<Lightbulb size={24} className="text-gold" />}

@@ -3,6 +3,7 @@ import { getTasks, reopenTask, dispatchTask, reassignTask } from '../lib/api'
 import { formatDate, formatStatus, getStatusColor, getAlertLevelColor, truncate, formatDuration } from '../lib/formatters'
 import { ListTodo, RotateCcw, Clock, Search, X, Play, ChevronDown, CheckCircle2, Loader2, Circle, XCircle, AlertTriangle, UserPlus } from 'lucide-react'
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 // Infer category from task title
 function getTaskCategory(task) {
@@ -71,7 +72,9 @@ const TIME_PERIODS = {
 }
 
 export default function TasksView() {
-  const [viewMode, setViewMode] = useState('by-assignee') // 'by-assignee', 'by-status', 'by-category', or 'completed'
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialView = searchParams.get('view') === 'stuck' ? 'stuck' : 'by-assignee'
+  const [viewMode, setViewMode] = useState(initialView)
   const [filter, setFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [timePeriodFilter, setTimePeriodFilter] = useState('all')
@@ -92,6 +95,11 @@ export default function TasksView() {
     if (timePeriodFilter !== 'all') {
       filteredTasks = filteredTasks.filter(t => getTimePeriod(t.completedAt) === timePeriodFilter)
     }
+  } else if (viewMode === 'stuck') {
+    filteredTasks = filteredTasks.filter(t => {
+      const level = t.timeTracking?.alertLevel
+      return level === 'yellow' || level === 'red'
+    })
   } else {
     if (filter !== 'all') {
       filteredTasks = filteredTasks.filter(t => t.status === filter)
@@ -252,6 +260,16 @@ export default function TasksView() {
             }`}
           >
             By Category
+          </button>
+          <button
+            onClick={() => setViewMode('stuck')}
+            className={`px-4 py-2 rounded-md font-medium transition-colors ${
+              viewMode === 'stuck'
+                ? 'bg-amber-500 text-white'
+                : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50'
+            }`}
+          >
+            Stuck
           </button>
           <button
             onClick={() => setViewMode('completed')}
