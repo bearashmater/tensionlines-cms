@@ -475,21 +475,27 @@ function DiscoveredItem({ item, onGenerate, onDismiss }) {
 
 // ---- Comment Queue Tab Components ----
 
+const PLATFORM_STYLE = {
+  bluesky: { bg: 'bg-blue-50', border: 'border-blue-200', hover: 'hover:border-blue-300', text: 'text-blue-600', ring: 'ring-blue-500', activeBg: 'bg-blue-100' },
+  twitter: { bg: 'bg-neutral-50', border: 'border-neutral-300', hover: 'hover:border-neutral-400', text: 'text-neutral-800', ring: 'ring-neutral-800', activeBg: 'bg-neutral-100' },
+}
+
 function RateLimitCard({ platform, icon, commentsToday, maxComments, canComment, isActive, onClick }) {
   const remaining = maxComments - commentsToday
+  const ps = PLATFORM_STYLE[platform] || PLATFORM_STYLE.twitter
 
   return (
     <button
       onClick={onClick}
       className={`p-4 rounded-lg border text-left w-full transition-all ${
         isActive
-          ? 'ring-2 ring-offset-1 ring-gold border-gold bg-amber-50'
-          : canComment ? 'bg-green-50 border-green-200 hover:border-green-300' : 'bg-red-50 border-red-200'
+          ? `ring-2 ring-offset-1 ${ps.ring} ${ps.border} ${ps.activeBg}`
+          : `${ps.bg} ${ps.border} ${ps.hover}`
       }`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={isActive ? 'text-gold' : canComment ? 'text-green-600' : 'text-red-600'}>
+          <div className={ps.text}>
             {icon}
           </div>
           <div>
@@ -499,7 +505,7 @@ function RateLimitCard({ platform, icon, commentsToday, maxComments, canComment,
             </p>
           </div>
         </div>
-        <div className={`text-2xl font-bold ${isActive ? 'text-gold' : canComment ? 'text-green-600' : 'text-red-600'}`}>
+        <div className={`text-2xl font-bold ${canComment ? 'text-green-600' : 'text-red-600'}`}>
           {remaining > 0 ? remaining : 0}
           <span className="text-sm font-normal ml-1">left</span>
         </div>
