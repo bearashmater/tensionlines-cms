@@ -19,7 +19,8 @@ import {
   Inbox,
   AtSign,
   Eye,
-  EyeOff
+  EyeOff,
+  UserPlus
 } from 'lucide-react'
 
 // Bluesky icon (reused from ManualPostingQueue)
@@ -658,6 +659,17 @@ function ReplyItem({ item, canReply, onUpdate }) {
                 Ready
               </span>
             )}
+            {item.followTarget && (
+              <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded inline-flex items-center gap-1">
+                <UserPlus size={10} />
+                Follow Outreach
+              </span>
+            )}
+            {item.philosopher && (
+              <span className="px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded capitalize">
+                {item.philosopher}
+              </span>
+            )}
             {item.taskId && (
               <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded">
                 {item.taskId}
@@ -745,13 +757,24 @@ function ReplyItem({ item, canReply, onUpdate }) {
                 {copyFeedback ? <Check size={14} /> : <Copy size={14} />}
                 {copyFeedback ? 'Copied!' : 'Copy & Open'}
               </button>
+              {item.followTarget && item.followUrl && (
+                <a
+                  href={item.followUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                >
+                  <UserPlus size={14} />
+                  Follow @{item.targetAuthor}
+                </a>
+              )}
               <button
                 onClick={handleMarkPosted}
                 disabled={isUpdating}
                 className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
               >
                 <Check size={14} />
-                Mark Posted
+                Mark Done
               </button>
             </>
           )}

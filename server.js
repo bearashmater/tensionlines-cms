@@ -3788,6 +3788,12 @@ app.post('/api/reply-queue', (req, res) => {
       targetCid: null
     };
 
+    // Follow-outreach fields
+    if (req.body.followTarget) {
+      item.followTarget = true;
+      item.followUrl = req.body.followUrl || '';
+    }
+
     data.queue.push(item);
     saveReplyQueue(data);
     res.json({ success: true, item });
@@ -9249,6 +9255,114 @@ app.post('/api/migrate-tasks-to-queues', (req, res) => {
   } catch (error) {
     console.error('Migration error:', error);
     res.status(500).json({ error: 'Migration failed', details: error.message });
+  }
+});
+
+/**
+ * Generate follow-outreach items: for each target, Claude writes an engagement
+ * comment based on their bio/post, then queues it as a reply with followTarget=true.
+ *
+ * Body: { targets: [{ handle, profileUrl, platform, context?, contextType? }], philosopher? }
+ * contextType: "bio" | "post" | "pinned" (helps Claude tailor the comment)
+ */
+app.post('/api/follow-outreach', async (req, res) => {
+  try {
+    const client = getAnthropicClient();
+    if (!client) {
+      return res.status(501).json({ error: 'Anthropic API key not configured' });
+    }
+
+    const { targets, philosopher: requestedPhilosopher } = req.body;
+    if (!targets || !Array.isArray(targets) || targets.length === 0) {
+      return res.status(400).json({ error: 'targets array is required' });
+    }
+
+    // Rotate philosophers across targets for variety
+    const OUTREACH_PHILOSOPHERS = ['nietzsche', 'marcus', 'socrates', 'heraclitus', 'plato'];
+    const replyData = getReplyQueue();
+    const results = [];
+
+    for (let i = 0; i < targets.length; i++) {
+      const target = targets[i];
+      const { handle, profileUrl, platform = 'twitter', context, contextType = 'post' } = target;
+
+      if (!handle) continue;
+
+      const philosopher = requestedPhilosopher || OUTREACH_PHILOSOPHERS[i % OUTREACH_PHILOSOPHERS.length];
+
+      // Read philosopher voice
+      let soulContent = '';
+      const soulPath = path.join(PHILOSOPHERS_DIR, philosopher, 'SOUL.md');
+      if (fs.existsSync(soulPath)) {
+        soulContent = fs.readFileSync(soulPath, 'utf8');
+        if (soulContent.length > 1500) soulContent = soulContent.substring(0, 1500) + '\n...(truncated)';
+      }
+
+      const contextLabel = contextType === 'bio' ? 'bio' : contextType === 'pinned' ? 'pinned post' : 'recent post';
+
+      const systemPrompt = `You are a philosopher writing a brief, genuine reply to someone's ${contextLabel} on ${platform === 'bluesky' ? 'Bluesky' : 'Twitter/X'}. You write as ${philosopher} — through the TensionLines brand.
+
+${soulContent ? `## Voice:\n${soulContent}\n` : ''}
+## Rules:
+- Write a short, authentic reply that engages with what they said. This is outreach — you're starting a relationship.
+- Start or end with a conversational hook: "I'm with you —", "This resonates —", "Spot on.", "Needed to read this.", "Real talk —", etc. Vary them.
+- Be genuinely engaging — NOT self-promotional. Don't mention TensionLines.
+- Be concise: 1-2 sentences max. This is a reply, not an essay.
+- Match their energy. If they're casual, be casual. If they're deep, go deeper.
+- Never use generic motivational filler. Be specific to what THEY said.
+- ${platform === 'bluesky' ? 'Must be ≤300 characters.' : 'Keep under 280 characters.'}
+- Return ONLY the reply text. No quotes, labels, or explanation.`;
+
+      const userPrompt = context
+        ? `Write a reply to @${handle}'s ${contextLabel}:\n\n"${context}"\n\nWrite one genuine reply.`
+        : `Write a brief, engaging reply to @${handle} on ${platform}. You're reaching out to start a conversation. Keep it warm, specific, and curious. Write one reply.`;
+
+      const message = await client.messages.create({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: 256,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      });
+
+      let replyText = (message.content[0]?.text || '').trim();
+      if (!replyText) continue;
+
+      // Add hashtags
+      replyText = addRelevantHashtags(replyText);
+
+      const targetUrl = profileUrl || `https://x.com/${handle}`;
+      const item = {
+        id: `reply-${Date.now()}-follow-${handle}`,
+        createdAt: new Date().toISOString(),
+        status: 'ready',
+        platform,
+        targetUrl: target.postUrl || targetUrl,
+        targetAuthor: handle.replace(/^@/, ''),
+        targetText: context || '',
+        replyText,
+        taskId: target.taskId || null,
+        targetUri: null,
+        targetCid: null,
+        followTarget: true,
+        followUrl: targetUrl,
+        philosopher,
+        contextType
+      };
+
+      replyData.queue.push(item);
+      results.push({ handle, philosopher, replyText: replyText.substring(0, 80) + '...', itemId: item.id });
+    }
+
+    saveReplyQueue(replyData);
+
+    res.json({
+      success: true,
+      generated: results.length,
+      items: results
+    });
+  } catch (error) {
+    console.error('Follow outreach error:', error);
+    res.status(500).json({ error: 'Failed to generate outreach', details: error.message });
   }
 });
 
