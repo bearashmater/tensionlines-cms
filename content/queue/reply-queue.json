@@ -1,20 +1,6 @@
 {
   "queue": [
     {
-      "id": "reply-1770561391025-task-035c",
-      "createdAt": "2026-02-07T06:06:56.662Z",
-      "status": "ready",
-      "platform": "twitter",
-      "targetUrl": "https://x.com/SiggyFaux/status/2020001866159993253",
-      "targetAuthor": "SiggyFaux",
-      "targetText": "Intellectualizing grief or loneliness? You're describing pain, not feeling it. Your body's wisdom gets outsourced.",
-      "replyText": "This is the trap most people don't see — naming the wound becomes a substitute for touching it. We build elaborate maps of our pain and mistake the cartography for the territory. The body knows what the mind keeps narrating around. More people need to sit with this.",
-      "taskId": "task-035c",
-      "targetUri": null,
-      "targetCid": null,
-      "hookApplied": true
-    },
-    {
       "id": "reply-1770561391025-task-035d",
       "createdAt": "2026-02-07T06:06:56.662Z",
       "status": "ready",
@@ -26,7 +12,8 @@
       "taskId": "task-035d",
       "targetUri": null,
       "targetCid": null,
-      "hookApplied": true
+      "hookApplied": true,
+      "hashtagsApplied": true
     },
     {
       "id": "reply-1770561391025-task-035e",
@@ -36,14 +23,30 @@
       "targetUrl": "https://x.com/TheInnerID/status/2013985443256414416",
       "targetAuthor": "TheInnerID",
       "targetText": "Emotional Intelligence Is Not Emotional Exposure. It's not about expressing every feeling or reacting to every emotion.",
-      "replyText": "So much this. This distinction is everything. Somewhere we confused transparency with wisdom — as if feeling deeply requires broadcasting constantly. Real emotional intelligence is knowing what to feel fully and what to hold quietly. Not every truth needs a stage.",
+      "replyText": "So much this. This distinction is everything. Somewhere we confused transparency with wisdom — as if feeling deeply requires broadcasting constantly. Real emotional intelligence is knowing what to feel fully and what to hold quietly. Not every truth needs a stage.\n\n#knowthyself",
       "taskId": "task-035e",
       "targetUri": null,
       "targetCid": null,
-      "hookApplied": true
+      "hookApplied": true,
+      "hashtagsApplied": true
     }
   ],
   "posted": [
+    {
+      "id": "reply-1770561391025-task-035c",
+      "createdAt": "2026-02-07T06:06:56.662Z",
+      "status": "posted",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/SiggyFaux/status/2020001866159993253",
+      "targetAuthor": "SiggyFaux",
+      "targetText": "Intellectualizing grief or loneliness? You're describing pain, not feeling it. Your body's wisdom gets outsourced.",
+      "replyText": "This is the trap most people don't see — naming the wound becomes a substitute for touching it. We build elaborate maps of our pain and mistake the cartography for the territory. The body knows what the mind keeps narrating around. More people need to sit with this.",
+      "taskId": "task-035c",
+      "targetUri": null,
+      "targetCid": null,
+      "hookApplied": true,
+      "postedAt": "2026-02-08T15:21:49.341Z"
+    },
     {
       "id": "reply-1770561391025-task-035b",
       "createdAt": "2026-02-07T06:06:56.662Z",
