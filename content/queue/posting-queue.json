@@ -1,9 +1,38 @@
 {
   "queue": [
     {
+      "id": "post-1770565051243",
+      "createdAt": "2026-02-08T15:37:31.243Z",
+      "status": "ready",
+      "platform": "twitter",
+      "content": "The opposite of certainty is not doubt. It is presence — the willingness to stay in the room after your conclusions leave.",
+      "caption": "",
+      "parts": [],
+      "canvaComplete": false,
+      "metadata": {
+        "options": [
+          {
+            "text": "The opposite of certainty is not doubt. It is presence — the willingness to stay in the room after your conclusions leave.",
+            "philosopher": "marcus"
+          },
+          {
+            "text": "You don't outgrow your contradictions. You learn to stop apologizing for them.",
+            "philosopher": "nietzsche"
+          },
+          {
+            "text": "What if the thing you're trying to fix about yourself is actually the thing that keeps you honest?",
+            "philosopher": "socrates"
+          }
+        ]
+      },
+      "postUrl": "https://x.com/compose/post"
+    }
+  ],
+  "posted": [
+    {
       "id": "post-1770561391025-task-035g",
       "createdAt": "2026-02-07T06:06:56.662Z",
-      "status": "ready",
+      "status": "posted",
       "platform": "twitter",
       "content": "The opposite of certainty isn't doubt. It's presence — the willingness to stay in the room after your conclusions leave.",
       "caption": "",
@@ -19,10 +48,9 @@
           "You don't outgrow your contradictions. You learn to stop apologizing for them.",
           "What if the thing you're trying to fix about yourself is actually the thing that keeps you honest?"
         ]
-      }
-    }
-  ],
-  "posted": [
+      },
+      "postedAt": "2026-02-08T15:31:26.694Z"
+    },
     {
       "id": "post-1770478247686",
       "createdAt": "2026-02-07T15:30:47.686Z",
