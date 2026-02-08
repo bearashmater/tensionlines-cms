@@ -231,6 +231,12 @@ export async function getTaskBreakdown(id) {
   return apiFetch(`/tasks/${id}/breakdown`)
 }
 
+export async function debugTask(id, level = 'debug') {
+  return apiFetch(`/tasks/${id}/debug?level=${level}`, {
+    method: 'POST'
+  })
+}
+
 export async function getStepAverages() {
   return apiFetch('/step-averages')
 }

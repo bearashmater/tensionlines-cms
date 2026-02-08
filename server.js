@@ -6973,6 +6973,183 @@ function analyzeBreakdowns(task) {
   return breakdowns;
 }
 
+/**
+ * Auto-debug a stuck task using Claude (Sonnet for debug, Opus for super-debug)
+ * Called automatically from checkStuckTasks() or manually via POST /api/tasks/:id/debug
+ */
+async function debugStuckTask(task, level = 'debug') {
+  const isSuper = level === 'super-debug';
+  const label = isSuper ? 'Super Debug (Opus)' : 'Debug (Sonnet)';
+  const metaKey = isSuper ? 'superDebug' : 'debug';
+
+  // Cost gate: reset daily tracker if date changed, then check cap
+  const today = new Date().toISOString().slice(0, 10);
+  if (debugCostToday.date !== today) {
+    debugCostToday = { date: today, cost: 0.0 };
+  }
+  if (debugCostToday.cost >= 10.0) {
+    console.log(`[Debug] Daily cost cap reached ($${debugCostToday.cost.toFixed(2)}), skipping ${label} for ${task.id}`);
+    return { skipped: true, reason: 'daily_cost_cap' };
+  }
+
+  // Attempt count gate
+  if (!task.metadata) task.metadata = {};
+  const attemptCount = task.metadata[`${metaKey}AttemptCount`] || 0;
+  const maxAttempts = isSuper ? 1 : 2;
+  if (attemptCount >= maxAttempts) {
+    console.log(`[Debug] Max ${label} attempts (${maxAttempts}) reached for ${task.id}`);
+    return { skipped: true, reason: 'max_attempts' };
+  }
+
+  const anthropic = getAnthropicClient();
+  if (!anthropic) {
+    console.log('[Debug] No Anthropic API key configured');
+    return { skipped: true, reason: 'no_api_key' };
+  }
+
+  // Gather context
+  const breakdowns = analyzeBreakdowns(task);
+  const mc = getMissionControl();
+  const recentActivities = mc.activities
+    .filter(a => a.taskId === task.id)
+    .slice(0, 20);
+
+  const stepsContext = (task.steps || []).map(s =>
+    `- [${s.status}] ${s.description} (started: ${s.startedAt || 'N/A'}, completed: ${s.completedAt || 'N/A'}, agent: ${s.agentId || 'N/A'})`
+  ).join('\n');
+
+  const activitiesContext = recentActivities.map(a =>
+    `- [${a.type}] ${a.description} (${a.timestamp})`
+  ).join('\n');
+
+  const breakdownContext = breakdowns.map(b =>
+    `- ${b.type}: duration=${Math.round((b.duration || 0) / 60000)}min, suggestions=[${(b.suggestions || []).join(', ')}]`
+  ).join('\n');
+
+  // Truncate description to ~8000 chars to keep input under ~30K tokens
+  const desc = (task.description || '').slice(0, 8000);
+
+  const userMessage = `Task ID: ${task.id}
+Title: ${task.title}
+Status: ${task.status}
+Assignees: ${(task.assigneeIds || []).join(', ')}
+Priority: ${task.priority || 'normal'}
+Created: ${task.createdAt}
+Dispatched: ${task.dispatchedAt || 'N/A'}
+
+Description:
+${desc}
+
+Steps:
+${stepsContext || '(none)'}
+
+Breakdowns:
+${breakdownContext || '(none)'}
+
+Recent Activity:
+${activitiesContext || '(none)'}
+
+Previous debug results: ${task.metadata.debugResult ? JSON.stringify(task.metadata.debugResult) : 'None'}
+
+Analyze why this task keeps failing and provide actionable fixes. Respond with JSON:
+{"diagnosis": "what went wrong", "suggestedFix": "concrete action", "canAutoFix": true/false, "fixType": "rewrite_description|break_into_subtasks|reassign|needs_human|code_fix"}`;
+
+  try {
+    const model = isSuper ? 'claude-opus-4-6' : 'claude-sonnet-4-5-20250929';
+    const response = await anthropic.messages.create({
+      model,
+      max_tokens: 4096,
+      system: 'You are a task debugger for an AI agent system. Analyze why this task keeps failing and provide actionable fixes. Always respond with valid JSON matching the requested schema.',
+      messages: [{ role: 'user', content: userMessage }]
+    });
+
+    // Estimate cost from usage
+    const inputTokens = response.usage?.input_tokens || 0;
+    const outputTokens = response.usage?.output_tokens || 0;
+    const costPerInputToken = isSuper ? 15 / 1_000_000 : 3 / 1_000_000;
+    const costPerOutputToken = isSuper ? 75 / 1_000_000 : 15 / 1_000_000;
+    const callCost = (inputTokens * costPerInputToken) + (outputTokens * costPerOutputToken);
+    debugCostToday.cost += callCost;
+    console.log(`[Debug] ${label} for ${task.id} — cost: $${callCost.toFixed(4)} (daily total: $${debugCostToday.cost.toFixed(2)})`);
+
+    // Parse response
+    const text = response.content[0]?.text || '';
+    let result;
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      result = jsonMatch ? JSON.parse(jsonMatch[0]) : { diagnosis: text, suggestedFix: 'See diagnosis', canAutoFix: false, fixType: 'needs_human' };
+    } catch {
+      result = { diagnosis: text, suggestedFix: 'See diagnosis', canAutoFix: false, fixType: 'needs_human' };
+    }
+
+    // Store result on task metadata
+    const data = getMissionControl();
+    const dbTask = data.tasks.find(t => t.id === task.id);
+    if (!dbTask) return { error: 'Task disappeared' };
+    if (!dbTask.metadata) dbTask.metadata = {};
+
+    dbTask.metadata[`${metaKey}Attempted`] = true;
+    dbTask.metadata[`${metaKey}AttemptCount`] = attemptCount + 1;
+    dbTask.metadata[`${metaKey}Result`] = {
+      ...result,
+      model,
+      cost: callCost,
+      timestamp: new Date().toISOString()
+    };
+
+    // Add step
+    if (!dbTask.steps) dbTask.steps = [];
+    const now = new Date().toISOString();
+    dbTask.steps.push({
+      id: `step-${Date.now()}`,
+      description: `${label}: ${(result.diagnosis || '').slice(0, 200)}`,
+      status: 'completed',
+      startedAt: now,
+      completedAt: now,
+      agentId: 'system'
+    });
+
+    // Create notification
+    data.notifications.push({
+      id: `notif-debug-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: isSuper ? 'task_super_debug' : 'task_debug',
+      title: `🔍 ${label}: ${dbTask.title}`,
+      message: `**Diagnosis:** ${result.diagnosis}\n\n**Suggested Fix:** ${result.suggestedFix}\n\n**Fix Type:** ${result.fixType} | **Auto-fixable:** ${result.canAutoFix ? 'Yes' : 'No'}`,
+      from: 'system',
+      to: ['tension', ...(dbTask.assigneeIds || [])],
+      createdAt: now,
+      read: false,
+      priority: 'high',
+      actionRequired: true,
+      metadata: {
+        taskId: dbTask.id,
+        debugLevel: level,
+        result
+      }
+    });
+
+    // Log activity
+    data.activities.unshift({
+      id: `activity-${Date.now()}`,
+      type: isSuper ? 'task_super_debug' : 'task_debug',
+      agentId: 'system',
+      taskId: dbTask.id,
+      timestamp: now,
+      description: `${label}: ${(result.diagnosis || '').slice(0, 150)}`,
+      metadata: { level, fixType: result.fixType, canAutoFix: result.canAutoFix, cost: callCost }
+    });
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(data, null, 2));
+    cache.missionControl = null;
+
+    console.log(`[Debug] ${label} completed for ${task.id}: fixType=${result.fixType}`);
+    return result;
+  } catch (err) {
+    console.error(`[Debug] ${label} failed for ${task.id}:`, err.message);
+    return { error: err.message };
+  }
+}
+
 app.get('/api/tasks/:id/breakdown', (req, res) => {
   try {
     const { id } = req.params;
@@ -6994,6 +7171,36 @@ app.get('/api/tasks/:id/breakdown', (req, res) => {
   } catch (error) {
     console.error('Error analyzing breakdowns:', error);
     res.status(500).json({ error: 'Failed to analyze breakdowns' });
+  }
+});
+
+/**
+ * Manually trigger debug on a task
+ * POST /api/tasks/:id/debug?level=debug|super-debug
+ */
+app.post('/api/tasks/:id/debug', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(id)) {
+      return res.status(400).json({ error: 'Invalid task ID' });
+    }
+
+    const level = req.query.level || req.body.level || 'debug';
+    if (!['debug', 'super-debug'].includes(level)) {
+      return res.status(400).json({ error: 'Level must be "debug" or "super-debug"' });
+    }
+
+    const data = getMissionControl();
+    const task = data.tasks.find(t => t.id === id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const result = await debugStuckTask(task, level);
+    res.json({ success: true, level, taskId: id, result });
+  } catch (error) {
+    console.error('Error in manual debug:', error);
+    res.status(500).json({ error: 'Debug failed' });
   }
 });
 
@@ -7374,6 +7581,9 @@ watcher.on('change', (filePath) => {
 // Track which tasks have been notified to avoid spam (in-memory cache, backed by DB check)
 const notifiedStuckTasks = new Set();
 
+// Track daily debug API spend to enforce $10/day cap
+let debugCostToday = { date: new Date().toISOString().slice(0, 10), cost: 0.0 };
+
 function checkStuckTasks() {
   try {
     const mc = getMissionControl();
@@ -7461,8 +7671,27 @@ function checkStuckTasks() {
       notifiedStuckTasks.add(notifKey);
 
       console.log(`[Stuck Task Alert] Created notification for task ${task.id}`);
+
+      // Auto-debug escalation: check retry count and trigger debug if appropriate
+      const retryCount = mc.activities.filter(a =>
+        a.taskId === task.id && a.type === 'task_retried'
+      ).length;
+
+      if (retryCount >= 1) {
+        if (!task.metadata?.debugAttempted) {
+          // First escalation: Sonnet debug
+          debugStuckTask(task, 'debug').catch(err =>
+            console.error(`[Debug] Auto-debug failed for ${task.id}:`, err.message)
+          );
+        } else if (!task.metadata?.superDebugAttempted) {
+          // Second escalation: Opus super-debug
+          debugStuckTask(task, 'super-debug').catch(err =>
+            console.error(`[Debug] Auto-super-debug failed for ${task.id}:`, err.message)
+          );
+        }
+      }
     });
-    
+
     // Clean up notified tasks that are no longer stuck
     const activeRedTaskIds = new Set(redAlertTasks.map(t => `${t.id}-red`));
     for (const notifKey of notifiedStuckTasks) {

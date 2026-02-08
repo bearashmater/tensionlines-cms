@@ -1,7 +1,7 @@
 import useSWR, { mutate } from 'swr'
-import { getTasks, dispatchTask, reassignTask, deleteTask } from '../lib/api'
+import { getTasks, dispatchTask, reassignTask, deleteTask, debugTask } from '../lib/api'
 import { formatDate, formatStatus, getStatusColor, getAlertLevelColor, truncate, formatDuration } from '../lib/formatters'
-import { ListTodo, RotateCcw, Clock, Search, X, ChevronDown, CheckCircle2, Loader2, Circle, XCircle, AlertTriangle, UserPlus, Trash2, Send } from 'lucide-react'
+import { ListTodo, RotateCcw, Clock, Search, X, ChevronDown, CheckCircle2, Loader2, Circle, XCircle, AlertTriangle, UserPlus, Trash2, Send, Bug } from 'lucide-react'
 import InfoTip from './InfoTip'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -803,6 +803,8 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
   const [retrying, setRetrying] = useState(false)
   const [sendingToHuman, setSendingToHuman] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [debugging, setDebugging] = useState(false)
+  const [completing, setCompleting] = useState(false)
   const statusColor = getStatusColor(task.status)
   const category = getTaskCategory(task)
   const isCompleted = ['completed', 'shipped'].includes(task.status)
@@ -858,6 +860,40 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
       alert('Failed to delete task. Please try again.')
     }
     setDeleting(false)
+  }
+
+  const handleDebug = async () => {
+    const level = task.metadata?.debugAttempted ? 'super-debug' : 'debug'
+    const label = level === 'super-debug' ? 'Super Debug (Opus)' : 'Debug (Sonnet)'
+    if (!confirm(`Run ${label} on "${task.title}"? This calls the Claude API.`)) return
+    setDebugging(true)
+    try {
+      const res = await debugTask(task.id, level)
+      mutate('/tasks')
+      if (res.result?.diagnosis) {
+        alert(`${label} complete:\n\n${res.result.diagnosis}\n\nFix: ${res.result.suggestedFix}`)
+      }
+    } catch (err) {
+      console.error('Error debugging task:', err)
+      alert('Debug failed. Check server logs.')
+    }
+    setDebugging(false)
+  }
+
+  const handleComplete = async () => {
+    setCompleting(true)
+    try {
+      await fetch(`/api/tasks/${task.id}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completedBy: 'human' })
+      })
+      mutate('/tasks')
+    } catch (err) {
+      console.error('Error completing task:', err)
+      alert('Failed to mark task complete.')
+    }
+    setCompleting(false)
   }
 
   // Calculate progress
@@ -982,6 +1018,21 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Complete */}
+          {!isCompleted && (
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={handleComplete}
+                disabled={completing}
+                className="flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors disabled:opacity-50 font-medium"
+              >
+                <CheckCircle2 size={14} className={completing ? 'animate-pulse' : ''} />
+                {completing ? 'Completing...' : 'Complete'}
+              </button>
+              <InfoTip text="Mark this task as completed" />
+            </div>
+          )}
+
           {/* Dispatch */}
           <div className="flex items-center gap-0.5">
             <button
@@ -1006,6 +1057,19 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
               {retrying ? 'Retrying...' : 'Retry'}
             </button>
             <InfoTip text="Re-run this task — same job, fresh attempt" />
+          </div>
+
+          {/* Debug */}
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={handleDebug}
+              disabled={debugging}
+              className="flex items-center gap-1 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors disabled:opacity-50 font-medium"
+            >
+              <Bug size={14} className={debugging ? 'animate-pulse' : ''} />
+              {debugging ? 'Analyzing...' : task.metadata?.debugAttempted ? 'Super Debug' : 'Debug'}
+            </button>
+            <InfoTip text={task.metadata?.debugAttempted ? 'Escalate to Opus for deeper analysis' : 'Analyze failure with Sonnet AI'} />
           </div>
 
           {/* Send to Human */}
