@@ -14,6 +14,7 @@ import rateLimit from 'express-rate-limit';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import http from 'http';
 import matter from 'gray-matter';
 import chokidar from 'chokidar';
 import cron from 'node-cron';
@@ -21,6 +22,7 @@ import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { createServer as createViteServer } from 'vite';
+import { WebSocketServer } from 'ws';
 import { BskyAgent, RichText } from '@atproto/api';
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -95,6 +97,71 @@ app.use((req, res, next) => {
     return writeLimiter(req, res, next);
   }
   return readLimiter(req, res, next);
+});
+
+// ─── WebSocket Server ────────────────────────────────────────────────────────
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server, path: '/ws' });
+
+wss.on('connection', (ws) => {
+  ws.isAlive = true;
+  ws.on('pong', () => { ws.isAlive = true; });
+  ws.send(JSON.stringify({ type: 'connected' }));
+});
+
+// Heartbeat: drop dead connections every 30s
+setInterval(() => {
+  wss.clients.forEach(ws => {
+    if (!ws.isAlive) return ws.terminate();
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 30000);
+
+/**
+ * Broadcast an invalidation event to all connected WebSocket clients.
+ * Frontend uses this to trigger SWR revalidation for the given channel.
+ */
+function broadcast(channel) {
+  const msg = JSON.stringify({ type: 'invalidate', channel });
+  wss.clients.forEach(ws => {
+    if (ws.readyState === 1) ws.send(msg);
+  });
+}
+
+// Route-to-channel mapping for auto-broadcast
+const ROUTE_CHANNELS = [
+  ['/api/tasks', 'tasks'],
+  ['/api/posting-queue', 'posting-queue'],
+  ['/api/repurpose', 'posting-queue'],
+  ['/api/reply-queue', 'reply-queue'],
+  ['/api/comment-queue', 'comment-queue'],
+  ['/api/engagement', 'engagement'],
+  ['/api/notifications', 'notifications'],
+  ['/api/analytics', 'analytics'],
+  ['/api/content/engagement', 'analytics'],
+  ['/api/messages', 'messages'],
+  ['/api/repost-candidates', 'ideas'],
+  ['/api/future-needs', 'ideas'],
+];
+
+// Auto-broadcast middleware: intercepts res.json() on mutation requests
+// and broadcasts an invalidation event on success (2xx status)
+app.use((req, res, next) => {
+  if (!['POST', 'PATCH', 'DELETE', 'PUT'].includes(req.method)) return next();
+
+  const channel = ROUTE_CHANNELS.find(([prefix]) => req.path.startsWith(prefix))?.[1];
+  if (!channel) return next();
+
+  const originalJson = res.json.bind(res);
+  res.json = function(body) {
+    const result = originalJson(body);
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      broadcast(channel);
+    }
+    return result;
+  };
+  next();
 });
 
 // Base paths
@@ -8911,10 +8978,11 @@ async function start() {
   // Vite dev middleware (handles React HMR, module serving, etc.)
   app.use(vite.middlewares);
 
-  app.listen(PORT, 'localhost', () => {
+  server.listen(PORT, 'localhost', () => {
     console.log(`\nTensionLines CMS (unified server)`);
     console.log(`  App:             http://localhost:${PORT}/`);
     console.log(`  API:             http://localhost:${PORT}/api/health`);
+    console.log(`  WebSocket:       ws://localhost:${PORT}/ws`);
     console.log(`  Mission Control: http://localhost:${PORT}/mission-control/`);
     console.log(`  Bound to localhost only (not accessible from network)`);
     console.log(`  Watching files for changes...\n`);

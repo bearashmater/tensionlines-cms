@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell, Zap, Compass, Send, Reply, Sparkles, MessageSquarePlus, Layers } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useWebSocket } from './lib/useWebSocket'
 
 // Import navigation components
 import { NavGroup, Breadcrumbs } from './components/Navigation'
@@ -105,6 +106,7 @@ function App() {
 
 function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenuOpen }) {
   const location = useLocation()
+  const wsConnected = useWebSocket()
 
   return (
     <div className="min-h-screen bg-cream">
@@ -164,6 +166,7 @@ function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenu
             </div>
             
             <div className="flex items-center space-x-4 flex-shrink-0">
+              <span className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-green-500' : 'bg-neutral-300'}`} title={wsConnected ? 'Live updates active' : 'Polling (reconnecting...)'} />
               <span className="text-sm text-neutral-600 hidden sm:block">
                 {new Date().toLocaleTimeString()}
               </span>
