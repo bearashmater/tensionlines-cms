@@ -1,0 +1,53 @@
+{
+  "segments": [],
+  "snapshots": [
+    {
+      "id": "snap-1770526359866",
+      "takenAt": "2026-02-08T04:52:39.866Z",
+      "totalPeople": 31,
+      "activeSegments": 6,
+      "overallEngagementRate": 6,
+      "segments": [
+        {
+          "theme": "Philosophy (General)",
+          "memberCount": 17,
+          "activeCount": 1,
+          "engagementRate": 6
+        },
+        {
+          "theme": "Creative Expression",
+          "memberCount": 6,
+          "activeCount": 0,
+          "engagementRate": 0
+        },
+        {
+          "theme": "Polarity & Paradox",
+          "memberCount": 3,
+          "activeCount": 1,
+          "engagementRate": 33
+        },
+        {
+          "theme": "Movement & Stillness",
+          "memberCount": 2,
+          "activeCount": 0,
+          "engagementRate": 0
+        },
+        {
+          "theme": "Identity & Meaning",
+          "memberCount": 2,
+          "activeCount": 0,
+          "engagementRate": 0
+        },
+        {
+          "theme": "Religion & Ethics",
+          "memberCount": 1,
+          "activeCount": 0,
+          "engagementRate": 0
+        }
+      ]
+    }
+  ],
+  "lastComputed": "2026-02-08T04:52:39.866Z",
+  "computeVersion": 1,
+  "recommendations": []
+}

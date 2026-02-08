@@ -41,7 +41,7 @@
       "category": "content",
       "priority": "medium",
       "effort": "large",
-      "status": "proposed",
+      "status": "completed",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q2-2026",
@@ -61,7 +61,8 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "updatedAt": "2026-02-07T19:04:18.384Z",
+      "completedAt": "2026-02-07T19:04:18.384Z"
     },
     {
       "id": "need-004",
@@ -71,7 +72,7 @@
       "category": "content",
       "priority": "medium",
       "effort": "medium",
-      "status": "proposed",
+      "status": "completed",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q1-2026",
@@ -88,7 +89,8 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "updatedAt": "2026-02-07T19:29:16.664Z",
+      "completedAt": "2026-02-07T19:29:16.664Z"
     },
     {
       "id": "need-005",
@@ -137,7 +139,7 @@
       "category": "growth",
       "priority": "high",
       "effort": "medium",
-      "status": "proposed",
+      "status": "completed",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q1-2026",
@@ -156,7 +158,8 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "updatedAt": "2026-02-07T17:15:52.441Z",
+      "completedAt": "2026-02-07T17:15:52.441Z"
     },
     {
       "id": "need-007",
@@ -166,7 +169,7 @@
       "category": "growth",
       "priority": "medium",
       "effort": "medium",
-      "status": "proposed",
+      "status": "completed",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q2-2026",
@@ -186,7 +189,8 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "updatedAt": "2026-02-07T20:07:51.397Z",
+      "completedAt": "2026-02-07T20:07:51.397Z"
     },
     {
       "id": "need-008",
@@ -196,7 +200,7 @@
       "category": "growth",
       "priority": "low",
       "effort": "large",
-      "status": "proposed",
+      "status": "in_progress",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q3-2026",
@@ -215,7 +219,7 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "updatedAt": "2026-02-08T04:31:22.024Z"
     },
     {
       "id": "need-009",
@@ -225,7 +229,7 @@
       "category": "analytics",
       "priority": "medium",
       "effort": "medium",
-      "status": "proposed",
+      "status": "completed",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q1-2026",
@@ -245,7 +249,8 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "updatedAt": "2026-02-07T23:57:03.040Z",
+      "completedAt": "2026-02-07T23:57:03.040Z"
     },
     {
       "id": "need-010",
@@ -281,7 +286,7 @@
       "category": "infrastructure",
       "priority": "high",
       "effort": "small",
-      "status": "proposed",
+      "status": "deferred",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q1-2026",
@@ -298,7 +303,7 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "updatedAt": "2026-02-07T17:18:04.642Z"
     },
     {
       "id": "need-012",
@@ -334,7 +339,7 @@
       "category": "infrastructure",
       "priority": "medium",
       "effort": "medium",
-      "status": "proposed",
+      "status": "completed",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q2-2026",
@@ -352,7 +357,8 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "updatedAt": "2026-02-08T04:02:33.663Z",
+      "completedAt": "2026-02-08T04:02:33.663Z"
     },
     {
       "id": "need-014",
@@ -362,7 +368,7 @@
       "category": "infrastructure",
       "priority": "high",
       "effort": "small",
-      "status": "proposed",
+      "status": "completed",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q1-2026",
@@ -378,7 +384,8 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "updatedAt": "2026-02-07T17:26:22.056Z",
+      "completedAt": "2026-02-07T17:26:22.056Z"
     },
     {
       "id": "need-015",
@@ -444,7 +451,7 @@
       "category": "governance",
       "priority": "medium",
       "effort": "medium",
-      "status": "proposed",
+      "status": "completed",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q2-2026",
@@ -461,7 +468,8 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "updatedAt": "2026-02-08T04:30:29.808Z",
+      "completedAt": "2026-02-08T04:30:29.808Z"
     },
     {
       "id": "need-018",
@@ -492,6 +500,60 @@
       "voters": [],
       "comments": [],
       "updatedAt": "2026-02-07T00:00:00.000Z"
+    },
+    {
+      "id": "need-019",
+      "title": "Reply Queue for Outreach",
+      "description": "CMS queue for drafting and publishing replies to target posts on Bluesky and Twitter. Bluesky replies auto-publish via API, Twitter uses copy-and-open. Linked tasks auto-complete when replies are posted.",
+      "useCase": "Outreach system generates reply drafts but they lived in markdown files with no CMS integration. Needed a way for Shawn to review and publish replies with one click, same as the posting queue.",
+      "category": "growth",
+      "priority": "high",
+      "effort": "medium",
+      "status": "completed",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-07T16:49:20.927Z",
+      "targetQuarter": "",
+      "agents": [
+        "claude"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Reply queue page in CMS with add/edit/delete",
+        "Bluesky replies auto-publish via AT Protocol API",
+        "Twitter replies use copy-and-open pattern",
+        "Rate limiting (5/day, 15min spacing per platform)",
+        "Linked task auto-completes when reply is posted",
+        "Activity logged in mission-control"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-07T16:49:25.164Z",
+      "completedAt": "2026-02-07T16:49:25.164Z"
+    },
+    {
+      "id": "need-020",
+      "title": "Audience Segmentation Dashboard",
+      "description": "Categorize audience by topic interest and behavior, recommend content per segment, and track segment growth over time.",
+      "useCase": "No understanding of who's engaging with TensionLines. Need to categorize audience by topic interest and behavior patterns to drive targeted content strategy.",
+      "category": "analytics",
+      "priority": "medium",
+      "effort": "medium",
+      "status": "in_progress",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-08T05:00:00.000Z",
+      "targetQuarter": "Q3-2026",
+      "agents": ["aristotle", "marcus"],
+      "dependencies": ["need-007"],
+      "acceptanceCriteria": [
+        "Audience segments defined by engagement patterns and topic interest",
+        "Content recommendations per segment via Haiku",
+        "Segment growth tracking over time with snapshots"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-08T05:00:00.000Z"
     }
   ],
   "categories": {
@@ -527,19 +589,19 @@
     }
   },
   "stats": {
-    "total": 17,
+    "total": 19,
     "byStatus": {
-      "proposed": 15,
-      "planned": 0,
+      "proposed": 5,
+      "planned": 1,
       "in_progress": 1,
-      "completed": 1,
-      "deferred": 0
+      "completed": 11,
+      "deferred": 1
     },
     "byPriority": {
-      "high": 5,
-      "medium": 7,
+      "high": 6,
+      "medium": 8,
       "low": 5
     },
-    "lastUpdated": "2026-02-07T15:06:56.132Z"
+    "lastUpdated": "2026-02-08T05:00:00.000Z"
   }
 }
