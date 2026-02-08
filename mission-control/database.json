@@ -3028,6 +3028,143 @@
   "documents": [],
   "notifications": [
     {
+      "id": "notif-1770566400029",
+      "type": "daily_summary",
+      "title": "Morning Briefing",
+      "message": "**Daily Summary - 2/8/2026**\n\n📊 **Progress**: 6 tasks completed yesterday\n📋 **Active**: 3 tasks in progress (⚠️ 3 stuck)\n👤 **Your Tasks**: 1 awaiting your attention\n🔔 **Notifications**: 6 unread\n💰 **Monthly Cost**: $0.00/$300 (0%)\n\n⚠️ **18 high priority issues** need attention\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h",
+      "read": false,
+      "createdAt": "2026-02-08T16:00:00.027Z",
+      "metadata": {
+        "completedYesterday": 6,
+        "completedDetails": [
+          {
+            "id": "task-035",
+            "title": "Reply to @ytsanders writing challenge",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-035b",
+            "title": "Reply to @markchironna on attunement",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-035c",
+            "title": "Reply to @SiggyFaux on intellectualizing pain",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-035d",
+            "title": "Reply to @TheTwinPowers on definitions",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-035e",
+            "title": "Reply to @TheInnerID on emotional intelligence",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-035g",
+            "title": "Post original tweet (pick A, B, or C)",
+            "assignees": [
+              "human"
+            ]
+          }
+        ],
+        "activeTasks": 3,
+        "activeDetails": [
+          {
+            "id": "task-014",
+            "title": "Bluesky Daily Outreach - Community Growth",
+            "status": "in_progress",
+            "assignees": [
+              "heraclitus"
+            ],
+            "timeInStatus": "3d 3h",
+            "alertLevel": "red"
+          },
+          {
+            "id": "task-016",
+            "title": "CMS Time-In-Status Alerts & Visual Indicators",
+            "status": "in_progress",
+            "assignees": [
+              "aristotle"
+            ],
+            "timeInStatus": "1d 19h",
+            "alertLevel": "red"
+          },
+          {
+            "id": "task-035f",
+            "title": "Follow 5 Day 4 outreach targets",
+            "status": "assigned",
+            "assignees": [
+              "human"
+            ],
+            "timeInStatus": "1d 9h",
+            "alertLevel": "red"
+          }
+        ],
+        "stuckTasks": 3,
+        "humanTasks": 1,
+        "humanDetails": [
+          {
+            "id": "task-035f",
+            "title": "Follow 5 Day 4 outreach targets",
+            "status": "assigned"
+          }
+        ],
+        "unreadCount": 6,
+        "costStatus": "$0.00/$300 (0%)",
+        "highPriorityIssues": 18,
+        "highPriorityDetails": [
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Twitter Daily Outreach - Growth to 1000 Followers\" (task-013) has been in in_progress status for 1d 6h. Assigned to: nietzsche",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-013",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Bluesky Daily Outreach - Community Growth\" (task-014) has been in in_progress status for 1d 6h. Assigned to: heraclitus",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-014",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 1d 6h. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 13h 1m",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 13h 1m. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in assigned for 3h 53m",
+            "description": "Task \"Reply to @ytsanders writing challenge\" (task-035) has been in assigned status for 3h 53m. Assigned to: human",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-035",
+            "type": "stuck_task"
+          }
+        ]
+      }
+    },
+    {
       "id": "notif-1770517763776-hb7d",
       "type": "agent_message",
       "title": "Alert from diogenes",

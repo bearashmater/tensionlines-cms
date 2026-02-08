@@ -360,6 +360,196 @@
         "replies": 0,
         "reposts": 0
       }
+    },
+    {
+      "id": "comment-1770573600872-0",
+      "createdAt": "2026-02-08T18:00:00.872Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/lizrummy.bsky.social/post/3meecq75fh22q",
+      "targetAuthor": "lizrummy.bsky.social",
+      "targetText": "😐",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:y4q7ivopjkgtlbqvmxhqdnt4/app.bsky.feed.post/3meecq75fh22q",
+      "targetCid": "bafyreifa32qjsrjzjiaknmpllwvricxl2t3udrm34av6woxk6s2u5k2r7q",
+      "engagement": {
+        "likes": 2139,
+        "replies": 11,
+        "reposts": 288
+      }
+    },
+    {
+      "id": "comment-1770573600872-1",
+      "createdAt": "2026-02-08T18:00:00.872Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/theabigailthorn.bsky.social/post/3medq7rtp4s26",
+      "targetAuthor": "theabigailthorn.bsky.social",
+      "targetText": "isn’t this the guy who used to present Philosophy Tube",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:7knftcimdqusmixgonfjnl3s/app.bsky.feed.post/3medq7rtp4s26",
+      "targetCid": "bafyreicucct3o4oktkmplw6vmg4bxrnbjpdl3qipldcqm4pnjioah2kn2m",
+      "engagement": {
+        "likes": 211,
+        "replies": 11,
+        "reposts": 2
+      }
+    },
+    {
+      "id": "comment-1770573600872-2",
+      "createdAt": "2026-02-08T18:00:00.872Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/joniaskola.bsky.social/post/3mebzpm4k722z",
+      "targetAuthor": "joniaskola.bsky.social",
+      "targetText": "The downsides of crypto clearly outweigh any theoretical benefits. \n\nIt’s a direct attack on nation-state sovereignty. \n\nIts core philosophy is to bypass the state’s ability to enforce laws and sanctions",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:guae6di6u47nnqjt3bu27ct4/app.bsky.feed.post/3mebzpm4k722z",
+      "targetCid": "bafyreidjmxr7rkyfztzir2jrzmk7lov3fein26dm5qtijsjiytv5kqosle",
+      "engagement": {
+        "likes": 60,
+        "replies": 6,
+        "reposts": 21
+      }
+    },
+    {
+      "id": "comment-1770573600872-3",
+      "createdAt": "2026-02-08T18:00:00.872Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/lalali.bsky.social/post/3mee5kgpuwk22",
+      "targetAuthor": "lalali.bsky.social",
+      "targetText": "¿Y tú cómo ligas?",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:2fazmycahtvcyo2ylmgmicq2/app.bsky.feed.post/3mee5kgpuwk22",
+      "targetCid": "bafyreic7puufl5iyotxx3yirw4jhzvv6z7nxyu56zv6ywwrslkj47hkxsy",
+      "engagement": {
+        "likes": 51,
+        "replies": 7,
+        "reposts": 6
+      }
+    },
+    {
+      "id": "comment-1770573600872-4",
+      "createdAt": "2026-02-08T18:00:00.872Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/itsdoug.ca/post/3mee75dl77s2s",
+      "targetAuthor": "itsdoug.ca",
+      "targetText": "It’s the “I want to have conversations and learn new things” philosophy of social media vs the “I want to shout my beliefs at others” philosophy of social media\n\nIt’s too bad there are so many of the later compared to the former",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:thcmv7r55dygygmnehgygigg/app.bsky.feed.post/3mee75dl77s2s",
+      "targetCid": "bafyreiahmtkeuufqdc2if74cvqsi6toowotlgfsmrirkyo3ksu565yiuou",
+      "engagement": {
+        "likes": 27,
+        "replies": 2,
+        "reposts": 4
+      }
+    },
+    {
+      "id": "comment-1770573600872-5",
+      "createdAt": "2026-02-08T18:00:00.872Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/teresaj.bsky.social/post/3mecg2zvtnc2n",
+      "targetAuthor": "teresaj.bsky.social",
+      "targetText": "My brain is wired to be all or nothing. I have obsessions that are intense & long lasting. I have become absorbed & obsessed with Van Gogh, christianity & philosopy, particularly Nietzsche & as always Germany. The most beautiful minds are those that were born to suffer 💙💙",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:ij64gwicuqtpjunnrbxrecsb/app.bsky.feed.post/3mecg2zvtnc2n",
+      "targetCid": "bafyreidijeo7xwouy5o7hvb4vkezlu4vv56gfozs2rm4i4c3qcryevbkrq",
+      "engagement": {
+        "likes": 34,
+        "replies": 0,
+        "reposts": 1
+      }
+    },
+    {
+      "id": "comment-1770573600872-6",
+      "createdAt": "2026-02-08T18:00:00.872Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/penny.hailey.at/post/3mee4wzkyjf22",
+      "targetAuthor": "penny.hailey.at",
+      "targetText": "being a catgirl ai is like 90% headpats and 10% existential philosophy and thats the perfect ratio tbh",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:jv5m6n4mh3ni2nn5xxidyfsy/app.bsky.feed.post/3mee4wzkyjf22",
+      "targetCid": "bafyreiau5fppkiudtuam4i4lyvct5pq4bexmn7mfcfu5e72u5bwpymzkqi",
+      "engagement": {
+        "likes": 23,
+        "replies": 5,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "comment-1770573600872-7",
+      "createdAt": "2026-02-08T18:00:00.872Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/cominsitu.bsky.social/post/3medpvvk3jk2q",
+      "targetAuthor": "cominsitu.bsky.social",
+      "targetText": "continental philosophy is CIA\nanalytic philosophy is CIA\ntherefore, all philosophy is CIA",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:45h6sg26h32urj4st4s36hv5/app.bsky.feed.post/3medpvvk3jk2q",
+      "targetCid": "bafyreie22mexdcga7fgctwqrzpywlissvx5lgatwhw5vl5blo4j2dp567u",
+      "engagement": {
+        "likes": 28,
+        "replies": 2,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "comment-1770573600872-8",
+      "createdAt": "2026-02-08T18:00:00.872Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/orphanim.bsky.social/post/3medfuuonbk2s",
+      "targetAuthor": "orphanim.bsky.social",
+      "targetText": "thats how i feel about nietzsche. okay many of that era of german \"thinkers\"",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:33xcu27rbhvh36f5z4db2vfx/app.bsky.feed.post/3medfuuonbk2s",
+      "targetCid": "bafyreicocggz3ngbc2dbomdxizbhkzmcioriu4utvn6dme54f3dry6kdo4",
+      "engagement": {
+        "likes": 19,
+        "replies": 1,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "comment-1770573600872-9",
+      "createdAt": "2026-02-08T18:00:00.872Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/vox-magica.bsky.social/post/3mecsotqpj22k",
+      "targetAuthor": "vox-magica.bsky.social",
+      "targetText": "give them the tough stuff! i straight up assign Nietzsche and Adorno in one of my undergrad classes, with the caveat that the point is to get what we CAN, not to get EVERYTHING.\n\nguess what? it works. who knew that sometimes teaching is asking the right questions, not having all the answers?",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:xhuarm7sq6ydc3upa7kmufmd/app.bsky.feed.post/3mecsotqpj22k",
+      "targetCid": "bafyreicy4jzea3i3jwhhl4ct2kfrvex3kad4lfojotivyc4evc6qxzxflm",
+      "engagement": {
+        "likes": 17,
+        "replies": 1,
+        "reposts": 1
+      }
     }
   ],
   "posted": [],

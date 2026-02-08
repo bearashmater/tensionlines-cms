@@ -6,6 +6,13 @@
       "followedAt": "2026-02-08T16:00:00.000Z",
       "source": "manual",
       "context": "Manually followed outside the system"
+    },
+    {
+      "handle": "roamingdruid.bsky.social",
+      "platform": "bluesky",
+      "followedAt": "2026-02-08T19:15:28.727Z",
+      "source": "auto-scan",
+      "context": "Author consistently explores emotional intelligence nuances—genuine voice in our space"
     }
   ]
 }
