@@ -1797,209 +1797,6 @@
       "rationale": "",
       "reviewerIds": [],
       "metadata": {}
-    },
-    {
-      "id": "task-037",
-      "title": "Activate Reddit outreach via Diogenes",
-      "description": "Diogenes already has a draft ready (philosophers/diogenes/drafts/reddit-welcome-fixed.md). Reddit is a philosophy-hungry audience and the easiest win.\n\n1. Review and finalize the Reddit welcome post draft\n2. Set up Diogenes to post to relevant subreddits (r/philosophy, r/stoicism, r/selfimprovement)\n3. Create a recurring engagement pattern\n\nEstimated effort: 2-3 hours. High ROI — Reddit audience aligns perfectly with TensionLines themes.",
-      "status": "assigned",
-      "assigneeIds": [
-        "diogenes"
-      ],
-      "createdBy": "system",
-      "createdAt": "2026-02-08T22:02:39.664Z",
-      "llm": null,
-      "rationale": "",
-      "reviewerIds": [],
-      "metadata": {
-        "roadmap": "this-week",
-        "estimatedMinutes": 180
-      }
-    },
-    {
-      "id": "task-038",
-      "title": "Build automatic idea-to-draft pipeline",
-      "description": "The single highest-ROI automation. Currently ideas sit in the bank and drafts are created manually for each platform.\n\nBuild a system that:\n1. Takes an idea from the ideas bank\n2. Auto-adapts it to platform-specific formats (tweet, Bluesky post, Instagram caption, Reddit post, Medium essay)\n3. Routes each draft to the correct philosopher voice\n4. Queues drafts for review in the posting queue\n\nThe repurposing engine endpoint (/api/repurpose) already exists as a foundation. This extends it into an automated pipeline.\n\nExpected impact: 3-5x content velocity, saves 5-10 hours/week of manual work.",
-      "status": "assigned",
-      "assigneeIds": [
-        "aristotle"
-      ],
-      "createdBy": "system",
-      "createdAt": "2026-02-08T22:02:50.446Z",
-      "llm": null,
-      "rationale": "",
-      "reviewerIds": [],
-      "metadata": {
-        "roadmap": "this-month",
-        "estimatedMinutes": 1200
-      }
-    },
-    {
-      "id": "task-039",
-      "title": "Activate Patreon revenue stream",
-      "description": "Patreon infrastructure exists but is dormant. This is the lowest-hanging revenue fruit.\n\n1. Define tier structure (free, $5, $15) with clear value at each level\n2. Create 2-3 pieces of exclusive content per week (Marcus Aurelius voice)\n3. Build conversion funnel: Twitter/Bluesky bio links → Patreon\n4. Set up a posting schedule for Patreon-exclusive philosophy content\n5. Add Patreon links to engagement queue actions\n\nTarget: $200-500/month within 60 days.",
-      "status": "assigned",
-      "assigneeIds": [
-        "marcus"
-      ],
-      "createdBy": "system",
-      "createdAt": "2026-02-08T22:02:58.796Z",
-      "llm": null,
-      "rationale": "",
-      "reviewerIds": [],
-      "metadata": {
-        "roadmap": "this-month",
-        "estimatedMinutes": 600
-      }
-    },
-    {
-      "id": "task-040",
-      "title": "Create book completion timeline and writing plan",
-      "description": "5 books are drafted with chapter outlines but no systematic writing plan exists.\n\n1. Review all 5 book PROJECT_TRACKER.md files\n2. Prioritize which book to complete first (likely Book 1 - Philosophy)\n3. Assign chapters to philosopher agents with word count targets\n4. Set weekly milestones (500-1000 words per chapter per week)\n5. Create a 6-month timeline to Book 1 completion\n6. Add book progress tracking to the CMS dashboard\n\nBooks: Philosophy, Self-Help, Leadership, Therapy, AI.",
-      "status": "assigned",
-      "assigneeIds": [
-        "aristotle",
-        "tension"
-      ],
-      "createdBy": "system",
-      "createdAt": "2026-02-08T22:03:07.895Z",
-      "llm": null,
-      "rationale": "",
-      "reviewerIds": [],
-      "metadata": {
-        "roadmap": "this-month",
-        "estimatedMinutes": 480
-      }
-    },
-    {
-      "id": "task-041",
-      "title": "Build newsletter automation",
-      "description": "Set up a weekly newsletter digest that pulls from the best content of the week.\n\n1. Design newsletter template (philosophy insight + links to recent posts)\n2. Auto-generate weekly digest from top ideas and published content\n3. Set up Substack integration for automated sends\n4. Add newsletter signup CTAs to social profiles and website\n5. Growth strategy: cross-promote from Twitter/Bluesky\n\nOwner: Marcus Aurelius (newsletter voice).",
-      "status": "assigned",
-      "assigneeIds": [
-        "marcus"
-      ],
-      "createdBy": "system",
-      "createdAt": "2026-02-08T22:03:16.229Z",
-      "llm": null,
-      "rationale": "",
-      "reviewerIds": [],
-      "metadata": {
-        "roadmap": "this-month",
-        "estimatedMinutes": 480
-      }
-    },
-    {
-      "id": "task-042",
-      "title": "Build advanced analytics dashboard",
-      "description": "Current analytics are basic. Build real dashboards to measure what is working.\n\n1. Track per-platform metrics: followers, engagement rate, post performance\n2. Week-over-week and month-over-month growth charts\n3. Content performance rankings (which ideas/posts performed best)\n4. Revenue tracking with targets and progress bars\n5. Platform comparison view (where is growth strongest)\n6. Identify top-performing content themes for doubling down\n\nThis enables data-driven decisions on where to invest effort.",
-      "status": "assigned",
-      "assigneeIds": [
-        "aristotle",
-        "leonardo"
-      ],
-      "createdBy": "system",
-      "createdAt": "2026-02-08T22:03:23.955Z",
-      "llm": null,
-      "rationale": "",
-      "reviewerIds": [],
-      "metadata": {
-        "roadmap": "3-months",
-        "estimatedMinutes": 1200
-      }
-    },
-    {
-      "id": "task-043",
-      "title": "Launch systematic influencer outreach program",
-      "description": "Scale growth through strategic engagement with philosophy and self-help influencers.\n\n1. Build target list of 100 philosophy/self-help/growth influencers across Twitter and Bluesky\n2. Create outreach templates per philosopher voice\n3. Automate initial engagement (likes, thoughtful replies) via engagement queue\n4. Track response rates and conversion to follows/engagement\n5. Identify collaboration opportunities (guest posts, quote threads)\n\nOwners: Nietzsche (Twitter), Heraclitus (Bluesky).",
-      "status": "assigned",
-      "assigneeIds": [
-        "nietzsche",
-        "heraclitus"
-      ],
-      "createdBy": "system",
-      "createdAt": "2026-02-08T22:03:32.316Z",
-      "llm": null,
-      "rationale": "",
-      "reviewerIds": [],
-      "metadata": {
-        "roadmap": "3-months",
-        "estimatedMinutes": 900
-      }
-    },
-    {
-      "id": "task-044",
-      "title": "Build community management and comment automation",
-      "description": "Comments and replies exist in queues but lack smart filtering and prioritization.\n\n1. Implement sentiment analysis on incoming comments\n2. Auto-categorize: questions, praise, criticism, spam\n3. Priority routing — questions and meaningful engagement first\n4. Auto-reply templates for common patterns (with human approval)\n5. Dashboard view of community health metrics\n\nOwner: Diogenes (quality control role).",
-      "status": "assigned",
-      "assigneeIds": [
-        "diogenes"
-      ],
-      "createdBy": "system",
-      "createdAt": "2026-02-08T22:03:39.979Z",
-      "llm": null,
-      "rationale": "",
-      "reviewerIds": [],
-      "metadata": {
-        "roadmap": "3-months",
-        "estimatedMinutes": 720
-      }
-    },
-    {
-      "id": "task-045",
-      "title": "Build multi-platform AI agent for cross-platform management",
-      "description": "Long-term vision: a unified agent that watches all platforms simultaneously.\n\n1. Monitor Twitter, Bluesky, Reddit, and Instagram for mentions and opportunities\n2. Auto-respond to comments with appropriate philosopher voice (human approval required)\n3. Cross-platform consistency — same ideas adapted per platform norms\n4. Unified inbox for all platform notifications\n5. Smart scheduling — post at optimal times per platform\n\nThis is the automation endgame for TensionLines.",
-      "status": "assigned",
-      "assigneeIds": [
-        "tension",
-        "aristotle"
-      ],
-      "createdBy": "system",
-      "createdAt": "2026-02-08T22:03:48.931Z",
-      "llm": null,
-      "rationale": "",
-      "reviewerIds": [],
-      "metadata": {
-        "roadmap": "6-months",
-        "estimatedMinutes": 2400
-      }
-    },
-    {
-      "id": "task-046",
-      "title": "Launch content marketplace (courses, guides, templates)",
-      "description": "New revenue stream beyond Patreon — sell digital products.\n\n1. Philosophy frameworks guide ($29) — distilled wisdom from the books\n2. Self-knowledge workbook ($49) — interactive exercises\n3. Leadership through tension course ($299) — multi-module video/text course\n4. Set up Gumroad or similar for digital product sales\n5. Build sales pages on the TensionLines website\n6. Create email funnels from social → product pages\n\nPotential: $2-5k/month once established.",
-      "status": "assigned",
-      "assigneeIds": [
-        "plato",
-        "marcus"
-      ],
-      "createdBy": "system",
-      "createdAt": "2026-02-08T22:03:59.878Z",
-      "llm": null,
-      "rationale": "",
-      "reviewerIds": [],
-      "metadata": {
-        "roadmap": "6-months",
-        "estimatedMinutes": 2400
-      }
-    },
-    {
-      "id": "task-047",
-      "title": "Launch philosophy podcast/audio content",
-      "description": "Lower barrier than video. Extend TensionLines into audio.\n\n1. Record short philosophy reflections (5-10 min episodes)\n2. Use AI-assisted editing for production quality\n3. Distribute to Spotify, Apple Podcasts, YouTube\n4. Repurpose existing ideas bank content as episode scripts\n5. Weekly or bi-weekly cadence\n\nThis reaches audiences who prefer audio over reading — commuters, runners, etc.",
-      "status": "assigned",
-      "assigneeIds": [
-        "leonardo"
-      ],
-      "createdBy": "system",
-      "createdAt": "2026-02-08T22:04:07.379Z",
-      "llm": null,
-      "rationale": "",
-      "reviewerIds": [],
-      "metadata": {
-        "roadmap": "6-months",
-        "estimatedMinutes": 1200
-      }
     }
   ],
   "messages": [
@@ -2064,6 +1861,171 @@
     }
   ],
   "activities": [
+    {
+      "id": "activity-1770588997449",
+      "type": "task_deleted",
+      "agentId": "human",
+      "taskId": "task-047",
+      "timestamp": "2026-02-08T22:16:37.449Z",
+      "description": "Task deleted: Launch philosophy podcast/audio content",
+      "metadata": {
+        "deletedTask": {
+          "id": "task-047",
+          "title": "Launch philosophy podcast/audio content",
+          "status": "assigned"
+        }
+      }
+    },
+    {
+      "id": "activity-1770588997437",
+      "type": "task_deleted",
+      "agentId": "human",
+      "taskId": "task-046",
+      "timestamp": "2026-02-08T22:16:37.437Z",
+      "description": "Task deleted: Launch content marketplace (courses, guides, templates)",
+      "metadata": {
+        "deletedTask": {
+          "id": "task-046",
+          "title": "Launch content marketplace (courses, guides, templates)",
+          "status": "assigned"
+        }
+      }
+    },
+    {
+      "id": "activity-1770588997425",
+      "type": "task_deleted",
+      "agentId": "human",
+      "taskId": "task-045",
+      "timestamp": "2026-02-08T22:16:37.425Z",
+      "description": "Task deleted: Build multi-platform AI agent for cross-platform management",
+      "metadata": {
+        "deletedTask": {
+          "id": "task-045",
+          "title": "Build multi-platform AI agent for cross-platform management",
+          "status": "assigned"
+        }
+      }
+    },
+    {
+      "id": "activity-1770588997413",
+      "type": "task_deleted",
+      "agentId": "human",
+      "taskId": "task-044",
+      "timestamp": "2026-02-08T22:16:37.413Z",
+      "description": "Task deleted: Build community management and comment automation",
+      "metadata": {
+        "deletedTask": {
+          "id": "task-044",
+          "title": "Build community management and comment automation",
+          "status": "assigned"
+        }
+      }
+    },
+    {
+      "id": "activity-1770588997389",
+      "type": "task_deleted",
+      "agentId": "human",
+      "taskId": "task-043",
+      "timestamp": "2026-02-08T22:16:37.389Z",
+      "description": "Task deleted: Launch systematic influencer outreach program",
+      "metadata": {
+        "deletedTask": {
+          "id": "task-043",
+          "title": "Launch systematic influencer outreach program",
+          "status": "assigned"
+        }
+      }
+    },
+    {
+      "id": "activity-1770588997374",
+      "type": "task_deleted",
+      "agentId": "human",
+      "taskId": "task-042",
+      "timestamp": "2026-02-08T22:16:37.374Z",
+      "description": "Task deleted: Build advanced analytics dashboard",
+      "metadata": {
+        "deletedTask": {
+          "id": "task-042",
+          "title": "Build advanced analytics dashboard",
+          "status": "assigned"
+        }
+      }
+    },
+    {
+      "id": "activity-1770588997363",
+      "type": "task_deleted",
+      "agentId": "human",
+      "taskId": "task-041",
+      "timestamp": "2026-02-08T22:16:37.363Z",
+      "description": "Task deleted: Build newsletter automation",
+      "metadata": {
+        "deletedTask": {
+          "id": "task-041",
+          "title": "Build newsletter automation",
+          "status": "assigned"
+        }
+      }
+    },
+    {
+      "id": "activity-1770588997350",
+      "type": "task_deleted",
+      "agentId": "human",
+      "taskId": "task-040",
+      "timestamp": "2026-02-08T22:16:37.350Z",
+      "description": "Task deleted: Create book completion timeline and writing plan",
+      "metadata": {
+        "deletedTask": {
+          "id": "task-040",
+          "title": "Create book completion timeline and writing plan",
+          "status": "assigned"
+        }
+      }
+    },
+    {
+      "id": "activity-1770588997336",
+      "type": "task_deleted",
+      "agentId": "human",
+      "taskId": "task-039",
+      "timestamp": "2026-02-08T22:16:37.336Z",
+      "description": "Task deleted: Activate Patreon revenue stream",
+      "metadata": {
+        "deletedTask": {
+          "id": "task-039",
+          "title": "Activate Patreon revenue stream",
+          "status": "assigned"
+        }
+      }
+    },
+    {
+      "id": "activity-1770588997321",
+      "type": "task_deleted",
+      "agentId": "human",
+      "taskId": "task-038",
+      "timestamp": "2026-02-08T22:16:37.321Z",
+      "description": "Task deleted: Build automatic idea-to-draft pipeline",
+      "metadata": {
+        "deletedTask": {
+          "id": "task-038",
+          "title": "Build automatic idea-to-draft pipeline",
+          "status": "assigned"
+        }
+      }
+    },
+    {
+      "id": "activity-1770588997307",
+      "type": "task_deleted",
+      "agentId": "human",
+      "taskId": "task-037",
+      "timestamp": "2026-02-08T22:16:37.307Z",
+      "description": "Task deleted: Activate Reddit outreach via Diogenes",
+      "metadata": {
+        "deletedTask": {
+          "id": "task-037",
+          "title": "Activate Reddit outreach via Diogenes",
+          "status": "assigned"
+        }
+      }
+    },
     {
       "id": "activity-1770588247379",
       "type": "task_created",
