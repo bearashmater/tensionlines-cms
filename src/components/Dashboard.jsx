@@ -2,8 +2,9 @@ import useSWR, { mutate } from 'swr'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getDashboard, getActivities, search } from '../lib/api'
+import { fetcher } from '../lib/api'
 import { formatDate, formatPercent, formatNumber, formatStatus, getStatusColor } from '../lib/formatters'
-import { Users, ListTodo, Lightbulb, Bell, TrendingUp, Search, FileText, X, Users as UsersIcon, ChevronRight, AlertTriangle } from 'lucide-react'
+import { Users, ListTodo, Lightbulb, Bell, TrendingUp, Search, FileText, X, Users as UsersIcon, ChevronRight, AlertTriangle, BarChart3, DollarSign, PenLine, ArrowUpRight, ArrowDownRight } from 'lucide-react'
 
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -21,6 +22,10 @@ export default function Dashboard() {
     () => getActivities(1, 10),
     { refreshInterval: 120000 }
   )
+
+  const { data: analytics } = useSWR('/api/analytics', fetcher, {
+    refreshInterval: 300000
+  })
 
   const handleSearch = async (e) => {
     e.preventDefault()
@@ -215,7 +220,7 @@ export default function Dashboard() {
       </div>
 
       {/* Task Completion */}
-      <Link to="/analytics" className="card card-hover block">
+      <Link to="/tasks" className="card card-hover block">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-serif font-semibold">Task Completion</h2>
           <span className="text-2xl font-bold text-gold">
@@ -233,6 +238,53 @@ export default function Dashboard() {
           <span>{dashboard.tasks.total} total</span>
         </div>
       </Link>
+
+      {/* Analytics Summary */}
+      {analytics?.summary && (
+        <Link to="/analytics" className="card card-hover block">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-serif font-semibold">Analytics</h2>
+            <BarChart3 size={20} className="text-gold" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <p className="text-xs text-neutral-500 mb-1">Total Audience</p>
+              <p className="text-2xl font-bold text-black">{formatNumber(analytics.summary.totalAudience)}</p>
+              {analytics.summary.totalAudienceChange !== 0 && (
+                <p className={`text-xs flex items-center gap-0.5 mt-0.5 ${analytics.summary.totalAudienceChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {analytics.summary.totalAudienceChange > 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                  {analytics.summary.totalAudienceChange > 0 ? '+' : ''}{analytics.summary.totalAudienceChange} this week
+                </p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500 mb-1">Weekly Growth</p>
+              <p className="text-2xl font-bold text-black">{analytics.summary.weeklyGrowth}%</p>
+              <p className="text-xs text-neutral-500 mt-0.5">across all platforms</p>
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500 mb-1">Revenue (Month)</p>
+              <p className="text-2xl font-bold text-black">${formatNumber(analytics.summary.monthlyRevenue)}</p>
+              {analytics.summary.monthlyRevenueChange !== 0 && (
+                <p className={`text-xs flex items-center gap-0.5 mt-0.5 ${analytics.summary.monthlyRevenueChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {analytics.summary.monthlyRevenueChange > 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                  {analytics.summary.monthlyRevenueChange > 0 ? '+' : ''}${analytics.summary.monthlyRevenueChange} vs last month
+                </p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500 mb-1">Content This Week</p>
+              <p className="text-2xl font-bold text-black">{analytics.summary.contentThisWeek}</p>
+              {analytics.summary.contentThisWeekChange !== 0 && (
+                <p className={`text-xs flex items-center gap-0.5 mt-0.5 ${analytics.summary.contentThisWeekChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {analytics.summary.contentThisWeekChange > 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                  {analytics.summary.contentThisWeekChange > 0 ? '+' : ''}{analytics.summary.contentThisWeekChange} vs last week
+                </p>
+              )}
+            </div>
+          </div>
+        </Link>
+      )}
 
       {/* Recent Activity */}
       <Link to="/tasks" className="card card-hover block">
