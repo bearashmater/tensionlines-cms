@@ -90,16 +90,7 @@
   "revenue": {
     "monthlyTarget": 500,
     "yearlyTarget": 6000,
-    "entries": [
-      {
-        "month": "2026-02",
-        "substack": 25,
-        "gumroad": 10,
-        "patreon": 0,
-        "amazon": 0,
-        "other": 0
-      }
-    ]
+    "entries": []
   },
   "goals": [
     {
