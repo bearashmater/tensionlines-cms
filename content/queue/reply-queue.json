@@ -1,23 +1,6 @@
 {
   "queue": [
     {
-      "id": "reply-1770565663308-follow-markchironna",
-      "createdAt": "2026-02-08T15:47:43.308Z",
-      "status": "ready",
-      "platform": "twitter",
-      "targetUrl": "https://x.com/markchironna",
-      "targetAuthor": "markchironna",
-      "targetText": "Attunement cannot coexist with chronic reactivity. The attuned soul operates from a different center altogether, one that is anchored deeply enough to resist the gravitational pull of whatever is loudest.",
-      "replyText": "I'm with you — reactivity is the noise that drowns out signal. The challenge isn't silencing the chaos around us, but strengthening that inner anchor until the pull becomes irrelevant. That's daily practice, not theory.\n\n#bothcanbtrue #lifelessons",
-      "taskId": null,
-      "targetUri": null,
-      "targetCid": null,
-      "followTarget": true,
-      "followUrl": "https://x.com/markchironna",
-      "philosopher": "marcus",
-      "contextType": "post"
-    },
-    {
       "id": "reply-1770565665827-follow-SiggyFaux",
       "createdAt": "2026-02-08T15:47:45.827Z",
       "status": "ready",
@@ -87,6 +70,24 @@
     }
   ],
   "posted": [
+    {
+      "id": "reply-1770565663308-follow-markchironna",
+      "createdAt": "2026-02-08T15:47:43.308Z",
+      "status": "posted",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/markchironna",
+      "targetAuthor": "markchironna",
+      "targetText": "Attunement cannot coexist with chronic reactivity. The attuned soul operates from a different center altogether, one that is anchored deeply enough to resist the gravitational pull of whatever is loudest.",
+      "replyText": "I'm with you — reactivity is the noise that drowns out signal. The challenge isn't silencing the chaos around us, but strengthening that inner anchor until the pull becomes irrelevant. That's daily practice, not theory.\n\n#bothcanbtrue #lifelessons",
+      "taskId": null,
+      "targetUri": null,
+      "targetCid": null,
+      "followTarget": true,
+      "followUrl": "https://x.com/markchironna",
+      "philosopher": "marcus",
+      "contextType": "post",
+      "postedAt": "2026-02-08T15:52:42.926Z"
+    },
     {
       "id": "reply-1770561391025-task-035d",
       "createdAt": "2026-02-07T06:06:56.662Z",
