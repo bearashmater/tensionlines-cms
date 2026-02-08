@@ -1,5 +1,367 @@
 {
-  "queue": [],
+  "queue": [
+    {
+      "id": "comment-1770501600741-0",
+      "createdAt": "2026-02-07T22:00:00.741Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/kenmartin.bsky.social/post/3mec6rlokjn2h",
+      "targetAuthor": "kenmartin.bsky.social",
+      "targetText": "Since I was elected DNC Chair, we’ve followed a simple philosophy: organize everywhere to win anywhere.\n\nWe’re making investments, registering voters, and rebuilding trust. The road ahead is long, but the ground is shifting unmistakably.\n\nRead my op-ed.",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:kyhuc5gvte6wtvcex2652v5j/app.bsky.feed.post/3mec6rlokjn2h",
+      "targetCid": "bafyreiaasoykhuol45d6tzyypdtcasvmghxk74kw6c46wj6mfybsfi4jpq",
+      "engagement": {
+        "likes": 124,
+        "replies": 17,
+        "reposts": 31
+      }
+    },
+    {
+      "id": "comment-1770501600741-1",
+      "createdAt": "2026-02-07T22:00:00.741Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/instanterudite.bsky.social/post/3meacsa32bs2v",
+      "targetAuthor": "instanterudite.bsky.social",
+      "targetText": "This week's #SundayShot features favourite guests @rachelwithers.bsky.social & @mrdtjames.bsky.social and an interview on the #EpsteinFiles with Professor of Philosophy at Cornell @katemanne.bsky.social.\n\nDon't miss us at 9am AEDT on Sunday (and please do subscribe!)\n\nwww.youtube.com/@TheSundayShot",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:2k247ab4tqqiaribuyfcrloz/app.bsky.feed.post/3meacsa32bs2v",
+      "targetCid": "bafyreialionwc5yd4pozppmmy2yuygczfhioob2s2lblti5qvjehwlqp7i",
+      "engagement": {
+        "likes": 110,
+        "replies": 4,
+        "reposts": 56
+      }
+    },
+    {
+      "id": "comment-1770501600741-2",
+      "createdAt": "2026-02-07T22:00:00.741Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/ayla96.bsky.social/post/3mearjkp2ok2r",
+      "targetAuthor": "ayla96.bsky.social",
+      "targetText": "Sahip olunması gereken tek şey var:\nYa yaradılıştan ince bir ruhtur bu,\nya da bilim ve sanatlar tarafından inceltilmiş bir ruh...\n\nNietzsche",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:u4vbgv7ckfkpljytf3l4y5m2/app.bsky.feed.post/3mearjkp2ok2r",
+      "targetCid": "bafyreidzleapctimhu67il7rg3fcb26jeq7ipqfrs3sh3i7osd64yxatzu",
+      "engagement": {
+        "likes": 58,
+        "replies": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "comment-1770501600741-3",
+      "createdAt": "2026-02-07T22:00:00.741Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/johnmoe.bsky.social/post/3mebvmfkf6s2w",
+      "targetAuthor": "johnmoe.bsky.social",
+      "targetText": "I love teaching writing classes in part because they lead me to explain my philosophy of writing. And I never knew I had a philosophy of writing but then I discover, in explaining it, that yes I do. So I’m hearing about it along with the students.",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:2g3p466mwex6cpt7pnlhi2eq/app.bsky.feed.post/3mebvmfkf6s2w",
+      "targetCid": "bafyreiark6xflabyn2xjilnauon2cgtrfu3lsxbrw6nmth67ujzk5bv3z4",
+      "engagement": {
+        "likes": 48,
+        "replies": 4,
+        "reposts": 1
+      }
+    },
+    {
+      "id": "comment-1770501600741-4",
+      "createdAt": "2026-02-07T22:00:00.741Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/kevinzollman.com/post/3mebtjbyljs2f",
+      "targetAuthor": "kevinzollman.com",
+      "targetText": "As an officer of the Philosophy of Science association, I would like to officially invite the Muppets to the next PSA conference in San Diego \n\n@philsci.bsky.social",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:bt4eno63kd5uttdozhexncs6/app.bsky.feed.post/3mebtjbyljs2f",
+      "targetCid": "bafyreidcki5vlfdbw3sfgaioo62l7cdjk6aneitjnz3kzjfgfp7aqk7h7y",
+      "engagement": {
+        "likes": 43,
+        "replies": 2,
+        "reposts": 9
+      }
+    },
+    {
+      "id": "comment-1770501600741-5",
+      "createdAt": "2026-02-07T22:00:00.741Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/funnysnarkyjoke.bsky.social/post/3mebnbbwcok2q",
+      "targetAuthor": "funnysnarkyjoke.bsky.social",
+      "targetText": "Denny’s is for the weak",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:lxm3v43kiuo4gdun45a4zivh/app.bsky.feed.post/3mebnbbwcok2q",
+      "targetCid": "bafyreif67xc54cjzqjmmprb6t5mlqvanofrkfofx3nqfs5psy52nii6ksy",
+      "engagement": {
+        "likes": 31,
+        "replies": 5,
+        "reposts": 4
+      }
+    },
+    {
+      "id": "comment-1770501600741-6",
+      "createdAt": "2026-02-07T22:00:00.741Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/neilforreal.bsky.social/post/3mebyokbzfk2a",
+      "targetAuthor": "neilforreal.bsky.social",
+      "targetText": "The MAGA party will not tolerate deviation from Dear Leader's philosophy of \"be as stupid as possible at all times.\"",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:ruhwgda4uh6aaj4qe5ncapj3/app.bsky.feed.post/3mebyokbzfk2a",
+      "targetCid": "bafyreied5mylz4crawd5adqonplghxsn6zijjvyt77jakocc72vgve4ezq",
+      "engagement": {
+        "likes": 33,
+        "replies": 0,
+        "reposts": 1
+      }
+    },
+    {
+      "id": "comment-1770501600741-7",
+      "createdAt": "2026-02-07T22:00:00.741Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/roblarocque.bsky.social/post/3mebulgtdyc2f",
+      "targetAuthor": "roblarocque.bsky.social",
+      "targetText": "“Distrust all in whom the impulse to punish is powerful!\" \n- Friedrich Nietzsche\n#QuoteOfTheDay #FriedrichNietzsche #LawAndOrder #Power #Punishment",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:x5kr7ohvyxmxegprhewzvvxr/app.bsky.feed.post/3mebulgtdyc2f",
+      "targetCid": "bafyreihasqgwpy6yx3mgbkfbuep33rdqr4laypd62yzrbl3nf34qmestty",
+      "engagement": {
+        "likes": 13,
+        "replies": 2,
+        "reposts": 2
+      }
+    },
+    {
+      "id": "comment-1770501600741-8",
+      "createdAt": "2026-02-07T22:00:00.741Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/simonm223.bsky.social/post/3me7xolhfb22c",
+      "targetAuthor": "simonm223.bsky.social",
+      "targetText": "Basically, if you suck as a person, you better be at least as good a writer as Nietzsche (or at least HPL) or why would I bother?",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:iw6baony4smnjgraewtwtdd2/app.bsky.feed.post/3me7xolhfb22c",
+      "targetCid": "bafyreigebx5oxtexup6igwi7njpwj35ycbdfpwsroaomwl4fu4nbgjtl2m",
+      "engagement": {
+        "likes": 15,
+        "replies": 1,
+        "reposts": 2
+      }
+    },
+    {
+      "id": "comment-1770501600741-9",
+      "createdAt": "2026-02-07T22:00:00.741Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/nightsisterlil1.bsky.social/post/3mec65ilrhk2g",
+      "targetAuthor": "nightsisterlil1.bsky.social",
+      "targetText": "www.patreon.com/c/infinite_b...\n\n#transmusician #soloartist #queerartist #philosophy #psychedelic #trans #infinite_blush #artproject #existential",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:e5lx5jjljysske6bc3vtft6b/app.bsky.feed.post/3mec65ilrhk2g",
+      "targetCid": "bafyreiaerkvwj7vxp5bluf3ru3ui4vr3vym7od6gyd4uezo52kdaltpmvu",
+      "engagement": {
+        "likes": 14,
+        "replies": 0,
+        "reposts": 2
+      }
+    },
+    {
+      "id": "comment-1770516000647-0",
+      "createdAt": "2026-02-08T02:00:00.647Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/egojunk.bsky.social/post/3mebmdbnmd22e",
+      "targetAuthor": "egojunk.bsky.social",
+      "targetText": "Philosophy spouse did NOT like me calling Socrates the “Joe Rogan” of ancient Greece. “Just asking questions.” Stepped on that rake this morning.",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:fzrbbhfjtw3n4smiwsukrj4m/app.bsky.feed.post/3mebmdbnmd22e",
+      "targetCid": "bafyreif2b5u5go7oyqabt2ff5bbdtcnrpvwkgim23ggojufug6bzlmzcse",
+      "engagement": {
+        "likes": 28,
+        "replies": 2,
+        "reposts": 1
+      }
+    },
+    {
+      "id": "comment-1770516000647-1",
+      "createdAt": "2026-02-08T02:00:00.647Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/joseli.to/post/3meco33n4ls2u",
+      "targetAuthor": "joseli.to",
+      "targetText": "é muito bom que dos veteranos quem era virao é vilao, quem era planta é planta e quem tinha carisma segue com carisma\n\nao menos no bbb nietzsche está totalmente correto",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:uorsid6pyxlcoggl3b65mzfy/app.bsky.feed.post/3meco33n4ls2u",
+      "targetCid": "bafyreigpdjuwtstc432656prugycelbv7hfffvnko4ruaodvdp43p3u62q",
+      "engagement": {
+        "likes": 29,
+        "replies": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "comment-1770516000647-2",
+      "createdAt": "2026-02-08T02:00:00.647Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/thegodofcities.bsky.social/post/3mebviaya622q",
+      "targetAuthor": "thegodofcities.bsky.social",
+      "targetText": "[mic tap]\n\nThere are no 'other races'. There is only the 'Human' race, and these pretenders see themselves as Ubermenchen (supermen) and they don't fucking understand Nietzsche or biology and they don't want to because their ignorance is a NARCOTIC. That narcotic is called #WhiteSupremacy.",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:3rfmyade35win2twlshyfvkt/app.bsky.feed.post/3mebviaya622q",
+      "targetCid": "bafyreiesvwd7wjqzosjgidmhktcxjdqv57nnkjwbgu2pwviiya2hl6nq6u",
+      "engagement": {
+        "likes": 12,
+        "replies": 1,
+        "reposts": 2
+      }
+    },
+    {
+      "id": "comment-1770516000647-3",
+      "createdAt": "2026-02-08T02:00:00.647Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/isobel.bsky.social/post/3mec3kqynss23",
+      "targetAuthor": "isobel.bsky.social",
+      "targetText": "existentialism is frightening to me. just be chill ok..",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:3zzgystmg6moxrcdxprqirzx/app.bsky.feed.post/3mec3kqynss23",
+      "targetCid": "bafyreicxo7lmki4i3xz6bv4ewodtwd5icbuedjnvunlgtaysdr4c3qqoxa",
+      "engagement": {
+        "likes": 9,
+        "replies": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "comment-1770516000647-4",
+      "createdAt": "2026-02-08T02:00:00.647Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/gander22h.bsky.social/post/3mebifz6aq22b",
+      "targetAuthor": "gander22h.bsky.social",
+      "targetText": "#caturday #cat #cats #CatOfBluesky #CatsOfBluesky #quote #quotations #philosophy #Sartre #existentialism",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:yjttealc67ug6p2ndr6gssye/app.bsky.feed.post/3mebifz6aq22b",
+      "targetCid": "bafyreigb7hlhcmxbqmjvpsgzp54ddpn3hn6ei2kenmasjbgeytv254uen4",
+      "engagement": {
+        "likes": 6,
+        "replies": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "comment-1770516000647-5",
+      "createdAt": "2026-02-08T02:00:00.647Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/shuchancellor.bsky.social/post/3mec65dqsi22w",
+      "targetAuthor": "shuchancellor.bsky.social",
+      "targetText": "Im so glad I got the dad i did. He has always been a bit zesty and a bit fruity with it. And he is a top tier woman liker and respecter. I despise stoicism and spartan larping",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:u2zjvwiyyiezc6hlxypomtj4/app.bsky.feed.post/3mec65dqsi22w",
+      "targetCid": "bafyreifueege6hmqe2kkwtksxfaex7awh42c3v57iawrkxitrk5d4wvp4m",
+      "engagement": {
+        "likes": 3,
+        "replies": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "comment-1770516000647-6",
+      "createdAt": "2026-02-08T02:00:00.647Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/laurelrjones.bsky.social/post/3mecnn22tbc24",
+      "targetAuthor": "laurelrjones.bsky.social",
+      "targetText": "New to Bluesky, retiree, degrees in physics and engineering. Background: biomedical optics, circus performance/promo. Interests: science, stoicism, logic, books, politics, history, medieval arms, low income housing advocacy. \nNon-binary, ace. Seeking intellectual conversation, NOT romance. Democrat.",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:uo4plyna2k5q6jihxw277vfy/app.bsky.feed.post/3mecnn22tbc24",
+      "targetCid": "bafyreifeypk7fs6va5firr6wmvtr73ckfhdddxnmrwj4i3f2khzi2xaqam",
+      "engagement": {
+        "likes": 2,
+        "replies": 0,
+        "reposts": 1
+      }
+    },
+    {
+      "id": "comment-1770516000647-7",
+      "createdAt": "2026-02-08T02:00:00.647Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/idiot-wind.bsky.social/post/3mecs5eugn22m",
+      "targetAuthor": "idiot-wind.bsky.social",
+      "targetText": "Existentialism ALERT\n\nAI vs. Humanity   It has quickly come down to it.\n\nWe are in the early stages BUT moving quickly.  And those who think they are in control don't know what they are unleashing.\n\nThe dollars are blinding them.",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:x7popd3mbfib62eofxunb45l/app.bsky.feed.post/3mecs5eugn22m",
+      "targetCid": "bafyreic35ouet54yusuqqdt7v54uvi7vudtkb7gkbzb22gxcxcnostvjui",
+      "engagement": {
+        "likes": 1,
+        "replies": 0,
+        "reposts": 1
+      }
+    },
+    {
+      "id": "comment-1770516000647-8",
+      "createdAt": "2026-02-08T02:00:00.647Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/nineveh-aka-nini.bsky.social/post/3measo7etus2c",
+      "targetAuthor": "nineveh-aka-nini.bsky.social",
+      "targetText": "a couple fotos for the no-filter fandom - O, n for those on pins n needles, yes, the Truman Show is on deck #Snakes #TransWoman I love the blend of absurdity, existentialism, paranoia, hope, déjà vu, yearning…",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:qc6ekznbhnzmfltyfjdxzq3j/app.bsky.feed.post/3measo7etus2c",
+      "targetCid": "bafyreibfc6vaqc3ief7z5x2dredsbifrfxfcfouj3xe5x7r75i473gvnzy",
+      "engagement": {
+        "likes": 1,
+        "replies": 0,
+        "reposts": 0
+      }
+    }
+  ],
   "posted": [],
   "settings": {
     "platforms": {

@@ -1,9 +1,96 @@
 {
   "queue": [
     {
+      "id": "reply-1770565663308-follow-markchironna",
+      "createdAt": "2026-02-08T15:47:43.308Z",
+      "status": "ready",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/markchironna",
+      "targetAuthor": "markchironna",
+      "targetText": "Attunement cannot coexist with chronic reactivity. The attuned soul operates from a different center altogether, one that is anchored deeply enough to resist the gravitational pull of whatever is loudest.",
+      "replyText": "I'm with you — reactivity is the noise that drowns out signal. The challenge isn't silencing the chaos around us, but strengthening that inner anchor until the pull becomes irrelevant. That's daily practice, not theory.\n\n#bothcanbtrue #lifelessons",
+      "taskId": null,
+      "targetUri": null,
+      "targetCid": null,
+      "followTarget": true,
+      "followUrl": "https://x.com/markchironna",
+      "philosopher": "marcus",
+      "contextType": "post"
+    },
+    {
+      "id": "reply-1770565665827-follow-SiggyFaux",
+      "createdAt": "2026-02-08T15:47:45.827Z",
+      "status": "ready",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/SiggyFaux",
+      "targetAuthor": "SiggyFaux",
+      "targetText": "Intellectualizing grief or loneliness? You are describing pain, not feeling it. Your body wisdom gets outsourced.",
+      "replyText": "Real talk — the moment you can perfectly explain your pain is usually the moment you've stopped sitting with it. The body doesn't speak in concepts.\n\n#holdthetension",
+      "taskId": null,
+      "targetUri": null,
+      "targetCid": null,
+      "followTarget": true,
+      "followUrl": "https://x.com/SiggyFaux",
+      "philosopher": "socrates",
+      "contextType": "post"
+    },
+    {
+      "id": "reply-1770565668837-follow-TheTwinPowers",
+      "createdAt": "2026-02-08T15:47:48.837Z",
+      "status": "ready",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/TheTwinPowers",
+      "targetAuthor": "TheTwinPowers",
+      "targetText": "While defining things can be helpful, becoming attached to our definitions is not.",
+      "replyText": "I'm with you — the map crystallizes while the territory keeps moving. We hold definitions like stones in a river, forgetting the water shaped them and will reshape them again.\n\n#resilience #bothcanbtrue",
+      "taskId": null,
+      "targetUri": null,
+      "targetCid": null,
+      "followTarget": true,
+      "followUrl": "https://x.com/TheTwinPowers",
+      "philosopher": "heraclitus",
+      "contextType": "post"
+    },
+    {
+      "id": "reply-1770565671259-follow-TheInnerID",
+      "createdAt": "2026-02-08T15:47:51.259Z",
+      "status": "ready",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/TheInnerID",
+      "targetAuthor": "TheInnerID",
+      "targetText": "Emotional Intelligence Is Not Emotional Exposure. It is not about expressing every feeling or reacting to every emotion.",
+      "replyText": "I'm with you — real EI is knowing which tensions to follow and which to let dissolve. The wise person doesn't speak every thought or act on every impulse. Discernment > disclosure.",
+      "taskId": null,
+      "targetUri": null,
+      "targetCid": null,
+      "followTarget": true,
+      "followUrl": "https://x.com/TheInnerID",
+      "philosopher": "plato",
+      "contextType": "post"
+    },
+    {
+      "id": "reply-1770565711257-follow-ytsanders",
+      "createdAt": "2026-02-08T15:48:31.257Z",
+      "status": "ready",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/ytsanders",
+      "targetAuthor": "ytsanders",
+      "targetText": "Weekend Writing Challenge: Holding On. Some things are held tightly. Others slip through our fingers no matter how hard we try. Sometimes the story lives in the tension between the two. This weekend, write about what it means to hold on - or what happens when you can't. Stay in the struggle. Do not rush toward relief or resolution. Let the act of holding reveal both strength and cost.",
+      "replyText": "Real talk — the instruction to \"stay in the struggle\" is where most writers fold. We're trained to solve, to release, to resolve. But the white-knuckle moment, that trembling grip? That's where the truth lives. The cost of holding is often more honest than the relief of letting go.\n\n#wordsmatter",
+      "taskId": null,
+      "targetUri": null,
+      "targetCid": null,
+      "followTarget": true,
+      "followUrl": "https://x.com/ytsanders",
+      "philosopher": "nietzsche",
+      "contextType": "post"
+    }
+  ],
+  "posted": [
+    {
       "id": "reply-1770561391025-task-035d",
       "createdAt": "2026-02-07T06:06:56.662Z",
-      "status": "ready",
+      "status": "posted",
       "platform": "twitter",
       "targetUrl": "https://x.com/TheTwinPowers/status/2020010887596143031",
       "targetAuthor": "TheTwinPowers",
@@ -13,12 +100,13 @@
       "targetUri": null,
       "targetCid": null,
       "hookApplied": true,
-      "hashtagsApplied": true
+      "hashtagsApplied": true,
+      "postedAt": "2026-02-08T15:29:55.574Z"
     },
     {
       "id": "reply-1770561391025-task-035e",
       "createdAt": "2026-02-07T06:06:56.662Z",
-      "status": "ready",
+      "status": "posted",
       "platform": "twitter",
       "targetUrl": "https://x.com/TheInnerID/status/2013985443256414416",
       "targetAuthor": "TheInnerID",
@@ -28,10 +116,9 @@
       "targetUri": null,
       "targetCid": null,
       "hookApplied": true,
-      "hashtagsApplied": true
-    }
-  ],
-  "posted": [
+      "hashtagsApplied": true,
+      "postedAt": "2026-02-08T15:29:16.694Z"
+    },
     {
       "id": "reply-1770561391025-task-035c",
       "createdAt": "2026-02-07T06:06:56.662Z",
