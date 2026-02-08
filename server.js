@@ -18,7 +18,7 @@ import http from 'http';
 import matter from 'gray-matter';
 import chokidar from 'chokidar';
 import cron from 'node-cron';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { createServer as createViteServer } from 'vite';
@@ -861,6 +861,17 @@ function isValidBookId(bookId) {
   // Ensure resolved path is still within BOOKS_DIR
   if (!resolvedPath.startsWith(path.resolve(BOOKS_DIR))) return false;
   return fs.existsSync(bookDir) && fs.statSync(bookDir).isDirectory();
+}
+
+/**
+ * Validate philosopher name to prevent path traversal attacks
+ */
+function isValidPhilosopher(name) {
+  if (!name || typeof name !== 'string') return false;
+  if (!/^[a-zA-Z0-9_-]+$/.test(name)) return false;
+  const dir = path.join(PHILOSOPHERS_DIR, name);
+  if (!path.resolve(dir).startsWith(path.resolve(PHILOSOPHERS_DIR))) return false;
+  return fs.existsSync(dir) && fs.statSync(dir).isDirectory();
 }
 
 /**
@@ -3158,7 +3169,7 @@ app.post('/api/posting-queue/:id/publish', async (req, res) => {
       savePostingQueue(queue);
     }
     console.error('[Bluesky] Publish failed:', error.message);
-    res.status(500).json({ error: 'Failed to publish', message: error.message });
+    res.status(500).json({ error: 'Failed to publish' });
   }
 });
 
@@ -3263,6 +3274,10 @@ app.post('/api/repurpose', async (req, res) => {
     }
 
     const { ideaId, rawText, platforms = ['twitter', 'bluesky', 'instagram', 'reddit', 'medium'], philosopher = 'nietzsche' } = req.body;
+
+    if (!isValidPhilosopher(philosopher)) {
+      return res.status(400).json({ error: 'Invalid philosopher name' });
+    }
 
     // Resolve source text
     let sourceText = '';
@@ -3392,7 +3407,7 @@ Only include the platforms requested: ${validPlatforms.join(', ')}`;
     if (error.status === 401) {
       return res.status(502).json({ error: 'Invalid Anthropic API key' });
     }
-    res.status(502).json({ error: 'Claude API call failed', details: error.message });
+    res.status(502).json({ error: 'Claude API call failed' });
   }
 });
 
@@ -3490,6 +3505,9 @@ app.post('/api/voice-check', writeLimiter, async (req, res) => {
     if (!content || !philosopher) {
       return res.status(400).json({ error: 'content and philosopher are required' });
     }
+    if (!isValidPhilosopher(philosopher)) {
+      return res.status(400).json({ error: 'Invalid philosopher name' });
+    }
 
     // Read SOUL.md
     const soulPath = path.join(PHILOSOPHERS_DIR, philosopher, 'SOUL.md');
@@ -3537,7 +3555,7 @@ Keep issues, suggestions, and strengths to 1-3 items each. Be specific, not gene
     res.json(result);
   } catch (error) {
     console.error('Voice check error:', error);
-    res.status(500).json({ error: 'Voice check failed: ' + error.message });
+    res.status(500).json({ error: 'Voice check failed' });
   }
 });
 
@@ -4051,7 +4069,7 @@ app.post('/api/reply-queue/:id/publish', async (req, res) => {
       saveReplyQueue(data);
     }
     console.error('[Bluesky] Reply publish failed:', error.message);
-    res.status(500).json({ error: 'Failed to publish reply', message: error.message });
+    res.status(500).json({ error: 'Failed to publish reply' });
   }
 });
 
@@ -4175,7 +4193,7 @@ app.post('/api/comment-queue/scan', async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('[CommentQueue] Manual scan error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
@@ -4333,7 +4351,7 @@ app.post('/api/comment-queue/:id/publish', async (req, res) => {
       saveCommentQueue(data);
     }
     console.error('[CommentQueue] Publish failed:', error.message);
-    res.status(500).json({ error: 'Failed to publish comment', message: error.message });
+    res.status(500).json({ error: 'Failed to publish comment' });
   }
 });
 
@@ -4352,6 +4370,9 @@ app.post('/api/comment-queue/:id/generate', async (req, res) => {
     if (!item) return res.status(404).json({ error: 'Item not found' });
 
     const philosopher = item.philosopher || 'nietzsche';
+    if (!isValidPhilosopher(philosopher)) {
+      return res.status(400).json({ error: 'Invalid philosopher name' });
+    }
 
     // Read philosopher SOUL.md for voice
     let soulContent = '';
@@ -4405,7 +4426,7 @@ Write a single comment that would naturally fit in this conversation.`;
     if (error.status === 401) {
       return res.status(502).json({ error: 'Invalid Anthropic API key' });
     }
-    res.status(502).json({ error: 'Claude API call failed', details: error.message });
+    res.status(502).json({ error: 'Claude API call failed' });
   }
 });
 
@@ -7902,7 +7923,7 @@ app.post('/api/backups/restore/:filename', (req, res) => {
     res.json({ success: true, ...result });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -9585,7 +9606,7 @@ app.post('/api/migrate-tasks-to-queues', (req, res) => {
     });
   } catch (error) {
     console.error('Migration error:', error);
-    res.status(500).json({ error: 'Migration failed', details: error.message });
+    res.status(500).json({ error: 'Migration failed' });
   }
 });
 
@@ -9620,6 +9641,7 @@ app.post('/api/follow-outreach', async (req, res) => {
       if (!handle) continue;
 
       const philosopher = requestedPhilosopher || OUTREACH_PHILOSOPHERS[i % OUTREACH_PHILOSOPHERS.length];
+      if (!isValidPhilosopher(philosopher)) continue;
 
       // Read philosopher voice
       let soulContent = '';
@@ -9693,7 +9715,7 @@ ${soulContent ? `## Voice:\n${soulContent}\n` : ''}
     });
   } catch (error) {
     console.error('Follow outreach error:', error);
-    res.status(500).json({ error: 'Failed to generate outreach', details: error.message });
+    res.status(500).json({ error: 'Failed to generate outreach' });
   }
 });
 
@@ -9899,7 +9921,7 @@ app.post('/api/engagement-actions/scan', async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('[EngagementScan] Manual scan error:', error);
-    res.status(500).json({ error: 'Scan failed', details: error.message });
+    res.status(500).json({ error: 'Scan failed' });
   }
 });
 
@@ -9910,7 +9932,7 @@ app.post('/api/engagement-actions/execute', async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('[EngagementExec] Manual execute error:', error);
-    res.status(500).json({ error: 'Execution failed', details: error.message });
+    res.status(500).json({ error: 'Execution failed' });
   }
 });
 
@@ -10048,7 +10070,7 @@ async function scanForEngagementTargets() {
     const twitterQueries = ENGAGEMENT_SCAN_KEYWORDS.slice(0, 3);
     for (const query of twitterQueries) {
       try {
-        const raw = execSync(`${BIRD_CLI} search "${query}" -n 10 --json`, {
+        const raw = execFileSync(BIRD_CLI, ['search', query, '-n', '10', '--json'], {
           timeout: 15000,
           encoding: 'utf-8'
         });
