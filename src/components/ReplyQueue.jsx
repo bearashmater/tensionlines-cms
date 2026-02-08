@@ -52,6 +52,11 @@ function getPlatformIcon(platform, size = 16) {
 export default function ReplyQueue() {
   const [activeTab, setActiveTab] = useState('queue')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showFollowInput, setShowFollowInput] = useState(false)
+  const [followHandle, setFollowHandle] = useState('')
+  const [followPlatform, setFollowPlatform] = useState('twitter')
+  const [followSaving, setFollowSaving] = useState(false)
+  const [followSaved, setFollowSaved] = useState(false)
   const [bskyStatus, setBskyStatus] = useState(null)
   const { data, error, isLoading, mutate } = useSWR('/api/reply-queue', fetcher, {
     refreshInterval: 30000
@@ -109,15 +114,102 @@ export default function ReplyQueue() {
           </div>
         </div>
         {activeTab === 'queue' && (
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gold text-white rounded-lg hover:bg-amber-600"
-          >
-            <Plus size={20} />
-            Add Reply
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setShowFollowInput(!showFollowInput)
+                setFollowSaved(false)
+                setFollowHandle('')
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                showFollowInput
+                  ? 'bg-indigo-100 text-indigo-700'
+                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
+              }`}
+            >
+              <UserPlus size={20} />
+              Log Follow
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gold text-white rounded-lg hover:bg-amber-600"
+            >
+              <Plus size={20} />
+              Add Reply
+            </button>
+          </div>
         )}
       </div>
+
+      {/* Log Follow Input */}
+      {showFollowInput && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault()
+              if (!followHandle.trim()) return
+              setFollowSaving(true)
+              try {
+                const res = await fetch('/api/follows', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    handle: followHandle.replace(/^@/, ''),
+                    platform: followPlatform,
+                    source: 'manual',
+                    context: 'Manually followed outside the system'
+                  })
+                })
+                const result = await res.json()
+                if (result.duplicate) {
+                  setFollowSaved('duplicate')
+                } else {
+                  setFollowSaved(true)
+                }
+                setTimeout(() => {
+                  setFollowHandle('')
+                  setFollowSaved(false)
+                }, 2000)
+              } catch (err) {
+                console.error('Failed to log follow:', err)
+              }
+              setFollowSaving(false)
+            }}
+            className="flex items-center gap-3"
+          >
+            <UserPlus size={18} className="text-indigo-600 flex-shrink-0" />
+            <input
+              type="text"
+              value={followHandle}
+              onChange={(e) => setFollowHandle(e.target.value)}
+              placeholder="@handle"
+              className="flex-1 px-3 py-2 border border-indigo-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 text-sm"
+              autoFocus
+            />
+            <select
+              value={followPlatform}
+              onChange={(e) => setFollowPlatform(e.target.value)}
+              className="px-3 py-2 border border-indigo-200 rounded-lg bg-white text-sm"
+            >
+              <option value="twitter">Twitter / X</option>
+              <option value="bluesky">Bluesky</option>
+            </select>
+            <button
+              type="submit"
+              disabled={followSaving || !followHandle.trim()}
+              className={`px-4 py-2 text-sm text-white rounded-lg disabled:opacity-50 ${
+                followSaved === true ? 'bg-green-600' :
+                followSaved === 'duplicate' ? 'bg-amber-600' :
+                'bg-indigo-600 hover:bg-indigo-700'
+              }`}
+            >
+              {followSaved === true ? 'Logged!' :
+               followSaved === 'duplicate' ? 'Already tracked' :
+               followSaving ? 'Saving...' : 'Log Follow'}
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex border-b border-neutral-200">
@@ -577,6 +669,7 @@ function ReplyItem({ item, canReply, onUpdate }) {
   const [publishError, setPublishError] = useState(null)
   const [isUpdating, setIsUpdating] = useState(false)
   const [copyFeedback, setCopyFeedback] = useState(false)
+  const [followTracked, setFollowTracked] = useState(false)
 
   const handlePublishBluesky = async () => {
     setPublishStatus('publishing')
@@ -758,15 +851,36 @@ function ReplyItem({ item, canReply, onUpdate }) {
                 {copyFeedback ? 'Copied!' : 'Copy & Open'}
               </button>
               {item.followTarget && item.followUrl && (
-                <a
-                  href={item.followUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                <button
+                  onClick={async () => {
+                    // Track the follow
+                    try {
+                      await fetch('/api/follows', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          handle: item.targetAuthor,
+                          platform: item.platform,
+                          source: 'outreach',
+                          context: item.targetText || '',
+                          replyQueueItemId: item.id
+                        })
+                      })
+                      setFollowTracked(true)
+                    } catch (err) {
+                      console.error('Failed to track follow:', err)
+                    }
+                    window.open(item.followUrl, '_blank')
+                  }}
+                  className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded ${
+                    followTracked
+                      ? 'bg-green-600 text-white'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  }`}
                 >
-                  <UserPlus size={14} />
-                  Follow @{item.targetAuthor}
-                </a>
+                  {followTracked ? <Check size={14} /> : <UserPlus size={14} />}
+                  {followTracked ? 'Followed!' : `Follow @${item.targetAuthor}`}
+                </button>
               )}
               <button
                 onClick={handleMarkPosted}

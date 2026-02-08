@@ -181,6 +181,7 @@ const ENGAGEMENT_INBOX_FILE = path.join(BASE_DIR, 'content', 'queue', 'engagemen
 const COMMENT_QUEUE_FILE = path.join(BASE_DIR, 'content', 'queue', 'comment-queue.json');
 const WEEKLY_REPORTS_DIR = path.join(BASE_DIR, 'mission-control', 'weekly-reports');
 const AUDIENCE_SEGMENTS_FILE = path.join(BASE_DIR, 'mission-control', 'audience-segments.json');
+const FOLLOWS_TRACKER_FILE = path.join(BASE_DIR, 'content', 'queue', 'follows-tracker.json');
 
 // Claude API client (lazy — only created when ANTHROPIC_API_KEY is set)
 let anthropicClient = null;
@@ -9417,6 +9418,70 @@ app.post('/api/apply-hooks', (req, res) => {
   } catch (error) {
     console.error('Hook application error:', error);
     res.status(500).json({ error: 'Failed to apply hooks' });
+  }
+});
+
+// ============================================================================
+// FOLLOWS TRACKER
+// ============================================================================
+
+function getFollowsTracker() {
+  try {
+    if (fs.existsSync(FOLLOWS_TRACKER_FILE)) {
+      return JSON.parse(fs.readFileSync(FOLLOWS_TRACKER_FILE, 'utf8'));
+    }
+  } catch (e) { console.error('Error reading follows tracker:', e); }
+  return { follows: [] };
+}
+
+function saveFollowsTracker(data) {
+  fs.writeFileSync(FOLLOWS_TRACKER_FILE, JSON.stringify(data, null, 2));
+}
+
+// GET /api/follows - list all tracked follows
+app.get('/api/follows', (req, res) => {
+  try {
+    const data = getFollowsTracker();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to read follows tracker' });
+  }
+});
+
+// POST /api/follows - log a new follow
+app.post('/api/follows', (req, res) => {
+  try {
+    const { handle, platform = 'twitter', source = 'manual', context = '', replyQueueItemId = null } = req.body;
+    if (!handle) return res.status(400).json({ error: 'handle is required' });
+
+    const data = getFollowsTracker();
+
+    // Check for duplicate (same handle + platform)
+    const cleanHandle = handle.replace(/^@/, '');
+    const existing = data.follows.find(f => f.handle.toLowerCase() === cleanHandle.toLowerCase() && f.platform === platform);
+    if (existing) {
+      return res.json({ success: true, duplicate: true, follow: existing });
+    }
+
+    const follow = {
+      handle: cleanHandle,
+      platform,
+      followedAt: new Date().toISOString(),
+      source, // 'manual', 'outreach', 'organic'
+      context
+    };
+
+    if (replyQueueItemId) {
+      follow.replyQueueItemId = replyQueueItemId;
+    }
+
+    data.follows.push(follow);
+    saveFollowsTracker(data);
+
+    res.json({ success: true, follow });
+  } catch (error) {
+    console.error('Follow tracking error:', error);
+    res.status(500).json({ error: 'Failed to track follow' });
   }
 });
 
