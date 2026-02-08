@@ -52,6 +52,7 @@ function getPlatformIcon(platform, size = 16) {
 
 export default function ManualPostingQueue() {
   const [showAddModal, setShowAddModal] = useState(false)
+  const [platformFilter, setPlatformFilter] = useState(null)
   const [bskyStatus, setBskyStatus] = useState(null)
   const { data, error, isLoading, mutate } = useSWR('/api/posting-queue', fetcher, {
     refreshInterval: 30000
@@ -106,7 +107,7 @@ export default function ManualPostingQueue() {
         </button>
       </div>
 
-      {/* Daily Limits */}
+      {/* Daily Limits (clickable filters) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <PlatformStatus
           platform="instagram"
@@ -115,6 +116,8 @@ export default function ManualPostingQueue() {
           maxPosts={data.settings?.platforms?.instagram?.maxPostsPerDay || 2}
           canPost={data.canPostInstagram}
           warmupMode={data.settings?.warmupMode}
+          isActive={platformFilter === 'instagram'}
+          onClick={() => setPlatformFilter(platformFilter === 'instagram' ? null : 'instagram')}
         />
         <PlatformStatus
           platform="threads"
@@ -123,6 +126,8 @@ export default function ManualPostingQueue() {
           maxPosts={data.settings?.platforms?.threads?.maxPostsPerDay || 3}
           canPost={data.canPostThreads}
           warmupMode={data.settings?.warmupMode}
+          isActive={platformFilter === 'threads'}
+          onClick={() => setPlatformFilter(platformFilter === 'threads' ? null : 'threads')}
         />
         <PlatformStatus
           platform="bluesky"
@@ -131,6 +136,8 @@ export default function ManualPostingQueue() {
           maxPosts={data.settings?.platforms?.bluesky?.maxPostsPerDay || 5}
           canPost={data.canPostBluesky}
           warmupMode={data.settings?.warmupMode}
+          isActive={platformFilter === 'bluesky'}
+          onClick={() => setPlatformFilter(platformFilter === 'bluesky' ? null : 'bluesky')}
         />
       </div>
 
@@ -148,21 +155,26 @@ export default function ManualPostingQueue() {
       )}
 
       {/* Queue */}
+      {(() => {
+        const filtered = platformFilter
+          ? (data.queue || []).filter(i => i.platform === platformFilter)
+          : (data.queue || [])
+        return (
       <div className="bg-white rounded-lg border border-neutral-200">
         <div className="px-4 py-3 border-b border-neutral-200">
           <h2 className="font-semibold text-neutral-900">
-            Ready to Post ({data.queue?.length || 0})
+            Ready to Post ({filtered.length})
           </h2>
         </div>
         <div className="divide-y divide-neutral-100">
-          {data.queue?.length === 0 ? (
+          {filtered.length === 0 ? (
             <div className="p-8 text-center text-neutral-500">
               <Clock className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
-              <p>No items in queue</p>
-              <p className="text-sm mt-1">Add content to post to Instagram, Threads or Bluesky</p>
+              <p>{platformFilter ? `No ${platformFilter} items in queue` : 'No items in queue'}</p>
+              <p className="text-sm mt-1">{platformFilter ? 'Click the card again to show all' : 'Add content to post to Instagram, Threads or Bluesky'}</p>
             </div>
           ) : (
-            data.queue.map(item => (
+            filtered.map(item => (
               <QueueItem
                 key={item.id}
                 item={item}
@@ -177,6 +189,8 @@ export default function ManualPostingQueue() {
           )}
         </div>
       </div>
+        )
+      })()}
 
       {/* Recently Posted */}
       {data.posted?.length > 0 && (
@@ -208,14 +222,21 @@ export default function ManualPostingQueue() {
   )
 }
 
-function PlatformStatus({ platform, icon, postsToday, maxPosts, canPost, warmupMode }) {
+function PlatformStatus({ platform, icon, postsToday, maxPosts, canPost, warmupMode, isActive, onClick }) {
   const remaining = maxPosts - postsToday
 
   return (
-    <div className={`p-4 rounded-lg border ${canPost ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+    <button
+      onClick={onClick}
+      className={`p-4 rounded-lg border text-left w-full transition-all ${
+        isActive
+          ? 'ring-2 ring-offset-1 ring-gold border-gold bg-amber-50'
+          : canPost ? 'bg-green-50 border-green-200 hover:border-green-300' : 'bg-red-50 border-red-200'
+      }`}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={canPost ? 'text-green-600' : 'text-red-600'}>
+          <div className={isActive ? 'text-gold' : canPost ? 'text-green-600' : 'text-red-600'}>
             {icon}
           </div>
           <div>
@@ -225,7 +246,7 @@ function PlatformStatus({ platform, icon, postsToday, maxPosts, canPost, warmupM
             </p>
           </div>
         </div>
-        <div className={`text-2xl font-bold ${canPost ? 'text-green-600' : 'text-red-600'}`}>
+        <div className={`text-2xl font-bold ${isActive ? 'text-gold' : canPost ? 'text-green-600' : 'text-red-600'}`}>
           {remaining > 0 ? remaining : 0}
           <span className="text-sm font-normal ml-1">left</span>
         </div>
@@ -233,7 +254,7 @@ function PlatformStatus({ platform, icon, postsToday, maxPosts, canPost, warmupM
       {warmupMode && (
         <p className="text-xs text-amber-600 mt-2">Warmup limits active</p>
       )}
-    </div>
+    </button>
   )
 }
 

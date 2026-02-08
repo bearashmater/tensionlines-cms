@@ -62,6 +62,7 @@ const PHILOSOPHERS = [
 export default function CommentQueue() {
   const [activeTab, setActiveTab] = useState('queue')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [platformFilter, setPlatformFilter] = useState(null)
   const [bskyStatus, setBskyStatus] = useState(null)
   const { data, error, isLoading, mutate } = useSWR('/api/comment-queue', fetcher, {
     refreshInterval: 30000
@@ -167,7 +168,7 @@ export default function CommentQueue() {
 
       {activeTab === 'queue' ? (
         <>
-          {/* Rate Limit Cards */}
+          {/* Rate Limit Cards (clickable filters) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <RateLimitCard
               platform="bluesky"
@@ -175,6 +176,8 @@ export default function CommentQueue() {
               commentsToday={data.commentsToday?.bluesky || 0}
               maxComments={data.settings?.platforms?.bluesky?.maxCommentsPerDay || 5}
               canComment={data.canCommentBluesky}
+              isActive={platformFilter === 'bluesky'}
+              onClick={() => setPlatformFilter(platformFilter === 'bluesky' ? null : 'bluesky')}
             />
             <RateLimitCard
               platform="twitter"
@@ -182,25 +185,35 @@ export default function CommentQueue() {
               commentsToday={data.commentsToday?.twitter || 0}
               maxComments={data.settings?.platforms?.twitter?.maxCommentsPerDay || 5}
               canComment={data.canCommentTwitter}
+              isActive={platformFilter === 'twitter'}
+              onClick={() => setPlatformFilter(platformFilter === 'twitter' ? null : 'twitter')}
             />
           </div>
 
           {/* Ready to Publish */}
+          {(() => {
+            const filteredReady = platformFilter
+              ? readyItems.filter(i => i.platform === platformFilter)
+              : readyItems
+            const filteredFailed = platformFilter
+              ? failedItems.filter(i => i.platform === platformFilter)
+              : failedItems
+            return (
           <div className="bg-white rounded-lg border border-neutral-200">
             <div className="px-4 py-3 border-b border-neutral-200">
               <h2 className="font-semibold text-neutral-900">
-                Ready to Publish ({readyItems.length})
+                Ready to Publish ({filteredReady.length})
               </h2>
             </div>
             <div className="divide-y divide-neutral-100">
-              {readyItems.length === 0 && failedItems.length === 0 ? (
+              {filteredReady.length === 0 && filteredFailed.length === 0 ? (
                 <div className="p-8 text-center text-neutral-500">
                   <MessageSquarePlus className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
-                  <p>No comments ready to publish</p>
-                  <p className="text-sm mt-1">Add comments manually or generate from discovered posts</p>
+                  <p>{platformFilter ? `No ${platformFilter} comments ready` : 'No comments ready to publish'}</p>
+                  <p className="text-sm mt-1">{platformFilter ? 'Click the card again to show all' : 'Add comments manually or generate from discovered posts'}</p>
                 </div>
               ) : (
-                [...failedItems, ...readyItems].map(item => (
+                [...filteredFailed, ...filteredReady].map(item => (
                   <CommentItem
                     key={item.id}
                     item={item}
@@ -213,6 +226,8 @@ export default function CommentQueue() {
               )}
             </div>
           </div>
+            )
+          })()}
 
           {/* Recently Posted */}
           {data.posted?.length > 0 && (
@@ -460,14 +475,21 @@ function DiscoveredItem({ item, onGenerate, onDismiss }) {
 
 // ---- Comment Queue Tab Components ----
 
-function RateLimitCard({ platform, icon, commentsToday, maxComments, canComment }) {
+function RateLimitCard({ platform, icon, commentsToday, maxComments, canComment, isActive, onClick }) {
   const remaining = maxComments - commentsToday
 
   return (
-    <div className={`p-4 rounded-lg border ${canComment ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+    <button
+      onClick={onClick}
+      className={`p-4 rounded-lg border text-left w-full transition-all ${
+        isActive
+          ? 'ring-2 ring-offset-1 ring-gold border-gold bg-amber-50'
+          : canComment ? 'bg-green-50 border-green-200 hover:border-green-300' : 'bg-red-50 border-red-200'
+      }`}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={canComment ? 'text-green-600' : 'text-red-600'}>
+          <div className={isActive ? 'text-gold' : canComment ? 'text-green-600' : 'text-red-600'}>
             {icon}
           </div>
           <div>
@@ -477,12 +499,12 @@ function RateLimitCard({ platform, icon, commentsToday, maxComments, canComment 
             </p>
           </div>
         </div>
-        <div className={`text-2xl font-bold ${canComment ? 'text-green-600' : 'text-red-600'}`}>
+        <div className={`text-2xl font-bold ${isActive ? 'text-gold' : canComment ? 'text-green-600' : 'text-red-600'}`}>
           {remaining > 0 ? remaining : 0}
           <span className="text-sm font-normal ml-1">left</span>
         </div>
       </div>
-    </div>
+    </button>
   )
 }
 

@@ -57,6 +57,7 @@ export default function ReplyQueue() {
   const [followPlatform, setFollowPlatform] = useState('twitter')
   const [followSaving, setFollowSaving] = useState(false)
   const [followSaved, setFollowSaved] = useState(false)
+  const [platformFilter, setPlatformFilter] = useState(null)
   const [bskyStatus, setBskyStatus] = useState(null)
   const { data, error, isLoading, mutate } = useSWR('/api/reply-queue', fetcher, {
     refreshInterval: 30000
@@ -253,7 +254,7 @@ export default function ReplyQueue() {
 
       {activeTab === 'queue' ? (
         <>
-          {/* Rate Limit Cards */}
+          {/* Rate Limit Cards (clickable filters) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <RateLimitCard
               platform="bluesky"
@@ -261,6 +262,8 @@ export default function ReplyQueue() {
               repliesToday={data.repliesToday?.bluesky || 0}
               maxReplies={data.settings?.platforms?.bluesky?.maxRepliesPerDay || 5}
               canReply={data.canReplyBluesky}
+              isActive={platformFilter === 'bluesky'}
+              onClick={() => setPlatformFilter(platformFilter === 'bluesky' ? null : 'bluesky')}
             />
             <RateLimitCard
               platform="twitter"
@@ -268,25 +271,32 @@ export default function ReplyQueue() {
               repliesToday={data.repliesToday?.twitter || 0}
               maxReplies={data.settings?.platforms?.twitter?.maxRepliesPerDay || 5}
               canReply={data.canReplyTwitter}
+              isActive={platformFilter === 'twitter'}
+              onClick={() => setPlatformFilter(platformFilter === 'twitter' ? null : 'twitter')}
             />
           </div>
 
           {/* Queue */}
+          {(() => {
+            const filtered = platformFilter
+              ? (data.queue || []).filter(i => i.platform === platformFilter)
+              : (data.queue || [])
+            return (
           <div className="bg-white rounded-lg border border-neutral-200">
             <div className="px-4 py-3 border-b border-neutral-200">
               <h2 className="font-semibold text-neutral-900">
-                Ready to Reply ({data.queue?.length || 0})
+                Ready to Reply ({filtered.length})
               </h2>
             </div>
             <div className="divide-y divide-neutral-100">
-              {data.queue?.length === 0 ? (
+              {filtered.length === 0 ? (
                 <div className="p-8 text-center text-neutral-500">
                   <MessageSquareReply className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
-                  <p>No replies in queue</p>
-                  <p className="text-sm mt-1">Add reply drafts to Bluesky or Twitter posts</p>
+                  <p>{platformFilter ? `No ${platformFilter} replies in queue` : 'No replies in queue'}</p>
+                  <p className="text-sm mt-1">{platformFilter ? 'Click the card again to show all' : 'Add reply drafts to Bluesky or Twitter posts'}</p>
                 </div>
               ) : (
-                data.queue.map(item => (
+                filtered.map(item => (
                   <ReplyItem
                     key={item.id}
                     item={item}
@@ -299,6 +309,8 @@ export default function ReplyQueue() {
               )}
             </div>
           </div>
+            )
+          })()}
 
           {/* Recently Posted */}
           {data.posted?.length > 0 && (
@@ -638,14 +650,21 @@ function EngagementItem({ item, onDraftReply, onDismiss, onMarkSeen }) {
 
 // ---- Original Reply Queue Components ----
 
-function RateLimitCard({ platform, icon, repliesToday, maxReplies, canReply }) {
+function RateLimitCard({ platform, icon, repliesToday, maxReplies, canReply, isActive, onClick }) {
   const remaining = maxReplies - repliesToday
 
   return (
-    <div className={`p-4 rounded-lg border ${canReply ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+    <button
+      onClick={onClick}
+      className={`p-4 rounded-lg border text-left w-full transition-all ${
+        isActive
+          ? 'ring-2 ring-offset-1 ring-gold border-gold bg-amber-50'
+          : canReply ? 'bg-green-50 border-green-200 hover:border-green-300' : 'bg-red-50 border-red-200'
+      }`}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={canReply ? 'text-green-600' : 'text-red-600'}>
+          <div className={isActive ? 'text-gold' : canReply ? 'text-green-600' : 'text-red-600'}>
             {icon}
           </div>
           <div>
@@ -655,12 +674,12 @@ function RateLimitCard({ platform, icon, repliesToday, maxReplies, canReply }) {
             </p>
           </div>
         </div>
-        <div className={`text-2xl font-bold ${canReply ? 'text-green-600' : 'text-red-600'}`}>
+        <div className={`text-2xl font-bold ${isActive ? 'text-gold' : canReply ? 'text-green-600' : 'text-red-600'}`}>
           {remaining > 0 ? remaining : 0}
           <span className="text-sm font-normal ml-1">left</span>
         </div>
       </div>
-    </div>
+    </button>
   )
 }
 
