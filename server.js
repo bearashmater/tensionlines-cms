@@ -3154,6 +3154,50 @@ app.get('/api/twitter/status', (req, res) => {
   }
 });
 
+app.get('/api/instagram/status', (req, res) => {
+  // Instagram is manual-only for now (no API integration)
+  res.json({ connected: false, mode: 'manual', message: 'Manual posting via Canva' });
+});
+
+app.get('/api/threads/status', (req, res) => {
+  // Threads is manual-only for now (no API integration)
+  res.json({ connected: false, mode: 'manual', message: 'Manual posting' });
+});
+
+// Unified endpoint: all platform statuses in one call
+app.get('/api/platforms/status', async (req, res) => {
+  const results = {};
+
+  // Bluesky
+  try {
+    const agent = await getBskyAgent();
+    const profile = await agent.getProfile({ actor: process.env.BLUESKY_HANDLE });
+    results.bluesky = { connected: true, handle: profile.data.handle };
+  } catch (error) {
+    bskyAgent = null;
+    results.bluesky = { connected: false, error: error.message };
+  }
+
+  // Twitter
+  try {
+    const raw = execSync(`/opt/homebrew/bin/bird whoami 2>/dev/null`, { timeout: 5000, encoding: 'utf-8' });
+    const firstLine = raw.trim().split('\n')[0] || '';
+    const handleMatch = firstLine.match(/@(\w+)/);
+    const handle = handleMatch ? handleMatch[1] : 'thetensionlines';
+    results.twitter = { connected: true, handle };
+  } catch (error) {
+    results.twitter = { connected: false, error: error.message };
+  }
+
+  // Instagram (manual)
+  results.instagram = { connected: false, mode: 'manual', message: 'Manual posting via Canva' };
+
+  // Threads (manual)
+  results.threads = { connected: false, mode: 'manual', message: 'Manual posting' };
+
+  res.json(results);
+});
+
 // ============================================================================
 // CONTENT REPURPOSING ENGINE
 // ============================================================================
