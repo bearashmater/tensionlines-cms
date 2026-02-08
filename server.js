@@ -2107,10 +2107,10 @@ app.get('/api/posting-queue', (req, res) => {
 app.post('/api/posting-queue', (req, res) => {
   try {
     const queue = getPostingQueue();
-    const { platform, content, caption, parts, canvaComplete, scheduledFor } = req.body;
+    const { platform, content, caption, parts, canvaComplete, scheduledFor, metadata, postUrl, createdBy, taskId } = req.body;
 
     // Validate required fields
-    if (!platform || !['instagram', 'threads', 'bluesky'].includes(platform)) {
+    if (!platform || !['instagram', 'threads', 'bluesky', 'twitter'].includes(platform)) {
       return res.status(400).json({ error: 'Invalid platform' });
     }
 
@@ -2132,6 +2132,11 @@ app.post('/api/posting-queue', (req, res) => {
       parts: Array.isArray(parts) ? parts : [],
       canvaComplete: canvaComplete === true
     };
+
+    if (metadata) item.metadata = metadata;
+    if (postUrl) item.postUrl = postUrl;
+    if (createdBy) item.createdBy = createdBy;
+    if (taskId) item.taskId = taskId;
 
     if (scheduledFor) {
       item.scheduledFor = new Date(scheduledFor).toISOString();
@@ -2161,7 +2166,7 @@ app.patch('/api/posting-queue/:id', (req, res) => {
     }
 
     // Update allowed fields
-    const allowedFields = ['canvaComplete', 'status', 'content', 'caption', 'parts'];
+    const allowedFields = ['canvaComplete', 'status', 'content', 'caption', 'parts', 'selectedOption'];
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
         item[field] = req.body[field];
@@ -9185,19 +9190,26 @@ app.post('/api/migrate-tasks-to-queues', (req, res) => {
 
       } else if (isPostingTask) {
         // Migrate to Posting Queue — extract options from description
-        const options = [];
+        // Assign a different philosopher voice to each option
+        const POSTING_PHILOSOPHERS = ['nietzsche', 'marcus', 'socrates', 'heraclitus', 'plato'];
+        const rawOptions = [];
         const optionRegex = /\*\*Option ([A-C])[^*]*\*\*[^>]*>\s*(.+?)(?=\n\n\*\*Option|\n\nhttps?:|$)/gs;
         let match;
         while ((match = optionRegex.exec(task.description)) !== null) {
-          options.push(match[2].trim());
+          rawOptions.push(match[2].trim());
         }
+
+        const options = rawOptions.map((text, i) => ({
+          text,
+          philosopher: POSTING_PHILOSOPHERS[i % POSTING_PHILOSOPHERS.length]
+        }));
 
         const item = {
           id: `post-${Date.now()}-${task.id}`,
           createdAt: task.createdAt,
           status: 'ready',
           platform: 'twitter',
-          content: options[0] || '',
+          content: options[0]?.text || '',
           caption: '',
           parts: [],
           canvaRequired: false,

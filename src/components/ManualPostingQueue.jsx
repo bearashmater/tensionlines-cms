@@ -344,20 +344,33 @@ function QueueItem({ item, canPost, onUpdate }) {
     }
   }
 
-  const handleCopyOption = async (text, idx) => {
+  const handleSelectOption = async (opt, idx) => {
+    const text = typeof opt === 'string' ? opt : opt.text
     try {
+      // Update the item's content to the selected option
+      await fetch(`/api/posting-queue/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: text, selectedOption: idx })
+      })
+      // Copy and open
       await navigator.clipboard.writeText(text)
       setCopyFeedback(idx)
       setTimeout(() => setCopyFeedback(null), 2000)
       if (item.postUrl) window.open(item.postUrl, '_blank')
+      onUpdate()
     } catch (err) {
-      console.error('Failed to copy:', err)
+      console.error('Failed to select option:', err)
     }
   }
 
   const isReady = !item.canvaRequired || item.canvaComplete
   const isFailed = item.status === 'failed'
-  const options = item.metadata?.options || []
+  const rawOptions = item.metadata?.options || []
+  // Normalize options: support both string[] and {text, philosopher}[]
+  const options = rawOptions.map(opt =>
+    typeof opt === 'string' ? { text: opt, philosopher: null } : opt
+  )
 
   return (
     <div className={`p-4 ${isFailed ? 'bg-red-50' : isReady ? '' : 'bg-amber-50'}`}>
@@ -390,25 +403,61 @@ function QueueItem({ item, canPost, onUpdate }) {
             )}
           </div>
 
-          {/* Show options if present (e.g. pick A/B/C tweet) */}
+          {/* Show options if present (e.g. pick A/B/C tweet from different philosophers) */}
           {options.length > 1 ? (
-            <div className="space-y-2 mb-2">
-              <p className="text-xs text-neutral-500 font-medium">Pick one and post:</p>
-              {options.map((opt, idx) => (
-                <div key={idx} className="flex items-start gap-2 p-2 bg-neutral-50 rounded border border-neutral-200">
-                  <span className="text-xs font-bold text-neutral-400 mt-0.5">
-                    {String.fromCharCode(65 + idx)}
-                  </span>
-                  <p className="flex-1 text-sm text-neutral-800">{opt}</p>
-                  <button
-                    onClick={() => handleCopyOption(opt, idx)}
-                    className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-800 text-white rounded hover:bg-neutral-900 whitespace-nowrap"
+            <div className="space-y-3 mb-2">
+              <p className="text-xs text-neutral-500 font-medium">Pick a voice and post:</p>
+              {options.map((opt, idx) => {
+                const isSelected = item.selectedOption === idx
+                return (
+                  <div
+                    key={idx}
+                    className={`p-3 rounded-lg border transition-all ${
+                      isSelected
+                        ? 'border-gold bg-amber-50 ring-1 ring-gold'
+                        : 'border-neutral-200 bg-white hover:border-neutral-300'
+                    }`}
                   >
-                    {copyFeedback === idx ? <Check size={12} /> : <Copy size={12} />}
-                    {copyFeedback === idx ? 'Copied!' : 'Copy & Open'}
-                  </button>
-                </div>
-              ))}
+                    <div className="flex items-center gap-2 mb-2">
+                      {opt.philosopher && (
+                        <img
+                          src={`/avatars/${opt.philosopher}.jpg`}
+                          alt={opt.philosopher}
+                          className="w-6 h-6 rounded-full object-cover"
+                          onError={(e) => {
+                            // Try .svg fallback
+                            if (e.target.src.includes('.jpg')) {
+                              e.target.src = `/avatars/${opt.philosopher}.svg`
+                            } else {
+                              e.target.style.display = 'none'
+                            }
+                          }}
+                        />
+                      )}
+                      <span className="text-xs font-semibold text-neutral-600 capitalize">
+                        {opt.philosopher || `Option ${String.fromCharCode(65 + idx)}`}
+                      </span>
+                      {isSelected && (
+                        <span className="px-2 py-0.5 text-xs bg-gold text-white rounded-full font-medium">
+                          Selected
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-neutral-800 mb-2">{opt.text}</p>
+                    <button
+                      onClick={() => handleSelectOption(opt, idx)}
+                      className={`flex items-center gap-1 px-3 py-1.5 text-xs rounded font-medium whitespace-nowrap ${
+                        isSelected
+                          ? 'bg-gold text-white hover:bg-amber-600'
+                          : 'bg-neutral-800 text-white hover:bg-neutral-900'
+                      }`}
+                    >
+                      {copyFeedback === idx ? <Check size={12} /> : <Copy size={12} />}
+                      {copyFeedback === idx ? 'Copied!' : isSelected ? 'Copy & Open Again' : 'Select · Copy & Open'}
+                    </button>
+                  </div>
+                )
+              })}
             </div>
           ) : (
             <p className="text-neutral-800 whitespace-pre-wrap line-clamp-3">{item.content}</p>
