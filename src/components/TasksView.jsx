@@ -104,6 +104,9 @@ export default function TasksView() {
   } else {
     if (filter !== 'all') {
       filteredTasks = filteredTasks.filter(t => t.status === filter)
+    } else {
+      // Hide completed/shipped by default — use the Completed tab to see those
+      filteredTasks = filteredTasks.filter(t => !['completed', 'shipped'].includes(t.status))
     }
   }
 
@@ -868,11 +871,8 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
     if (!confirm(`Run ${label} on "${task.title}"? This calls the Claude API.`)) return
     setDebugging(true)
     try {
-      const res = await debugTask(task.id, level)
+      await debugTask(task.id, level)
       mutate('/tasks')
-      if (res.result?.diagnosis) {
-        alert(`${label} complete:\n\n${res.result.diagnosis}\n\nFix: ${res.result.suggestedFix}`)
-      }
     } catch (err) {
       console.error('Error debugging task:', err)
       alert('Debug failed. Check server logs.')
@@ -1004,6 +1004,36 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
 
       {/* Step Timeline */}
       <StepTimeline task={task} />
+
+      {/* Debug Results */}
+      {(task.metadata?.debugResult || task.metadata?.superDebugResult) && (
+        <div className="mt-3 space-y-2">
+          {task.metadata?.debugResult && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-sm">
+              <div className="flex items-center gap-1.5 font-semibold text-purple-800 mb-1.5">
+                <Bug size={14} /> Debug (Sonnet)
+              </div>
+              <div className="text-purple-900 mb-1"><strong>Diagnosis:</strong> {task.metadata.debugResult.diagnosis}</div>
+              <div className="text-purple-900 mb-1"><strong>Fix:</strong> {task.metadata.debugResult.suggestedFix}</div>
+              <div className="text-purple-600 text-xs">
+                Type: {task.metadata.debugResult.fixType} · Auto-fixable: {task.metadata.debugResult.canAutoFix ? 'Yes' : 'No'}
+              </div>
+            </div>
+          )}
+          {task.metadata?.superDebugResult && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm">
+              <div className="flex items-center gap-1.5 font-semibold text-orange-800 mb-1.5">
+                <Bug size={14} /> Super Debug (Opus)
+              </div>
+              <div className="text-orange-900 mb-1"><strong>Diagnosis:</strong> {task.metadata.superDebugResult.diagnosis}</div>
+              <div className="text-orange-900 mb-1"><strong>Fix:</strong> {task.metadata.superDebugResult.suggestedFix}</div>
+              <div className="text-orange-600 text-xs">
+                Type: {task.metadata.superDebugResult.fixType} · Auto-fixable: {task.metadata.superDebugResult.canAutoFix ? 'Yes' : 'No'}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center justify-between text-xs text-neutral-500 mt-3">
         <div className="flex items-center space-x-4">
