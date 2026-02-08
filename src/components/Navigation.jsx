@@ -64,6 +64,7 @@ export function Breadcrumbs({ location }) {
     'reply-queue': 'Reply Queue',
     'comments': 'Comment Queue',
     'outreach': 'Outreach Effectiveness',
+    'audience': 'Audience Segmentation',
     'weekly-report': 'Weekly Report',
     'messages': 'Messages'
   }

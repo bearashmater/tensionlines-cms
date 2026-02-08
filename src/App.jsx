@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
-import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell, Zap, Compass, Send, Reply, Sparkles, MessageSquarePlus } from 'lucide-react'
+import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell, Zap, Compass, Send, Reply, Sparkles, MessageSquarePlus, Layers } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 // Import navigation components
@@ -30,6 +30,7 @@ import CommentQueue from './components/CommentQueue'
 import OutreachDashboard from './components/OutreachDashboard'
 import WeeklyReport from './components/WeeklyReport'
 import AgentMessages from './components/AgentMessages'
+import AudienceSegmentation from './components/AudienceSegmentation'
 
 // Navigation structure with grouping
 const navGroups = [
@@ -80,6 +81,7 @@ const navGroups = [
       { to: '/analytics', icon: <BarChart3 size={20} />, label: 'Analytics' },
       { to: '/weekly-report', icon: <Calendar size={20} />, label: 'Weekly Report' },
       { to: '/outreach', icon: <Target size={20} />, label: 'Outreach' },
+      { to: '/audience', icon: <Layers size={20} />, label: 'Audience' },
       { to: '/search', icon: <Search size={20} />, label: 'Search' }
     ]
   }
@@ -196,6 +198,7 @@ function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenu
             <Route path="/future-needs" element={<FutureNeeds />} />
             <Route path="/weekly-report" element={<WeeklyReport />} />
             <Route path="/outreach" element={<OutreachDashboard />} />
+            <Route path="/audience" element={<AudienceSegmentation />} />
             <Route path="/messages" element={<AgentMessages />} />
           </Routes>
         </main>

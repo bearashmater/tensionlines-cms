@@ -113,6 +113,7 @@ const ANALYTICS_DATA_FILE = path.join(BASE_DIR, 'mission-control', 'analytics-da
 const ENGAGEMENT_INBOX_FILE = path.join(BASE_DIR, 'content', 'queue', 'engagement-inbox.json');
 const COMMENT_QUEUE_FILE = path.join(BASE_DIR, 'content', 'queue', 'comment-queue.json');
 const WEEKLY_REPORTS_DIR = path.join(BASE_DIR, 'mission-control', 'weekly-reports');
+const AUDIENCE_SEGMENTS_FILE = path.join(BASE_DIR, 'mission-control', 'audience-segments.json');
 
 // Claude API client (lazy — only created when ANTHROPIC_API_KEY is set)
 let anthropicClient = null;
@@ -137,6 +138,7 @@ let cache = {
   futureNeeds: null,
   analyticsData: null,
   engagementInbox: null,
+  audienceSegments: null,
   lastUpdate: null
 };
 
@@ -161,6 +163,8 @@ function invalidateCache(filePath) {
     cache.futureNeeds = null;
   } else if (filePath.includes('analytics-data')) {
     cache.analyticsData = null;
+  } else if (filePath.includes('audience-segments')) {
+    cache.audienceSegments = null;
   }
   cache.lastUpdate = new Date().toISOString();
 }
@@ -168,6 +172,21 @@ function invalidateCache(filePath) {
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
+
+/**
+ * Theme extraction from reason/text field — shared by outreach-analytics and audience-segments
+ */
+function extractTheme(reason) {
+  if (!reason) return 'Philosophy (General)';
+  const r = reason.toLowerCase();
+  if (/religion|faith|ethics/.test(r)) return 'Religion & Ethics';
+  if (/polarity|paradox|opposites/.test(r)) return 'Polarity & Paradox';
+  if (/identity|meaning|self|emotional/.test(r)) return 'Identity & Meaning';
+  if (/movement|stillness|paralysis/.test(r)) return 'Movement & Stillness';
+  if (/art|artist|writer|writing|creative/.test(r)) return 'Creative Expression';
+  if (/practical|action|steps|coaching/.test(r)) return 'Practical Wisdom';
+  return 'Philosophy (General)';
+}
 
 /**
  * Read and parse Mission Control database
@@ -2177,19 +2196,6 @@ app.get('/api/outreach-analytics', (req, res) => {
   try {
     const TWITTER_OUTREACH_DIR = path.join(BASE_DIR, 'twitter-outreach');
 
-    // Theme extraction from reason field
-    function extractTheme(reason) {
-      if (!reason) return 'Philosophy (General)';
-      const r = reason.toLowerCase();
-      if (/religion|faith|ethics/.test(r)) return 'Religion & Ethics';
-      if (/polarity|paradox|opposites/.test(r)) return 'Polarity & Paradox';
-      if (/identity|meaning|self|emotional/.test(r)) return 'Identity & Meaning';
-      if (/movement|stillness|paralysis/.test(r)) return 'Movement & Stillness';
-      if (/art|artist|writer|writing|creative/.test(r)) return 'Creative Expression';
-      if (/practical|action|steps|coaching/.test(r)) return 'Practical Wisdom';
-      return 'Philosophy (General)';
-    }
-
     // Time slot from UTC hour
     function getTimeSlot(dateStr) {
       if (!dateStr) return null;
@@ -2325,6 +2331,292 @@ app.get('/api/outreach-analytics', (req, res) => {
   } catch (error) {
     console.error('Error getting outreach analytics:', error);
     res.status(500).json({ error: 'Failed to get outreach analytics' });
+  }
+});
+
+// ============================================================================
+// AUDIENCE SEGMENTATION
+// ============================================================================
+
+function getAudienceSegments() {
+  if (cache.audienceSegments) return cache.audienceSegments;
+  try {
+    if (fs.existsSync(AUDIENCE_SEGMENTS_FILE)) {
+      cache.audienceSegments = JSON.parse(fs.readFileSync(AUDIENCE_SEGMENTS_FILE, 'utf8'));
+      return cache.audienceSegments;
+    }
+  } catch (err) {
+    console.error('Error reading audience segments:', err);
+  }
+  return { segments: [], snapshots: [], lastComputed: null, computeVersion: 1 };
+}
+
+function saveAudienceSegments(data) {
+  fs.writeFileSync(AUDIENCE_SEGMENTS_FILE, JSON.stringify(data, null, 2));
+  cache.audienceSegments = null;
+}
+
+function computeSegments() {
+  const TWITTER_OUTREACH_DIR = path.join(BASE_DIR, 'twitter-outreach');
+  const people = {}; // keyed by username
+
+  // 1. Build person registry from twitter outreach files
+  if (fs.existsSync(TWITTER_OUTREACH_DIR)) {
+    const files = fs.readdirSync(TWITTER_OUTREACH_DIR).filter(f => f.endsWith('.json'));
+    for (const file of files) {
+      try {
+        const data = JSON.parse(fs.readFileSync(path.join(TWITTER_OUTREACH_DIR, file), 'utf-8'));
+        for (const user of (data.users || [])) {
+          const key = (user.username || '').toLowerCase().replace(/^@/, '');
+          if (!key) continue;
+          if (!people[key]) {
+            people[key] = {
+              username: user.username,
+              source: 'outreach',
+              themes: [],
+              replied: false,
+              followedBack: false,
+              platform: 'twitter',
+              firstSeen: data.date
+            };
+          }
+          if (user.reason) people[key].themes.push(user.reason);
+          if (user.replied) people[key].replied = true;
+          if (user.followedBack) people[key].followedBack = true;
+        }
+      } catch (e) { /* skip malformed */ }
+    }
+  }
+
+  // 2. Add people from engagement inbox (organic)
+  try {
+    if (fs.existsSync(ENGAGEMENT_INBOX_FILE)) {
+      const inbox = JSON.parse(fs.readFileSync(ENGAGEMENT_INBOX_FILE, 'utf-8'));
+      for (const platform of ['bluesky', 'twitter']) {
+        const items = inbox[platform]?.items || [];
+        for (const item of items) {
+          const handle = (item.authorHandle || '').toLowerCase().replace(/^@/, '');
+          if (!handle) continue;
+          if (!people[handle]) {
+            people[handle] = {
+              username: '@' + handle,
+              source: 'organic',
+              themes: [],
+              replied: true, // they engaged with us
+              followedBack: false,
+              platform,
+              firstSeen: item.indexedAt || item.scannedAt
+            };
+          } else {
+            // Existing person also found organically — mark as replied
+            people[handle].replied = true;
+          }
+          if (item.postText) people[handle].themes.push(item.postText);
+        }
+      }
+    }
+  } catch (e) { /* skip */ }
+
+  // 3. Add people from comment queue (targets we've commented on)
+  try {
+    if (fs.existsSync(COMMENT_QUEUE_FILE)) {
+      const cq = JSON.parse(fs.readFileSync(COMMENT_QUEUE_FILE, 'utf-8'));
+      for (const item of [...(cq.queue || []), ...(cq.posted || [])]) {
+        const handle = (item.targetAuthor || '').toLowerCase().replace(/^@/, '');
+        if (!handle) continue;
+        if (!people[handle]) {
+          people[handle] = {
+            username: '@' + handle,
+            source: 'outreach',
+            themes: [],
+            replied: false,
+            followedBack: false,
+            platform: item.platform || 'bluesky',
+            firstSeen: item.createdAt
+          };
+        }
+        if (item.targetText) people[handle].themes.push(item.targetText);
+      }
+    }
+  } catch (e) { /* skip */ }
+
+  // 4. Assign primary theme and behavior type to each person
+  const personList = Object.values(people).map(p => {
+    // Primary theme from most common theme keyword
+    const allText = p.themes.join(' ');
+    const theme = extractTheme(allText);
+
+    // Behavior classification
+    let behavior;
+    if (p.source === 'organic') {
+      behavior = 'organic';
+    } else if (p.replied && p.followedBack) {
+      behavior = 'active_engager';
+    } else if (p.followedBack) {
+      behavior = 'silent_follower';
+    } else {
+      behavior = 'prospect';
+    }
+
+    return {
+      username: p.username,
+      theme,
+      behavior,
+      platform: p.platform,
+      source: p.source,
+      firstSeen: p.firstSeen
+    };
+  });
+
+  // 5. Group into theme segments
+  const themeColors = {
+    'Religion & Ethics': '#8B5CF6',
+    'Polarity & Paradox': '#D4A574',
+    'Identity & Meaning': '#3B82F6',
+    'Movement & Stillness': '#10B981',
+    'Creative Expression': '#F59E0B',
+    'Practical Wisdom': '#EF4444',
+    'Philosophy (General)': '#6B7280'
+  };
+
+  const segmentMap = {};
+  for (const person of personList) {
+    if (!segmentMap[person.theme]) {
+      segmentMap[person.theme] = {
+        theme: person.theme,
+        color: themeColors[person.theme] || '#6B7280',
+        members: [],
+        activeCount: 0
+      };
+    }
+    segmentMap[person.theme].members.push(person);
+    if (person.behavior === 'active_engager' || person.behavior === 'organic') {
+      segmentMap[person.theme].activeCount++;
+    }
+  }
+
+  const segments = Object.values(segmentMap).map(seg => ({
+    theme: seg.theme,
+    color: seg.color,
+    memberCount: seg.members.length,
+    activeCount: seg.activeCount,
+    engagementRate: seg.members.length > 0 ? Math.round((seg.activeCount / seg.members.length) * 100) : 0,
+    members: seg.members
+  })).sort((a, b) => b.memberCount - a.memberCount);
+
+  // 6. Behavior breakdown
+  const behaviorCounts = { active_engager: 0, silent_follower: 0, prospect: 0, organic: 0 };
+  for (const p of personList) {
+    behaviorCounts[p.behavior] = (behaviorCounts[p.behavior] || 0) + 1;
+  }
+
+  return {
+    segments,
+    behaviorCounts,
+    totalPeople: personList.length,
+    activeSegments: segments.filter(s => s.memberCount > 0).length,
+    overallEngagementRate: personList.length > 0
+      ? Math.round((personList.filter(p => p.behavior === 'active_engager' || p.behavior === 'organic').length / personList.length) * 100)
+      : 0,
+    topTheme: segments[0]?.theme || 'None'
+  };
+}
+
+/**
+ * GET /api/audience-segments — live-computed segments + persisted snapshots + recommendations
+ */
+app.get('/api/audience-segments', (req, res) => {
+  try {
+    const computed = computeSegments();
+    const persisted = getAudienceSegments();
+
+    res.json({
+      ...computed,
+      snapshots: persisted.snapshots || [],
+      recommendations: persisted.recommendations || [],
+      lastComputed: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error computing audience segments:', error);
+    res.status(500).json({ error: 'Failed to compute audience segments' });
+  }
+});
+
+/**
+ * POST /api/audience-segments/snapshot — persist current state, optionally generate Haiku recommendations
+ */
+app.post('/api/audience-segments/snapshot', writeLimiter, async (req, res) => {
+  try {
+    const { generateRecommendations } = req.body || {};
+    const computed = computeSegments();
+    const persisted = getAudienceSegments();
+
+    const snapshot = {
+      id: `snap-${Date.now()}`,
+      takenAt: new Date().toISOString(),
+      totalPeople: computed.totalPeople,
+      activeSegments: computed.activeSegments,
+      overallEngagementRate: computed.overallEngagementRate,
+      segments: computed.segments.map(s => ({
+        theme: s.theme,
+        memberCount: s.memberCount,
+        activeCount: s.activeCount,
+        engagementRate: s.engagementRate
+      }))
+    };
+
+    persisted.snapshots = persisted.snapshots || [];
+    persisted.snapshots.push(snapshot);
+    // Cap at 52 snapshots (one year of weekly)
+    if (persisted.snapshots.length > 52) {
+      persisted.snapshots = persisted.snapshots.slice(-52);
+    }
+    persisted.lastComputed = snapshot.takenAt;
+
+    // Optionally generate Haiku recommendations
+    let recommendations = persisted.recommendations || [];
+    if (generateRecommendations) {
+      const client = getAnthropicClient();
+      if (client) {
+        try {
+          const segmentSummary = computed.segments
+            .filter(s => s.memberCount > 0)
+            .map(s => `- ${s.theme}: ${s.memberCount} people, ${s.engagementRate}% engagement rate`)
+            .join('\n');
+
+          const response = await client.messages.create({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 1024,
+            system: 'You are a content strategist for TensionLines, a philosophy brand. Generate content recommendations for audience segments. Respond ONLY with valid JSON, no markdown wrapping.',
+            messages: [{
+              role: 'user',
+              content: `Our audience segments:\n${segmentSummary}\n\nBehavior breakdown: ${JSON.stringify(computed.behaviorCounts)}\n\nGenerate 3-5 content recommendations. Each should target a specific segment. Return JSON array:\n[{"segment": "<theme name>", "title": "<content idea title>", "rationale": "<why this works for this segment>", "platform": "<twitter|bluesky|both>", "philosopher": "<nietzsche|heraclitus|marcus|diogenes|hypatia>"}]`
+            }]
+          });
+
+          const text = response.content[0]?.text || '';
+          const jsonMatch = text.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            recommendations = JSON.parse(jsonMatch[0]);
+          }
+        } catch (aiErr) {
+          console.error('Haiku recommendation error:', aiErr.message);
+        }
+      }
+    }
+
+    persisted.recommendations = recommendations;
+    saveAudienceSegments(persisted);
+
+    res.json({
+      success: true,
+      snapshot,
+      recommendations,
+      snapshotCount: persisted.snapshots.length
+    });
+  } catch (error) {
+    console.error('Error taking audience snapshot:', error);
+    res.status(500).json({ error: 'Failed to take snapshot' });
   }
 });
 
