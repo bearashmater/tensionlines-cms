@@ -16,7 +16,9 @@ import {
   Send,
   RefreshCw,
   CloudOff,
-  Cloud
+  Cloud,
+  ShieldCheck,
+  Loader2
 } from 'lucide-react'
 
 // Bluesky icon as inline SVG since lucide doesn't have one
@@ -224,10 +226,36 @@ function PlatformStatus({ platform, icon, postsToday, maxPosts, canPost, warmupM
   )
 }
 
+const VOICE_COLORS = {
+  strong: { bg: 'bg-green-50', text: 'text-green-700', dot: 'bg-green-500' },
+  good: { bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-500' },
+  weak: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
+  'off-voice': { bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' }
+}
+
 function QueueItem({ item, canPost, onUpdate }) {
   const [isUpdating, setIsUpdating] = useState(false)
   const [publishStatus, setPublishStatus] = useState(null) // 'publishing' | 'success' | 'error'
   const [publishError, setPublishError] = useState(null)
+  const [voiceCheck, setVoiceCheck] = useState(null)
+  const [voiceCheckLoading, setVoiceCheckLoading] = useState(false)
+
+  const handleVoiceCheck = async () => {
+    setVoiceCheckLoading(true)
+    try {
+      const content = [item.content, item.caption].filter(Boolean).join('\n\n')
+      const res = await fetch('/api/voice-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, philosopher: item.createdBy, platform: item.platform })
+      })
+      const data = await res.json()
+      if (res.ok) setVoiceCheck(data)
+    } catch (err) {
+      console.error('Voice check error:', err)
+    }
+    setVoiceCheckLoading(false)
+  }
 
   const handleMarkPosted = async () => {
     setIsUpdating(true)
@@ -330,7 +358,22 @@ function QueueItem({ item, canPost, onUpdate }) {
           )}
           <p className="text-xs text-neutral-400 mt-2">
             Added {new Date(item.createdAt).toLocaleString()}
+            {item.createdBy && item.createdBy !== 'unknown' && (
+              <span className="ml-2 text-neutral-400">by {item.createdBy}</span>
+            )}
           </p>
+
+          {/* Voice check result inline */}
+          {voiceCheck && (
+            <div className={`flex items-center gap-2 mt-2 text-xs ${(VOICE_COLORS[voiceCheck.verdict] || VOICE_COLORS.good).text}`}>
+              <span className={`w-2 h-2 rounded-full ${(VOICE_COLORS[voiceCheck.verdict] || VOICE_COLORS.good).dot}`} />
+              <span className="font-medium">{voiceCheck.score}</span>
+              <span>{voiceCheck.verdict}</span>
+              {voiceCheck.issues?.length > 0 && (
+                <span className="text-neutral-400">— {voiceCheck.issues[0].description}</span>
+              )}
+            </div>
+          )}
 
           {/* Publishing status feedback */}
           {publishStatus === 'publishing' && (
@@ -392,6 +435,20 @@ function QueueItem({ item, canPost, onUpdate }) {
           )}
           {!canPost && isReady && (
             <span className="text-xs text-red-600">Daily limit reached</span>
+          )}
+          {item.createdBy && item.createdBy !== 'unknown' && (
+            <button
+              onClick={handleVoiceCheck}
+              disabled={voiceCheckLoading}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm text-purple-600 hover:bg-purple-50 rounded disabled:opacity-50"
+            >
+              {voiceCheckLoading ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <ShieldCheck size={14} />
+              )}
+              Voice Check
+            </button>
           )}
           <button
             onClick={handleDelete}

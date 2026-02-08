@@ -2984,6 +2984,99 @@ app.post('/api/repurpose/queue', (req, res) => {
 });
 
 // ============================================================================
+// VOICE CHECK (Style Guide Enforcement)
+// ============================================================================
+
+/**
+ * Extract voice-relevant sections from SOUL.md, stripping operational sections
+ * like Responsibilities and Repost Curation that aren't about voice/tone.
+ */
+function extractVoiceSections(soulContent) {
+  const lines = soulContent.split('\n');
+  const result = [];
+  let skip = false;
+
+  for (const line of lines) {
+    // Stop including content when we hit operational sections
+    if (/^## (My Responsibilities|Repost Curation|What I Care About)/.test(line)) {
+      skip = true;
+      continue;
+    }
+    // Resume on next top-level section that isn't operational
+    if (/^## /.test(line) && skip) {
+      skip = false;
+    }
+    if (!skip) {
+      result.push(line);
+    }
+  }
+
+  return result.join('\n').trim();
+}
+
+app.post('/api/voice-check', writeLimiter, async (req, res) => {
+  try {
+    const client = getAnthropicClient();
+    if (!client) {
+      return res.status(500).json({ error: 'Anthropic API key not configured' });
+    }
+
+    const { content, philosopher, platform } = req.body;
+    if (!content || !philosopher) {
+      return res.status(400).json({ error: 'content and philosopher are required' });
+    }
+
+    // Read SOUL.md
+    const soulPath = path.join(PHILOSOPHERS_DIR, philosopher, 'SOUL.md');
+    if (!fs.existsSync(soulPath)) {
+      return res.status(404).json({ error: `No SOUL.md found for ${philosopher}` });
+    }
+    const soulRaw = fs.readFileSync(soulPath, 'utf8');
+    const voiceDefinition = extractVoiceSections(soulRaw);
+
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 512,
+      system: `You are a voice consistency checker for a philosophy brand called TensionLines. You evaluate whether content matches a philosopher's defined voice and style. Be concise and specific. Respond ONLY with valid JSON, no markdown wrapping.`,
+      messages: [{
+        role: 'user',
+        content: `## Voice Definition for "${philosopher}"
+${voiceDefinition}
+
+## Content to Check${platform ? ` (for ${platform})` : ''}
+${content}
+
+## Task
+Analyze how well this content matches the voice definition above. Return JSON:
+{
+  "score": <0-100 integer>,
+  "verdict": "<strong|good|weak|off-voice>",
+  "issues": [{"type": "<tone|vocabulary|structure|length>", "description": "<specific issue>", "severity": "<low|medium|high>"}],
+  "suggestions": ["<specific actionable suggestion>"],
+  "strengths": ["<what matches the voice well>"]
+}
+
+Scoring: 80-100=strong (nails the voice), 60-79=good (mostly on voice), 40-59=weak (drifting), 0-39=off-voice (wrong voice entirely).
+Keep issues, suggestions, and strengths to 1-3 items each. Be specific, not generic.`
+      }]
+    });
+
+    const text = response.content[0]?.text || '';
+    // Parse JSON from response, handling potential markdown wrapping
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return res.status(500).json({ error: 'Failed to parse voice check response' });
+    }
+
+    const result = JSON.parse(jsonMatch[0]);
+    res.json(result);
+  } catch (error) {
+    console.error('Voice check error:', error);
+    res.status(500).json({ error: 'Voice check failed: ' + error.message });
+  }
+});
+
+// ============================================================================
 // REPLY QUEUE
 // ============================================================================
 
@@ -8046,6 +8139,325 @@ app.delete('/api/future-needs/:id', (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ============================================================================
+// AGENT MESSAGING
+// ============================================================================
+
+const VALID_MESSAGE_TYPES = ['alert', 'request', 'update', 'question', 'review'];
+const VALID_MESSAGE_PRIORITIES = ['high', 'medium', 'low'];
+const VALID_MESSAGE_STATUSES = ['unread', 'read', 'archived'];
+
+function generateMessageId() {
+  return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+function createMessageNotification(message, mc) {
+  if (message.priority !== 'high') return;
+  const actionRequired = ['alert', 'request'].includes(message.type);
+  mc.notifications.unshift({
+    id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    type: 'agent_message',
+    title: `${message.type === 'alert' ? 'Alert' : 'Message'} from ${message.from}`,
+    message: `**${message.subject}**\n\n${message.body.substring(0, 200)}${message.body.length > 200 ? '...' : ''}`,
+    from: message.from,
+    read: false,
+    createdAt: message.createdAt,
+    priority: 'high',
+    actionRequired,
+    metadata: {
+      messageId: message.id,
+      threadId: message.threadId,
+      to: message.to,
+      messageType: message.type
+    }
+  });
+}
+
+function logMessageActivity(message, mc) {
+  mc.activities.unshift({
+    id: `activity-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    type: 'message_sent',
+    agentId: message.from,
+    timestamp: message.createdAt,
+    description: `Sent ${message.type} to ${message.to.join(', ')}: ${message.subject}`,
+    metadata: {
+      messageId: message.id,
+      threadId: message.threadId,
+      to: message.to,
+      messageType: message.type,
+      priority: message.priority
+    }
+  });
+}
+
+/**
+ * GET /api/messages - List messages with filters
+ */
+app.get('/api/messages', (req, res) => {
+  try {
+    const mc = getMissionControl();
+    const messages = mc.messages || [];
+    const { agent, type, status, thread, from, to, limit = '100' } = req.query;
+
+    let filtered = [...messages];
+
+    if (agent) {
+      filtered = filtered.filter(m => m.from === agent || m.to.includes(agent));
+    }
+    if (type) {
+      filtered = filtered.filter(m => m.type === type);
+    }
+    if (status && status !== 'all') {
+      filtered = filtered.filter(m => m.status === status);
+    }
+    if (thread) {
+      filtered = filtered.filter(m => m.threadId === thread);
+    }
+    if (from) {
+      filtered = filtered.filter(m => m.from === from);
+    }
+    if (to) {
+      filtered = filtered.filter(m => m.to.includes(to));
+    }
+
+    // Sort newest first (unless thread view, then oldest first)
+    if (thread) {
+      filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    } else {
+      filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+
+    const limitNum = Math.min(parseInt(limit) || 100, 500);
+    const total = filtered.length;
+    filtered = filtered.slice(0, limitNum);
+
+    res.json({ messages: filtered, total });
+  } catch (error) {
+    console.error('[Messages] GET error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/messages/stats - Message statistics
+ */
+app.get('/api/messages/stats', (req, res) => {
+  try {
+    const mc = getMissionControl();
+    const messages = mc.messages || [];
+
+    const stats = {
+      total: messages.length,
+      unread: messages.filter(m => m.status === 'unread').length,
+      byType: {},
+      byAgent: {},
+      threads: new Set(messages.map(m => m.threadId)).size
+    };
+
+    for (const m of messages) {
+      stats.byType[m.type] = (stats.byType[m.type] || 0) + 1;
+
+      // Track sender
+      if (!stats.byAgent[m.from]) {
+        stats.byAgent[m.from] = { sent: 0, received: 0, unread: 0 };
+      }
+      stats.byAgent[m.from].sent++;
+
+      // Track recipients
+      for (const recipient of m.to) {
+        if (!stats.byAgent[recipient]) {
+          stats.byAgent[recipient] = { sent: 0, received: 0, unread: 0 };
+        }
+        stats.byAgent[recipient].received++;
+        if (m.status === 'unread') {
+          stats.byAgent[recipient].unread++;
+        }
+      }
+    }
+
+    res.json(stats);
+  } catch (error) {
+    console.error('[Messages] Stats error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * POST /api/messages - Send a new message
+ */
+app.post('/api/messages', (req, res) => {
+  try {
+    const { from, to, type, subject, body, priority = 'medium', metadata = {} } = req.body;
+
+    // Validate required fields
+    if (!from || !to || !type || !subject || !body) {
+      return res.status(400).json({ error: 'Missing required fields: from, to, type, subject, body' });
+    }
+    if (!Array.isArray(to) || to.length === 0) {
+      return res.status(400).json({ error: '"to" must be a non-empty array of agent IDs' });
+    }
+    if (!VALID_MESSAGE_TYPES.includes(type)) {
+      return res.status(400).json({ error: `Invalid type. Must be one of: ${VALID_MESSAGE_TYPES.join(', ')}` });
+    }
+    if (!VALID_MESSAGE_PRIORITIES.includes(priority)) {
+      return res.status(400).json({ error: `Invalid priority. Must be one of: ${VALID_MESSAGE_PRIORITIES.join(', ')}` });
+    }
+
+    const mc = getMissionControl();
+    const agentIds = mc.agents.map(a => a.id);
+
+    if (!agentIds.includes(from)) {
+      return res.status(400).json({ error: `Unknown sender: ${from}` });
+    }
+    for (const recipient of to) {
+      if (!agentIds.includes(recipient)) {
+        return res.status(400).json({ error: `Unknown recipient: ${recipient}` });
+      }
+    }
+
+    const id = generateMessageId();
+    const now = new Date().toISOString();
+
+    const message = {
+      id,
+      threadId: id,
+      parentId: null,
+      from,
+      to,
+      type,
+      subject,
+      body,
+      priority,
+      status: 'unread',
+      createdAt: now,
+      readAt: null,
+      archivedAt: null,
+      metadata
+    };
+
+    if (!mc.messages) mc.messages = [];
+    mc.messages.unshift(message);
+
+    createMessageNotification(message, mc);
+    logMessageActivity(message, mc);
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+    cache.missionControl = null;
+
+    res.status(201).json(message);
+  } catch (error) {
+    console.error('[Messages] POST error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * PATCH /api/messages/:id - Update message status
+ */
+app.patch('/api/messages/:id', (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!status || !VALID_MESSAGE_STATUSES.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_MESSAGE_STATUSES.join(', ')}` });
+    }
+
+    const mc = getMissionControl();
+    if (!mc.messages) mc.messages = [];
+
+    const message = mc.messages.find(m => m.id === req.params.id);
+    if (!message) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+
+    const now = new Date().toISOString();
+    message.status = status;
+    if (status === 'read' && !message.readAt) message.readAt = now;
+    if (status === 'archived') message.archivedAt = now;
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+    cache.missionControl = null;
+
+    res.json(message);
+  } catch (error) {
+    console.error('[Messages] PATCH error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * POST /api/messages/:id/reply - Reply to a message
+ */
+app.post('/api/messages/:id/reply', (req, res) => {
+  try {
+    const { from, body, type, priority } = req.body;
+
+    if (!from || !body) {
+      return res.status(400).json({ error: 'Missing required fields: from, body' });
+    }
+
+    const mc = getMissionControl();
+    if (!mc.messages) mc.messages = [];
+
+    const parent = mc.messages.find(m => m.id === req.params.id);
+    if (!parent) {
+      return res.status(404).json({ error: 'Parent message not found' });
+    }
+
+    const agentIds = mc.agents.map(a => a.id);
+    if (!agentIds.includes(from)) {
+      return res.status(400).json({ error: `Unknown sender: ${from}` });
+    }
+
+    const replyType = type || parent.type;
+    const replyPriority = priority || parent.priority;
+
+    if (type && !VALID_MESSAGE_TYPES.includes(type)) {
+      return res.status(400).json({ error: `Invalid type. Must be one of: ${VALID_MESSAGE_TYPES.join(', ')}` });
+    }
+    if (priority && !VALID_MESSAGE_PRIORITIES.includes(priority)) {
+      return res.status(400).json({ error: `Invalid priority. Must be one of: ${VALID_MESSAGE_PRIORITIES.join(', ')}` });
+    }
+
+    // Auto-set recipients: original sender + recipients, minus the replier
+    const recipients = new Set([parent.from, ...parent.to]);
+    recipients.delete(from);
+    const to = Array.from(recipients);
+
+    const id = generateMessageId();
+    const now = new Date().toISOString();
+
+    const reply = {
+      id,
+      threadId: parent.threadId,
+      parentId: parent.id,
+      from,
+      to,
+      type: replyType,
+      subject: parent.subject.startsWith('Re: ') ? parent.subject : `Re: ${parent.subject}`,
+      body,
+      priority: replyPriority,
+      status: 'unread',
+      createdAt: now,
+      readAt: null,
+      archivedAt: null,
+      metadata: parent.metadata || {}
+    };
+
+    mc.messages.unshift(reply);
+
+    createMessageNotification(reply, mc);
+    logMessageActivity(reply, mc);
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+    cache.missionControl = null;
+
+    res.status(201).json(reply);
+  } catch (error) {
+    console.error('[Messages] Reply error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
