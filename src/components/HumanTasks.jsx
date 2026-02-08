@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import useSWR from 'swr'
+import useSWR, { mutate } from 'swr'
 import ReactMarkdown from 'react-markdown'
-import { getTasks, fetcher } from '../lib/api'
-import { CheckCircle, Clock, ExternalLink, AlertCircle, Copy, Check, Link, MessageSquare, Instagram, MessageCircle, Palette, Send, Plus, Trash2, Vote, MapPin, FileText, Image, Film, Lightbulb, Reply, MessageSquarePlus } from 'lucide-react'
+import { getTasks, fetcher, dispatchTask, reassignTask, deleteTask } from '../lib/api'
+import { CheckCircle, Clock, ExternalLink, AlertCircle, Copy, Check, Link, MessageSquare, Instagram, MessageCircle, Palette, Send, Plus, Trash2, Vote, MapPin, FileText, Image, Film, Lightbulb, Reply, MessageSquarePlus, RotateCcw, UserPlus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import InfoTip from './InfoTip'
 
 // Security: Validate URLs to prevent javascript: and other malicious protocols
 function isValidHttpUrl(urlString) {
@@ -194,6 +195,9 @@ export default function HumanTasks() {
 
 function TaskCard({ task, onComplete, completing, ideaStats }) {
   const [copiedIndex, setCopiedIndex] = useState(null)
+  const [dispatching, setDispatching] = useState(false)
+  const [retrying, setRetrying] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const priority = task.metadata?.priority || 'medium'
   const estimatedMinutes = task.metadata?.estimatedMinutes || null
   const directLink = task.metadata?.directLink
@@ -232,6 +236,43 @@ function TaskCard({ task, onComplete, completing, ideaStats }) {
     await navigator.clipboard.writeText(text)
     setCopiedIndex(index)
     setTimeout(() => setCopiedIndex(null), 2000)
+  }
+
+  const handleDispatch = async () => {
+    setDispatching(true)
+    try {
+      await dispatchTask(task.id)
+      mutate('/tasks')
+    } catch (err) {
+      console.error('Error dispatching task:', err)
+      alert('Failed to dispatch task. Please try again.')
+    }
+    setDispatching(false)
+  }
+
+  const handleRetry = async () => {
+    setRetrying(true)
+    try {
+      await dispatchTask(task.id)
+      mutate('/tasks')
+    } catch (err) {
+      console.error('Error retrying task:', err)
+      alert('Failed to retry task. Please try again.')
+    }
+    setRetrying(false)
+  }
+
+  const handleDelete = async () => {
+    if (!confirm(`Delete "${task.title}"? This cannot be undone.`)) return
+    setDeleting(true)
+    try {
+      await deleteTask(task.id)
+      mutate('/tasks')
+    } catch (err) {
+      console.error('Error deleting task:', err)
+      alert('Failed to delete task. Please try again.')
+    }
+    setDeleting(false)
   }
 
   return (
@@ -384,23 +425,77 @@ function TaskCard({ task, onComplete, completing, ideaStats }) {
         </div>
       )}
 
-      <div className="flex items-center gap-3 pt-4 border-t border-neutral-200">
-        <button
-          onClick={() => onComplete(task.id)}
-          disabled={completing}
-          className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
-            completing
-              ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
-              : 'bg-gold text-white hover:bg-black shadow-sm hover:shadow-md'
-          }`}
-        >
-          <CheckCircle size={18} />
-          {completing ? 'Marking Complete...' : 'Mark Complete'}
-        </button>
+      <div className="flex items-center justify-between pt-4 border-t border-neutral-200">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => onComplete(task.id)}
+            disabled={completing}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+              completing
+                ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
+                : 'bg-gold text-white hover:bg-black shadow-sm hover:shadow-md'
+            }`}
+          >
+            <CheckCircle size={18} />
+            {completing ? 'Marking Complete...' : 'Mark Complete'}
+          </button>
+          <span className="text-sm text-neutral-500">
+            Task #{task.id.replace('task-', '')}
+          </span>
+        </div>
 
-        <span className="text-sm text-neutral-500">
-          Task #{task.id.replace('task-', '')}
-        </span>
+        <div className="flex items-center gap-2">
+          {/* Dispatch */}
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={handleDispatch}
+              disabled={dispatching}
+              className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-md hover:bg-amber-200 transition-colors disabled:opacity-50 font-medium text-xs"
+            >
+              <Send size={14} className={dispatching ? 'animate-pulse' : ''} />
+              {dispatching ? 'Sending...' : 'Dispatch'}
+            </button>
+            <InfoTip text="Send to the agent team to work on" />
+          </div>
+
+          {/* Retry */}
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={handleRetry}
+              disabled={retrying}
+              className="flex items-center gap-1 px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-md hover:bg-yellow-200 transition-colors disabled:opacity-50 font-medium text-xs"
+            >
+              <RotateCcw size={14} className={retrying ? 'animate-spin' : ''} />
+              {retrying ? 'Retrying...' : 'Retry'}
+            </button>
+            <InfoTip text="Re-run this task — same job, fresh attempt" />
+          </div>
+
+          {/* Send to Human (disabled — already human) */}
+          <div className="flex items-center gap-0.5">
+            <button
+              disabled
+              className="flex items-center gap-1 px-3 py-1.5 bg-neutral-100 text-neutral-400 rounded-md cursor-not-allowed font-medium text-xs"
+            >
+              <UserPlus size={14} />
+              Send to Human
+            </button>
+            <InfoTip text="Already on your task list" />
+          </div>
+
+          {/* Delete */}
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex items-center gap-1 px-3 py-1.5 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors disabled:opacity-50 font-medium text-xs"
+            >
+              <Trash2 size={14} />
+              {deleting ? 'Deleting...' : 'Delete'}
+            </button>
+            <InfoTip text="Permanently remove this task" />
+          </div>
+        </div>
       </div>
     </div>
   )

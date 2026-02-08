@@ -1800,6 +1800,48 @@ app.patch('/api/tasks/:id/status', (req, res) => {
 });
 
 /**
+ * Delete a task permanently
+ */
+app.delete('/api/tasks/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(id)) {
+      return res.status(400).json({ error: 'Invalid task ID' });
+    }
+
+    const data = getMissionControl();
+    const taskIndex = data.tasks.findIndex(t => t.id === id);
+
+    if (taskIndex === -1) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const task = data.tasks[taskIndex];
+    data.tasks.splice(taskIndex, 1);
+
+    // Log activity
+    data.activities.unshift({
+      id: `activity-${Date.now()}`,
+      type: 'task_deleted',
+      agentId: 'human',
+      taskId: id,
+      timestamp: new Date().toISOString(),
+      description: `Task deleted: ${task.title}`,
+      metadata: { deletedTask: { id: task.id, title: task.title, status: task.status } }
+    });
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(data, null, 2));
+    cache.missionControl = null;
+
+    res.json({ success: true, deleted: task.id });
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    res.status(500).json({ error: 'Failed to delete task' });
+  }
+});
+
+/**
  * Complete a task (for human tasks)
  */
 app.post('/api/tasks/:id/complete', (req, res) => {
@@ -6638,10 +6680,6 @@ app.post('/api/tasks/:id/dispatch', (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
 
-    if (task.status !== 'assigned' && task.status !== 'in_progress') {
-      return res.status(400).json({ error: 'Only assigned or in-progress tasks can be dispatched' });
-    }
-
     const now = new Date().toISOString();
     const isRetry = task.status === 'in_progress';
 
@@ -6651,6 +6689,11 @@ app.post('/api/tasks/:id/dispatch', (req, res) => {
       delete task.metadata.reassignedFrom;
       delete task.metadata.reassignedAt;
       delete task.metadata.reassignReason;
+    }
+
+    // Clear completion data when re-dispatching a completed/shipped task
+    if (['completed', 'shipped'].includes(task.status)) {
+      delete task.completedAt;
     }
 
     task.status = 'in_progress';

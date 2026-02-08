@@ -207,6 +207,12 @@ export async function dispatchTask(id) {
   })
 }
 
+export async function deleteTask(id) {
+  return apiFetch(`/tasks/${id}`, {
+    method: 'DELETE'
+  })
+}
+
 export async function addTaskStep(id, description, status, agentId) {
   return apiFetch(`/tasks/${id}/steps`, {
     method: 'POST',

@@ -1,7 +1,8 @@
 import useSWR, { mutate } from 'swr'
-import { getTasks, reopenTask, dispatchTask, reassignTask } from '../lib/api'
+import { getTasks, dispatchTask, reassignTask, deleteTask } from '../lib/api'
 import { formatDate, formatStatus, getStatusColor, getAlertLevelColor, truncate, formatDuration } from '../lib/formatters'
-import { ListTodo, RotateCcw, Clock, Search, X, Play, ChevronDown, CheckCircle2, Loader2, Circle, XCircle, AlertTriangle, UserPlus } from 'lucide-react'
+import { ListTodo, RotateCcw, Clock, Search, X, ChevronDown, CheckCircle2, Loader2, Circle, XCircle, AlertTriangle, UserPlus, Trash2, Send } from 'lucide-react'
+import InfoTip from './InfoTip'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
@@ -798,31 +799,16 @@ function StepTimeline({ task }) {
 }
 
 function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
-  const [reopening, setReopening] = useState(false)
   const [dispatching, setDispatching] = useState(false)
   const [retrying, setRetrying] = useState(false)
   const [sendingToHuman, setSendingToHuman] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const statusColor = getStatusColor(task.status)
   const category = getTaskCategory(task)
   const isCompleted = ['completed', 'shipped'].includes(task.status)
   const isHumanTask = task.assigneeIds?.includes('human')
   const breakdownCount = detectBreakdowns(task).length
   const isPostingIssue = detectPostingIssue(task)
-
-  const handleReopen = async () => {
-    if (!confirm('Reopen this task? It will be marked as "assigned" and returned to the assignee.')) {
-      return
-    }
-    setReopening(true)
-    try {
-      await reopenTask(task.id, 'Marked as undone by user')
-      mutate('/tasks')
-    } catch (err) {
-      console.error('Error reopening task:', err)
-      alert('Failed to reopen task. Please try again.')
-    }
-    setReopening(false)
-  }
 
   const handleDispatch = async () => {
     setDispatching(true)
@@ -852,13 +838,26 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
     if (!confirm('Reassign this task to Shawn (Human) for manual action?')) return
     setSendingToHuman(true)
     try {
-      await reassignTask(task.id, 'human', 'Posting issue — reassigned to human for manual action')
+      await reassignTask(task.id, 'human', 'Reassigned to human for manual action')
       mutate('/tasks')
     } catch (err) {
       console.error('Error reassigning task:', err)
       alert('Failed to reassign task. Please try again.')
     }
     setSendingToHuman(false)
+  }
+
+  const handleDelete = async () => {
+    if (!confirm(`Delete "${task.title}"? This cannot be undone.`)) return
+    setDeleting(true)
+    try {
+      await deleteTask(task.id)
+      mutate('/tasks')
+    } catch (err) {
+      console.error('Error deleting task:', err)
+      alert('Failed to delete task. Please try again.')
+    }
+    setDeleting(false)
   }
 
   // Calculate progress
@@ -983,57 +982,61 @@ function TaskCard({ task, hideCategory = false, showCompletedDate = false }) {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Dispatch button for assigned tasks */}
-          {task.status === 'assigned' && (
+          {/* Dispatch */}
+          <div className="flex items-center gap-0.5">
             <button
               onClick={handleDispatch}
               disabled={dispatching}
               className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-md hover:bg-amber-200 transition-colors disabled:opacity-50 font-medium"
-              title="Dispatch this task — start execution"
             >
-              <Play size={14} className={dispatching ? 'animate-pulse' : ''} />
-              {dispatching ? 'Dispatching...' : 'Dispatch'}
+              <Send size={14} className={dispatching ? 'animate-pulse' : ''} />
+              {dispatching ? 'Sending...' : 'Dispatch'}
             </button>
-          )}
+            <InfoTip text="Send to the agent team to work on" />
+          </div>
 
-          {/* Retry button for stuck in_progress tasks */}
-          {task.status === 'in_progress' && (
+          {/* Retry */}
+          <div className="flex items-center gap-0.5">
             <button
               onClick={handleRetry}
               disabled={retrying}
-              className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-white rounded-md hover:from-amber-500 hover:to-yellow-600 transition-all disabled:opacity-50 font-medium shadow-sm"
-              title="Retry — re-dispatch this task to the agent"
+              className="flex items-center gap-1 px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-md hover:bg-yellow-200 transition-colors disabled:opacity-50 font-medium"
             >
               <RotateCcw size={14} className={retrying ? 'animate-spin' : ''} />
               {retrying ? 'Retrying...' : 'Retry'}
             </button>
-          )}
+            <InfoTip text="Re-run this task — same job, fresh attempt" />
+          </div>
 
-          {/* Send to Human button for posting issues or stuck in_progress tasks */}
-          {(isPostingIssue || task.status === 'in_progress') && !isHumanTask && (
+          {/* Send to Human */}
+          <div className="flex items-center gap-0.5">
             <button
               onClick={handleSendToHuman}
-              disabled={sendingToHuman}
-              className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium shadow-sm"
-              title="Reassign to Shawn for manual action"
+              disabled={sendingToHuman || isHumanTask}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 font-medium ${
+                isHumanTask
+                  ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
+                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+              }`}
             >
               <UserPlus size={14} />
               {sendingToHuman ? 'Sending...' : 'Send to Human'}
             </button>
-          )}
+            <InfoTip text="Reassign to your task list and queues" />
+          </div>
 
-          {/* Reopen button for completed tasks */}
-          {isCompleted && (
+          {/* Delete */}
+          <div className="flex items-center gap-0.5">
             <button
-              onClick={handleReopen}
-              disabled={reopening}
-              className="flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-md hover:bg-amber-200 transition-colors disabled:opacity-50"
-              title="Reopen this task and return it to the assignee"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex items-center gap-1 px-3 py-1.5 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors disabled:opacity-50 font-medium"
             >
-              <RotateCcw size={14} className={reopening ? 'animate-spin' : ''} />
-              {reopening ? 'Reopening...' : 'Undo Complete'}
+              <Trash2 size={14} />
+              {deleting ? 'Deleting...' : 'Delete'}
             </button>
-          )}
+            <InfoTip text="Permanently remove this task" />
+          </div>
         </div>
       </div>
     </div>
