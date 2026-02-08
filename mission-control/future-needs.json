@@ -398,7 +398,7 @@
       "category": "monetization",
       "priority": "medium",
       "effort": "medium",
-      "status": "proposed",
+      "status": "planned",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q2-2026",
@@ -418,7 +418,7 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "updatedAt": "2026-02-08T21:41:43.411Z"
     },
     {
       "id": "need-016",
@@ -426,9 +426,9 @@
       "description": "API integration for subscriber tracking, content gating, and tier management.",
       "useCase": "Marcus manages Patreon manually. API integration would enable subscriber tracking, content gating, tier management from within CMS.",
       "category": "monetization",
-      "priority": "low",
+      "priority": "high",
       "effort": "medium",
-      "status": "proposed",
+      "status": "planned",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q3-2026",
@@ -444,7 +444,7 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "updatedAt": "2026-02-08T22:11:10.956Z"
     },
     {
       "id": "need-017",
@@ -482,7 +482,7 @@
       "category": "governance",
       "priority": "low",
       "effort": "small",
-      "status": "proposed",
+      "status": "deferred",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q2-2026",
@@ -502,7 +502,7 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-07T00:00:00.000Z"
+      "updatedAt": "2026-02-08T21:41:13.001Z"
     },
     {
       "id": "need-019",
@@ -563,6 +563,242 @@
       "comments": [],
       "updatedAt": "2026-02-08T05:04:04.807Z",
       "completedAt": "2026-02-08T05:04:04.807Z"
+    },
+    {
+      "id": "need-021",
+      "title": "Systematic Book Completion Plan",
+      "description": "Create a structured timeline and writing plan for the 5 TensionLines books.",
+      "useCase": "5 books have chapter outlines but no systematic writing plan. No weekly targets, no agent assignments per chapter, no timeline. At current pace books are 12-24 months out.",
+      "category": "content",
+      "priority": "high",
+      "effort": "medium",
+      "status": "planned",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-08T22:07:57.880Z",
+      "targetQuarter": "Q1-2026",
+      "agents": [
+        "aristotle",
+        "tension"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Book 1 (Philosophy) prioritized with 6-month completion timeline",
+        "Chapters assigned to philosopher agents with weekly word count targets",
+        "Progress tracked in CMS dashboard",
+        "Weekly milestones defined (500-1000 words per chapter)"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-08T22:14:12.323Z"
+    },
+    {
+      "id": "need-022",
+      "title": "Newsletter Automation System",
+      "description": "Weekly philosophy digest auto-generated from top content and ideas.",
+      "useCase": "Newsletter infrastructure exists on Substack but no content is being published. Marcus Aurelius is the designated voice but has no automated workflow for generating and sending newsletters.",
+      "category": "content",
+      "priority": "medium",
+      "effort": "medium",
+      "status": "planned",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-08T22:07:57.911Z",
+      "targetQuarter": "Q1-2026",
+      "agents": [
+        "marcus"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Weekly digest template designed",
+        "Auto-pulls from top ideas and published content",
+        "Substack integration for send",
+        "Signup CTAs added to social profiles"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-08T22:14:12.337Z"
+    },
+    {
+      "id": "need-023",
+      "title": "Systematic Influencer Outreach Program",
+      "description": "Build and execute a strategic engagement program with philosophy and self-help influencers.",
+      "useCase": "Growth is organic but slow. Targeted engagement with 100 influencers across Twitter and Bluesky could accelerate audience growth significantly. Some outreach exists but is ad-hoc.",
+      "category": "growth",
+      "priority": "medium",
+      "effort": "medium",
+      "status": "planned",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-08T22:08:34.066Z",
+      "targetQuarter": "Q2-2026",
+      "agents": [
+        "nietzsche",
+        "heraclitus"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Target list of 100 philosophy/self-help influencers built",
+        "Outreach templates per philosopher voice",
+        "Response rate and conversion tracking",
+        "Collaboration opportunities identified"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-08T22:14:12.348Z"
+    },
+    {
+      "id": "need-024",
+      "title": "Community Management Automation",
+      "description": "Smart comment filtering, sentiment analysis, and priority routing for engagement.",
+      "useCase": "Comments and replies exist in queues but lack smart filtering. No way to prioritize questions over praise, detect criticism, or auto-categorize. Manual review of everything wastes time.",
+      "category": "infrastructure",
+      "priority": "low",
+      "effort": "medium",
+      "status": "planned",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-08T22:08:34.116Z",
+      "targetQuarter": "Q2-2026",
+      "agents": [
+        "diogenes"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Sentiment analysis on incoming comments",
+        "Auto-categorization: questions, praise, criticism, spam",
+        "Priority routing for meaningful engagement",
+        "Community health metrics dashboard"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-08T22:14:12.360Z"
+    },
+    {
+      "id": "need-025",
+      "title": "Philosophy Podcast / Audio Content",
+      "description": "Extend TensionLines into audio with short philosophy reflection episodes.",
+      "useCase": "Audio reaches audiences who prefer listening over reading — commuters, runners, etc. Lower production barrier than video. Existing ideas bank content can be repurposed as episode scripts.",
+      "category": "content",
+      "priority": "low",
+      "effort": "medium",
+      "status": "planned",
+      "proposedBy": "claude",
+      "proposedAt": "2026-02-08T22:10:58.906Z",
+      "targetQuarter": "Q3-2026",
+      "agents": [
+        "leonardo"
+      ],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "5-10 minute episode format defined",
+        "First 5 episodes recorded and published",
+        "Distribution to Spotify and Apple Podcasts",
+        "Weekly or bi-weekly cadence established"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-08T22:14:12.371Z"
+    },
+    {
+      "id": "need-026",
+      "title": "Reddit Community Activation",
+      "description": "Launch TensionLines presence on Reddit via Diogenes. Reddit has philosophy-hungry subreddits (r/philosophy, r/stoicism, r/selfimprovement). Diogenes has a drafted welcome post ready. Easiest win on the roadmap.",
+      "useCase": "Zero Reddit presence despite having content and a designated agent.",
+      "category": "growth",
+      "priority": "high",
+      "effort": "small",
+      "status": "planned",
+      "proposedBy": "shawn",
+      "proposedAt": "2026-02-08T22:15:16.417Z",
+      "targetQuarter": "Q1-2026",
+      "agents": [],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Reddit welcome post published",
+        "Recurring weekly engagement",
+        "Diogenes has Reddit templates"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-08T22:15:29.195Z"
+    },
+    {
+      "id": "need-027",
+      "title": "Automatic Idea-to-Draft Pipeline",
+      "description": "Auto-adapt ideas from the bank into platform-specific drafts routed through philosopher voices. Highest-ROI automation — expected 3-5x content velocity, saves 5-10 hrs/week.",
+      "useCase": "Ideas sit in bank and drafts are created manually. Repurposing engine exists but is not automated.",
+      "category": "content",
+      "priority": "high",
+      "effort": "large",
+      "status": "planned",
+      "proposedBy": "shawn",
+      "proposedAt": "2026-02-08T22:15:16.466Z",
+      "targetQuarter": "Q1-2026",
+      "agents": [],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Auto-adapt ideas to 5 platform formats",
+        "Route to correct philosopher voice",
+        "Queue drafts for human review",
+        "Save 5-10 hrs/week"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-08T22:15:29.204Z"
+    },
+    {
+      "id": "need-028",
+      "title": "Advanced Analytics Dashboard",
+      "description": "Real analytics with growth charts, content performance rankings, and platform comparison. Enables data-driven decisions on where to invest effort.",
+      "useCase": "Current analytics are basic metric displays. Cannot track trends, identify top content, or compare platform ROI.",
+      "category": "infrastructure",
+      "priority": "medium",
+      "effort": "large",
+      "status": "planned",
+      "proposedBy": "shawn",
+      "proposedAt": "2026-02-08T22:15:16.492Z",
+      "targetQuarter": "Q2-2026",
+      "agents": [],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Per-platform growth charts (WoW, MoM)",
+        "Content performance rankings",
+        "Revenue tracking with targets",
+        "Platform comparison view"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-08T22:15:29.213Z"
+    },
+    {
+      "id": "need-029",
+      "title": "Multi-Platform AI Agent",
+      "description": "Unified agent monitoring all platforms with cross-platform consistency, auto-response with approval flow, and smart per-platform scheduling.",
+      "useCase": "Each platform is managed separately. A unified agent could watch all platforms simultaneously and ensure consistent messaging.",
+      "category": "infrastructure",
+      "priority": "low",
+      "effort": "large",
+      "status": "planned",
+      "proposedBy": "shawn",
+      "proposedAt": "2026-02-08T22:15:16.518Z",
+      "targetQuarter": "Q3-2026",
+      "agents": [],
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "Unified inbox for all notifications",
+        "Auto-response with approval flow",
+        "Cross-platform content consistency",
+        "Smart per-platform scheduling"
+      ],
+      "votes": 0,
+      "voters": [],
+      "comments": [],
+      "updatedAt": "2026-02-08T22:15:29.222Z"
     }
   ],
   "categories": {
@@ -598,19 +834,19 @@
     }
   },
   "stats": {
-    "total": 19,
+    "total": 28,
     "byStatus": {
-      "proposed": 5,
-      "planned": 0,
+      "proposed": 0,
+      "planned": 11,
       "in_progress": 0,
-      "completed": 13,
-      "deferred": 1
+      "completed": 15,
+      "deferred": 2
     },
     "byPriority": {
-      "high": 6,
-      "medium": 8,
-      "low": 5
+      "high": 10,
+      "medium": 11,
+      "low": 7
     },
-    "lastUpdated": "2026-02-08T05:04:08.209Z"
+    "lastUpdated": "2026-02-08T22:15:29.222Z"
   }
 }
