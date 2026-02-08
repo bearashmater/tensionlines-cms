@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { getDashboard, getActivities, search } from '../lib/api'
 import { fetcher } from '../lib/api'
 import { formatDate, formatPercent, formatNumber, formatStatus, getStatusColor } from '../lib/formatters'
-import { Users, ListTodo, Lightbulb, Bell, TrendingUp, Search, FileText, X, Users as UsersIcon, ChevronRight, AlertTriangle, BarChart3, DollarSign, PenLine, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { Users, ListTodo, Lightbulb, Bell, TrendingUp, Search, FileText, X, Users as UsersIcon, ChevronRight, AlertTriangle, BarChart3, DollarSign, PenLine, ArrowUpRight, ArrowDownRight, Inbox } from 'lucide-react'
 
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -26,6 +26,21 @@ export default function Dashboard() {
   const { data: analytics } = useSWR('/api/analytics', fetcher, {
     refreshInterval: 300000
   })
+
+  const { data: queueTotal } = useSWR('queue-total', async () => {
+    const [posting, replies, comments, engagement] = await Promise.all([
+      fetch('/api/posting-queue').then(r => r.json()).catch(() => ({ queue: [] })),
+      fetch('/api/reply-queue').then(r => r.json()).catch(() => ({ queue: [] })),
+      fetch('/api/comment-queue').then(r => r.json()).catch(() => ({ queue: [] })),
+      fetch('/api/engagement-actions').then(r => r.json()).catch(() => ({ queue: [] }))
+    ])
+    return {
+      posting: posting.queue?.filter(i => i.status === 'ready' || i.status === 'scheduled')?.length || 0,
+      replies: replies.queue?.length || 0,
+      comments: comments.queue?.filter(i => i.status === 'ready')?.length || 0,
+      engagement: engagement.queue?.length || 0
+    }
+  }, { refreshInterval: 120000 })
 
   const handleSearch = async (e) => {
     e.preventDefault()
@@ -176,7 +191,7 @@ export default function Dashboard() {
       )}
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
         <MetricCard
           icon={<Users size={24} className="text-gold" />}
           label="Active Agents"
@@ -217,6 +232,16 @@ export default function Dashboard() {
           bgColor="bg-accent-tertiary"
           to="/notifications"
         />
+        {queueTotal && (
+          <MetricCard
+            icon={<Inbox size={24} className="text-gold" />}
+            label="Queue Items"
+            value={queueTotal.posting + queueTotal.replies + queueTotal.comments + queueTotal.engagement}
+            subtitle={`${queueTotal.posting} posts · ${queueTotal.replies} replies · ${queueTotal.comments} comments · ${queueTotal.engagement} engagement`}
+            bgColor="bg-accent-tertiary"
+            to="/posting-queue"
+          />
+        )}
       </div>
 
       {/* Task Completion */}
