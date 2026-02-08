@@ -9674,6 +9674,17 @@ app.post('/api/engagement-actions/scan', async (req, res) => {
   }
 });
 
+// POST /api/engagement-actions/execute - manual trigger (must be before :id routes)
+app.post('/api/engagement-actions/execute', async (req, res) => {
+  try {
+    const result = await executeEngagementActions();
+    res.json(result);
+  } catch (error) {
+    console.error('[EngagementExec] Manual execute error:', error);
+    res.status(500).json({ error: 'Execution failed', details: error.message });
+  }
+});
+
 // POST /api/engagement-actions/:id/done - mark completed
 app.post('/api/engagement-actions/:id/done', (req, res) => {
   try {
@@ -9917,6 +9928,8 @@ ${candidateList}`
         : candidate.url,
       targetAuthor: candidate.author,
       targetText: candidate.text,
+      targetUri: candidate.uri || null,
+      targetCid: candidate.cid || null,
       context: pick.reason || '',
       source: 'auto-scan',
       status: 'ready',
@@ -9945,6 +9958,131 @@ cron.schedule('0 11,15,19 * * *', async () => {
   }
 }, { timezone: 'America/Los_Angeles' });
 console.log('[EngagementScan] Scheduled: 11 AM, 3 PM, 7 PM PST daily');
+
+// ============================================================================
+// ENGAGEMENT ACTION EXECUTOR (auto-execute queued likes, reposts, follows)
+// ============================================================================
+
+async function executeEngagementActions() {
+  console.log('[EngagementExec] Starting execution of queued engagement actions...');
+  const data = getEngagementActions();
+  const settings = data.settings?.platforms?.bluesky || { enabled: true, maxActionsPerDay: 25 };
+
+  // Count today's completed actions for bluesky
+  const today = new Date().toISOString().slice(0, 10);
+  const todayCompleted = data.completed.filter(
+    i => i.platform === 'bluesky' && i.completedAt?.startsWith(today)
+  ).length;
+  const remaining = Math.max(0, (settings.maxActionsPerDay || 25) - todayCompleted);
+
+  if (remaining === 0) {
+    console.log('[EngagementExec] Daily limit reached for bluesky, skipping');
+    return { success: true, executed: 0, reason: 'daily limit reached' };
+  }
+
+  // Filter ready bluesky actions
+  const readyActions = data.queue.filter(i => i.status === 'ready' && i.platform === 'bluesky');
+  if (readyActions.length === 0) {
+    console.log('[EngagementExec] No ready bluesky actions in queue');
+    return { success: true, executed: 0, reason: 'no ready actions' };
+  }
+
+  const toExecute = readyActions.slice(0, remaining);
+  let executed = 0;
+  let failed = 0;
+
+  let agent;
+  try {
+    agent = await getBskyAgent();
+  } catch (err) {
+    console.error('[EngagementExec] Failed to get Bluesky agent:', err.message);
+    return { success: false, error: 'Bluesky auth failed' };
+  }
+
+  for (const action of toExecute) {
+    try {
+      if (action.type === 'like') {
+        if (!action.targetUri || !action.targetCid) {
+          throw new Error('Missing targetUri or targetCid for like action');
+        }
+        await agent.like(action.targetUri, action.targetCid);
+      } else if (action.type === 'repost') {
+        if (!action.targetUri || !action.targetCid) {
+          throw new Error('Missing targetUri or targetCid for repost action');
+        }
+        await agent.repost(action.targetUri, action.targetCid);
+      } else if (action.type === 'follow') {
+        const handle = (action.targetAuthor || '').replace(/^@/, '');
+        if (!handle) throw new Error('Missing targetAuthor for follow action');
+        const resolved = await agent.resolveHandle({ handle });
+        await agent.follow(resolved.data.did);
+      } else {
+        console.log(`[EngagementExec] Unknown action type: ${action.type}, skipping`);
+        continue;
+      }
+
+      // Success: move to completed
+      const idx = data.queue.findIndex(i => i.id === action.id);
+      if (idx !== -1) {
+        const item = data.queue.splice(idx, 1)[0];
+        item.status = 'completed';
+        item.completedAt = new Date().toISOString();
+        item.executedBy = 'auto';
+        data.completed.unshift(item);
+
+        // Log follows to follows-tracker
+        if (item.type === 'follow') {
+          const followsData = getFollowsTracker();
+          const cleanHandle = (item.targetAuthor || '').replace(/^@/, '');
+          const exists = followsData.follows.find(
+            f => f.handle.toLowerCase() === cleanHandle.toLowerCase() && f.platform === 'bluesky'
+          );
+          if (!exists) {
+            followsData.follows.push({
+              handle: cleanHandle,
+              platform: 'bluesky',
+              followedAt: item.completedAt,
+              source: 'auto-engagement',
+              context: item.context || item.targetText || ''
+            });
+            saveFollowsTracker(followsData);
+          }
+        }
+
+        executed++;
+        console.log(`[EngagementExec] ${action.type} OK: @${action.targetAuthor} (${action.targetUrl})`);
+      }
+    } catch (err) {
+      console.error(`[EngagementExec] ${action.type} FAILED for @${action.targetAuthor}:`, err.message);
+      action.status = 'failed';
+      action.error = err.message;
+      action.failedAt = new Date().toISOString();
+      failed++;
+    }
+
+    // Delay 3-5 seconds between actions to avoid rate limits
+    if (toExecute.indexOf(action) < toExecute.length - 1) {
+      const delay = 3000 + Math.random() * 2000;
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+
+  saveEngagementActions(data);
+  if (executed > 0) broadcast('engagement-actions');
+
+  console.log(`[EngagementExec] Done: ${executed} executed, ${failed} failed`);
+  return { success: true, executed, failed };
+}
+
+// Cron: 15 min after each scan (11:15 AM, 3:15 PM, 7:15 PM PST)
+cron.schedule('15 11,15,19 * * *', async () => {
+  try {
+    await executeEngagementActions();
+  } catch (e) {
+    console.error('[EngagementExec] Scheduled execution failed:', e.message);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[EngagementExec] Scheduled: 11:15 AM, 3:15 PM, 7:15 PM PST daily');
 
 // ============================================================================
 // START SERVER
