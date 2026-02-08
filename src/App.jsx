@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
-import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell, Zap, Compass, Send, Reply, Sparkles, MessageSquarePlus, Layers } from 'lucide-react'
+import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell, Zap, Compass, Send, Reply, Sparkles, MessageSquarePlus, Layers, Heart } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useWebSocket } from './lib/useWebSocket'
 
@@ -32,6 +32,7 @@ import OutreachDashboard from './components/OutreachDashboard'
 import WeeklyReport from './components/WeeklyReport'
 import AgentMessages from './components/AgentMessages'
 import AudienceSegmentation from './components/AudienceSegmentation'
+import EngagementActions from './components/EngagementActions'
 
 // Navigation structure with grouping
 const navGroups = [
@@ -49,7 +50,8 @@ const navGroups = [
     items: [
       { to: '/posting-queue', icon: <Send size={20} />, label: 'Posting' },
       { to: '/reply-queue', icon: <Reply size={20} />, label: 'Replies' },
-      { to: '/comments', icon: <MessageSquarePlus size={20} />, label: 'Comments' }
+      { to: '/comments', icon: <MessageSquarePlus size={20} />, label: 'Comments' },
+      { to: '/engagement', icon: <Heart size={20} />, label: 'Engagement' }
     ]
   },
   {
@@ -191,6 +193,7 @@ function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenu
             <Route path="/repurpose" element={<RepurposeEngine />} />
             <Route path="/reply-queue" element={<ReplyQueue />} />
             <Route path="/comments" element={<CommentQueue />} />
+            <Route path="/engagement" element={<EngagementActions />} />
             <Route path="/book" element={<BookProgress />} />
             <Route path="/book/:bookId/chapter/:chapterNum" element={<ChapterDetail />} />
             <Route path="/knowledge" element={<KnowledgeBase />} />

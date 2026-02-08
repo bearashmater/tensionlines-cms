@@ -182,6 +182,7 @@ const COMMENT_QUEUE_FILE = path.join(BASE_DIR, 'content', 'queue', 'comment-queu
 const WEEKLY_REPORTS_DIR = path.join(BASE_DIR, 'mission-control', 'weekly-reports');
 const AUDIENCE_SEGMENTS_FILE = path.join(BASE_DIR, 'mission-control', 'audience-segments.json');
 const FOLLOWS_TRACKER_FILE = path.join(BASE_DIR, 'content', 'queue', 'follows-tracker.json');
+const ENGAGEMENT_ACTIONS_FILE = path.join(BASE_DIR, 'content', 'queue', 'engagement-actions.json');
 
 // Claude API client (lazy — only created when ANTHROPIC_API_KEY is set)
 let anthropicClient = null;
@@ -9482,6 +9483,133 @@ app.post('/api/follows', (req, res) => {
   } catch (error) {
     console.error('Follow tracking error:', error);
     res.status(500).json({ error: 'Failed to track follow' });
+  }
+});
+
+// ============================================================================
+// ENGAGEMENT ACTIONS QUEUE (repost, like, follow)
+// ============================================================================
+
+function getEngagementActions() {
+  try {
+    if (fs.existsSync(ENGAGEMENT_ACTIONS_FILE)) {
+      return JSON.parse(fs.readFileSync(ENGAGEMENT_ACTIONS_FILE, 'utf8'));
+    }
+  } catch (e) { console.error('Error reading engagement actions:', e); }
+  return { queue: [], completed: [], settings: { platforms: { twitter: { enabled: true, maxActionsPerDay: 25 }, bluesky: { enabled: true, maxActionsPerDay: 25 } } } };
+}
+
+function saveEngagementActions(data) {
+  fs.writeFileSync(ENGAGEMENT_ACTIONS_FILE, JSON.stringify(data, null, 2));
+}
+
+// GET /api/engagement-actions
+app.get('/api/engagement-actions', (req, res) => {
+  try {
+    const data = getEngagementActions();
+    // Count today's completed actions per platform
+    const today = new Date().toISOString().slice(0, 10);
+    const todayCounts = { twitter: { repost: 0, like: 0, follow: 0 }, bluesky: { repost: 0, like: 0, follow: 0 } };
+    for (const item of data.completed) {
+      if (item.completedAt && item.completedAt.startsWith(today)) {
+        const p = item.platform || 'twitter';
+        const t = item.type || 'like';
+        if (todayCounts[p]) todayCounts[p][t] = (todayCounts[p][t] || 0) + 1;
+      }
+    }
+    res.json({ ...data, todayCounts });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to read engagement actions' });
+  }
+});
+
+// POST /api/engagement-actions - add one or more items
+app.post('/api/engagement-actions', (req, res) => {
+  try {
+    const items = Array.isArray(req.body) ? req.body : [req.body];
+    const data = getEngagementActions();
+    const created = [];
+
+    for (const item of items) {
+      const { type, platform = 'twitter', targetUrl, targetAuthor, targetText = '', context = '', source = 'manual' } = item;
+      if (!type || !['repost', 'like', 'follow'].includes(type)) {
+        continue; // skip invalid
+      }
+      if (!targetUrl && type !== 'follow') continue;
+      if (!targetAuthor && type === 'follow') continue;
+
+      const newItem = {
+        id: `action-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        type,
+        platform,
+        targetUrl: targetUrl || `https://x.com/${(targetAuthor || '').replace(/^@/, '')}`,
+        targetAuthor: (targetAuthor || '').replace(/^@/, ''),
+        targetText,
+        context,
+        source,
+        status: 'ready',
+        createdAt: new Date().toISOString()
+      };
+
+      data.queue.push(newItem);
+      created.push(newItem);
+    }
+
+    saveEngagementActions(data);
+    res.json({ success: true, created: created.length, items: created });
+  } catch (error) {
+    console.error('Engagement action create error:', error);
+    res.status(500).json({ error: 'Failed to create engagement action' });
+  }
+});
+
+// POST /api/engagement-actions/:id/done - mark completed
+app.post('/api/engagement-actions/:id/done', (req, res) => {
+  try {
+    const data = getEngagementActions();
+    const idx = data.queue.findIndex(i => i.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Item not found' });
+
+    const item = data.queue.splice(idx, 1)[0];
+    item.status = 'completed';
+    item.completedAt = new Date().toISOString();
+    data.completed.unshift(item);
+
+    // If it's a follow, also log to follows tracker
+    if (item.type === 'follow') {
+      const followsData = getFollowsTracker();
+      const cleanHandle = (item.targetAuthor || '').replace(/^@/, '');
+      const exists = followsData.follows.find(f => f.handle.toLowerCase() === cleanHandle.toLowerCase() && f.platform === item.platform);
+      if (!exists) {
+        followsData.follows.push({
+          handle: cleanHandle,
+          platform: item.platform,
+          followedAt: item.completedAt,
+          source: item.source || 'engagement-queue',
+          context: item.context || item.targetText || ''
+        });
+        saveFollowsTracker(followsData);
+      }
+    }
+
+    saveEngagementActions(data);
+    res.json({ success: true, item });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to complete action' });
+  }
+});
+
+// DELETE /api/engagement-actions/:id
+app.delete('/api/engagement-actions/:id', (req, res) => {
+  try {
+    const data = getEngagementActions();
+    const idx = data.queue.findIndex(i => i.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Item not found' });
+    data.queue.splice(idx, 1);
+    saveEngagementActions(data);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete action' });
   }
 });
 
