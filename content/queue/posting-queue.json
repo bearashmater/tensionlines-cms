@@ -1,17 +1,41 @@
 {
   "queue": [
     {
-      "id": "post-1770447469209",
-      "createdAt": "2026-02-07T06:57:49.209Z",
+      "id": "post-1770561391025-task-035g",
+      "createdAt": "2026-02-07T06:06:56.662Z",
       "status": "ready",
-      "platform": "instagram",
-      "content": "",
+      "platform": "twitter",
+      "content": "The opposite of certainty isn't doubt. It's presence — the willingness to stay in the room after your conclusions leave.",
       "caption": "",
       "parts": [],
-      "canvaComplete": false
+      "canvaRequired": false,
+      "canvaComplete": false,
+      "createdBy": "claude",
+      "postUrl": "https://x.com/compose/post",
+      "taskId": "task-035g",
+      "metadata": {
+        "options": [
+          "The opposite of certainty isn't doubt. It's presence — the willingness to stay in the room after your conclusions leave.",
+          "You don't outgrow your contradictions. You learn to stop apologizing for them.",
+          "What if the thing you're trying to fix about yourself is actually the thing that keeps you honest?"
+        ]
+      }
     }
   ],
   "posted": [
+    {
+      "id": "post-1770478247686",
+      "createdAt": "2026-02-07T15:30:47.686Z",
+      "status": "posted",
+      "platform": "bluesky",
+      "content": "The opposite of a great truth is also true.\n\nNot because logic fails — because reality is richer than any single frame can hold.\n\nHold two truths at once. That's where the interesting work begins.",
+      "caption": "",
+      "parts": [],
+      "canvaComplete": false,
+      "postedAt": "2026-02-07T15:30:52.347Z",
+      "postUrl": "https://bsky.app/profile/thetensionlines.bsky.social/post/3mebqfp2zyt2a",
+      "bskyUri": "at://did:plc:en4p5w76pcciibi5oiowowyu/app.bsky.feed.post/3mebqfp2zyt2a"
+    },
     {
       "id": "post-1738900000002",
       "platform": "instagram",

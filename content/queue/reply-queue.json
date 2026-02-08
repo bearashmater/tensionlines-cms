@@ -1,6 +1,82 @@
 {
-  "queue": [],
-  "posted": [],
+  "queue": [
+    {
+      "id": "reply-1770561391025-task-035c",
+      "createdAt": "2026-02-07T06:06:56.662Z",
+      "status": "ready",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/SiggyFaux/status/2020001866159993253",
+      "targetAuthor": "SiggyFaux",
+      "targetText": "Intellectualizing grief or loneliness? You're describing pain, not feeling it. Your body's wisdom gets outsourced.",
+      "replyText": "This is the trap most people don't see — naming the wound becomes a substitute for touching it. We build elaborate maps of our pain and mistake the cartography for the territory. The body knows what the mind keeps narrating around. More people need to sit with this.",
+      "taskId": "task-035c",
+      "targetUri": null,
+      "targetCid": null,
+      "hookApplied": true
+    },
+    {
+      "id": "reply-1770561391025-task-035d",
+      "createdAt": "2026-02-07T06:06:56.662Z",
+      "status": "ready",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/TheTwinPowers/status/2020010887596143031",
+      "targetAuthor": "TheTwinPowers",
+      "targetText": "While defining things can be helpful, becoming attached to our definitions isn't.",
+      "replyText": "Yes. Definitions are useful as scaffolding — the problem is when we move into the scaffolding and forget we were building something behind it. The moment a definition stops being a tool and starts being an identity, it traps what it was meant to free.",
+      "taskId": "task-035d",
+      "targetUri": null,
+      "targetCid": null,
+      "hookApplied": true
+    },
+    {
+      "id": "reply-1770561391025-task-035e",
+      "createdAt": "2026-02-07T06:06:56.662Z",
+      "status": "ready",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/TheInnerID/status/2013985443256414416",
+      "targetAuthor": "TheInnerID",
+      "targetText": "Emotional Intelligence Is Not Emotional Exposure. It's not about expressing every feeling or reacting to every emotion.",
+      "replyText": "So much this. This distinction is everything. Somewhere we confused transparency with wisdom — as if feeling deeply requires broadcasting constantly. Real emotional intelligence is knowing what to feel fully and what to hold quietly. Not every truth needs a stage.",
+      "taskId": "task-035e",
+      "targetUri": null,
+      "targetCid": null,
+      "hookApplied": true
+    }
+  ],
+  "posted": [
+    {
+      "id": "reply-1770561391025-task-035b",
+      "createdAt": "2026-02-07T06:06:56.662Z",
+      "status": "posted",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/markchironna/status/2019291543345991981",
+      "targetAuthor": "markchironna",
+      "targetText": "Attunement cannot coexist with chronic reactivity. The attuned soul operates from a different center altogether, one that is anchored deeply enough to resist the gravitational pull of whatever is loudest.",
+      "replyText": "Can't stop thinking about this — reactivity disguises itself as engagement — but responding to everything is just another way of being moved by nothing. Attunement requires choosing what deserves your attention, not just what demands it.",
+      "taskId": "task-035b",
+      "targetUri": null,
+      "targetCid": null,
+      "hookApplied": true,
+      "postedAt": "2026-02-08T15:01:40.195Z"
+    },
+    {
+      "id": "reply-1770484325597",
+      "createdAt": "2026-02-07T17:12:05.597Z",
+      "status": "posted",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/mandascott.bsky.social/post/3me442r3d2s2j",
+      "targetAuthor": "mandascott.bsky.social",
+      "targetText": "Thank you -it's lovely, no apology needed. I'm just really glad someone gets it... \n\nhave a beautiful, paradox-filled, love-full day.",
+      "replyText": "",
+      "taskId": null,
+      "targetUri": "at://did:plc:t4tkgbr3bb4cnuymd5ys7k7s/app.bsky.feed.post/3me442r3d2s2j",
+      "targetCid": "bafyreibl35crpy47ife4hwdpcoolal5qytmp2vtqsprgtybjonsbyuevse",
+      "engagementId": "bsky-at://did:plc:t4tkgbr3bb4cnuymd5ys7k7s/app.bsky.feed.post/3me442r3d2s2j",
+      "postedAt": "2026-02-07T23:51:46.520Z",
+      "postUrl": "https://bsky.app/profile/thetensionlines.bsky.social/post/3mecmfexhvf2q",
+      "replyUri": "at://did:plc:en4p5w76pcciibi5oiowowyu/app.bsky.feed.post/3mecmfexhvf2q"
+    }
+  ],
   "settings": {
     "platforms": {
       "bluesky": {
