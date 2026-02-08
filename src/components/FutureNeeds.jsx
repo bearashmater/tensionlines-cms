@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import useSWR from 'swr'
-import { Compass, ChevronDown, ChevronUp, ThumbsUp, MessageSquare, Plus, X, FileText, TrendingUp, BarChart3, Zap, DollarSign, Shield, Clock, ArrowRight, CheckCircle2, Trophy } from 'lucide-react'
+import { Compass, ChevronDown, ChevronUp, ThumbsUp, MessageSquare, Plus, X, FileText, TrendingUp, BarChart3, Zap, DollarSign, Shield, Clock, ArrowLeft, ArrowRight, Pause, CheckCircle2, Trophy } from 'lucide-react'
 
 const fetcher = (url) => fetch(url).then(r => r.json())
 
@@ -316,15 +316,23 @@ function NeedCard({ need, expanded, onToggle, onStatusChange, onVote, onDelete, 
   const sta = STATUS_CONFIG[need.status] || STATUS_CONFIG.proposed
   const CatIcon = cat.icon
 
-  const statusActions = {
-    proposed: [{ label: 'Plan', target: 'planned' }, { label: 'Defer', target: 'deferred' }],
-    planned: [{ label: 'Start', target: 'in_progress' }, { label: 'Defer', target: 'deferred' }],
-    in_progress: [{ label: 'Defer', target: 'deferred' }],
-    completed: [{ label: 'Reopen', target: 'proposed' }],
-    deferred: [{ label: 'Reopen', target: 'proposed' }]
-  }
-
-  const actions = statusActions[need.status] || []
+  // Flow order: proposed(0) → planned(1) → in_progress(2) → completed(3), deferred is a sidestep
+  const flowIndex = { proposed: 0, planned: 1, in_progress: 2, completed: 3 }
+  const currentIndex = flowIndex[need.status] ?? -1
+  const allStatuses = [
+    { key: 'proposed', label: 'Proposed' },
+    { key: 'planned', label: 'Planned' },
+    { key: 'in_progress', label: 'In Progress' },
+    { key: 'completed', label: 'Completed' },
+    { key: 'deferred', label: 'Deferred' }
+  ]
+  const actions = allStatuses.filter(s => s.key !== need.status).map(s => {
+    const targetIndex = flowIndex[s.key] ?? -1
+    let direction = 'forward' // default
+    if (s.key === 'deferred') direction = 'sidestep'
+    else if (targetIndex < currentIndex) direction = 'backward'
+    return { ...s, direction }
+  })
 
   return (
     <div className={`bg-white rounded-lg border transition-all ${expanded ? 'border-neutral-300 shadow-md' : 'border-neutral-200 hover:border-neutral-300'}`}>
@@ -405,23 +413,19 @@ function NeedCard({ need, expanded, onToggle, onStatusChange, onVote, onDelete, 
 
           {/* Status Actions */}
           <div className="flex items-center gap-2 flex-wrap">
-            {need.status !== 'completed' && (
-              <button
-                onClick={() => onStatusChange(need.id, 'completed')}
-                className="px-3 py-1 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1"
-              >
-                <CheckCircle2 size={14} /> Complete
-              </button>
-            )}
-            {actions.map(a => (
-              <button
-                key={a.target}
-                onClick={() => onStatusChange(need.id, a.target)}
-                className="px-3 py-1 text-sm border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors flex items-center gap-1"
-              >
-                <ArrowRight size={14} /> {a.label}
-              </button>
-            ))}
+            <span className="text-xs font-semibold text-neutral-500 uppercase">Move to:</span>
+            {actions.map(a => {
+              const Icon = a.direction === 'backward' ? ArrowLeft : a.direction === 'sidestep' ? Pause : ArrowRight
+              return (
+                <button
+                  key={a.key}
+                  onClick={() => onStatusChange(need.id, a.key)}
+                  className="px-3 py-1 text-sm border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors flex items-center gap-1"
+                >
+                  <Icon size={14} /> {a.label}
+                </button>
+              )
+            })}
             <button
               onClick={() => onDelete(need.id)}
               className="px-3 py-1 text-sm border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors ml-auto"

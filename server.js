@@ -8641,6 +8641,246 @@ cron.schedule('0 7 * * 1', () => {
 }, { timezone: 'America/Los_Angeles' });
 console.log('[Cron] Weekly report generation scheduled for Monday 7:00 AM PST');
 
+// Weekly project review — every Sunday at 10 PM PST
+// Tension reviews the entire project for security vulnerabilities and product enhancements,
+// then adds ideas to the "Proposed" section of the Future Needs roadmap.
+async function weeklyProjectReview() {
+  console.log('[Cron] Starting weekly project review...');
+
+  const anthropic = getAnthropicClient();
+  if (!anthropic) {
+    console.log('[Cron] Weekly review skipped — no Anthropic API key');
+    return;
+  }
+
+  // Cost gate (shares daily cap with debug system)
+  const today = new Date().toISOString().slice(0, 10);
+  if (debugCostToday.date !== today) {
+    debugCostToday = { date: today, cost: 0.0 };
+  }
+  if (debugCostToday.cost >= 10.0) {
+    console.log(`[Cron] Weekly review skipped — daily cost cap reached ($${debugCostToday.cost.toFixed(2)})`);
+    return;
+  }
+
+  try {
+    // Gather project context
+    const mc = getMissionControl();
+    const futureNeeds = getFutureNeeds();
+    const pkg = JSON.parse(fs.readFileSync(path.join(BASE_DIR, 'cms/package.json'), 'utf8'));
+
+    // Route summary — extract all endpoint definitions
+    const serverCode = fs.readFileSync(path.join(BASE_DIR, 'cms/server.js'), 'utf8');
+    const routeLines = serverCode.split('\n')
+      .map((line, i) => ({ line: line.trim(), num: i + 1 }))
+      .filter(({ line }) => /^app\.(get|post|put|patch|delete)\(/.test(line))
+      .map(({ line, num }) => {
+        const match = line.match(/app\.(get|post|put|patch|delete)\(['"]([^'"]+)['"]/);
+        return match ? `${match[1].toUpperCase()} ${match[2]}` : null;
+      })
+      .filter(Boolean);
+
+    // Agent summary
+    const agents = (mc.agents || []).map(a => `${a.name} (${a.id}) — ${a.role || 'philosopher'}`).join('\n');
+
+    // Task summary
+    const tasksByStatus = {};
+    (mc.tasks || []).forEach(t => {
+      tasksByStatus[t.status] = (tasksByStatus[t.status] || 0) + 1;
+    });
+    const taskSummary = Object.entries(tasksByStatus).map(([s, c]) => `${s}: ${c}`).join(', ');
+
+    // Existing future needs titles (for dedup)
+    const existingTitles = (futureNeeds.needs || []).map(n => n.title);
+
+    // File structure summary
+    const dirs = ['cms/src/components', 'cms/src/lib', 'philosophers', 'mission-control', 'content', 'content/queue', 'books'];
+    const fileStructure = dirs.map(d => {
+      const fullPath = path.join(BASE_DIR, d);
+      try {
+        const files = fs.readdirSync(fullPath).filter(f => !f.startsWith('.'));
+        return `${d}/: ${files.join(', ')}`;
+      } catch { return `${d}/: (not found)`; }
+    }).join('\n');
+
+    // Dependencies
+    const deps = Object.entries(pkg.dependencies || {}).map(([k, v]) => `${k}@${v}`).join(', ');
+
+    const userMessage = `You are Tension, the AI orchestrator for TensionLines — a philosophy brand with 10 philosopher agents, a Node.js/React CMS, and multi-platform social media presence.
+
+Review this project for:
+1. **Security vulnerabilities** — authentication gaps, injection risks, data exposure, dependency issues, API security, file system risks
+2. **Product/feature enhancements** — UX improvements, automation opportunities, new capabilities, performance optimizations, content pipeline improvements
+
+PROJECT CONTEXT:
+
+**Dependencies:** ${deps}
+
+**API Endpoints (${routeLines.length} total):**
+${routeLines.join('\n')}
+
+**File Structure:**
+${fileStructure}
+
+**Agents:**
+${agents}
+
+**Tasks:** ${taskSummary}
+
+**Existing Future Needs (DO NOT duplicate these):**
+${existingTitles.map(t => `- ${t}`).join('\n') || '(none)'}
+
+Respond with a JSON array of new proposed items. Each item should have:
+- "title": concise title (max 80 chars)
+- "description": 1-2 sentence explanation
+- "category": one of [content, growth, analytics, infrastructure, monetization, governance]
+- "priority": one of [high, medium, low]
+- "effort": one of [small, medium, large]
+- "type": "security" or "enhancement"
+
+Rules:
+- Return 3-8 items total (mix of security and enhancements)
+- Do NOT duplicate any existing future needs
+- Focus on actionable, specific improvements (not vague wishes)
+- Prioritize security issues as "high" priority
+- Return ONLY the JSON array, no other text`;
+
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 4096,
+      system: 'You are a senior security auditor and product strategist reviewing an AI-powered content management system. Respond only with valid JSON.',
+      messages: [{ role: 'user', content: userMessage }]
+    });
+
+    // Track cost
+    const inputTokens = response.usage?.input_tokens || 0;
+    const outputTokens = response.usage?.output_tokens || 0;
+    const callCost = (inputTokens * 3 / 1_000_000) + (outputTokens * 15 / 1_000_000);
+    debugCostToday.cost += callCost;
+    console.log(`[Cron] Weekly review API call — cost: $${callCost.toFixed(4)} (daily total: $${debugCostToday.cost.toFixed(2)})`);
+
+    // Parse response
+    const text = response.content[0]?.text || '';
+    let items;
+    try {
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      items = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch {
+      console.error('[Cron] Weekly review — failed to parse response:', text.slice(0, 200));
+      return;
+    }
+
+    if (!Array.isArray(items) || items.length === 0) {
+      console.log('[Cron] Weekly review — no new items proposed');
+      return;
+    }
+
+    // Dedup against existing titles (case-insensitive)
+    const existingLower = existingTitles.map(t => t.toLowerCase());
+    const newItems = items.filter(item =>
+      item.title && !existingLower.includes(item.title.toLowerCase())
+    );
+
+    if (newItems.length === 0) {
+      console.log('[Cron] Weekly review — all items already exist, nothing to add');
+      return;
+    }
+
+    // Add to future needs
+    const data = getFutureNeeds();
+    const maxNum = data.needs.reduce((max, n) => {
+      const num = parseInt(n.id.replace('need-', ''));
+      return num > max ? num : max;
+    }, 0);
+
+    let addedCount = 0;
+    newItems.forEach((item, i) => {
+      // Validate fields
+      const category = VALID_NEED_CATEGORIES.includes(item.category) ? item.category : 'infrastructure';
+      const priority = VALID_NEED_PRIORITIES.includes(item.priority) ? item.priority : 'medium';
+      const effort = VALID_NEED_EFFORTS.includes(item.effort) ? item.effort : 'medium';
+
+      const newNeed = {
+        id: `need-${String(maxNum + 1 + i).padStart(3, '0')}`,
+        title: String(item.title).slice(0, 120),
+        description: String(item.description || '').slice(0, 500),
+        useCase: item.type === 'security' ? 'Security hardening identified by weekly automated review' : 'Enhancement identified by weekly automated review',
+        category,
+        priority,
+        effort,
+        status: 'proposed',
+        proposedBy: 'tension',
+        proposedAt: new Date().toISOString(),
+        targetQuarter: '',
+        agents: [],
+        dependencies: [],
+        acceptanceCriteria: [],
+        votes: 0,
+        voters: [],
+        comments: [],
+        updatedAt: new Date().toISOString()
+      };
+
+      data.needs.push(newNeed);
+      addedCount++;
+    });
+
+    saveFutureNeeds(data);
+
+    // Create notification
+    const mcData = getMissionControl();
+    const secCount = newItems.filter(i => i.type === 'security').length;
+    const enhCount = newItems.filter(i => i.type === 'enhancement').length;
+    mcData.notifications.push({
+      id: `notif-review-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: 'weekly_review',
+      title: `Weekly Project Review: ${addedCount} new proposals`,
+      message: `Tension's weekly review found ${secCount} security item${secCount !== 1 ? 's' : ''} and ${enhCount} enhancement${enhCount !== 1 ? 's' : ''}. Check the Future Needs roadmap for details.`,
+      from: 'tension',
+      to: ['shawn'],
+      createdAt: new Date().toISOString(),
+      read: false,
+      priority: secCount > 0 ? 'high' : 'normal',
+      actionRequired: false,
+      metadata: { itemCount: addedCount, securityCount: secCount, enhancementCount: enhCount }
+    });
+
+    // Log activity
+    mcData.activities.unshift({
+      id: `activity-${Date.now()}`,
+      type: 'weekly_review',
+      agentId: 'tension',
+      timestamp: new Date().toISOString(),
+      description: `Weekly project review: added ${addedCount} proposed items (${secCount} security, ${enhCount} enhancements)`,
+      metadata: { cost: callCost, itemCount: addedCount }
+    });
+
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mcData, null, 2));
+    cache.missionControl = null;
+
+    console.log(`[Cron] Weekly review complete — added ${addedCount} items (${secCount} security, ${enhCount} enhancements), cost: $${callCost.toFixed(4)}`);
+  } catch (err) {
+    console.error('[Cron] Weekly project review failed:', err.message);
+  }
+}
+
+// Sunday at 10 PM PST — after all daily jobs, well before Monday's midnight reset
+cron.schedule('0 22 * * 0', () => {
+  weeklyProjectReview();
+}, { timezone: 'America/Los_Angeles' });
+console.log('[Cron] Weekly project review scheduled for Sunday 10:00 PM PST');
+
+// Manual trigger endpoint
+app.post('/api/weekly-review', async (req, res) => {
+  try {
+    const result = await weeklyProjectReview();
+    res.json({ success: true, message: 'Weekly review triggered' });
+  } catch (error) {
+    console.error('Weekly review error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ============================================================================
 // OPTIMIZATION API ENDPOINTS
 // ============================================================================
