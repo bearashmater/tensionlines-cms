@@ -358,7 +358,7 @@ function NeedCard({ need, expanded, onToggle, onStatusChange, onVote, onDelete, 
             </span>
             <span className={`px-2 py-0.5 rounded text-xs font-medium ${sta.color}`}>{sta.label}</span>
           </div>
-          <h3 className="font-semibold text-black truncate">{need.title}</h3>
+          <h3 className="font-semibold text-black truncate">{need.title} <span className="text-neutral-400 font-mono text-xs ml-1.5">{need.id}</span></h3>
           <p className="text-sm text-neutral-500 truncate">{need.description}</p>
         </div>
 
