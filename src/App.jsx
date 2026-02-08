@@ -220,15 +220,17 @@ function Sidebar({ location, onClose, showCloseButton = false }) {
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        const [posting, replies, comments] = await Promise.all([
+        const [posting, replies, comments, engagement] = await Promise.all([
           fetch('/api/posting-queue').then(r => r.json()).catch(() => null),
           fetch('/api/reply-queue').then(r => r.json()).catch(() => null),
-          fetch('/api/comment-queue').then(r => r.json()).catch(() => null)
+          fetch('/api/comment-queue').then(r => r.json()).catch(() => null),
+          fetch('/api/engagement-actions').then(r => r.json()).catch(() => null)
         ])
         setQueueCounts({
           '/posting-queue': posting?.queue?.filter(i => i.status === 'ready' || i.status === 'scheduled')?.length || 0,
           '/reply-queue': replies?.queue?.length || 0,
-          '/comments': comments?.queue?.filter(i => i.status === 'ready')?.length || 0
+          '/comments': comments?.queue?.filter(i => i.status === 'ready')?.length || 0,
+          '/engagement': engagement?.queue?.length || 0
         })
       } catch (e) { /* silent */ }
     }
