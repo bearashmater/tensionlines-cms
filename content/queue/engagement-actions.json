@@ -1,5 +1,78 @@
 {
-  "queue": [],
+  "queue": [
+    {
+      "id": "action-1770568493272-8hqr",
+      "type": "like",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/dataworkersinquiry.bsky.social/post/3me7einbgwc2f",
+      "targetAuthor": "dataworkersinquiry.bsky.social",
+      "targetText": "🚨NEW INQUIRY! - Behind the Face of AI🚨\n\nIn this short comic, two data workers describe their work impersonating an “AI” chatbot for a major social media platform. Sleepless nights, penalties for sounding “too human,” and emotional drain are just a few of the job hazards. \n\n➡️ data-workers.org/fran",
+      "context": "Reveals hidden human labor behind 'AI'—exposes the tension between tech mythology and reality",
+      "source": "auto-scan",
+      "status": "ready",
+      "createdAt": "2026-02-08T16:34:53.272Z"
+    },
+    {
+      "id": "action-1770568493272-326q",
+      "type": "repost",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/roamingdruid.bsky.social/post/3me7qngmjfk2l",
+      "targetAuthor": "roamingdruid.bsky.social",
+      "targetText": "A hallmark of emotional intelligence, is discernment. I wanna be clear though, emotional intelligence isn’t just understanding others. It’s about knowing when to stop making excuses for them. Just because you can empathize with someone’s behavior, doesn’t mean you have to keep tolerating it.",
+      "context": "Perfect TensionLines content: emotional intelligence as boundary-setting, empathy vs tolerance paradox, practical wisdom",
+      "source": "auto-scan",
+      "status": "ready",
+      "createdAt": "2026-02-08T16:34:53.272Z"
+    },
+    {
+      "id": "action-1770568493272-suq5",
+      "type": "follow",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/roamingdruid.bsky.social",
+      "targetAuthor": "roamingdruid.bsky.social",
+      "targetText": "A hallmark of emotional intelligence, is discernment. I wanna be clear though, emotional intelligence isn’t just understanding others. It’s about knowing when to stop making excuses for them. Just because you can empathize with someone’s behavior, doesn’t mean you have to keep tolerating it.",
+      "context": "Author consistently explores emotional intelligence nuances—genuine voice in our space",
+      "source": "auto-scan",
+      "status": "ready",
+      "createdAt": "2026-02-08T16:34:53.272Z"
+    },
+    {
+      "id": "action-1770568493272-u9gh",
+      "type": "like",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/nondairycanary.bsky.social/post/3mea5be5gmc2o",
+      "targetAuthor": "nondairycanary.bsky.social",
+      "targetText": "It's always the same. Unbelievably lazy, derived from minimal thought and hoary old stereotypes, yet presented as the consequence of a rare and profound self-knowledge.\n\nIt's like those people who proudly declare, 'I don't believe in the old man with a beard, but I am a very spiritual person.'",
+      "context": "Sharp critique of lazy self-knowledge claims—calls out performative spirituality vs genuine insight",
+      "source": "auto-scan",
+      "status": "ready",
+      "createdAt": "2026-02-08T16:34:53.272Z"
+    },
+    {
+      "id": "action-1770568493272-5ine",
+      "type": "like",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/bluelabyrinths.bsky.social/post/3meawpezqbm2h",
+      "targetAuthor": "bluelabyrinths.bsky.social",
+      "targetText": "\"To Deleuze, Stoicism was a philosophy that emphasised the importance of life. 'A life' is made up of intensive moments and events, but it can never be separated from the immanence of nature itself.\" bluelabyrinths.com/2020/10/25/g...",
+      "context": "Stoicism and immanence—philosophy-meets-life, intensity and events, relevant to our themes",
+      "source": "auto-scan",
+      "status": "ready",
+      "createdAt": "2026-02-08T16:34:53.272Z"
+    },
+    {
+      "id": "action-1770568493272-uk6a",
+      "type": "like",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/bullix.bsky.social/post/3meaztopmzk2y",
+      "targetAuthor": "bullix.bsky.social",
+      "targetText": "Same here. I think a lot of these AI proponents on these threads have the energy of “deploy it and figure it out as we go.”\n\nI make medication for a living. That philosophy would have made me a murderer for following it.\n\nLife-critical technologies are NOT a place to cut safety margins. Ever.",
+      "context": "Stakes of 'move fast and break things' philosophy—tension between innovation and responsibility in life-critical contexts",
+      "source": "auto-scan",
+      "status": "ready",
+      "createdAt": "2026-02-08T16:34:53.272Z"
+    }
+  ],
   "completed": [],
   "settings": {
     "platforms": {
