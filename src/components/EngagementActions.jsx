@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import { fetcher } from '../lib/api'
 import {
@@ -8,6 +8,8 @@ import {
   ExternalLink,
   AlertTriangle,
   X,
+  Cloud,
+  CloudOff,
   RefreshCw,
   Copy,
   Heart,
@@ -43,9 +45,22 @@ export default function EngagementActions() {
   const [activeTab, setActiveTab] = useState('queue')
   const [scanning, setScanning] = useState(false)
   const [scanResult, setScanResult] = useState(null)
+  const [bskyStatus, setBskyStatus] = useState(null)
+  const [twitterStatus, setTwitterStatus] = useState(null)
   const { data, error, isLoading, mutate } = useSWR('/api/engagement-actions', fetcher, {
     refreshInterval: 30000
   })
+
+  useEffect(() => {
+    fetch('/api/bluesky/status')
+      .then(r => r.json())
+      .then(setBskyStatus)
+      .catch(() => setBskyStatus({ connected: false }))
+    fetch('/api/twitter/status')
+      .then(r => r.json())
+      .then(setTwitterStatus)
+      .catch(() => setTwitterStatus({ connected: false }))
+  }, [])
 
   if (error) {
     return (
@@ -75,7 +90,29 @@ export default function EngagementActions() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-serif font-bold text-black">Engagement</h1>
-          <p className="text-neutral-600 mt-1">Reposts, likes & follows</p>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-neutral-600">Reposts, likes & follows</p>
+            {bskyStatus && (
+              <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
+                bskyStatus.connected
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'bg-red-50 text-red-600'
+              }`}>
+                {bskyStatus.connected ? <Cloud size={12} /> : <CloudOff size={12} />}
+                Bluesky {bskyStatus.connected ? 'connected' : 'disconnected'}
+              </span>
+            )}
+            {twitterStatus && (
+              <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
+                twitterStatus.connected
+                  ? 'bg-neutral-100 text-neutral-700'
+                  : 'bg-red-50 text-red-600'
+              }`}>
+                {twitterStatus.connected ? <Cloud size={12} /> : <CloudOff size={12} />}
+                Twitter {twitterStatus.connected ? 'connected' : 'disconnected'}
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button

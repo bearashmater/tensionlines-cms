@@ -3141,6 +3141,19 @@ app.get('/api/bluesky/status', async (req, res) => {
   }
 });
 
+app.get('/api/twitter/status', (req, res) => {
+  try {
+    const raw = execSync(`/opt/homebrew/bin/bird whoami 2>/dev/null`, { timeout: 5000, encoding: 'utf-8' });
+    // First line is like "🙋 @thetensionlines (Shawn Brown)"
+    const firstLine = raw.trim().split('\n')[0] || '';
+    const handleMatch = firstLine.match(/@(\w+)/);
+    const handle = handleMatch ? handleMatch[1] : 'thetensionlines';
+    res.json({ connected: true, handle });
+  } catch (error) {
+    res.json({ connected: false, error: error.message });
+  }
+});
+
 // ============================================================================
 // CONTENT REPURPOSING ENGINE
 // ============================================================================
