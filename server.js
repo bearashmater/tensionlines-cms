@@ -9563,6 +9563,17 @@ app.post('/api/engagement-actions', (req, res) => {
   }
 });
 
+// POST /api/engagement-actions/scan - manual trigger (must be before :id routes)
+app.post('/api/engagement-actions/scan', async (req, res) => {
+  try {
+    const result = await scanForEngagementTargets();
+    res.json(result);
+  } catch (error) {
+    console.error('[EngagementScan] Manual scan error:', error);
+    res.status(500).json({ error: 'Scan failed', details: error.message });
+  }
+});
+
 // POST /api/engagement-actions/:id/done - mark completed
 app.post('/api/engagement-actions/:id/done', (req, res) => {
   try {
@@ -9612,6 +9623,228 @@ app.delete('/api/engagement-actions/:id', (req, res) => {
     res.status(500).json({ error: 'Failed to delete action' });
   }
 });
+
+// ============================================================================
+// ENGAGEMENT SCANNER (auto-find posts to repost, like, and accounts to follow)
+// ============================================================================
+
+const ENGAGEMENT_SCAN_KEYWORDS = [
+  'philosophy of life', 'self-knowledge', 'emotional intelligence',
+  'personal growth wisdom', 'stoic wisdom', 'existential truth',
+  'paradox of life', 'know thyself', 'inner work'
+];
+
+async function scanForEngagementTargets() {
+  console.log('[EngagementScan] Starting scan for engagement targets...');
+  const data = getEngagementActions();
+  const followsData = getFollowsTracker();
+
+  // Build dedup sets from queue + completed + follows
+  const existingUrls = new Set([
+    ...data.queue.map(i => i.targetUrl),
+    ...data.completed.map(i => i.targetUrl)
+  ]);
+  const existingFollows = new Set(
+    followsData.follows.map(f => f.handle.toLowerCase())
+  );
+  // Also check reply queue and comment queue to avoid overlap
+  const replyData = getReplyQueue();
+  const commentData = getCommentQueue();
+  for (const item of [...replyData.queue, ...replyData.posted]) {
+    if (item.targetUrl) existingUrls.add(item.targetUrl);
+  }
+  for (const item of [...commentData.queue, ...commentData.posted]) {
+    if (item.targetUrl) existingUrls.add(item.targetUrl);
+  }
+
+  const candidates = [];
+  const now = new Date();
+  const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+
+  // --- Bluesky scan ---
+  try {
+    const agent = await getBskyAgent();
+    const bskyKeywords = ENGAGEMENT_SCAN_KEYWORDS.slice(0, 4);
+    for (const keyword of bskyKeywords) {
+      try {
+        const searchRes = await agent.app.bsky.feed.searchPosts({
+          q: keyword,
+          limit: 20,
+          sort: 'top'
+        });
+        for (const post of (searchRes.data?.posts || [])) {
+          const rkey = post.uri.split('/').pop();
+          const postUrl = `https://bsky.app/profile/${post.author.handle}/post/${rkey}`;
+          if (post.author.handle === process.env.BLUESKY_HANDLE) continue;
+          if (existingUrls.has(postUrl)) continue;
+          const postDate = new Date(post.record?.createdAt || post.indexedAt);
+          if (postDate < twoDaysAgo) continue;
+
+          const score = (post.likeCount || 0) + ((post.replyCount || 0) * 2) + (post.repostCount || 0);
+          candidates.push({
+            platform: 'bluesky',
+            url: postUrl,
+            author: post.author.handle,
+            authorFollowers: post.author.followersCount || 0,
+            text: (post.record?.text || '').slice(0, 300),
+            score,
+            likes: post.likeCount || 0,
+            reposts: post.repostCount || 0,
+            uri: post.uri,
+            cid: post.cid
+          });
+          existingUrls.add(postUrl);
+        }
+      } catch (err) {
+        console.error(`[EngagementScan] Bluesky search "${keyword}" failed:`, err.message);
+      }
+    }
+  } catch (err) {
+    console.error('[EngagementScan] Bluesky agent error:', err.message);
+  }
+
+  // --- Twitter scan via Bird CLI ---
+  try {
+    const twitterQueries = ENGAGEMENT_SCAN_KEYWORDS.slice(0, 3);
+    for (const query of twitterQueries) {
+      try {
+        const raw = execSync(`${BIRD_CLI} search "${query}" -n 10 --json`, {
+          timeout: 15000,
+          encoding: 'utf-8'
+        });
+        const tweets = JSON.parse(raw);
+        for (const tweet of tweets) {
+          const tweetUrl = `https://x.com/${tweet.author?.username}/status/${tweet.id}`;
+          if (existingUrls.has(tweetUrl)) continue;
+          // Skip replies and our own tweets
+          if (tweet.inReplyToStatusId) continue;
+          if (tweet.author?.username?.toLowerCase() === 'thetensionlines') continue;
+
+          const score = (tweet.likeCount || 0) + ((tweet.replyCount || 0) * 2) + (tweet.retweetCount || 0);
+          candidates.push({
+            platform: 'twitter',
+            url: tweetUrl,
+            author: tweet.author?.username || '',
+            authorFollowers: 0,
+            text: (tweet.text || '').slice(0, 300),
+            score,
+            likes: tweet.likeCount || 0,
+            reposts: tweet.retweetCount || 0
+          });
+          existingUrls.add(tweetUrl);
+        }
+      } catch (err) {
+        console.error(`[EngagementScan] Twitter search "${query}" failed:`, err.message);
+      }
+    }
+  } catch (err) {
+    console.error('[EngagementScan] Bird CLI error:', err.message);
+  }
+
+  if (candidates.length === 0) {
+    console.log('[EngagementScan] No candidates found');
+    return { success: true, added: 0 };
+  }
+
+  // Sort by score and take top 20 for Claude to evaluate
+  candidates.sort((a, b) => b.score - a.score);
+  const topCandidates = candidates.slice(0, 20);
+
+  // --- Use Claude to pick the best engagement actions ---
+  let picks = [];
+  try {
+    const anthropic = getAnthropicClient();
+    const candidateList = topCandidates.map((c, i) =>
+      `[${i}] @${c.author} (${c.platform}) — score:${c.score}, likes:${c.likes}\n"${c.text}"`
+    ).join('\n\n');
+
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 1000,
+      system: `You are the engagement strategist for TensionLines, a philosophy-meets-real-life brand. Your job is to pick posts worth engaging with.
+
+Criteria:
+- REPOST: High-quality, original thought that aligns with our themes (tension, paradox, self-knowledge, emotional intelligence, growth). Must be something our audience would value. Pick 1-2 max.
+- LIKE: Good content, relevant to our space, shows the author we notice them. Pick 3-5.
+- FOLLOW: Author creates consistently interesting content in our niche. Only recommend if they seem like a genuine voice (not a bot, not a mega-influencer). Pick 1-2 max.
+
+Skip anything low-effort, spammy, overly promotional, or off-brand. Quality over quantity.`,
+      messages: [{
+        role: 'user',
+        content: `Here are today's candidate posts. For each one you recommend, respond with a JSON array of objects:
+{"index": 0, "action": "repost|like|follow", "reason": "brief reason"}
+
+Only include posts worth engaging with. Be selective.
+
+${candidateList}`
+      }]
+    });
+
+    const text = response.content[0]?.text || '';
+    // Extract JSON array from response
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      picks = JSON.parse(jsonMatch[0]);
+    }
+  } catch (err) {
+    console.error('[EngagementScan] Claude evaluation failed:', err.message);
+    // Fallback: simple heuristic — top 3 by score get liked
+    picks = topCandidates.slice(0, 3).map((_, i) => ({ index: i, action: 'like', reason: 'High engagement score' }));
+  }
+
+  // --- Add picks to the engagement actions queue ---
+  let added = 0;
+  const today = new Date().toISOString().slice(0, 10);
+  const todayCompleted = data.completed.filter(i => i.completedAt?.startsWith(today)).length;
+  const todayQueued = data.queue.length;
+  const maxNew = Math.max(0, 15 - todayQueued - todayCompleted); // Cap total at 15/day
+
+  for (const pick of picks.slice(0, maxNew)) {
+    const candidate = topCandidates[pick.index];
+    if (!candidate) continue;
+
+    // Skip follows for people we already follow
+    if (pick.action === 'follow' && existingFollows.has(candidate.author.toLowerCase())) continue;
+
+    const item = {
+      id: `action-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      type: pick.action,
+      platform: candidate.platform,
+      targetUrl: pick.action === 'follow'
+        ? (candidate.platform === 'twitter'
+          ? `https://x.com/${candidate.author}`
+          : `https://bsky.app/profile/${candidate.author}`)
+        : candidate.url,
+      targetAuthor: candidate.author,
+      targetText: candidate.text,
+      context: pick.reason || '',
+      source: 'auto-scan',
+      status: 'ready',
+      createdAt: new Date().toISOString()
+    };
+
+    data.queue.push(item);
+    added++;
+  }
+
+  if (added > 0) {
+    saveEngagementActions(data);
+    broadcast('engagement-actions');
+  }
+
+  console.log(`[EngagementScan] Done: evaluated ${topCandidates.length} candidates, queued ${added} actions`);
+  return { success: true, evaluated: topCandidates.length, added };
+}
+
+// Cron: 3x daily at 11 AM, 3 PM, 7 PM PST (offset from comment scan)
+cron.schedule('0 11,15,19 * * *', async () => {
+  try {
+    await scanForEngagementTargets();
+  } catch (e) {
+    console.error('[EngagementScan] Scheduled scan failed:', e.message);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[EngagementScan] Scheduled: 11 AM, 3 PM, 7 PM PST daily');
 
 // ============================================================================
 // START SERVER

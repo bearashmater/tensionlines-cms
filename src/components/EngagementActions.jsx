@@ -41,6 +41,8 @@ const TYPE_CONFIG = {
 export default function EngagementActions() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [activeTab, setActiveTab] = useState('queue')
+  const [scanning, setScanning] = useState(false)
+  const [scanResult, setScanResult] = useState(null)
   const { data, error, isLoading, mutate } = useSWR('/api/engagement-actions', fetcher, {
     refreshInterval: 30000
   })
@@ -75,13 +77,35 @@ export default function EngagementActions() {
           <h1 className="text-3xl font-serif font-bold text-black">Engagement</h1>
           <p className="text-neutral-600 mt-1">Reposts, likes & follows</p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gold text-white rounded-lg hover:bg-amber-600"
-        >
-          <Plus size={20} />
-          Add Action
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={async () => {
+              setScanning(true)
+              setScanResult(null)
+              try {
+                const res = await fetch('/api/engagement-actions/scan', { method: 'POST' })
+                const result = await res.json()
+                setScanResult(result)
+                mutate()
+              } catch (err) {
+                setScanResult({ success: false, error: err.message })
+              }
+              setScanning(false)
+            }}
+            disabled={scanning}
+            className="flex items-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50"
+          >
+            <RefreshCw size={20} className={scanning ? 'animate-spin' : ''} />
+            {scanning ? 'Scanning...' : 'Scan Now'}
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gold text-white rounded-lg hover:bg-amber-600"
+          >
+            <Plus size={20} />
+            Add Action
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -108,6 +132,25 @@ export default function EngagementActions() {
           )
         })}
       </div>
+
+      {/* Scan Result */}
+      {scanResult && (
+        <div className={`p-3 rounded-lg text-sm ${
+          scanResult.success ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+        }`}>
+          {scanResult.success ? (
+            <span className="flex items-center gap-2">
+              <CheckCircle size={14} />
+              Scan complete — evaluated {scanResult.evaluated || 0} posts, added {scanResult.added || 0} actions to queue
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              <AlertTriangle size={14} />
+              {scanResult.error || 'Scan failed'}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex border-b border-neutral-200">
