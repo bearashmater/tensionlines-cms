@@ -200,7 +200,7 @@
       "category": "growth",
       "priority": "low",
       "effort": "large",
-      "status": "in_progress",
+      "status": "completed",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q3-2026",
@@ -219,7 +219,8 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-08T04:31:22.024Z"
+      "updatedAt": "2026-02-08T05:04:08.209Z",
+      "completedAt": "2026-02-08T05:04:08.209Z"
     },
     {
       "id": "need-009",
@@ -260,7 +261,8 @@
       "category": "analytics",
       "priority": "low",
       "effort": "medium",
-      "status": "proposed",
+      "status": "completed",
+      "completedAt": "2026-02-08T05:20:00.000Z",
       "proposedBy": "claude",
       "proposedAt": "2026-02-07T00:00:00.000Z",
       "targetQuarter": "Q2-2026",
@@ -539,12 +541,17 @@
       "category": "analytics",
       "priority": "medium",
       "effort": "medium",
-      "status": "in_progress",
+      "status": "completed",
       "proposedBy": "claude",
       "proposedAt": "2026-02-08T05:00:00.000Z",
       "targetQuarter": "Q3-2026",
-      "agents": ["aristotle", "marcus"],
-      "dependencies": ["need-007"],
+      "agents": [
+        "aristotle",
+        "marcus"
+      ],
+      "dependencies": [
+        "need-007"
+      ],
       "acceptanceCriteria": [
         "Audience segments defined by engagement patterns and topic interest",
         "Content recommendations per segment via Haiku",
@@ -553,7 +560,8 @@
       "votes": 0,
       "voters": [],
       "comments": [],
-      "updatedAt": "2026-02-08T05:00:00.000Z"
+      "updatedAt": "2026-02-08T05:04:04.807Z",
+      "completedAt": "2026-02-08T05:04:04.807Z"
     }
   ],
   "categories": {
@@ -592,9 +600,9 @@
     "total": 19,
     "byStatus": {
       "proposed": 5,
-      "planned": 1,
-      "in_progress": 1,
-      "completed": 11,
+      "planned": 0,
+      "in_progress": 0,
+      "completed": 13,
       "deferred": 1
     },
     "byPriority": {
@@ -602,6 +610,6 @@
       "medium": 8,
       "low": 5
     },
-    "lastUpdated": "2026-02-08T05:00:00.000Z"
+    "lastUpdated": "2026-02-08T05:04:08.209Z"
   }
 }
