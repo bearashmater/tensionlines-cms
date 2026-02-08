@@ -1,7 +1,8 @@
 import useSWR from 'swr'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Bell, Check, CheckCheck, Filter, Clock, AlertTriangle, MessageSquare, User, ChevronDown, ChevronUp, X, Lightbulb, DollarSign, BarChart3, ListTodo, UserCheck } from 'lucide-react'
+import { Bell, Check, CheckCheck, Filter, Clock, AlertTriangle, MessageSquare, MessageSquareReply, User, ChevronDown, ChevronUp, X, Lightbulb, DollarSign, BarChart3, ListTodo, UserCheck, AtSign, ExternalLink } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 export default function NotificationsView() {
   const [filter, setFilter] = useState('unread') // 'all' | 'unread'
@@ -149,6 +150,8 @@ function NotificationCard({ notification, expanded, onToggle, onMarkRead }) {
     backend_ready: <Check size={18} />,
     stuck_task_alert: <AlertTriangle size={18} />,
     message: <MessageSquare size={18} />,
+    engagement_reply: <MessageSquareReply size={18} />,
+    engagement_mention: <AtSign size={18} />,
     default: <Bell size={18} />
   }
 
@@ -267,6 +270,11 @@ function NotificationCard({ notification, expanded, onToggle, onMarkRead }) {
                     </div>
                   )}
                 </div>
+              )}
+
+              {/* Engagement Actions */}
+              {(type === 'engagement_reply' || type === 'engagement_mention') && metadata && (
+                <EngagementActions metadata={metadata} />
               )}
 
               {/* Read Status */}
@@ -470,6 +478,54 @@ function BriefingMessage({ metadata }) {
           )}
         </div>
       ))}
+    </div>
+  )
+}
+
+function EngagementActions({ metadata }) {
+  const navigate = useNavigate()
+  const [drafting, setDrafting] = useState(false)
+
+  const handleDraftReply = async () => {
+    if (!metadata.engagementId) return
+    setDrafting(true)
+    try {
+      const res = await fetch(`/api/engagement/${metadata.engagementId}/draft-reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      if (res.ok) {
+        navigate('/reply-queue')
+      }
+    } catch (err) {
+      console.error('Error creating draft reply:', err)
+    }
+    setDrafting(false)
+  }
+
+  return (
+    <div className="flex items-center gap-2 pt-2">
+      {metadata.postUrl && (
+        <a
+          href={metadata.postUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-neutral-100 text-neutral-700 rounded hover:bg-neutral-200"
+        >
+          <ExternalLink size={12} />
+          View Post
+        </a>
+      )}
+      {metadata.engagementId && (
+        <button
+          onClick={handleDraftReply}
+          disabled={drafting}
+          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-gold text-white rounded hover:bg-amber-600 disabled:opacity-50"
+        >
+          <MessageSquareReply size={12} />
+          {drafting ? 'Creating...' : 'Draft Reply'}
+        </button>
+      )}
     </div>
   )
 }

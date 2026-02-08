@@ -19,6 +19,7 @@
   "author": "Aristotle",
   "license": "MIT",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.73.0",
     "@atproto/api": "^0.18.20",
     "chokidar": "^3.5.3",
     "cors": "^2.8.5",

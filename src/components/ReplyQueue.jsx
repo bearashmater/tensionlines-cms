@@ -15,7 +15,11 @@ import {
   CloudOff,
   Cloud,
   Copy,
-  MessageSquareReply
+  MessageSquareReply,
+  Inbox,
+  AtSign,
+  Eye,
+  EyeOff
 } from 'lucide-react'
 
 // Bluesky icon (reused from ManualPostingQueue)
@@ -45,11 +49,15 @@ function getPlatformIcon(platform, size = 16) {
 }
 
 export default function ReplyQueue() {
+  const [activeTab, setActiveTab] = useState('queue')
   const [showAddModal, setShowAddModal] = useState(false)
   const [bskyStatus, setBskyStatus] = useState(null)
   const { data, error, isLoading, mutate } = useSWR('/api/reply-queue', fetcher, {
     refreshInterval: 30000
   })
+  const { data: engagementData, mutate: mutateEngagement } = useSWR(
+    '/api/engagement', fetcher, { refreshInterval: 30000 }
+  )
 
   useEffect(() => {
     fetch('/api/bluesky/status')
@@ -57,6 +65,10 @@ export default function ReplyQueue() {
       .then(setBskyStatus)
       .catch(() => setBskyStatus({ connected: false }))
   }, [])
+
+  const unreadCount = engagementData?.stats
+    ? (engagementData.stats.bluesky?.new || 0) + (engagementData.stats.twitter?.new || 0)
+    : 0
 
   if (error) {
     return (
@@ -95,76 +107,132 @@ export default function ReplyQueue() {
             )}
           </div>
         </div>
+        {activeTab === 'queue' && (
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gold text-white rounded-lg hover:bg-amber-600"
+          >
+            <Plus size={20} />
+            Add Reply
+          </button>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-neutral-200">
         <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gold text-white rounded-lg hover:bg-amber-600"
+          onClick={() => setActiveTab('queue')}
+          className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'queue'
+              ? 'border-gold text-gold'
+              : 'border-transparent text-neutral-500 hover:text-neutral-700'
+          }`}
         >
-          <Plus size={20} />
-          Add Reply
+          <span className="flex items-center gap-2">
+            <MessageSquareReply size={16} />
+            Reply Queue
+            {data.queue?.length > 0 && (
+              <span className="px-1.5 py-0.5 text-xs bg-neutral-100 text-neutral-600 rounded-full">
+                {data.queue.length}
+              </span>
+            )}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('inbox')}
+          className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'inbox'
+              ? 'border-gold text-gold'
+              : 'border-transparent text-neutral-500 hover:text-neutral-700'
+          }`}
+        >
+          <span className="flex items-center gap-2">
+            <Inbox size={16} />
+            Engagement Inbox
+            {unreadCount > 0 && (
+              <span className="px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full min-w-[20px] text-center">
+                {unreadCount}
+              </span>
+            )}
+          </span>
         </button>
       </div>
 
-      {/* Rate Limit Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <RateLimitCard
-          platform="bluesky"
-          icon={<BlueskyIcon size={24} className="text-current" />}
-          repliesToday={data.repliesToday?.bluesky || 0}
-          maxReplies={data.settings?.platforms?.bluesky?.maxRepliesPerDay || 5}
-          canReply={data.canReplyBluesky}
-        />
-        <RateLimitCard
-          platform="twitter"
-          icon={<TwitterIcon size={24} className="text-current" />}
-          repliesToday={data.repliesToday?.twitter || 0}
-          maxReplies={data.settings?.platforms?.twitter?.maxRepliesPerDay || 5}
-          canReply={data.canReplyTwitter}
-        />
-      </div>
+      {activeTab === 'queue' ? (
+        <>
+          {/* Rate Limit Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <RateLimitCard
+              platform="bluesky"
+              icon={<BlueskyIcon size={24} className="text-current" />}
+              repliesToday={data.repliesToday?.bluesky || 0}
+              maxReplies={data.settings?.platforms?.bluesky?.maxRepliesPerDay || 5}
+              canReply={data.canReplyBluesky}
+            />
+            <RateLimitCard
+              platform="twitter"
+              icon={<TwitterIcon size={24} className="text-current" />}
+              repliesToday={data.repliesToday?.twitter || 0}
+              maxReplies={data.settings?.platforms?.twitter?.maxRepliesPerDay || 5}
+              canReply={data.canReplyTwitter}
+            />
+          </div>
 
-      {/* Queue */}
-      <div className="bg-white rounded-lg border border-neutral-200">
-        <div className="px-4 py-3 border-b border-neutral-200">
-          <h2 className="font-semibold text-neutral-900">
-            Ready to Reply ({data.queue?.length || 0})
-          </h2>
-        </div>
-        <div className="divide-y divide-neutral-100">
-          {data.queue?.length === 0 ? (
-            <div className="p-8 text-center text-neutral-500">
-              <MessageSquareReply className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
-              <p>No replies in queue</p>
-              <p className="text-sm mt-1">Add reply drafts to Bluesky or Twitter posts</p>
+          {/* Queue */}
+          <div className="bg-white rounded-lg border border-neutral-200">
+            <div className="px-4 py-3 border-b border-neutral-200">
+              <h2 className="font-semibold text-neutral-900">
+                Ready to Reply ({data.queue?.length || 0})
+              </h2>
             </div>
-          ) : (
-            data.queue.map(item => (
-              <ReplyItem
-                key={item.id}
-                item={item}
-                canReply={
-                  item.platform === 'bluesky' ? data.canReplyBluesky : data.canReplyTwitter
-                }
-                onUpdate={mutate}
-              />
-            ))
-          )}
-        </div>
-      </div>
+            <div className="divide-y divide-neutral-100">
+              {data.queue?.length === 0 ? (
+                <div className="p-8 text-center text-neutral-500">
+                  <MessageSquareReply className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
+                  <p>No replies in queue</p>
+                  <p className="text-sm mt-1">Add reply drafts to Bluesky or Twitter posts</p>
+                </div>
+              ) : (
+                data.queue.map(item => (
+                  <ReplyItem
+                    key={item.id}
+                    item={item}
+                    canReply={
+                      item.platform === 'bluesky' ? data.canReplyBluesky : data.canReplyTwitter
+                    }
+                    onUpdate={mutate}
+                  />
+                ))
+              )}
+            </div>
+          </div>
 
-      {/* Recently Posted */}
-      {data.posted?.length > 0 && (
-        <div className="bg-white rounded-lg border border-neutral-200">
-          <div className="px-4 py-3 border-b border-neutral-200">
-            <h2 className="font-semibold text-neutral-900">
-              Recently Replied ({data.posted?.length || 0})
-            </h2>
-          </div>
-          <div className="divide-y divide-neutral-100 max-h-64 overflow-y-auto">
-            {data.posted.slice(0, 10).map(item => (
-              <PostedReplyItem key={item.id} item={item} />
-            ))}
-          </div>
-        </div>
+          {/* Recently Posted */}
+          {data.posted?.length > 0 && (
+            <div className="bg-white rounded-lg border border-neutral-200">
+              <div className="px-4 py-3 border-b border-neutral-200">
+                <h2 className="font-semibold text-neutral-900">
+                  Recently Replied ({data.posted?.length || 0})
+                </h2>
+              </div>
+              <div className="divide-y divide-neutral-100 max-h-64 overflow-y-auto">
+                {data.posted.slice(0, 10).map(item => (
+                  <PostedReplyItem key={item.id} item={item} />
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <EngagementInbox
+          data={engagementData}
+          onRefresh={mutateEngagement}
+          onDraftReply={() => {
+            mutate()
+            mutateEngagement()
+            setActiveTab('queue')
+          }}
+        />
       )}
 
       {/* Add Modal */}
@@ -180,6 +248,302 @@ export default function ReplyQueue() {
     </div>
   )
 }
+
+// ---- Engagement Inbox Tab ----
+
+function EngagementInbox({ data, onRefresh, onDraftReply }) {
+  const [scanningBsky, setScanningBsky] = useState(false)
+  const [scanningTwitter, setScanningTwitter] = useState(false)
+  const [scanResult, setScanResult] = useState(null)
+  const [showDismissed, setShowDismissed] = useState(false)
+
+  const handleScan = async (platform) => {
+    const setter = platform === 'bluesky' ? setScanningBsky : setScanningTwitter
+    setter(true)
+    setScanResult(null)
+    try {
+      const res = await fetch('/api/engagement/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platform })
+      })
+      const result = await res.json()
+      setScanResult(result)
+      onRefresh()
+    } catch (err) {
+      setScanResult({ success: false, error: err.message })
+    }
+    setter(false)
+  }
+
+  const handleDraftReply = async (itemId) => {
+    try {
+      const res = await fetch(`/api/engagement/${itemId}/draft-reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      if (res.ok) {
+        onDraftReply()
+      }
+    } catch (err) {
+      console.error('Error creating draft reply:', err)
+    }
+  }
+
+  const handleDismiss = async (itemId) => {
+    try {
+      await fetch(`/api/engagement/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'dismissed' })
+      })
+      onRefresh()
+    } catch (err) {
+      console.error('Error dismissing item:', err)
+    }
+  }
+
+  const handleMarkSeen = async (itemId) => {
+    try {
+      await fetch(`/api/engagement/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'seen' })
+      })
+      onRefresh()
+    } catch (err) {
+      console.error('Error marking as seen:', err)
+    }
+  }
+
+  const items = data?.items || []
+  const visibleItems = showDismissed ? items : items.filter(i => i.status !== 'dismissed')
+  const dismissedCount = items.filter(i => i.status === 'dismissed').length
+
+  return (
+    <div className="space-y-4">
+      {/* Scan Controls */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <BlueskyIcon size={20} className="text-blue-600" />
+            <div>
+              <p className="text-sm font-medium text-blue-800">Bluesky</p>
+              <p className="text-xs text-blue-600">
+                {data?.stats?.bluesky?.lastScannedAt
+                  ? `Last scan: ${new Date(data.stats.bluesky.lastScannedAt).toLocaleString()}`
+                  : 'Never scanned'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => handleScan('bluesky')}
+            disabled={scanningBsky}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+          >
+            <RefreshCw size={14} className={scanningBsky ? 'animate-spin' : ''} />
+            {scanningBsky ? 'Scanning...' : 'Scan Bluesky'}
+          </button>
+        </div>
+
+        <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TwitterIcon size={20} className="text-neutral-700" />
+            <div>
+              <p className="text-sm font-medium text-neutral-800">Twitter / X</p>
+              <p className="text-xs text-neutral-500">
+                {data?.stats?.twitter?.lastScannedAt
+                  ? `Last scan: ${new Date(data.stats.twitter.lastScannedAt).toLocaleString()}`
+                  : 'Never scanned'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => handleScan('twitter')}
+            disabled={scanningTwitter}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-neutral-800 text-white rounded hover:bg-neutral-900 disabled:opacity-50"
+          >
+            <RefreshCw size={14} className={scanningTwitter ? 'animate-spin' : ''} />
+            {scanningTwitter ? 'Scanning...' : 'Scan Twitter'}
+          </button>
+        </div>
+      </div>
+
+      {/* Scan Result Feedback */}
+      {scanResult && (
+        <div className={`p-3 rounded-lg text-sm ${
+          scanResult.success !== false ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+        }`}>
+          {scanResult.success !== false ? (
+            <span className="flex items-center gap-2">
+              <CheckCircle size={14} />
+              Scan complete.
+              {scanResult.results?.bluesky && ` Bluesky: ${scanResult.results.bluesky.newCount ?? 0} new.`}
+              {scanResult.results?.twitter && (
+                scanResult.results.twitter.success
+                  ? ` Twitter: ${scanResult.results.twitter.newCount ?? 0} new.`
+                  : ` Twitter: ${scanResult.results.twitter.error}`
+              )}
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              <AlertTriangle size={14} />
+              {scanResult.error || 'Scan failed'}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Item List */}
+      <div className="bg-white rounded-lg border border-neutral-200">
+        <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
+          <h2 className="font-semibold text-neutral-900">
+            Incoming ({visibleItems.length})
+          </h2>
+          {dismissedCount > 0 && (
+            <button
+              onClick={() => setShowDismissed(!showDismissed)}
+              className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700"
+            >
+              {showDismissed ? <EyeOff size={12} /> : <Eye size={12} />}
+              {showDismissed ? 'Hide' : 'Show'} {dismissedCount} dismissed
+            </button>
+          )}
+        </div>
+        <div className="divide-y divide-neutral-100">
+          {visibleItems.length === 0 ? (
+            <div className="p-8 text-center text-neutral-500">
+              <Inbox className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
+              <p>No engagement yet</p>
+              <p className="text-sm mt-1">Scan Bluesky or Twitter to check for replies and mentions</p>
+            </div>
+          ) : (
+            visibleItems.map(item => (
+              <EngagementItem
+                key={item.id}
+                item={item}
+                onDraftReply={handleDraftReply}
+                onDismiss={handleDismiss}
+                onMarkSeen={handleMarkSeen}
+              />
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function EngagementItem({ item, onDraftReply, onDismiss, onMarkSeen }) {
+  const isNew = item.status === 'new'
+  const isDismissed = item.status === 'dismissed'
+  const isReplied = item.status === 'replied'
+
+  return (
+    <div className={`p-4 ${isNew ? 'bg-amber-50/50' : ''} ${isDismissed ? 'opacity-50' : ''}`}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          {/* Platform + type badges */}
+          <div className="flex items-center gap-2 mb-2">
+            {getPlatformIcon(item.platform)}
+            <span className="text-sm font-medium">
+              @{item.authorHandle}
+            </span>
+            {item.authorDisplayName && item.authorDisplayName !== item.authorHandle && (
+              <span className="text-xs text-neutral-500">({item.authorDisplayName})</span>
+            )}
+            <span className={`px-2 py-0.5 text-xs rounded ${
+              item.type === 'reply'
+                ? 'bg-blue-100 text-blue-700'
+                : 'bg-purple-100 text-purple-700'
+            }`}>
+              {item.type === 'reply' ? 'Reply' : 'Mention'}
+            </span>
+            {isNew && (
+              <span className="px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded font-medium">
+                New
+              </span>
+            )}
+            {isReplied && (
+              <span className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">
+                Replied
+              </span>
+            )}
+            {isDismissed && (
+              <span className="px-2 py-0.5 text-xs bg-neutral-100 text-neutral-500 rounded">
+                Dismissed
+              </span>
+            )}
+          </div>
+
+          {/* Post text */}
+          <p className="text-neutral-800 whitespace-pre-wrap text-sm">{item.postText}</p>
+
+          {/* Links */}
+          <div className="flex items-center gap-3 mt-2">
+            <a
+              href={item.postUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1"
+            >
+              <ExternalLink size={10} />
+              View post
+            </a>
+            {item.ourPostUrl && (
+              <a
+                href={item.ourPostUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-neutral-500 hover:underline inline-flex items-center gap-1"
+              >
+                <ExternalLink size={10} />
+                Our post
+              </a>
+            )}
+          </div>
+
+          <p className="text-xs text-neutral-400 mt-2">
+            {new Date(item.indexedAt).toLocaleString()}
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col gap-2">
+          {!isReplied && !isDismissed && (
+            <button
+              onClick={() => onDraftReply(item.id)}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gold text-white rounded hover:bg-amber-600"
+            >
+              <MessageSquareReply size={14} />
+              Draft Reply
+            </button>
+          )}
+          {isNew && (
+            <button
+              onClick={() => onMarkSeen(item.id)}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100 rounded"
+            >
+              <Eye size={14} />
+              Mark Seen
+            </button>
+          )}
+          {!isDismissed && !isReplied && (
+            <button
+              onClick={() => onDismiss(item.id)}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50 rounded"
+            >
+              <X size={14} />
+              Dismiss
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---- Original Reply Queue Components ----
 
 function RateLimitCard({ platform, icon, repliesToday, maxReplies, canReply }) {
   const remaining = maxReplies - repliesToday

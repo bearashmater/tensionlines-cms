@@ -35,7 +35,7 @@ const STATUS_CONFIG = {
 
 export default function FutureNeeds() {
   const [categoryFilter, setCategoryFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('proposed')
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [effortFilter, setEffortFilter] = useState('all')
   const [sortBy, setSortBy] = useState('priority')

@@ -29,6 +29,7 @@ import RepurposeEngine from './components/RepurposeEngine'
 import CommentQueue from './components/CommentQueue'
 import OutreachDashboard from './components/OutreachDashboard'
 import WeeklyReport from './components/WeeklyReport'
+import AgentMessages from './components/AgentMessages'
 
 // Navigation structure with grouping
 const navGroups = [
@@ -57,6 +58,7 @@ const navGroups = [
       { to: '/recurring', icon: <Repeat size={20} />, label: 'Recurring Tasks' },
       { to: '/schedule', icon: <Calendar size={20} />, label: 'Calendar' },
       { to: '/squad-lead', icon: <Target size={20} />, label: 'Squad Lead' },
+      { to: '/messages', icon: <MessageSquarePlus size={20} />, label: 'Messages' },
       { to: '/optimization', icon: <Zap size={20} />, label: 'Optimization' },
       { to: '/future-needs', icon: <Compass size={20} />, label: 'Future Needs' },
       { to: '/mission-control/', icon: <Rocket size={20} />, label: 'Mission Control', external: true }
@@ -194,6 +196,7 @@ function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenu
             <Route path="/future-needs" element={<FutureNeeds />} />
             <Route path="/weekly-report" element={<WeeklyReport />} />
             <Route path="/outreach" element={<OutreachDashboard />} />
+            <Route path="/messages" element={<AgentMessages />} />
           </Routes>
         </main>
       </div>
