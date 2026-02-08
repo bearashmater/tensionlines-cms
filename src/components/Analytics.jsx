@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import useSWR from 'swr'
 import {
   TrendingUp, TrendingDown, Users, DollarSign, FileText, Pencil, Plus,
-  Target, CheckCircle2, X, BarChart3, Trophy, ArrowUpRight, ArrowDownRight, Minus
+  Target, CheckCircle2, X, BarChart3, Trophy, ArrowUpRight, ArrowDownRight, Minus, Activity
 } from 'lucide-react'
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area,
@@ -315,8 +315,10 @@ function AddGoalModal({ onClose, onSave }) {
 export default function Analytics() {
   const { data: analytics, mutate: mutateAnalytics } = useSWR('/api/analytics', fetcher, { refreshInterval: 60000 })
   const { data: engagement } = useSWR('/api/content/engagement?range=month', fetcher, { refreshInterval: 60000 })
+  const { data: engagementTrends } = useSWR('/api/engagement-trends', fetcher, { refreshInterval: 60000 })
 
   const [timeRange, setTimeRange] = useState('30d')
+  const [engagementRange, setEngagementRange] = useState('month')
   const [editingPlatform, setEditingPlatform] = useState(null)
   const [showRevenueModal, setShowRevenueModal] = useState(false)
   const [showGoalModal, setShowGoalModal] = useState(false)
@@ -399,6 +401,34 @@ export default function Analytics() {
     })
     return sorted
   }, [engagement?.posts, contentSort])
+
+  // ─── Engagement Trends Data ─────────────────────────────────────────────
+
+  const engagementChartData = useMemo(() => {
+    if (!engagementTrends) return { data: [], chartType: 'bar' }
+
+    const now = new Date()
+    const useWeekly = engagementRange === 'quarter' || engagementRange === 'all'
+
+    if (useWeekly) {
+      let data = engagementTrends.weekly || []
+      if (engagementRange === 'quarter') {
+        const cutoff = new Date(now - 91 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        data = data.filter(d => d.weekStart >= cutoff)
+      }
+      return { data, chartType: 'line' }
+    }
+
+    let data = engagementTrends.daily || []
+    if (engagementRange === 'week') {
+      const cutoff = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      data = data.filter(d => d.date >= cutoff)
+    } else if (engagementRange === 'month') {
+      const cutoff = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      data = data.filter(d => d.date >= cutoff)
+    }
+    return { data, chartType: 'bar' }
+  }, [engagementTrends, engagementRange])
 
   // Sort handler
   function handleContentSort(key) {
@@ -616,6 +646,94 @@ export default function Analytics() {
             <p className="text-neutral-400 text-center py-8 text-sm">No content engagement data yet. Post tracking data will appear here.</p>
           )}
         </div>
+      </div>
+
+      {/* ── Section 4.5: Engagement Trends ────────────────────────────────── */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-serif font-bold text-black">Engagement Trends</h2>
+          <div className="flex gap-1">
+            {[
+              { key: 'week', label: 'Week' },
+              { key: 'month', label: 'Month' },
+              { key: 'quarter', label: 'Quarter' },
+              { key: 'all', label: 'All' }
+            ].map(r => (
+              <button
+                key={r.key}
+                onClick={() => setEngagementRange(r.key)}
+                className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                  engagementRange === r.key ? 'bg-gold text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="card">
+          {engagementChartData.data.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              {engagementChartData.chartType === 'bar' ? (
+                <BarChart data={engagementChartData.data}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E8E3DC" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={d => formatDate(d)} />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip labelFormatter={d => formatDate(d)} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="bluesky_out" name="Bluesky" stackId="out" fill="#0085FF" />
+                  <Bar dataKey="twitter_out" name="Twitter" stackId="out" fill="#1DA1F2" />
+                  <Bar dataKey="instagram_out" name="Instagram" stackId="out" fill="#E4405F" />
+                  <Bar dataKey="threads_out" name="Threads" stackId="out" fill="#000000" />
+                  <Line type="monotone" dataKey="bluesky_in" name="Incoming (Bluesky)" stroke="#0085FF" strokeDasharray="5 5" dot={false} />
+                  <Line type="monotone" dataKey="twitter_in" name="Incoming (Twitter)" stroke="#1DA1F2" strokeDasharray="5 5" dot={false} />
+                </BarChart>
+              ) : (
+                <LineChart data={engagementChartData.data}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E8E3DC" />
+                  <XAxis dataKey="weekStart" tick={{ fontSize: 11 }} tickFormatter={d => formatDate(d)} />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip labelFormatter={d => formatDate(d)} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey="bluesky_out" name="Bluesky" stroke="#0085FF" strokeWidth={2} dot={false} connectNulls />
+                  <Line type="monotone" dataKey="twitter_out" name="Twitter" stroke="#1DA1F2" strokeWidth={2} dot={false} connectNulls />
+                  <Line type="monotone" dataKey="instagram_out" name="Instagram" stroke="#E4405F" strokeWidth={2} dot={false} connectNulls />
+                  <Line type="monotone" dataKey="threads_out" name="Threads" stroke="#000000" strokeWidth={2} dot={false} connectNulls />
+                </LineChart>
+              )}
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-neutral-400 text-center py-12 text-sm">
+              Engagement trends will appear as you publish content and receive engagement.
+            </p>
+          )}
+        </div>
+
+        {/* Mini stat badges */}
+        {engagementTrends?.summary && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+            <div className="card !p-3 text-center">
+              <div className="text-xs text-neutral-500 uppercase tracking-wider">Total Activity</div>
+              <div className="text-xl font-bold text-black">{engagementTrends.summary.totalActivity}</div>
+            </div>
+            <div className="card !p-3 text-center">
+              <div className="text-xs text-neutral-500 uppercase tracking-wider">Top Platform</div>
+              <div className="text-xl font-bold capitalize" style={{ color: PLATFORM_CONFIG[Object.entries(engagementTrends.summary.byPlatform || {}).sort((a, b) => b[1] - a[1])[0]?.[0]]?.color || '#000' }}>
+                {Object.entries(engagementTrends.summary.byPlatform || {}).sort((a, b) => b[1] - a[1])[0]?.[0] || '—'}
+              </div>
+            </div>
+            <div className="card !p-3 text-center">
+              <div className="text-xs text-neutral-500 uppercase tracking-wider">Posts / Replies</div>
+              <div className="text-xl font-bold text-black">
+                {engagementTrends.summary.byType?.post || 0} / {engagementTrends.summary.byType?.reply || 0}
+              </div>
+            </div>
+            <div className="card !p-3 text-center">
+              <div className="text-xs text-neutral-500 uppercase tracking-wider">Active Days</div>
+              <div className="text-xl font-bold text-black">{engagementTrends.summary.activeDays}</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Section 5: Growth Chart ─────────────────────────────────────────── */}

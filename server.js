@@ -5056,6 +5056,125 @@ function saveEngagementData(data) {
 }
 
 /**
+ * GET /api/engagement-trends — Aggregate engagement activity over time
+ * Sources: posting-queue posted, reply-queue posted, comment-queue posted, engagement-inbox items
+ */
+app.get('/api/engagement-trends', (req, res) => {
+  try {
+    const postingQueue = getPostingQueue();
+    const replyQueue = getReplyQueue();
+    const commentQueue = getCommentQueue();
+    const inbox = getEngagementInbox();
+
+    // Collect all activity items with { date, platform, direction }
+    const items = [];
+
+    // Outbound: posts published
+    for (const p of (postingQueue.posted || [])) {
+      if (!p.postedAt) continue;
+      items.push({ date: p.postedAt.split('T')[0], platform: p.platform || 'unknown', direction: 'out', type: 'post' });
+    }
+
+    // Outbound: replies sent
+    for (const r of (replyQueue.posted || [])) {
+      const dt = r.postedAt || r.createdAt;
+      if (!dt) continue;
+      items.push({ date: dt.split('T')[0], platform: r.platform || 'unknown', direction: 'out', type: 'reply' });
+    }
+
+    // Outbound: comments posted
+    for (const c of (commentQueue.posted || [])) {
+      const dt = c.postedAt || c.createdAt;
+      if (!dt) continue;
+      items.push({ date: dt.split('T')[0], platform: c.platform || 'unknown', direction: 'out', type: 'comment' });
+    }
+
+    // Incoming: engagement inbox items (bluesky, twitter)
+    for (const platform of ['bluesky', 'twitter']) {
+      const section = inbox[platform];
+      if (!section || !section.items) continue;
+      for (const item of section.items) {
+        const dt = item.indexedAt || item.scannedAt;
+        if (!dt) continue;
+        items.push({ date: dt.split('T')[0], platform, direction: 'in', type: 'incoming' });
+      }
+    }
+
+    // Build daily buckets
+    const dayMap = {};
+    const platforms = ['bluesky', 'twitter', 'instagram', 'threads'];
+
+    for (const item of items) {
+      if (!dayMap[item.date]) {
+        dayMap[item.date] = { date: item.date };
+        for (const p of platforms) { dayMap[item.date][p + '_out'] = 0; dayMap[item.date][p + '_in'] = 0; }
+        dayMap[item.date].total = 0;
+      }
+      const suffix = item.direction === 'out' ? '_out' : '_in';
+      const key = item.platform + suffix;
+      if (dayMap[item.date][key] !== undefined) dayMap[item.date][key]++;
+      dayMap[item.date].total++;
+    }
+
+    const daily = Object.values(dayMap).sort((a, b) => a.date.localeCompare(b.date));
+
+    // Build weekly buckets (ISO weeks)
+    const weekMap = {};
+    for (const day of daily) {
+      const d = new Date(day.date + 'T00:00:00Z');
+      const dayOfWeek = d.getUTCDay();
+      const mondayOffset = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
+      const monday = new Date(d);
+      monday.setUTCDate(d.getUTCDate() + mondayOffset);
+      const weekStart = monday.toISOString().split('T')[0];
+
+      // ISO week number
+      const jan1 = new Date(Date.UTC(monday.getUTCFullYear(), 0, 1));
+      const weekNum = Math.ceil(((monday - jan1) / 86400000 + jan1.getUTCDay() + 1) / 7);
+      const weekLabel = 'W' + String(weekNum).padStart(2, '0');
+
+      if (!weekMap[weekStart]) {
+        weekMap[weekStart] = { week: weekLabel, weekStart };
+        for (const p of platforms) { weekMap[weekStart][p + '_out'] = 0; weekMap[weekStart][p + '_in'] = 0; }
+        weekMap[weekStart].total = 0;
+      }
+      for (const p of platforms) {
+        weekMap[weekStart][p + '_out'] += day[p + '_out'] || 0;
+        weekMap[weekStart][p + '_in'] += day[p + '_in'] || 0;
+      }
+      weekMap[weekStart].total += day.total;
+    }
+
+    const weekly = Object.values(weekMap).sort((a, b) => a.weekStart.localeCompare(b.weekStart));
+
+    // Summary stats
+    const byPlatform = {};
+    const byType = { post: 0, reply: 0, comment: 0, incoming: 0 };
+    for (const item of items) {
+      byPlatform[item.platform] = (byPlatform[item.platform] || 0) + 1;
+      if (byType[item.type] !== undefined) byType[item.type]++;
+    }
+
+    const dates = items.map(i => i.date).sort();
+    const summary = {
+      totalActivity: items.length,
+      byPlatform,
+      byType,
+      activeDays: new Set(items.map(i => i.date)).size,
+      dateRange: {
+        first: dates[0] || null,
+        last: dates[dates.length - 1] || null
+      }
+    };
+
+    res.json({ daily, weekly, summary });
+  } catch (err) {
+    console.error('Error computing engagement trends:', err);
+    res.status(500).json({ error: 'Failed to compute engagement trends' });
+  }
+});
+
+/**
  * Get content engagement stats
  */
 app.get('/api/content/engagement', (req, res) => {
