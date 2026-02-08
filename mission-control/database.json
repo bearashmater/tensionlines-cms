@@ -694,7 +694,18 @@
         "escalationChannel": "Telegram to Shawn",
         "reportingFrequency": "Weekly summary every Sunday",
         "platformAdvantage": "Higher engagement, better cultural fit for contemplative content",
-        "voiceStyle": "Heraclitus: observational, flux-focused, gentle"
+        "voiceStyle": "Heraclitus: observational, flux-focused, gentle",
+        "debugAttempted": true,
+        "debugAttemptCount": 1,
+        "debugResult": {
+          "diagnosis": "This task is marked as 'completed' but shows a pattern of repeated retries and reassignments between agent and human, suggesting confusion about task ownership and execution model. The task description underwent a major workflow change (Feb 5: manual search required, Feb 8: now automated) but the daily recurring nature isn't properly structured. The agent 'heraclitus' appears unable to execute the manual steps (Bluesky login, commenting) that were required during the transition period. The multiple retry attempts and 119-minute gaps indicate the agent kept attempting execution but couldn't complete the full workflow. The task conflates ongoing daily operations with one-time setup/automation work.",
+          "suggestedFix": "1) Mark this specific task instance as complete (it represents the setup/transition phase). 2) Create separate task types: a) 'Bluesky Automation - Monitor & Maintain' (for heraclitus to monitor the automated scanner/executor at 11AM, 3PM, 7PM PST), b) 'Bluesky Reply Response' (triggered when replies come in, assigned to human/Shawn), c) 'Bluesky Weekly Analytics Review' (weekly task to review metrics from tracking files). 3) Update the automation system documentation to clarify that the manual outreach workflow is deprecated and the AT Protocol API automation is now the primary method. 4) Remove the expectation that heraclitus can perform web login or manual commenting - these require human intervention or proper API integration.",
+          "canAutoFix": false,
+          "fixType": "break_into_subtasks",
+          "model": "claude-sonnet-4-5-20250929",
+          "cost": 0.010929000000000001,
+          "timestamp": "2026-02-08T21:08:48.526Z"
+        }
       },
       "dueDate": "2026-02-07T06:49:00.000Z",
       "startedAt": "2026-02-05T12:35:38.821882Z",
@@ -724,6 +735,14 @@
           "startedAt": "2026-02-07T02:36:37.622Z",
           "completedAt": "2026-02-07T02:36:37.622Z",
           "agentId": "human"
+        },
+        {
+          "id": "step-1770584928526",
+          "description": "Debug (Sonnet): This task is marked as 'completed' but shows a pattern of repeated retries and reassignments between agent and human, suggesting confusion about task ownership and execution model. The task descriptio",
+          "status": "completed",
+          "startedAt": "2026-02-08T21:08:48.526Z",
+          "completedAt": "2026-02-08T21:08:48.526Z",
+          "agentId": "system"
         }
       ]
     },
@@ -763,7 +782,7 @@
       "id": "task-016",
       "title": "CMS Time-In-Status Alerts & Visual Indicators",
       "description": "**Problem:** No visibility into how long tasks have been stuck in assigned/in-progress status. Example: Task #003 - Leonardo stuck 5+ hours without detection.\n\n**Solution:** Track time-in-status and add visual alerts:\n\n**Backend (Aristotle):**\n1. Calculate time-in-status for each task\n2. Add thresholds: Yellow warning (assigned > 3h, in_progress > 4h), Red alert (assigned > 6h, in_progress > 8h)\n3. New API field: timeInStatus\n4. Auto-generate notification when red threshold hit\n\n**Frontend (Leonardo):**\n1. Tasks View: Add time-in-status badges with color coding\n2. Agent cards: Show yellow/red indicators for stuck tasks\n3. Dashboard: Show \"Stuck Tasks\" count\n\n**Time:** 1-2 hours total\n**Priority:** High (prevents philosopher bottlenecks)",
-      "status": "in_progress",
+      "status": "completed",
       "assigneeIds": [
         "aristotle"
       ],
@@ -804,7 +823,18 @@
         "reassignedFrom": [
           "leonardo"
         ],
-        "reassignReason": "Restoring original assignment after test"
+        "reassignReason": "Restoring original assignment after test",
+        "debugAttempted": true,
+        "debugAttemptCount": 1,
+        "debugResult": {
+          "diagnosis": "This task has been idle for 45+ hours (2718 minutes) after Aristotle completed backend work. The task description split work between Aristotle (backend) and Leonardo (frontend), but Leonardo was never properly engaged. Task history shows multiple reassignments (aristotle→leonardo→aristotle→socrates→aristotle→leonardo→aristotle), creating confusion about ownership. Aristotle completed the backend portion on 2026-02-05T10:46:00 and the task has been dormant since. The task requires Leonardo to do the frontend work, but Leonardo is not the current assignee and appears to have no active steps assigned.",
+          "suggestedFix": "1. Split this into two separate tasks: (A) 'Backend: Time-In-Status API' (mark as COMPLETED - Aristotle already finished this per the task_progress note), and (B) 'Frontend: Time-In-Status Visual Indicators' (assign to Leonardo with clear, actionable steps: add time badges to Tasks view, add indicators to agent cards, add 'Stuck Tasks' count to dashboard). 2. The new Leonardo task should reference task-016's completed backend work and include specific component files to modify. 3. Update task-016 status to 'completed' since Aristotle's portion is done, or convert it to track only the frontend work and reassign to Leonardo.",
+          "canAutoFix": true,
+          "fixType": "break_into_subtasks",
+          "model": "claude-sonnet-4-5-20250929",
+          "cost": 0.010277999999999999,
+          "timestamp": "2026-02-08T21:16:15.648Z"
+        }
       },
       "dueDate": "2026-02-08T12:00:00.000Z",
       "startedAt": "2026-02-06T20:58:15.434Z",
@@ -850,8 +880,18 @@
           "startedAt": "2026-02-06T23:58:32.833Z",
           "completedAt": "2026-02-06T23:58:32.833Z",
           "agentId": "human"
+        },
+        {
+          "id": "step-1770585375648",
+          "description": "Debug (Sonnet): This task has been idle for 45+ hours (2718 minutes) after Aristotle completed backend work. The task description split work between Aristotle (backend) and Leonardo (frontend), but Leonardo was never",
+          "status": "completed",
+          "startedAt": "2026-02-08T21:16:15.648Z",
+          "completedAt": "2026-02-08T21:16:15.648Z",
+          "agentId": "system"
         }
-      ]
+      ],
+      "completedAt": "2026-02-08T21:18:07.612Z",
+      "completedBy": "human"
     },
     {
       "id": "task-017",
@@ -1742,6 +1782,224 @@
       },
       "completedAt": "2026-02-08T14:36:31.025Z",
       "completedBy": "migration"
+    },
+    {
+      "id": "task-036",
+      "title": "Rotate Anthropic API key",
+      "description": "Your current API key has been in the .env file since project start. As a security best practice, rotate it now.\n\n1. Go to the Anthropic Console and generate a new API key\n2. Update cms/.env with the new key\n3. Restart the CMS server\n\nhttps://console.anthropic.com/settings/keys\n\n> After generating the new key, paste it into cms/.env as ANTHROPIC_API_KEY=sk-ant-...",
+      "status": "assigned",
+      "assigneeIds": [
+        "human"
+      ],
+      "createdBy": "system",
+      "createdAt": "2026-02-08T21:58:22.991Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {}
+    },
+    {
+      "id": "task-037",
+      "title": "Activate Reddit outreach via Diogenes",
+      "description": "Diogenes already has a draft ready (philosophers/diogenes/drafts/reddit-welcome-fixed.md). Reddit is a philosophy-hungry audience and the easiest win.\n\n1. Review and finalize the Reddit welcome post draft\n2. Set up Diogenes to post to relevant subreddits (r/philosophy, r/stoicism, r/selfimprovement)\n3. Create a recurring engagement pattern\n\nEstimated effort: 2-3 hours. High ROI — Reddit audience aligns perfectly with TensionLines themes.",
+      "status": "assigned",
+      "assigneeIds": [
+        "diogenes"
+      ],
+      "createdBy": "system",
+      "createdAt": "2026-02-08T22:02:39.664Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "roadmap": "this-week",
+        "estimatedMinutes": 180
+      }
+    },
+    {
+      "id": "task-038",
+      "title": "Build automatic idea-to-draft pipeline",
+      "description": "The single highest-ROI automation. Currently ideas sit in the bank and drafts are created manually for each platform.\n\nBuild a system that:\n1. Takes an idea from the ideas bank\n2. Auto-adapts it to platform-specific formats (tweet, Bluesky post, Instagram caption, Reddit post, Medium essay)\n3. Routes each draft to the correct philosopher voice\n4. Queues drafts for review in the posting queue\n\nThe repurposing engine endpoint (/api/repurpose) already exists as a foundation. This extends it into an automated pipeline.\n\nExpected impact: 3-5x content velocity, saves 5-10 hours/week of manual work.",
+      "status": "assigned",
+      "assigneeIds": [
+        "aristotle"
+      ],
+      "createdBy": "system",
+      "createdAt": "2026-02-08T22:02:50.446Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "roadmap": "this-month",
+        "estimatedMinutes": 1200
+      }
+    },
+    {
+      "id": "task-039",
+      "title": "Activate Patreon revenue stream",
+      "description": "Patreon infrastructure exists but is dormant. This is the lowest-hanging revenue fruit.\n\n1. Define tier structure (free, $5, $15) with clear value at each level\n2. Create 2-3 pieces of exclusive content per week (Marcus Aurelius voice)\n3. Build conversion funnel: Twitter/Bluesky bio links → Patreon\n4. Set up a posting schedule for Patreon-exclusive philosophy content\n5. Add Patreon links to engagement queue actions\n\nTarget: $200-500/month within 60 days.",
+      "status": "assigned",
+      "assigneeIds": [
+        "marcus"
+      ],
+      "createdBy": "system",
+      "createdAt": "2026-02-08T22:02:58.796Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "roadmap": "this-month",
+        "estimatedMinutes": 600
+      }
+    },
+    {
+      "id": "task-040",
+      "title": "Create book completion timeline and writing plan",
+      "description": "5 books are drafted with chapter outlines but no systematic writing plan exists.\n\n1. Review all 5 book PROJECT_TRACKER.md files\n2. Prioritize which book to complete first (likely Book 1 - Philosophy)\n3. Assign chapters to philosopher agents with word count targets\n4. Set weekly milestones (500-1000 words per chapter per week)\n5. Create a 6-month timeline to Book 1 completion\n6. Add book progress tracking to the CMS dashboard\n\nBooks: Philosophy, Self-Help, Leadership, Therapy, AI.",
+      "status": "assigned",
+      "assigneeIds": [
+        "aristotle",
+        "tension"
+      ],
+      "createdBy": "system",
+      "createdAt": "2026-02-08T22:03:07.895Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "roadmap": "this-month",
+        "estimatedMinutes": 480
+      }
+    },
+    {
+      "id": "task-041",
+      "title": "Build newsletter automation",
+      "description": "Set up a weekly newsletter digest that pulls from the best content of the week.\n\n1. Design newsletter template (philosophy insight + links to recent posts)\n2. Auto-generate weekly digest from top ideas and published content\n3. Set up Substack integration for automated sends\n4. Add newsletter signup CTAs to social profiles and website\n5. Growth strategy: cross-promote from Twitter/Bluesky\n\nOwner: Marcus Aurelius (newsletter voice).",
+      "status": "assigned",
+      "assigneeIds": [
+        "marcus"
+      ],
+      "createdBy": "system",
+      "createdAt": "2026-02-08T22:03:16.229Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "roadmap": "this-month",
+        "estimatedMinutes": 480
+      }
+    },
+    {
+      "id": "task-042",
+      "title": "Build advanced analytics dashboard",
+      "description": "Current analytics are basic. Build real dashboards to measure what is working.\n\n1. Track per-platform metrics: followers, engagement rate, post performance\n2. Week-over-week and month-over-month growth charts\n3. Content performance rankings (which ideas/posts performed best)\n4. Revenue tracking with targets and progress bars\n5. Platform comparison view (where is growth strongest)\n6. Identify top-performing content themes for doubling down\n\nThis enables data-driven decisions on where to invest effort.",
+      "status": "assigned",
+      "assigneeIds": [
+        "aristotle",
+        "leonardo"
+      ],
+      "createdBy": "system",
+      "createdAt": "2026-02-08T22:03:23.955Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "roadmap": "3-months",
+        "estimatedMinutes": 1200
+      }
+    },
+    {
+      "id": "task-043",
+      "title": "Launch systematic influencer outreach program",
+      "description": "Scale growth through strategic engagement with philosophy and self-help influencers.\n\n1. Build target list of 100 philosophy/self-help/growth influencers across Twitter and Bluesky\n2. Create outreach templates per philosopher voice\n3. Automate initial engagement (likes, thoughtful replies) via engagement queue\n4. Track response rates and conversion to follows/engagement\n5. Identify collaboration opportunities (guest posts, quote threads)\n\nOwners: Nietzsche (Twitter), Heraclitus (Bluesky).",
+      "status": "assigned",
+      "assigneeIds": [
+        "nietzsche",
+        "heraclitus"
+      ],
+      "createdBy": "system",
+      "createdAt": "2026-02-08T22:03:32.316Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "roadmap": "3-months",
+        "estimatedMinutes": 900
+      }
+    },
+    {
+      "id": "task-044",
+      "title": "Build community management and comment automation",
+      "description": "Comments and replies exist in queues but lack smart filtering and prioritization.\n\n1. Implement sentiment analysis on incoming comments\n2. Auto-categorize: questions, praise, criticism, spam\n3. Priority routing — questions and meaningful engagement first\n4. Auto-reply templates for common patterns (with human approval)\n5. Dashboard view of community health metrics\n\nOwner: Diogenes (quality control role).",
+      "status": "assigned",
+      "assigneeIds": [
+        "diogenes"
+      ],
+      "createdBy": "system",
+      "createdAt": "2026-02-08T22:03:39.979Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "roadmap": "3-months",
+        "estimatedMinutes": 720
+      }
+    },
+    {
+      "id": "task-045",
+      "title": "Build multi-platform AI agent for cross-platform management",
+      "description": "Long-term vision: a unified agent that watches all platforms simultaneously.\n\n1. Monitor Twitter, Bluesky, Reddit, and Instagram for mentions and opportunities\n2. Auto-respond to comments with appropriate philosopher voice (human approval required)\n3. Cross-platform consistency — same ideas adapted per platform norms\n4. Unified inbox for all platform notifications\n5. Smart scheduling — post at optimal times per platform\n\nThis is the automation endgame for TensionLines.",
+      "status": "assigned",
+      "assigneeIds": [
+        "tension",
+        "aristotle"
+      ],
+      "createdBy": "system",
+      "createdAt": "2026-02-08T22:03:48.931Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "roadmap": "6-months",
+        "estimatedMinutes": 2400
+      }
+    },
+    {
+      "id": "task-046",
+      "title": "Launch content marketplace (courses, guides, templates)",
+      "description": "New revenue stream beyond Patreon — sell digital products.\n\n1. Philosophy frameworks guide ($29) — distilled wisdom from the books\n2. Self-knowledge workbook ($49) — interactive exercises\n3. Leadership through tension course ($299) — multi-module video/text course\n4. Set up Gumroad or similar for digital product sales\n5. Build sales pages on the TensionLines website\n6. Create email funnels from social → product pages\n\nPotential: $2-5k/month once established.",
+      "status": "assigned",
+      "assigneeIds": [
+        "plato",
+        "marcus"
+      ],
+      "createdBy": "system",
+      "createdAt": "2026-02-08T22:03:59.878Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "roadmap": "6-months",
+        "estimatedMinutes": 2400
+      }
+    },
+    {
+      "id": "task-047",
+      "title": "Launch philosophy podcast/audio content",
+      "description": "Lower barrier than video. Extend TensionLines into audio.\n\n1. Record short philosophy reflections (5-10 min episodes)\n2. Use AI-assisted editing for production quality\n3. Distribute to Spotify, Apple Podcasts, YouTube\n4. Repurpose existing ideas bank content as episode scripts\n5. Weekly or bi-weekly cadence\n\nThis reaches audiences who prefer audio over reading — commuters, runners, etc.",
+      "status": "assigned",
+      "assigneeIds": [
+        "leonardo"
+      ],
+      "createdBy": "system",
+      "createdAt": "2026-02-08T22:04:07.379Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "roadmap": "6-months",
+        "estimatedMinutes": 1200
+      }
     }
   ],
   "messages": [
@@ -1806,6 +2064,230 @@
     }
   ],
   "activities": [
+    {
+      "id": "activity-1770588247379",
+      "type": "task_created",
+      "agentId": "system",
+      "taskId": "task-047",
+      "timestamp": "2026-02-08T22:04:07.379Z",
+      "description": "Created task: Launch philosophy podcast/audio content",
+      "metadata": {
+        "assigneeIds": [
+          "leonardo"
+        ],
+        "status": "assigned",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770588239878",
+      "type": "task_created",
+      "agentId": "system",
+      "taskId": "task-046",
+      "timestamp": "2026-02-08T22:03:59.878Z",
+      "description": "Created task: Launch content marketplace (courses, guides, templates)",
+      "metadata": {
+        "assigneeIds": [
+          "plato",
+          "marcus"
+        ],
+        "status": "assigned",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770588228931",
+      "type": "task_created",
+      "agentId": "system",
+      "taskId": "task-045",
+      "timestamp": "2026-02-08T22:03:48.931Z",
+      "description": "Created task: Build multi-platform AI agent for cross-platform management",
+      "metadata": {
+        "assigneeIds": [
+          "tension",
+          "aristotle"
+        ],
+        "status": "assigned",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770588219979",
+      "type": "task_created",
+      "agentId": "system",
+      "taskId": "task-044",
+      "timestamp": "2026-02-08T22:03:39.979Z",
+      "description": "Created task: Build community management and comment automation",
+      "metadata": {
+        "assigneeIds": [
+          "diogenes"
+        ],
+        "status": "assigned",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770588212316",
+      "type": "task_created",
+      "agentId": "system",
+      "taskId": "task-043",
+      "timestamp": "2026-02-08T22:03:32.316Z",
+      "description": "Created task: Launch systematic influencer outreach program",
+      "metadata": {
+        "assigneeIds": [
+          "nietzsche",
+          "heraclitus"
+        ],
+        "status": "assigned",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770588203955",
+      "type": "task_created",
+      "agentId": "system",
+      "taskId": "task-042",
+      "timestamp": "2026-02-08T22:03:23.955Z",
+      "description": "Created task: Build advanced analytics dashboard",
+      "metadata": {
+        "assigneeIds": [
+          "aristotle",
+          "leonardo"
+        ],
+        "status": "assigned",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770588196229",
+      "type": "task_created",
+      "agentId": "system",
+      "taskId": "task-041",
+      "timestamp": "2026-02-08T22:03:16.229Z",
+      "description": "Created task: Build newsletter automation",
+      "metadata": {
+        "assigneeIds": [
+          "marcus"
+        ],
+        "status": "assigned",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770588187895",
+      "type": "task_created",
+      "agentId": "system",
+      "taskId": "task-040",
+      "timestamp": "2026-02-08T22:03:07.895Z",
+      "description": "Created task: Create book completion timeline and writing plan",
+      "metadata": {
+        "assigneeIds": [
+          "aristotle",
+          "tension"
+        ],
+        "status": "assigned",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770588178796",
+      "type": "task_created",
+      "agentId": "system",
+      "taskId": "task-039",
+      "timestamp": "2026-02-08T22:02:58.796Z",
+      "description": "Created task: Activate Patreon revenue stream",
+      "metadata": {
+        "assigneeIds": [
+          "marcus"
+        ],
+        "status": "assigned",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770588170446",
+      "type": "task_created",
+      "agentId": "system",
+      "taskId": "task-038",
+      "timestamp": "2026-02-08T22:02:50.446Z",
+      "description": "Created task: Build automatic idea-to-draft pipeline",
+      "metadata": {
+        "assigneeIds": [
+          "aristotle"
+        ],
+        "status": "assigned",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770588159664",
+      "type": "task_created",
+      "agentId": "system",
+      "taskId": "task-037",
+      "timestamp": "2026-02-08T22:02:39.664Z",
+      "description": "Created task: Activate Reddit outreach via Diogenes",
+      "metadata": {
+        "assigneeIds": [
+          "diogenes"
+        ],
+        "status": "assigned",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770587902991",
+      "type": "task_created",
+      "agentId": "system",
+      "taskId": "task-036",
+      "timestamp": "2026-02-08T21:58:22.991Z",
+      "description": "Created task: Rotate Anthropic API key",
+      "metadata": {
+        "assigneeIds": [
+          "human"
+        ],
+        "status": "assigned",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770585487612",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-016",
+      "timestamp": "2026-02-08T21:18:07.612Z",
+      "description": "Completed: CMS Time-In-Status Alerts & Visual Indicators",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770585375648",
+      "type": "task_debug",
+      "agentId": "system",
+      "taskId": "task-016",
+      "timestamp": "2026-02-08T21:16:15.648Z",
+      "description": "Debug (Sonnet): This task has been idle for 45+ hours (2718 minutes) after Aristotle completed backend work. The task description split work between Aristotle (backen",
+      "metadata": {
+        "level": "debug",
+        "fixType": "break_into_subtasks",
+        "canAutoFix": true,
+        "cost": 0.010277999999999999
+      }
+    },
+    {
+      "id": "activity-1770584928527",
+      "type": "task_debug",
+      "agentId": "system",
+      "taskId": "task-014",
+      "timestamp": "2026-02-08T21:08:48.526Z",
+      "description": "Debug (Sonnet): This task is marked as 'completed' but shows a pattern of repeated retries and reassignments between agent and human, suggesting confusion about task ",
+      "metadata": {
+        "level": "debug",
+        "fixType": "break_into_subtasks",
+        "canAutoFix": false,
+        "cost": 0.010929000000000001
+      }
+    },
     {
       "id": "activity-1770581553047",
       "type": "task_completed",
@@ -3043,11 +3525,196 @@
   "documents": [],
   "notifications": [
     {
+      "id": "notif-1770588247379",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Launch philosophy podcast/audio content**\n\nAssigned to: leonardo\nPriority: not set\n\nLower barrier than video. Extend TensionLines into audio.\n\n1. Record short philosophy reflections (5-10 min episodes)\n2. Use AI-assisted editing for production quality\n3. Distribute to Spotify, Apple ...",
+      "read": false,
+      "createdAt": "2026-02-08T22:04:07.379Z",
+      "metadata": {
+        "taskId": "task-047",
+        "assigneeIds": [
+          "leonardo"
+        ],
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "notif-1770588239878",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Launch content marketplace (courses, guides, templates)**\n\nAssigned to: plato, marcus\nPriority: not set\n\nNew revenue stream beyond Patreon — sell digital products.\n\n1. Philosophy frameworks guide ($29) — distilled wisdom from the books\n2. Self-knowledge workbook ($49) — interactive exercises\n3. Leadershi...",
+      "read": false,
+      "createdAt": "2026-02-08T22:03:59.878Z",
+      "metadata": {
+        "taskId": "task-046",
+        "assigneeIds": [
+          "plato",
+          "marcus"
+        ],
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "notif-1770588228931",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Build multi-platform AI agent for cross-platform management**\n\nAssigned to: tension, aristotle\nPriority: not set\n\nLong-term vision: a unified agent that watches all platforms simultaneously.\n\n1. Monitor Twitter, Bluesky, Reddit, and Instagram for mentions and opportunities\n2. Auto-respond to comments with appropr...",
+      "read": false,
+      "createdAt": "2026-02-08T22:03:48.931Z",
+      "metadata": {
+        "taskId": "task-045",
+        "assigneeIds": [
+          "tension",
+          "aristotle"
+        ],
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "notif-1770588219979",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Build community management and comment automation**\n\nAssigned to: diogenes\nPriority: not set\n\nComments and replies exist in queues but lack smart filtering and prioritization.\n\n1. Implement sentiment analysis on incoming comments\n2. Auto-categorize: questions, praise, criticism, spam\n3. Priori...",
+      "read": false,
+      "createdAt": "2026-02-08T22:03:39.979Z",
+      "metadata": {
+        "taskId": "task-044",
+        "assigneeIds": [
+          "diogenes"
+        ],
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "notif-1770588212316",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Launch systematic influencer outreach program**\n\nAssigned to: nietzsche, heraclitus\nPriority: not set\n\nScale growth through strategic engagement with philosophy and self-help influencers.\n\n1. Build target list of 100 philosophy/self-help/growth influencers across Twitter and Bluesky\n2. Create outreach ...",
+      "read": false,
+      "createdAt": "2026-02-08T22:03:32.316Z",
+      "metadata": {
+        "taskId": "task-043",
+        "assigneeIds": [
+          "nietzsche",
+          "heraclitus"
+        ],
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "notif-1770588203955",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Build advanced analytics dashboard**\n\nAssigned to: aristotle, leonardo\nPriority: not set\n\nCurrent analytics are basic. Build real dashboards to measure what is working.\n\n1. Track per-platform metrics: followers, engagement rate, post performance\n2. Week-over-week and month-over-month growt...",
+      "read": false,
+      "createdAt": "2026-02-08T22:03:23.955Z",
+      "metadata": {
+        "taskId": "task-042",
+        "assigneeIds": [
+          "aristotle",
+          "leonardo"
+        ],
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "notif-1770588196229",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Build newsletter automation**\n\nAssigned to: marcus\nPriority: not set\n\nSet up a weekly newsletter digest that pulls from the best content of the week.\n\n1. Design newsletter template (philosophy insight + links to recent posts)\n2. Auto-generate weekly digest from top idea...",
+      "read": false,
+      "createdAt": "2026-02-08T22:03:16.229Z",
+      "metadata": {
+        "taskId": "task-041",
+        "assigneeIds": [
+          "marcus"
+        ],
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "notif-1770588187895",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Create book completion timeline and writing plan**\n\nAssigned to: aristotle, tension\nPriority: not set\n\n5 books are drafted with chapter outlines but no systematic writing plan exists.\n\n1. Review all 5 book PROJECT_TRACKER.md files\n2. Prioritize which book to complete first (likely Book 1 - Philosophy)\n...",
+      "read": false,
+      "createdAt": "2026-02-08T22:03:07.895Z",
+      "metadata": {
+        "taskId": "task-040",
+        "assigneeIds": [
+          "aristotle",
+          "tension"
+        ],
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "notif-1770588178796",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Activate Patreon revenue stream**\n\nAssigned to: marcus\nPriority: not set\n\nPatreon infrastructure exists but is dormant. This is the lowest-hanging revenue fruit.\n\n1. Define tier structure (free, $5, $15) with clear value at each level\n2. Create 2-3 pieces of exclusive conte...",
+      "read": false,
+      "createdAt": "2026-02-08T22:02:58.796Z",
+      "metadata": {
+        "taskId": "task-039",
+        "assigneeIds": [
+          "marcus"
+        ],
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "notif-1770588170446",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Build automatic idea-to-draft pipeline**\n\nAssigned to: aristotle\nPriority: not set\n\nThe single highest-ROI automation. Currently ideas sit in the bank and drafts are created manually for each platform.\n\nBuild a system that:\n1. Takes an idea from the ideas bank\n2. Auto-adapts it to pl...",
+      "read": false,
+      "createdAt": "2026-02-08T22:02:50.446Z",
+      "metadata": {
+        "taskId": "task-038",
+        "assigneeIds": [
+          "aristotle"
+        ],
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "notif-1770588159664",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Activate Reddit outreach via Diogenes**\n\nAssigned to: diogenes\nPriority: not set\n\nDiogenes already has a draft ready (philosophers/diogenes/drafts/reddit-welcome-fixed.md). Reddit is a philosophy-hungry audience and the easiest win.\n\n1. Review and finalize the Reddit welcome post d...",
+      "read": false,
+      "createdAt": "2026-02-08T22:02:39.664Z",
+      "metadata": {
+        "taskId": "task-037",
+        "assigneeIds": [
+          "diogenes"
+        ],
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "notif-1770587902991",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Rotate Anthropic API key**\n\nAssigned to: human\nPriority: not set\n\nYour current API key has been in the .env file since project start. As a security best practice, rotate it now.\n\n1. Go to the Anthropic Console and generate a new API key\n2. Update cms/.env with the n...",
+      "read": false,
+      "createdAt": "2026-02-08T21:58:22.991Z",
+      "metadata": {
+        "taskId": "task-036",
+        "assigneeIds": [
+          "human"
+        ],
+        "createdBy": "system"
+      }
+    },
+    {
       "id": "notif-1770566400029",
       "type": "daily_summary",
       "title": "Morning Briefing",
       "message": "**Daily Summary - 2/8/2026**\n\n📊 **Progress**: 6 tasks completed yesterday\n📋 **Active**: 3 tasks in progress (⚠️ 3 stuck)\n👤 **Your Tasks**: 1 awaiting your attention\n🔔 **Notifications**: 6 unread\n💰 **Monthly Cost**: $0.00/$300 (0%)\n\n⚠️ **18 high priority issues** need attention\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h",
-      "read": false,
+      "read": true,
       "createdAt": "2026-02-08T16:00:00.027Z",
       "metadata": {
         "completedYesterday": 6,
@@ -3177,7 +3844,9 @@
             "type": "stuck_task"
           }
         ]
-      }
+      },
+      "readAt": "2026-02-08T21:23:15.576Z",
+      "readBy": "human"
     },
     {
       "id": "notif-1770517763776-hb7d",
@@ -4466,7 +5135,7 @@
         "human"
       ],
       "createdAt": "2026-02-08T13:51:32.940Z",
-      "read": false,
+      "read": true,
       "priority": "critical",
       "actionRequired": true,
       "metadata": {
@@ -4475,7 +5144,9 @@
         "alertLevel": "red",
         "diagnostics": [],
         "suggestions": []
-      }
+      },
+      "readAt": "2026-02-08T21:23:16.144Z",
+      "readBy": "human"
     },
     {
       "id": "notif-stuck-1770558692945-xtt1to5l2",
@@ -4488,7 +5159,7 @@
         "human"
       ],
       "createdAt": "2026-02-08T13:51:32.945Z",
-      "read": false,
+      "read": true,
       "priority": "critical",
       "actionRequired": true,
       "metadata": {
@@ -4497,7 +5168,9 @@
         "alertLevel": "red",
         "diagnostics": [],
         "suggestions": []
-      }
+      },
+      "readAt": "2026-02-08T21:23:16.779Z",
+      "readBy": "human"
     },
     {
       "id": "notif-stuck-1770558692949-ix7aygglm",
@@ -4510,7 +5183,7 @@
         "human"
       ],
       "createdAt": "2026-02-08T13:51:32.949Z",
-      "read": false,
+      "read": true,
       "priority": "critical",
       "actionRequired": true,
       "metadata": {
@@ -4519,7 +5192,9 @@
         "alertLevel": "red",
         "diagnostics": [],
         "suggestions": []
-      }
+      },
+      "readAt": "2026-02-08T21:23:17.243Z",
+      "readBy": "human"
     },
     {
       "id": "notif-stuck-1770558692960-0hlz177pm",
@@ -4532,7 +5207,7 @@
         "human"
       ],
       "createdAt": "2026-02-08T13:51:32.960Z",
-      "read": false,
+      "read": true,
       "priority": "critical",
       "actionRequired": true,
       "metadata": {
@@ -4541,7 +5216,9 @@
         "alertLevel": "red",
         "diagnostics": [],
         "suggestions": []
-      }
+      },
+      "readAt": "2026-02-08T21:23:17.407Z",
+      "readBy": "human"
     },
     {
       "id": "notif-stuck-1770558692976-xr8ku9ahm",
@@ -4554,7 +5231,7 @@
         "human"
       ],
       "createdAt": "2026-02-08T13:51:32.976Z",
-      "read": false,
+      "read": true,
       "priority": "critical",
       "actionRequired": true,
       "metadata": {
@@ -4563,7 +5240,9 @@
         "alertLevel": "red",
         "diagnostics": [],
         "suggestions": []
-      }
+      },
+      "readAt": "2026-02-08T21:23:17.591Z",
+      "readBy": "human"
     },
     {
       "id": "notif-stuck-1770558692980-73dpujpcq",
@@ -4576,7 +5255,7 @@
         "human"
       ],
       "createdAt": "2026-02-08T13:51:32.980Z",
-      "read": false,
+      "read": true,
       "priority": "critical",
       "actionRequired": true,
       "metadata": {
@@ -4585,7 +5264,63 @@
         "alertLevel": "red",
         "diagnostics": [],
         "suggestions": []
-      }
+      },
+      "readAt": "2026-02-08T21:23:17.741Z",
+      "readBy": "human"
+    },
+    {
+      "id": "notif-debug-1770584928526-olo9ypdff",
+      "type": "task_debug",
+      "title": "🔍 Debug (Sonnet): Bluesky Daily Outreach - Community Growth",
+      "message": "**Diagnosis:** This task is marked as 'completed' but shows a pattern of repeated retries and reassignments between agent and human, suggesting confusion about task ownership and execution model. The task description underwent a major workflow change (Feb 5: manual search required, Feb 8: now automated) but the daily recurring nature isn't properly structured. The agent 'heraclitus' appears unable to execute the manual steps (Bluesky login, commenting) that were required during the transition period. The multiple retry attempts and 119-minute gaps indicate the agent kept attempting execution but couldn't complete the full workflow. The task conflates ongoing daily operations with one-time setup/automation work.\n\n**Suggested Fix:** 1) Mark this specific task instance as complete (it represents the setup/transition phase). 2) Create separate task types: a) 'Bluesky Automation - Monitor & Maintain' (for heraclitus to monitor the automated scanner/executor at 11AM, 3PM, 7PM PST), b) 'Bluesky Reply Response' (triggered when replies come in, assigned to human/Shawn), c) 'Bluesky Weekly Analytics Review' (weekly task to review metrics from tracking files). 3) Update the automation system documentation to clarify that the manual outreach workflow is deprecated and the AT Protocol API automation is now the primary method. 4) Remove the expectation that heraclitus can perform web login or manual commenting - these require human intervention or proper API integration.\n\n**Fix Type:** break_into_subtasks | **Auto-fixable:** No",
+      "from": "system",
+      "to": [
+        "tension",
+        "heraclitus"
+      ],
+      "createdAt": "2026-02-08T21:08:48.526Z",
+      "read": true,
+      "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "taskId": "task-014",
+        "debugLevel": "debug",
+        "result": {
+          "diagnosis": "This task is marked as 'completed' but shows a pattern of repeated retries and reassignments between agent and human, suggesting confusion about task ownership and execution model. The task description underwent a major workflow change (Feb 5: manual search required, Feb 8: now automated) but the daily recurring nature isn't properly structured. The agent 'heraclitus' appears unable to execute the manual steps (Bluesky login, commenting) that were required during the transition period. The multiple retry attempts and 119-minute gaps indicate the agent kept attempting execution but couldn't complete the full workflow. The task conflates ongoing daily operations with one-time setup/automation work.",
+          "suggestedFix": "1) Mark this specific task instance as complete (it represents the setup/transition phase). 2) Create separate task types: a) 'Bluesky Automation - Monitor & Maintain' (for heraclitus to monitor the automated scanner/executor at 11AM, 3PM, 7PM PST), b) 'Bluesky Reply Response' (triggered when replies come in, assigned to human/Shawn), c) 'Bluesky Weekly Analytics Review' (weekly task to review metrics from tracking files). 3) Update the automation system documentation to clarify that the manual outreach workflow is deprecated and the AT Protocol API automation is now the primary method. 4) Remove the expectation that heraclitus can perform web login or manual commenting - these require human intervention or proper API integration.",
+          "canAutoFix": false,
+          "fixType": "break_into_subtasks"
+        }
+      },
+      "readAt": "2026-02-08T21:23:17.891Z",
+      "readBy": "human"
+    },
+    {
+      "id": "notif-debug-1770585375648-dleidpf5p",
+      "type": "task_debug",
+      "title": "🔍 Debug (Sonnet): CMS Time-In-Status Alerts & Visual Indicators",
+      "message": "**Diagnosis:** This task has been idle for 45+ hours (2718 minutes) after Aristotle completed backend work. The task description split work between Aristotle (backend) and Leonardo (frontend), but Leonardo was never properly engaged. Task history shows multiple reassignments (aristotle→leonardo→aristotle→socrates→aristotle→leonardo→aristotle), creating confusion about ownership. Aristotle completed the backend portion on 2026-02-05T10:46:00 and the task has been dormant since. The task requires Leonardo to do the frontend work, but Leonardo is not the current assignee and appears to have no active steps assigned.\n\n**Suggested Fix:** 1. Split this into two separate tasks: (A) 'Backend: Time-In-Status API' (mark as COMPLETED - Aristotle already finished this per the task_progress note), and (B) 'Frontend: Time-In-Status Visual Indicators' (assign to Leonardo with clear, actionable steps: add time badges to Tasks view, add indicators to agent cards, add 'Stuck Tasks' count to dashboard). 2. The new Leonardo task should reference task-016's completed backend work and include specific component files to modify. 3. Update task-016 status to 'completed' since Aristotle's portion is done, or convert it to track only the frontend work and reassign to Leonardo.\n\n**Fix Type:** break_into_subtasks | **Auto-fixable:** Yes",
+      "from": "system",
+      "to": [
+        "tension",
+        "aristotle"
+      ],
+      "createdAt": "2026-02-08T21:16:15.648Z",
+      "read": true,
+      "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "taskId": "task-016",
+        "debugLevel": "debug",
+        "result": {
+          "diagnosis": "This task has been idle for 45+ hours (2718 minutes) after Aristotle completed backend work. The task description split work between Aristotle (backend) and Leonardo (frontend), but Leonardo was never properly engaged. Task history shows multiple reassignments (aristotle→leonardo→aristotle→socrates→aristotle→leonardo→aristotle), creating confusion about ownership. Aristotle completed the backend portion on 2026-02-05T10:46:00 and the task has been dormant since. The task requires Leonardo to do the frontend work, but Leonardo is not the current assignee and appears to have no active steps assigned.",
+          "suggestedFix": "1. Split this into two separate tasks: (A) 'Backend: Time-In-Status API' (mark as COMPLETED - Aristotle already finished this per the task_progress note), and (B) 'Frontend: Time-In-Status Visual Indicators' (assign to Leonardo with clear, actionable steps: add time badges to Tasks view, add indicators to agent cards, add 'Stuck Tasks' count to dashboard). 2. The new Leonardo task should reference task-016's completed backend work and include specific component files to modify. 3. Update task-016 status to 'completed' since Aristotle's portion is done, or convert it to track only the frontend work and reassign to Leonardo.",
+          "canAutoFix": true,
+          "fixType": "break_into_subtasks"
+        }
+      },
+      "readAt": "2026-02-08T21:23:18.462Z",
+      "readBy": "human"
     }
   ],
   "stepDurations": [
