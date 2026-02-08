@@ -1,6 +1,37 @@
 {
-  "queue": [],
+  "queue": [
+    {
+      "id": "action-1770582277363-1p4q",
+      "type": "like",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/NimeniEPhrog/status/2020590300859908528",
+      "targetAuthor": "NimeniEPhrog",
+      "targetText": "THE BEAR MEANS PAINFUL MEMORIES THE SKIN PROPHET INCOMPREHENSIBLE KNOWLEDGE THE ROSE HUNTER BEING INTO A FORCED ROLE HEADLESS FISH BEING BLIND TO SOMETHING AND FOLLOWING IT  WATCH DOGS INSTINCT BAG PAIN NEEDING SOMETHING TO LIVE TIME DUCK ILLUSION SELF WHAT IS",
+      "targetUri": null,
+      "targetCid": null,
+      "context": "Cryptic but intriguing exploration of symbols and self-awareness—has that paradoxical quality we appreciate",
+      "source": "auto-scan",
+      "status": "ready",
+      "createdAt": "2026-02-08T20:24:37.363Z"
+    }
+  ],
   "completed": [
+    {
+      "id": "action-1770582277363-xuq4",
+      "type": "like",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/nondairycanary.bsky.social/post/3mea5be5gmc2o",
+      "targetAuthor": "nondairycanary.bsky.social",
+      "targetText": "It's always the same. Unbelievably lazy, derived from minimal thought and hoary old stereotypes, yet presented as the consequence of a rare and profound self-knowledge.\n\nIt's like those people who proudly declare, 'I don't believe in the old man with a beard, but I am a very spiritual person.'",
+      "targetUri": "at://did:plc:bdnbn2ochuyjpwhsmvvgmdpd/app.bsky.feed.post/3mea5be5gmc2o",
+      "targetCid": "bafyreiht73wi3gwzuiixflaw7gmds3jpeas32cknfmrdskchgjjddjb55a",
+      "context": "Sharp critique of superficial self-knowledge claims—touches on our tension between genuine insight and lazy thinking",
+      "source": "auto-scan",
+      "status": "completed",
+      "createdAt": "2026-02-08T20:24:37.363Z",
+      "completedAt": "2026-02-08T20:24:51.066Z",
+      "executedBy": "auto"
+    },
     {
       "id": "action-1770577208812-7ygc",
       "type": "repost",
