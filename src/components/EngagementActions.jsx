@@ -45,6 +45,7 @@ export default function EngagementActions() {
   const [activeTab, setActiveTab] = useState('queue')
   const [scanning, setScanning] = useState(false)
   const [scanResult, setScanResult] = useState(null)
+  const [typeFilter, setTypeFilter] = useState(null)
   const [bskyStatus, setBskyStatus] = useState(null)
   const [twitterStatus, setTwitterStatus] = useState(null)
   const { data, error, isLoading, mutate } = useSWR('/api/engagement-actions', fetcher, {
@@ -145,14 +146,23 @@ export default function EngagementActions() {
         </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Cards (clickable filters) */}
       <div className="grid grid-cols-3 gap-4">
         {Object.entries(TYPE_CONFIG).map(([type, cfg]) => {
           const Icon = cfg.icon
           const count = queueByType[type]?.length || 0
           const todayCount = data.todayCounts?.twitter?.[type] || 0
+          const isActive = typeFilter === type
           return (
-            <div key={type} className="bg-white rounded-lg border border-neutral-200 p-4">
+            <button
+              key={type}
+              onClick={() => setTypeFilter(isActive ? null : type)}
+              className={`text-left rounded-lg border p-4 transition-all ${
+                isActive
+                  ? 'border-2 border-current ring-2 ring-offset-1 ' + cfg.bgClass
+                  : 'bg-white border-neutral-200 hover:border-neutral-300'
+              }`}
+            >
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg ${cfg.bgClass}`}>
                   <Icon size={20} />
@@ -165,7 +175,7 @@ export default function EngagementActions() {
               {todayCount > 0 && (
                 <p className="text-xs text-neutral-400 mt-2">{todayCount} completed today</p>
               )}
-            </div>
+            </button>
           )
         })}
       </div>
@@ -213,37 +223,47 @@ export default function EngagementActions() {
         </button>
       </div>
 
-      {activeTab === 'queue' ? (
+      {activeTab === 'queue' ? (() => {
+        const filtered = typeFilter
+          ? (data.queue || []).filter(i => i.type === typeFilter)
+          : (data.queue || [])
+        return (
         <div className="bg-white rounded-lg border border-neutral-200">
           <div className="divide-y divide-neutral-100">
-            {(data.queue?.length === 0) ? (
+            {filtered.length === 0 ? (
               <div className="p-8 text-center text-neutral-500">
                 <RefreshCw className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
-                <p>No actions queued</p>
-                <p className="text-sm mt-1">Add reposts, likes, or follows to get started</p>
+                <p>{typeFilter ? `No ${typeFilter}s queued` : 'No actions queued'}</p>
+                <p className="text-sm mt-1">{typeFilter ? 'Click the card again to show all' : 'Add reposts, likes, or follows to get started'}</p>
               </div>
             ) : (
-              data.queue.map(item => (
+              filtered.map(item => (
                 <ActionItem key={item.id} item={item} onUpdate={mutate} />
               ))
             )}
           </div>
         </div>
-      ) : (
+        )
+      })() : (() => {
+        const filtered = typeFilter
+          ? (data.completed || []).filter(i => i.type === typeFilter)
+          : (data.completed || [])
+        return (
         <div className="bg-white rounded-lg border border-neutral-200">
           <div className="divide-y divide-neutral-100 max-h-96 overflow-y-auto">
-            {(data.completed?.length === 0) ? (
+            {filtered.length === 0 ? (
               <div className="p-8 text-center text-neutral-500">
-                <p>No completed actions yet</p>
+                <p>{typeFilter ? `No completed ${typeFilter}s` : 'No completed actions yet'}</p>
               </div>
             ) : (
-              data.completed.slice(0, 50).map(item => (
+              filtered.slice(0, 50).map(item => (
                 <CompletedItem key={item.id} item={item} />
               ))
             )}
           </div>
         </div>
-      )}
+        )
+      })()}
 
       {showAddModal && (
         <AddActionModal
