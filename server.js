@@ -3523,6 +3523,98 @@ function addConversationalHook(text) {
 }
 
 // ============================================================================
+// HASHTAGS (for replies & comments)
+// ============================================================================
+
+const HASHTAG_POOLS = {
+  philosophy: ['#philosophy', '#deepthoughts', '#bigquestions', '#thinkdifferent', '#philosophyoflife'],
+  wisdom: ['#wisdom', '#lifelessons', '#truth', '#perspective', '#knowthyself'],
+  growth: ['#personalgrowth', '#selfawareness', '#innerwork', '#growthmindset', '#selfdiscovery'],
+  emotion: ['#emotionalintelligence', '#vulnerability', '#authenticity', '#realness', '#honesty'],
+  mindset: ['#mindset', '#mindfulness', '#presence', '#awareness', '#intention'],
+  identity: ['#identity', '#selfknowledge', '#whoami', '#bereal', '#ownit'],
+  tension: ['#tensionlines', '#holdthetension', '#bothcanbtrue'],
+  resilience: ['#resilience', '#courage', '#strength', '#keepgoing', '#dontlookaway'],
+  language: ['#wordsmatter', '#storytelling', '#writingcommunity', '#quotestoliveby'],
+};
+
+// Keywords that map reply content to hashtag pools
+const KEYWORD_TO_POOL = [
+  { keywords: ['wisdom', 'wise', 'lesson', 'learn', 'teach'], pool: 'wisdom' },
+  { keywords: ['emotion', 'feel', 'feeling', 'grief', 'pain', 'joy', 'anger'], pool: 'emotion' },
+  { keywords: ['grow', 'growth', 'change', 'evolve', 'transform', 'becoming'], pool: 'growth' },
+  { keywords: ['mind', 'think', 'thought', 'aware', 'conscious', 'attention', 'present', 'presence'], pool: 'mindset' },
+  { keywords: ['identity', 'self', 'who', 'define', 'definition', 'label', 'authentic'], pool: 'identity' },
+  { keywords: ['tension', 'paradox', 'contradict', 'both', 'opposite', 'between'], pool: 'tension' },
+  { keywords: ['courage', 'brave', 'fear', 'resilient', 'struggle', 'hold', 'stay'], pool: 'resilience' },
+  { keywords: ['word', 'story', 'write', 'narrat', 'sentence', 'language', 'name', 'naming'], pool: 'language' },
+  { keywords: ['philosophy', 'philosopher', 'existential', 'meaning', 'purpose', 'truth'], pool: 'philosophy' },
+];
+
+/**
+ * Add relevant hashtags to reply/comment text on a variable schedule.
+ * ~30% no tags, ~45% 1 tag, ~25% 2 tags. Keeps replies from looking spammy.
+ */
+function addRelevantHashtags(text) {
+  if (!text || text.length < 20) return text;
+
+  // Hash for deterministic selection (different seed than hooks)
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 7) - hash + text.charCodeAt(i)) | 0;
+  }
+  hash = Math.abs(hash);
+
+  // Variable schedule: 30% skip, 45% one tag, 25% two tags
+  const bucket = hash % 100;
+  let tagCount;
+  if (bucket < 30) return text;        // no hashtags
+  else if (bucket < 75) tagCount = 1;  // 1 hashtag
+  else tagCount = 2;                   // 2 hashtags
+
+  // Find matching pools based on content keywords
+  const lower = text.toLowerCase();
+  const matchedPools = new Set();
+
+  for (const mapping of KEYWORD_TO_POOL) {
+    if (mapping.keywords.some(kw => lower.includes(kw))) {
+      matchedPools.add(mapping.pool);
+    }
+  }
+
+  // Always include tension pool as a candidate (brand tag)
+  matchedPools.add('tension');
+
+  // If no keyword matches, use philosophy + wisdom as fallback
+  if (matchedPools.size <= 1) {
+    matchedPools.add('philosophy');
+    matchedPools.add('wisdom');
+  }
+
+  // Collect candidate hashtags from matched pools
+  const candidates = [];
+  for (const poolName of matchedPools) {
+    const pool = HASHTAG_POOLS[poolName];
+    if (pool) candidates.push(...pool);
+  }
+
+  // Dedupe and pick deterministically
+  const unique = [...new Set(candidates)];
+  const picked = [];
+  for (let i = 0; i < tagCount && i < unique.length; i++) {
+    const idx = (hash + i * 7) % unique.length;
+    const tag = unique[idx];
+    if (!picked.includes(tag)) picked.push(tag);
+  }
+
+  if (picked.length === 0) return text;
+
+  // Append tags after a line break
+  const trimmed = text.trimEnd();
+  return `${trimmed}\n\n${picked.join(' ')}`;
+}
+
+// ============================================================================
 // REPLY QUEUE
 // ============================================================================
 
@@ -3673,8 +3765,9 @@ app.post('/api/reply-queue', (req, res) => {
       return res.status(400).json({ error: 'targetUrl and replyText are required' });
     }
 
-    // Add conversational hook unless caller opts out
-    const hookedReplyText = req.body.skipHook ? replyText : addConversationalHook(replyText);
+    // Add conversational hook and hashtags unless caller opts out
+    let processedReplyText = req.body.skipHook ? replyText : addConversationalHook(replyText);
+    if (!req.body.skipHook) processedReplyText = addRelevantHashtags(processedReplyText);
 
     const item = {
       id: `reply-${Date.now()}`,
@@ -3684,7 +3777,7 @@ app.post('/api/reply-queue', (req, res) => {
       targetUrl,
       targetAuthor: targetAuthor || '',
       targetText: targetText || '',
-      replyText: hookedReplyText,
+      replyText: processedReplyText,
       taskId: taskId || null,
       targetUri: null,
       targetCid: null
@@ -4187,7 +4280,7 @@ Write a single comment that would naturally fit in this conversation.`;
       return res.status(502).json({ error: 'Claude returned empty response' });
     }
 
-    item.commentText = commentText;
+    item.commentText = addRelevantHashtags(commentText);
     item.status = 'ready';
     item.generatedAt = new Date().toISOString();
     item.generatedModel = 'claude-sonnet-4-5-20250929';
@@ -9077,7 +9170,7 @@ app.post('/api/migrate-tasks-to-queues', (req, res) => {
           targetUrl: action.url,
           targetAuthor: handle,
           targetText,
-          replyText: addConversationalHook(action.suggestedComment),
+          replyText: addRelevantHashtags(addConversationalHook(action.suggestedComment)),
           taskId: task.id,
           targetUri: null,
           targetCid: null
@@ -9154,14 +9247,21 @@ app.post('/api/apply-hooks', (req, res) => {
   try {
     const replyData = getReplyQueue();
     const commentData = getCommentQueue();
-    let replyCount = 0;
-    let commentCount = 0;
+    let replyHookCount = 0;
+    let replyTagCount = 0;
+    let commentHookCount = 0;
+    let commentTagCount = 0;
 
     for (const item of replyData.queue) {
       if (item.replyText && !item.hookApplied) {
         item.replyText = addConversationalHook(item.replyText);
         item.hookApplied = true;
-        replyCount++;
+        replyHookCount++;
+      }
+      if (item.replyText && !item.hashtagsApplied) {
+        item.replyText = addRelevantHashtags(item.replyText);
+        item.hashtagsApplied = true;
+        replyTagCount++;
       }
     }
 
@@ -9169,14 +9269,25 @@ app.post('/api/apply-hooks', (req, res) => {
       if (item.commentText && !item.hookApplied) {
         item.commentText = addConversationalHook(item.commentText);
         item.hookApplied = true;
-        commentCount++;
+        commentHookCount++;
+      }
+      if (item.commentText && !item.hashtagsApplied) {
+        item.commentText = addRelevantHashtags(item.commentText);
+        item.hashtagsApplied = true;
+        commentTagCount++;
       }
     }
 
-    if (replyCount > 0) saveReplyQueue(replyData);
-    if (commentCount > 0) saveCommentQueue(commentData);
+    if (replyHookCount > 0 || replyTagCount > 0) saveReplyQueue(replyData);
+    if (commentHookCount > 0 || commentTagCount > 0) saveCommentQueue(commentData);
 
-    res.json({ success: true, updated: { replies: replyCount, comments: commentCount } });
+    res.json({
+      success: true,
+      updated: {
+        replies: { hooks: replyHookCount, hashtags: replyTagCount },
+        comments: { hooks: commentHookCount, hashtags: commentTagCount }
+      }
+    });
   } catch (error) {
     console.error('Hook application error:', error);
     res.status(500).json({ error: 'Failed to apply hooks' });
