@@ -2,7 +2,8 @@ import { useState } from 'react'
 import useSWR from 'swr'
 import ReactMarkdown from 'react-markdown'
 import { getTasks, fetcher } from '../lib/api'
-import { CheckCircle, Clock, ExternalLink, AlertCircle, Copy, Check, Link, MessageSquare, Instagram, MessageCircle, Palette, Send, Plus, Trash2, Vote, MapPin, FileText, Image, Film, Lightbulb } from 'lucide-react'
+import { CheckCircle, Clock, ExternalLink, AlertCircle, Copy, Check, Link, MessageSquare, Instagram, MessageCircle, Palette, Send, Plus, Trash2, Vote, MapPin, FileText, Image, Film, Lightbulb, Reply, MessageSquarePlus } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 // Security: Validate URLs to prevent javascript: and other malicious protocols
 function isValidHttpUrl(urlString) {
@@ -14,11 +15,32 @@ function isValidHttpUrl(urlString) {
   }
 }
 
+// Check if a task is a queue-like task (reply or posting) that belongs in queues
+function isQueueLikeTask(task) {
+  // Already migrated
+  if (task.metadata?.migratedToQueue) return true
+  // Has reply-style action items
+  const actionItems = task.metadata?.actionItems || []
+  if (actionItems.some(a => a.suggestedComment && a.url)) return true
+  // Is a posting/retweet task
+  const titleLower = task.title.toLowerCase()
+  if (titleLower.startsWith('post original tweet') || titleLower.startsWith('retweet')) return true
+  if (task.metadata?.repostCandidate) return true
+  return false
+}
+
 export default function HumanTasks() {
+  const navigate = useNavigate()
   const { data: allTasks, error, mutate } = useSWR('/tasks', getTasks, {
     refreshInterval: 30000
   })
   const { data: postingQueue, mutate: mutateQueue } = useSWR('/api/posting-queue', fetcher, {
+    refreshInterval: 30000
+  })
+  const { data: replyQueueData } = useSWR('/api/reply-queue', fetcher, {
+    refreshInterval: 30000
+  })
+  const { data: commentQueueData } = useSWR('/api/comment-queue', fetcher, {
     refreshInterval: 30000
   })
   const { data: ideaStats } = useSWR('/api/ideas/stats', fetcher, {
@@ -30,7 +52,7 @@ export default function HumanTasks() {
   if (error) return <ErrorState />
   if (!allTasks) return <LoadingState />
 
-  // Filter human tasks, but hide idea batch task if goal is met
+  // Filter human tasks: exclude shipped/completed AND queue-like tasks
   const humanTasks = allTasks.filter(t => {
     if (!t.assigneeIds?.includes('human')) return false
     if (['completed', 'shipped', 'deferred', 'blocked'].includes(t.status)) return false
@@ -42,27 +64,23 @@ export default function HumanTasks() {
       return false
     }
 
+    // Hide queue-like tasks (they belong in queues now)
+    if (isQueueLikeTask(t)) return false
+
     return true
   })
 
-  if (humanTasks.length === 0) {
-    return <EmptyState />
-  }
-
   const handleComplete = async (taskId) => {
     setCompleting(taskId)
-    
+
     try {
-      // Update task status in database
       const response = await fetch(`/api/tasks/${taskId}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ completedBy: 'human' })
       })
-      
+
       if (!response.ok) throw new Error('Failed to complete task')
-      
-      // Refresh tasks list
       mutate()
     } catch (err) {
       console.error('Error completing task:', err)
@@ -74,7 +92,6 @@ export default function HumanTasks() {
 
   // Sort: reopened tasks first (most recent), then by priority
   const sortedTasks = [...humanTasks].sort((a, b) => {
-    // Reopened tasks go to the top, sorted by most recently reopened
     const aReopened = a.reopenedAt ? new Date(a.reopenedAt) : null
     const bReopened = b.reopenedAt ? new Date(b.reopenedAt) : null
 
@@ -82,12 +99,16 @@ export default function HumanTasks() {
     if (!aReopened && bReopened) return 1
     if (aReopened && bReopened) return bReopened - aReopened
 
-    // Then sort by priority
     const priorityOrder = { high: 0, medium: 1, low: 2 }
     const aPriority = a.metadata?.priority || 'medium'
     const bPriority = b.metadata?.priority || 'medium'
     return priorityOrder[aPriority] - priorityOrder[bPriority]
   })
+
+  // Queue counts
+  const replyCount = replyQueueData?.queue?.filter(i => i.status === 'ready' || i.status === 'scheduled').length || 0
+  const postingCount = postingQueue?.queue?.filter(i => i.status === 'ready' || i.status === 'scheduled').length || 0
+  const commentCount = commentQueueData?.queue?.filter(i => i.status === 'ready' || i.status === 'scheduled' || i.status === 'draft').length || 0
 
   return (
     <div className="space-y-6">
@@ -101,7 +122,46 @@ export default function HumanTasks() {
         <AlertCircle className="text-gold" size={32} />
       </div>
 
-      {/* Posting Queue Section */}
+      {/* Queue Summary Cards */}
+      <div className="grid grid-cols-3 gap-4">
+        <button
+          onClick={() => navigate('/reply-queue')}
+          className="bg-white rounded-lg border border-neutral-200 p-4 hover:border-blue-300 hover:shadow-md transition-all text-left"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <Reply className="text-blue-600" size={20} />
+            <span className="font-semibold text-neutral-800">Reply Queue</span>
+          </div>
+          <div className="text-2xl font-bold text-blue-600">{replyCount}</div>
+          <p className="text-xs text-neutral-500 mt-1">ready to post</p>
+        </button>
+
+        <button
+          onClick={() => navigate('/posting-queue')}
+          className="bg-white rounded-lg border border-neutral-200 p-4 hover:border-green-300 hover:shadow-md transition-all text-left"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <Send className="text-green-600" size={20} />
+            <span className="font-semibold text-neutral-800">Posting Queue</span>
+          </div>
+          <div className="text-2xl font-bold text-green-600">{postingCount}</div>
+          <p className="text-xs text-neutral-500 mt-1">ready to post</p>
+        </button>
+
+        <button
+          onClick={() => navigate('/comments')}
+          className="bg-white rounded-lg border border-neutral-200 p-4 hover:border-purple-300 hover:shadow-md transition-all text-left"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <MessageSquarePlus className="text-purple-600" size={20} />
+            <span className="font-semibold text-neutral-800">Comment Queue</span>
+          </div>
+          <div className="text-2xl font-bold text-purple-600">{commentCount}</div>
+          <p className="text-xs text-neutral-500 mt-1">ready to post</p>
+        </button>
+      </div>
+
+      {/* Inline Posting Queue (kept for quick access) */}
       {postingQueue && (
         <PostingQueueSection
           queue={postingQueue}
@@ -109,17 +169,25 @@ export default function HumanTasks() {
         />
       )}
 
-      <div className="space-y-4">
-        {sortedTasks.map(task => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            onComplete={handleComplete}
-            completing={completing === task.id}
-            ideaStats={ideaStats}
-          />
-        ))}
-      </div>
+      {sortedTasks.length > 0 ? (
+        <div className="space-y-4">
+          {sortedTasks.map(task => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              onComplete={handleComplete}
+              completing={completing === task.id}
+              ideaStats={ideaStats}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
+          <CheckCircle size={36} className="text-green-600 mx-auto mb-3" />
+          <h3 className="text-lg font-serif font-bold text-black mb-1">No manual tasks right now</h3>
+          <p className="text-neutral-600 text-sm">Check the queues above for posts and replies to send.</p>
+        </div>
+      )}
     </div>
   )
 }

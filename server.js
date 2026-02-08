@@ -3436,6 +3436,93 @@ Keep issues, suggestions, and strengths to 1-3 items each. Be specific, not gene
 });
 
 // ============================================================================
+// CONVERSATIONAL HOOKS (for replies & comments)
+// ============================================================================
+
+// Hooks that flow into the text via em-dash (lowercase the first char of the reply)
+const FLOW_HOOKS = [
+  "I'm with you —",
+  "This resonates —",
+  "Spot on —",
+  "Right there with you —",
+  "Been thinking about this too —",
+  "Hard to argue with that —",
+  "This hits home —",
+  "Love this take —",
+  "You put words to something I've been sitting with —",
+  "Can't stop thinking about this —",
+  "Felt this one —",
+  "This lands —",
+  "Real talk —",
+  "You're onto something here —",
+  "Worth saying twice —",
+];
+
+// Hooks that stand alone as a sentence before the reply (keep original caps)
+const STANDALONE_HOOKS = [
+  "Exactly this.",
+  "Yes.",
+  "This stopped me mid-scroll.",
+  "Underrated take.",
+  "More people need to hear this.",
+  "This is it.",
+  "Needed to read this today.",
+  "Been waiting for someone to say this.",
+  "So much this.",
+  "The kind of take that sticks with you.",
+];
+
+// Hooks that go at the end of the reply
+const ENDING_HOOKS = [
+  "More people need to sit with this.",
+  "The kind of honesty that cuts through.",
+  "Sitting with this one.",
+  "Needed this reminder today.",
+  "That's the part people skip over.",
+  "This is the conversation worth having.",
+  "The quiet part most people won't say out loud.",
+];
+
+/**
+ * Add a conversational hook to reply/comment text.
+ * Makes replies feel human — agreement, resonance, a bridge into the thought.
+ * Returns the text with a hook added (beginning or end).
+ */
+function addConversationalHook(text) {
+  if (!text || text.length < 10) return text;
+
+  // Use a simple hash of the text to pick deterministically
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+  }
+  hash = Math.abs(hash);
+
+  // 45% flow hooks, 30% standalone, 25% ending
+  const bucket = hash % 100;
+
+  if (bucket < 45) {
+    const hook = FLOW_HOOKS[hash % FLOW_HOOKS.length];
+    // Lowercase first char unless it's "I" (pronoun) or a quote
+    const first = text[0];
+    const lowered = (first === 'I' && (text[1] === ' ' || text[1] === "'")) || first === '"' || first === '"'
+      ? text
+      : first.toLowerCase() + text.slice(1);
+    return `${hook} ${lowered}`;
+  } else if (bucket < 75) {
+    const hook = STANDALONE_HOOKS[hash % STANDALONE_HOOKS.length];
+    return `${hook} ${text}`;
+  } else {
+    const hook = ENDING_HOOKS[hash % ENDING_HOOKS.length];
+    // If text ends with period/exclamation, just append
+    const trimmed = text.trimEnd();
+    const lastChar = trimmed[trimmed.length - 1];
+    const needsPeriod = lastChar !== '.' && lastChar !== '!' && lastChar !== '?';
+    return `${trimmed}${needsPeriod ? '.' : ''} ${hook}`;
+  }
+}
+
+// ============================================================================
 // REPLY QUEUE
 // ============================================================================
 
@@ -3586,6 +3673,9 @@ app.post('/api/reply-queue', (req, res) => {
       return res.status(400).json({ error: 'targetUrl and replyText are required' });
     }
 
+    // Add conversational hook unless caller opts out
+    const hookedReplyText = req.body.skipHook ? replyText : addConversationalHook(replyText);
+
     const item = {
       id: `reply-${Date.now()}`,
       createdAt: new Date().toISOString(),
@@ -3594,7 +3684,7 @@ app.post('/api/reply-queue', (req, res) => {
       targetUrl,
       targetAuthor: targetAuthor || '',
       targetText: targetText || '',
-      replyText,
+      replyText: hookedReplyText,
       taskId: taskId || null,
       targetUri: null,
       targetCid: null
@@ -4075,6 +4165,7 @@ ${soulContent ? `## Voice & Personality:\n${soulContent}\n` : ''}
 - Match the tone of the original post — if it's casual, be casual. If it's deep, go deeper.
 - Be concise. This is a comment, not an essay. One to three sentences.
 - Never use generic motivational language. Be specific. Be surprising.
+- IMPORTANT: Start or end with a short conversational hook — a phrase of agreement, resonance, or respectful pushback that connects you to what they said. Examples: "I'm with you —", "Spot on.", "This stopped me mid-scroll.", "Been thinking about this too —", "Hard to argue with that —", "Real talk —". Vary the hooks, make them feel natural, not templated. The hook bridges your thought to theirs.
 - ${item.platform === 'bluesky' ? 'Must be ≤300 characters.' : 'Keep it tweet-length, under 280 characters.'}
 - Return ONLY the comment text, nothing else. No quotes, no labels.`;
 
@@ -8937,6 +9028,158 @@ app.post('/api/messages/:id/reply', (req, res) => {
   } catch (error) {
     console.error('[Messages] Reply error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ============================================================================
+// ONE-TIME MIGRATION: Human tasks → Queues
+// ============================================================================
+
+app.post('/api/migrate-tasks-to-queues', (req, res) => {
+  try {
+    const mc = getMissionControl();
+    const replyQueue = getReplyQueue();
+    const postingQueue = getPostingQueue();
+
+    const migrated = { replies: [], posts: [] };
+
+    // Find active human tasks that match queue patterns
+    const humanTasks = mc.tasks.filter(t =>
+      t.assigneeIds?.includes('human') &&
+      !['completed', 'shipped', 'deferred'].includes(t.status) &&
+      !t.metadata?.migratedToQueue
+    );
+
+    for (const task of humanTasks) {
+      const actionItems = task.metadata?.actionItems || [];
+      const hasReplyAction = actionItems.some(a => a.suggestedComment && a.url);
+      const isPostingTask = task.title.toLowerCase().startsWith('post original tweet') ||
+        task.metadata?.repostCandidate;
+
+      if (hasReplyAction) {
+        // Migrate to Reply Queue
+        const action = actionItems[0];
+        // Extract @handle from URL
+        const urlParts = (action.url || '').split('/');
+        const domainIdx = urlParts.findIndex(p => p.includes('x.com') || p.includes('twitter.com'));
+        const handle = domainIdx >= 0 ? urlParts[domainIdx + 1] : '';
+
+        // Extract "They wrote" text from description
+        let targetText = '';
+        const wroteMatch = task.description?.match(/\*\*(?:They|He|She) wrote:\*\*\s*"([^"]+)"/);
+        if (wroteMatch) targetText = wroteMatch[1];
+
+        const item = {
+          id: `reply-${Date.now()}-${task.id}`,
+          createdAt: task.createdAt,
+          status: 'ready',
+          platform: 'twitter',
+          targetUrl: action.url,
+          targetAuthor: handle,
+          targetText,
+          replyText: addConversationalHook(action.suggestedComment),
+          taskId: task.id,
+          targetUri: null,
+          targetCid: null
+        };
+
+        replyQueue.queue.push(item);
+        task.status = 'shipped';
+        task.metadata.migratedToQueue = true;
+        task.completedAt = new Date().toISOString();
+        task.completedBy = 'migration';
+        migrated.replies.push({ taskId: task.id, queueItemId: item.id });
+
+      } else if (isPostingTask) {
+        // Migrate to Posting Queue — extract options from description
+        const options = [];
+        const optionRegex = /\*\*Option ([A-C])[^*]*\*\*[^>]*>\s*(.+?)(?=\n\n\*\*Option|\n\nhttps?:|$)/gs;
+        let match;
+        while ((match = optionRegex.exec(task.description)) !== null) {
+          options.push(match[2].trim());
+        }
+
+        const item = {
+          id: `post-${Date.now()}-${task.id}`,
+          createdAt: task.createdAt,
+          status: 'ready',
+          platform: 'twitter',
+          content: options[0] || '',
+          caption: '',
+          parts: [],
+          canvaRequired: false,
+          canvaComplete: false,
+          createdBy: task.createdBy || 'migration',
+          postUrl: 'https://x.com/compose/post',
+          taskId: task.id,
+          metadata: options.length > 0 ? { options } : {}
+        };
+
+        postingQueue.queue.push(item);
+        task.status = 'shipped';
+        task.metadata.migratedToQueue = true;
+        task.completedAt = new Date().toISOString();
+        task.completedBy = 'migration';
+        migrated.posts.push({ taskId: task.id, queueItemId: item.id });
+      }
+    }
+
+    // Save all changes
+    if (migrated.replies.length > 0) saveReplyQueue(replyQueue);
+    if (migrated.posts.length > 0) savePostingQueue(postingQueue);
+    if (migrated.replies.length + migrated.posts.length > 0) {
+      fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+      cache.missionControl = null;
+    }
+
+    res.json({
+      success: true,
+      migrated: {
+        replies: migrated.replies.length,
+        posts: migrated.posts.length,
+        total: migrated.replies.length + migrated.posts.length,
+        details: migrated
+      }
+    });
+  } catch (error) {
+    console.error('Migration error:', error);
+    res.status(500).json({ error: 'Migration failed', details: error.message });
+  }
+});
+
+/**
+ * Apply conversational hooks to existing reply/comment queue items that don't have one yet.
+ */
+app.post('/api/apply-hooks', (req, res) => {
+  try {
+    const replyData = getReplyQueue();
+    const commentData = getCommentQueue();
+    let replyCount = 0;
+    let commentCount = 0;
+
+    for (const item of replyData.queue) {
+      if (item.replyText && !item.hookApplied) {
+        item.replyText = addConversationalHook(item.replyText);
+        item.hookApplied = true;
+        replyCount++;
+      }
+    }
+
+    for (const item of commentData.queue) {
+      if (item.commentText && !item.hookApplied) {
+        item.commentText = addConversationalHook(item.commentText);
+        item.hookApplied = true;
+        commentCount++;
+      }
+    }
+
+    if (replyCount > 0) saveReplyQueue(replyData);
+    if (commentCount > 0) saveCommentQueue(commentData);
+
+    res.json({ success: true, updated: { replies: replyCount, comments: commentCount } });
+  } catch (error) {
+    console.error('Hook application error:', error);
+    res.status(500).json({ error: 'Failed to apply hooks' });
   }
 });
 

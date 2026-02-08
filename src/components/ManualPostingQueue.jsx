@@ -18,7 +18,8 @@ import {
   CloudOff,
   Cloud,
   ShieldCheck,
-  Loader2
+  Loader2,
+  Copy
 } from 'lucide-react'
 
 // Bluesky icon as inline SVG since lucide doesn't have one
@@ -30,11 +31,21 @@ function BlueskyIcon({ size = 16, className = '' }) {
   )
 }
 
+// Twitter/X icon
+function TwitterIcon({ size = 16, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+    </svg>
+  )
+}
+
 function getPlatformIcon(platform, size = 16) {
   switch (platform) {
     case 'instagram': return <Instagram size={size} className="text-pink-600" />
     case 'threads': return <MessageCircle size={size} className="text-black" />
     case 'bluesky': return <BlueskyIcon size={size} className="text-blue-500" />
+    case 'twitter': return <TwitterIcon size={size} className="text-neutral-800" />
     default: return null
   }
 }
@@ -239,6 +250,7 @@ function QueueItem({ item, canPost, onUpdate }) {
   const [publishError, setPublishError] = useState(null)
   const [voiceCheck, setVoiceCheck] = useState(null)
   const [voiceCheckLoading, setVoiceCheckLoading] = useState(false)
+  const [copyFeedback, setCopyFeedback] = useState(null) // null | 'content' | option index
 
   const handleVoiceCheck = async () => {
     setVoiceCheckLoading(true)
@@ -321,8 +333,31 @@ function QueueItem({ item, canPost, onUpdate }) {
     setIsUpdating(false)
   }
 
+  const handleCopyAndOpen = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopyFeedback('content')
+      setTimeout(() => setCopyFeedback(null), 2000)
+      if (item.postUrl) window.open(item.postUrl, '_blank')
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
+
+  const handleCopyOption = async (text, idx) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopyFeedback(idx)
+      setTimeout(() => setCopyFeedback(null), 2000)
+      if (item.postUrl) window.open(item.postUrl, '_blank')
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
+
   const isReady = !item.canvaRequired || item.canvaComplete
   const isFailed = item.status === 'failed'
+  const options = item.metadata?.options || []
 
   return (
     <div className={`p-4 ${isFailed ? 'bg-red-50' : isReady ? '' : 'bg-amber-50'}`}>
@@ -330,7 +365,9 @@ function QueueItem({ item, canPost, onUpdate }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
             {getPlatformIcon(item.platform)}
-            <span className="text-sm font-medium capitalize">{item.platform}</span>
+            <span className="text-sm font-medium capitalize">
+              {item.platform === 'twitter' ? 'Twitter / X' : item.platform}
+            </span>
             {item.canvaRequired && !item.canvaComplete && (
               <span className="px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded">
                 Needs Canva
@@ -346,8 +383,37 @@ function QueueItem({ item, canPost, onUpdate }) {
                 Ready
               </span>
             )}
+            {item.taskId && (
+              <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded">
+                {item.taskId}
+              </span>
+            )}
           </div>
-          <p className="text-neutral-800 whitespace-pre-wrap line-clamp-3">{item.content}</p>
+
+          {/* Show options if present (e.g. pick A/B/C tweet) */}
+          {options.length > 1 ? (
+            <div className="space-y-2 mb-2">
+              <p className="text-xs text-neutral-500 font-medium">Pick one and post:</p>
+              {options.map((opt, idx) => (
+                <div key={idx} className="flex items-start gap-2 p-2 bg-neutral-50 rounded border border-neutral-200">
+                  <span className="text-xs font-bold text-neutral-400 mt-0.5">
+                    {String.fromCharCode(65 + idx)}
+                  </span>
+                  <p className="flex-1 text-sm text-neutral-800">{opt}</p>
+                  <button
+                    onClick={() => handleCopyOption(opt, idx)}
+                    className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-800 text-white rounded hover:bg-neutral-900 whitespace-nowrap"
+                  >
+                    {copyFeedback === idx ? <Check size={12} /> : <Copy size={12} />}
+                    {copyFeedback === idx ? 'Copied!' : 'Copy & Open'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-neutral-800 whitespace-pre-wrap line-clamp-3">{item.content}</p>
+          )}
+
           {item.caption && (
             <p className="text-sm text-neutral-500 mt-2 line-clamp-2">
               Caption: {item.caption}
@@ -422,8 +488,18 @@ function QueueItem({ item, canPost, onUpdate }) {
               {isFailed ? 'Retry' : 'Publish to Bluesky'}
             </button>
           )}
+          {/* Twitter gets Copy & Open + Mark Posted */}
+          {item.platform === 'twitter' && isReady && options.length <= 1 && (
+            <button
+              onClick={() => handleCopyAndOpen(item.content)}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-neutral-800 text-white rounded hover:bg-neutral-900"
+            >
+              {copyFeedback === 'content' ? <Check size={14} /> : <Copy size={14} />}
+              {copyFeedback === 'content' ? 'Copied!' : 'Copy & Open'}
+            </button>
+          )}
           {/* Non-bluesky platforms get manual Mark Posted */}
-          {item.platform !== 'bluesky' && isReady && canPost && (
+          {item.platform !== 'bluesky' && isReady && (
             <button
               onClick={handleMarkPosted}
               disabled={isUpdating}
