@@ -330,6 +330,7 @@ function QueueItem({ item, canPost, onUpdate }) {
   const [voiceCheck, setVoiceCheck] = useState(null)
   const [voiceCheckLoading, setVoiceCheckLoading] = useState(false)
   const [copyFeedback, setCopyFeedback] = useState(null) // null | 'content' | option index
+  const [expanded, setExpanded] = useState(false)
 
   const handleVoiceCheck = async () => {
     setVoiceCheckLoading(true)
@@ -567,7 +568,17 @@ function QueueItem({ item, canPost, onUpdate }) {
               })}
             </div>
           ) : (
-            <p className="text-neutral-800 whitespace-pre-wrap line-clamp-3">{item.content}</p>
+            <div>
+              <p className={`text-neutral-800 whitespace-pre-wrap ${expanded ? '' : 'line-clamp-3'}`}>{item.content}</p>
+              {item.content?.length > 150 && (
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  className="text-xs text-gold hover:text-amber-700 font-medium mt-1"
+                >
+                  {expanded ? 'Show less' : 'Show more'}
+                </button>
+              )}
+            </div>
           )}
 
           {item.title && (
@@ -593,7 +604,7 @@ function QueueItem({ item, canPost, onUpdate }) {
           )}
 
           {item.caption && (
-            <p className="text-sm text-neutral-500 mt-2 line-clamp-2">
+            <p className={`text-sm text-neutral-500 mt-2 ${expanded ? '' : 'line-clamp-2'}`}>
               Caption: {item.caption}
             </p>
           )}
