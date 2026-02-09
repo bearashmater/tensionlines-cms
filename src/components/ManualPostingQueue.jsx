@@ -418,9 +418,17 @@ function QueueItem({ item, canPost, onUpdate }) {
     twitter: 'https://x.com/compose/post',
     bluesky: 'https://bsky.app/',
     instagram: 'https://www.canva.com/',
-    reddit: 'https://www.reddit.com/submit',
+    reddit: 'https://www.reddit.com/r/thetensionlines/submit',
     medium: 'https://medium.com/new-story',
     threads: 'https://www.threads.net/',
+  }
+
+  const getComposeUrl = () => {
+    if (item.postUrl) return item.postUrl
+    if (item.platform === 'reddit' && item.subreddit) {
+      return `https://www.reddit.com/r/${item.subreddit}/submit`
+    }
+    return platformComposeUrls[item.platform]
   }
 
   const handleCopyAndOpen = async (text) => {
@@ -428,7 +436,7 @@ function QueueItem({ item, canPost, onUpdate }) {
       await navigator.clipboard.writeText(text)
       setCopyFeedback('content')
       setTimeout(() => setCopyFeedback(null), 2000)
-      const url = item.postUrl || platformComposeUrls[item.platform]
+      const url = getComposeUrl()
       if (url) window.open(url, '_blank')
     } catch (err) {
       console.error('Failed to copy:', err)
@@ -448,7 +456,7 @@ function QueueItem({ item, canPost, onUpdate }) {
       await navigator.clipboard.writeText(text)
       setCopyFeedback(idx)
       setTimeout(() => setCopyFeedback(null), 2000)
-      const url = item.postUrl || platformComposeUrls[item.platform]
+      const url = getComposeUrl()
       if (url) window.open(url, '_blank')
       onUpdate()
     } catch (err) {
@@ -475,6 +483,11 @@ function QueueItem({ item, canPost, onUpdate }) {
             <span className="text-sm font-medium capitalize">
               {item.platform === 'twitter' ? 'Twitter / X' : item.platform}
             </span>
+            {item.platform === 'reddit' && (
+              <span className="text-xs text-orange-600 font-medium">
+                r/{item.subreddit || 'thetensionlines'}
+              </span>
+            )}
             {item.canvaRequired && !item.canvaComplete && (
               <span className="px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded">
                 Needs Canva
@@ -848,7 +861,7 @@ function AddToQueueModal({ onClose, onAdd }) {
           {platform === 'reddit' && (
             <p className="text-sm text-orange-600 flex items-center gap-2">
               <Hash size={14} />
-              Manual posting — copy and post to the relevant subreddit
+              Manual posting to <span className="font-semibold">r/thetensionlines</span> — community is pre-filled
             </p>
           )}
 

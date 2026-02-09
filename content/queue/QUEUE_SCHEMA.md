@@ -133,6 +133,26 @@ Use sparingly. Only when it genuinely adds to the point.
 
 ---
 
+## Reddit Post
+
+```json
+{
+  "platform": "reddit",
+  "subreddit": "thetensionlines",
+  "content": "Discussion Title\n\nBody text goes here. Separate title from body with a blank line.",
+  "createdBy": "diogenes",
+  "status": "ready"
+}
+```
+
+**Fields:**
+- `subreddit` — Target community name without `r/` prefix. Defaults to `thetensionlines` if omitted.
+- `content` — First line is the post title, body follows after a blank line.
+
+The CMS "Copy & Open" button opens `reddit.com/r/{subreddit}/submit` directly, so the community is pre-filled.
+
+---
+
 ## Status Values
 
 | Status | Meaning |
