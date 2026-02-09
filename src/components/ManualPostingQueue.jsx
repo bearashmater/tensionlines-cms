@@ -600,7 +600,7 @@ function QueueItem({ item, canPost, onUpdate }) {
           {/* All non-bluesky platforms get Copy & Open */}
           {item.platform !== 'bluesky' && isReady && (
             <button
-              onClick={() => handleCopyAndOpen(item.platform === 'instagram' ? [item.content, item.caption].filter(Boolean).join('\n\n') : item.content)}
+              onClick={() => handleCopyAndOpen(item.platform === 'instagram' ? `Instagram Post:\n\n${item.content}${item.caption ? '\n\n' + item.caption : ''}` : item.content)}
               className="flex items-center gap-1 px-3 py-1.5 text-sm bg-neutral-800 text-white rounded hover:bg-neutral-900"
             >
               {copyFeedback === 'content' ? <Check size={14} /> : <Copy size={14} />}
