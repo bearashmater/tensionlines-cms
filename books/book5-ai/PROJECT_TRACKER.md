@@ -63,6 +63,10 @@ Exploring the tension lines emerging from human-AI interaction. Building on idea
 |---------|--------|---------|--------|
 | **Total** | 55,000 | 0 | |
 
+## Dependency
+
+> **Blocked on Book 1 (TensionLines) completion.** However, this is the most timely topic — may be accelerated if the AI landscape demands it. Ideas #010 and #011 are actively developing. **Tentative start: Q3/Q4 2026.**
+
 ## Notes
 - Most timely of all book topics
 - Could be standalone or chapter in Book 1

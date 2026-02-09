@@ -103,6 +103,69 @@
 | #013 | Haidt - joining beliefs | Ch 4 | 🔵 New |
 | #014 | Core thesis - buzz | Ch 1 | 🔵 New |
 
+## Writing Timeline (Feb 2026 → Aug 2026)
+
+| Month | Period | Focus | Target Words |
+|-------|--------|-------|-------------|
+| 1 | Feb 2026 | Chapter 1: The Buzz (Introduction) | 8,000 |
+| 2 | Mar 2026 | Chapter 2: The Tension Line | 12,000 |
+| 3 | Apr 2026 | Chapter 3: Multiple Lines, One Life | 10,000 |
+| 4 | May 2026 | Chapter 4: When Tension Collapses | 10,000 |
+| 5 | Jun 2026 | Chapter 5: The Pull (Transcendence) | 10,000 |
+| 6 | Jul-Aug 2026 | Revision + polish | — |
+
+## Agent Assignments
+
+| Agent | Role | Responsibilities |
+|-------|------|-----------------|
+| **Plato** | Primary Writer | Long-form essay drafting, voice and tone |
+| **Aristotle** | Structure Editor | Outline adherence, continuity, logical flow |
+| **Hypatia** | Researcher | Source verification, fact-checking, citation accuracy |
+| **Socrates** | Critic | Questioning weak arguments, requirements clarification |
+| **Tension** | Coordinator | Milestone tracking, weekly check-ins, cross-agent sync |
+
+## Weekly Milestones
+
+**Target pace:** ~2,000 words/week (with buffer for revision weeks)
+
+### Month 1 — Chapter 1: The Buzz (Feb 2026)
+- [ ] Week of Feb 9: Section 1 (Opening Hook) — 1,500 words
+- [ ] Week of Feb 16: Section 2 (Ecclesiastes) — 2,000 words
+- [ ] Week of Feb 23: Section 3 (Exodus) — 2,000 words
+- [ ] Week of Mar 2: Sections 4-5 (Core Proposition + Roadmap) — 2,500 words
+
+### Month 2 — Chapter 2: The Tension Line (Mar 2026)
+- [ ] Week of Mar 9: Sections 1-2 (Definition + Romantic Individualism) — 3,000 words
+- [ ] Week of Mar 16: Section 3 (Security vs. Liberty) — 2,500 words
+- [ ] Week of Mar 23: Sections 4-5 (Yoda Reframe + Science vs. Philosophy) — 3,500 words
+- [ ] Week of Mar 30: Section 6 (Practice Inspires Theory) + chapter revision — 3,000 words
+
+### Month 3 — Chapter 3: Multiple Lines, One Life (Apr 2026)
+- [ ] Week of Apr 6: Sections 1-2 (Single Dilemma Myth + Computer Help Mindsets) — 2,500 words
+- [ ] Week of Apr 13: Sections 3-4 (Practice Applied + Pain as Scale) — 2,500 words
+- [ ] Week of Apr 20: Section 5 (Mapping Your Lines) — 2,500 words
+- [ ] Week of Apr 27: Chapter revision — 2,500 words
+
+### Month 4 — Chapter 4: When Tension Collapses (May 2026)
+- [ ] Week of May 4: Sections 1-2 (Collapse + Haidt) — 2,500 words
+- [ ] Week of May 11: Section 3 (Middle is Death) — 2,500 words
+- [ ] Week of May 18: Section 4 (Shadow Generation) — 2,500 words
+- [ ] Week of May 25: Section 5 (Recovery) + chapter revision — 2,500 words
+
+### Month 5 — Chapter 5: The Pull (Jun 2026)
+- [ ] Week of Jun 1: Sections 1-2 (Sensing the Season + Life as Sentences) — 2,500 words
+- [ ] Week of Jun 8: Section 3 (Wisdom of Timing) — 2,500 words
+- [ ] Week of Jun 15: Sections 4-5 (Permanent Positions + Buzzing Forward) — 2,500 words
+- [ ] Week of Jun 22: Chapter revision — 2,500 words
+
+### Month 6 — Revision + Polish (Jul-Aug 2026)
+- [ ] Week of Jul 6: Full manuscript read-through, structural notes
+- [ ] Week of Jul 13: Chapter 1-2 revision pass
+- [ ] Week of Jul 20: Chapter 3-4 revision pass
+- [ ] Week of Jul 27: Chapter 5 revision pass
+- [ ] Week of Aug 3: Final polish, proofreading
+- [ ] Week of Aug 10: Beta reader copies out
+
 ## Notes
 - Primary source for ideas: `/Users/admin/clawd/content/ideas-bank.md`
 - All ideas captured from Shawn's "!" thoughts

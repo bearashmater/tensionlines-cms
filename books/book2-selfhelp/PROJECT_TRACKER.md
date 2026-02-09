@@ -49,6 +49,10 @@ A practical self-help companion to the TensionLines philosophy book. Takes the t
 |---------|--------|---------|--------|
 | **Total** | 45,000 | 0 | |
 
+## Dependency
+
+> **Blocked on Book 1 (TensionLines) completion.** This book translates Book 1's theoretical framework into practical exercises. Detailed timeline and agent assignments will be created once Book 1 drafting is substantially complete. **Tentative start: Q3/Q4 2026.**
+
 ## Notes
 - Dependent on Book 1 (TensionLines) completion
 - Focus on exercises, not theory

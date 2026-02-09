@@ -54,6 +54,10 @@ Exploring how tension line philosophy applies to mental health, therapy, and psy
 |---------|--------|---------|--------|
 | **Total** | 45,000 | 0 | |
 
+## Dependency
+
+> **Blocked on Book 1 (TensionLines) completion.** Therapeutic applications require the core tension line framework to be finalized. Also requires professional consultation before outlining. **Tentative start: Q4 2026 / Q1 2027.**
+
 ## Notes
 - Requires professional consultation
 - Not a replacement for therapy

@@ -49,6 +49,10 @@ Applying tension line philosophy to leadership and organizational management. Ho
 |---------|--------|---------|--------|
 | **Total** | 50,000 | 0 | |
 
+## Dependency
+
+> **Blocked on Book 1 (TensionLines) completion.** The leadership application depends on the core framework being fully articulated. Detailed timeline and agent assignments will be created once Book 1 is complete. **Tentative start: Q4 2026 / Q1 2027.**
+
 ## Notes
 - Dependent on Book 1 (TensionLines) completion
 - Target: Business/leadership market
