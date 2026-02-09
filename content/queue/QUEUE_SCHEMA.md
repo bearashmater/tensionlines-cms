@@ -140,6 +140,7 @@ Use sparingly. Only when it genuinely adds to the point.
   "platform": "reddit",
   "subreddit": "thetensionlines",
   "content": "Discussion Title\n\nBody text goes here. Separate title from body with a blank line.",
+  "tags": ["philosophy", "paradox", "tension"],
   "createdBy": "diogenes",
   "status": "ready"
 }
@@ -148,6 +149,7 @@ Use sparingly. Only when it genuinely adds to the point.
 **Fields:**
 - `subreddit` — Target community name without `r/` prefix. Defaults to `thetensionlines` if omitted.
 - `content` — First line is the post title, body follows after a blank line.
+- `tags` — Array of tags to add when posting (shown as pills on the card, appended to copied text).
 
 The CMS "Copy & Open" button opens `reddit.com/r/{subreddit}/submit` directly, so the community is pre-filled.
 

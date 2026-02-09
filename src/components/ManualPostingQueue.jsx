@@ -584,6 +584,14 @@ function QueueItem({ item, canPost, onUpdate }) {
             </div>
           )}
 
+          {item.platform === 'reddit' && item.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {item.tags.map(tag => (
+                <span key={tag} className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full">{tag}</span>
+              ))}
+            </div>
+          )}
+
           {item.caption && (
             <p className="text-sm text-neutral-500 mt-2 line-clamp-2">
               Caption: {item.caption}
@@ -649,6 +657,7 @@ function QueueItem({ item, canPost, onUpdate }) {
               onClick={() => handleCopyAndOpen(
                 item.platform === 'instagram' ? `Instagram Post:\n\n${item.content}${item.caption ? '\n\n' + item.caption : ''}` :
                 item.platform === 'medium' ? `${item.title ? item.title + '\n\n' : ''}${item.content}${item.topics?.length ? '\n\nTopics: ' + item.topics.join(', ') : ''}` :
+                item.platform === 'reddit' ? `${item.content}${item.tags?.length ? '\n\nTags: ' + item.tags.join(', ') : ''}` :
                 item.content
               )}
               className="flex items-center gap-1 px-3 py-1.5 text-sm bg-neutral-800 text-white rounded hover:bg-neutral-900"
