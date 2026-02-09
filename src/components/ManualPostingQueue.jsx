@@ -383,12 +383,21 @@ function QueueItem({ item, canPost, onUpdate }) {
     setIsUpdating(false)
   }
 
+  const platformComposeUrls = {
+    twitter: 'https://x.com/compose/post',
+    instagram: 'https://www.canva.com/',
+    reddit: 'https://www.reddit.com/submit',
+    medium: 'https://medium.com/new-story',
+    threads: 'https://www.threads.net/',
+  }
+
   const handleCopyAndOpen = async (text) => {
     try {
       await navigator.clipboard.writeText(text)
       setCopyFeedback('content')
       setTimeout(() => setCopyFeedback(null), 2000)
-      if (item.postUrl) window.open(item.postUrl, '_blank')
+      const url = item.postUrl || platformComposeUrls[item.platform]
+      if (url) window.open(url, '_blank')
     } catch (err) {
       console.error('Failed to copy:', err)
     }
@@ -407,7 +416,8 @@ function QueueItem({ item, canPost, onUpdate }) {
       await navigator.clipboard.writeText(text)
       setCopyFeedback(idx)
       setTimeout(() => setCopyFeedback(null), 2000)
-      if (item.postUrl) window.open(item.postUrl, '_blank')
+      const url = item.postUrl || platformComposeUrls[item.platform]
+      if (url) window.open(url, '_blank')
       onUpdate()
     } catch (err) {
       console.error('Failed to select option:', err)
@@ -587,10 +597,10 @@ function QueueItem({ item, canPost, onUpdate }) {
               {isFailed ? 'Retry' : 'Publish to Bluesky'}
             </button>
           )}
-          {/* Twitter gets Copy & Open + Mark Posted */}
-          {item.platform === 'twitter' && isReady && options.length <= 1 && (
+          {/* All non-bluesky platforms get Copy & Open */}
+          {item.platform !== 'bluesky' && isReady && (
             <button
-              onClick={() => handleCopyAndOpen(item.content)}
+              onClick={() => handleCopyAndOpen(item.platform === 'instagram' ? [item.content, item.caption].filter(Boolean).join('\n\n') : item.content)}
               className="flex items-center gap-1 px-3 py-1.5 text-sm bg-neutral-800 text-white rounded hover:bg-neutral-900"
             >
               {copyFeedback === 'content' ? <Check size={14} /> : <Copy size={14} />}

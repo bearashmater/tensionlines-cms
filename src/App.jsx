@@ -230,7 +230,7 @@ function Sidebar({ location, onClose, showCloseButton = false }) {
           fetch('/api/engagement-actions').then(r => r.json()).catch(() => null)
         ])
         setQueueCounts({
-          '/posting-queue': posting?.queue?.filter(i => i.status === 'ready' || i.status === 'scheduled')?.length || 0,
+          '/posting-queue': posting?.queue?.filter(i => i.status === 'ready' || i.status === 'scheduled' || i.status === 'pending-review')?.length || 0,
           '/reply-queue': replies?.queue?.length || 0,
           '/comments': comments?.queue?.filter(i => i.status === 'ready')?.length || 0,
           '/engagement': engagement?.queue?.length || 0
