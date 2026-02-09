@@ -34,6 +34,7 @@ import AgentMessages from './components/AgentMessages'
 import AudienceSegmentation from './components/AudienceSegmentation'
 import EngagementActions from './components/EngagementActions'
 import AutoPipeline from './components/AutoPipeline'
+import MissionControlDashboard from './components/MissionControlDashboard'
 
 // Navigation structure with grouping
 const navGroups = [
@@ -66,7 +67,7 @@ const navGroups = [
       { to: '/messages', icon: <MessageSquarePlus size={20} />, label: 'Messages' },
       { to: '/optimization', icon: <Zap size={20} />, label: 'Optimization' },
       { to: '/future-needs', icon: <Compass size={20} />, label: 'Future Needs' },
-      { to: '/mission-control/', icon: <Rocket size={20} />, label: 'Mission Control', external: true }
+      { to: '/mission-control', icon: <Rocket size={20} />, label: 'Mission Control' }
     ]
   },
   {
@@ -209,6 +210,7 @@ function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenu
             <Route path="/outreach" element={<OutreachDashboard />} />
             <Route path="/audience" element={<AudienceSegmentation />} />
             <Route path="/messages" element={<AgentMessages />} />
+            <Route path="/mission-control" element={<MissionControlDashboard />} />
           </Routes>
         </main>
       </div>

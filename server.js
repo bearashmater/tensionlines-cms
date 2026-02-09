@@ -143,7 +143,62 @@ const ROUTE_CHANNELS = [
   ['/api/messages', 'messages'],
   ['/api/repost-candidates', 'ideas'],
   ['/api/future-needs', 'ideas'],
+  ['/api/system', 'system'],
 ];
+
+// ─── System Event Log (in-memory ring buffer) ───────────────────────────────
+const systemEventLog = [];
+const MAX_SYSTEM_EVENTS = 200;
+
+function logSystemEvent(type, message, metadata = {}) {
+  const event = {
+    id: `evt-${Date.now()}-${Math.random().toString(36).slice(2,5)}`,
+    type,
+    message,
+    metadata,
+    timestamp: new Date().toISOString()
+  };
+  systemEventLog.push(event);
+  if (systemEventLog.length > MAX_SYSTEM_EVENTS) systemEventLog.shift();
+  broadcast('system');
+}
+
+// ─── Cron Registry ──────────────────────────────────────────────────────────
+const cronRegistry = {};
+
+function registerCron(id, schedule, description) {
+  cronRegistry[id] = {
+    id,
+    schedule,
+    description,
+    lastRun: null,
+    lastResult: null,
+    lastError: null,
+    runCount: 0
+  };
+}
+
+function recordCronRun(id, result = 'ok', error = null) {
+  if (!cronRegistry[id]) return;
+  cronRegistry[id].lastRun = new Date().toISOString();
+  cronRegistry[id].lastResult = error ? 'error' : result;
+  cronRegistry[id].lastError = error;
+  cronRegistry[id].runCount++;
+}
+
+// Register all crons
+registerCron('comment-scan', '0 10,14,18 * * *', 'Comment queue scan (3x daily)');
+registerCron('backup', '55 1 * * *', 'Nightly backup');
+registerCron('optimization', '0 2 * * *', 'Nightly optimization');
+registerCron('daily-summary', '0 8 * * *', 'Morning summary notification');
+registerCron('repost-convert', '0 9 * * *', 'Repost candidate conversion');
+registerCron('weekly-idea-reset', '0 0 * * 1', 'Weekly idea batch reset');
+registerCron('twitter-metrics', '0 6 * * *', 'Daily Twitter metrics snapshot');
+registerCron('weekly-report', '0 7 * * 1', 'Weekly report generation');
+registerCron('weekly-review', '0 22 * * 0', 'Weekly project review');
+registerCron('auto-pipeline', '0 6 * * *', 'Auto-pipeline draft generation');
+registerCron('engagement-scan', '0 11,15,19 * * *', 'Engagement target scan (3x daily)');
+registerCron('engagement-execute', '15 11,15,19 * * *', 'Engagement action execution (3x daily)');
 
 // Auto-broadcast middleware: intercepts res.json() on mutation requests
 // and broadcasts an invalidation event on success (2xx status)
@@ -184,6 +239,7 @@ const AUDIENCE_SEGMENTS_FILE = path.join(BASE_DIR, 'mission-control', 'audience-
 const FOLLOWS_TRACKER_FILE = path.join(BASE_DIR, 'content', 'queue', 'follows-tracker.json');
 const ENGAGEMENT_ACTIONS_FILE = path.join(BASE_DIR, 'content', 'queue', 'engagement-actions.json');
 const AUTO_PIPELINE_STATE_FILE = path.join(BASE_DIR, 'content', 'queue', 'auto-pipeline-state.json');
+const APPROVAL_QUEUE_FILE = path.join(BASE_DIR, 'mission-control', 'approval-queue.json');
 
 // Claude API client (lazy — only created when ANTHROPIC_API_KEY is set)
 let anthropicClient = null;
@@ -4855,8 +4911,12 @@ async function scanForCommentableContent() {
 cron.schedule('0 10,14,18 * * *', async () => {
   try {
     await scanForCommentableContent();
+    recordCronRun('comment-scan');
+    logSystemEvent('cron', 'Comment queue scan completed');
   } catch (e) {
     console.error('[CommentQueue] Scheduled scan failed:', e.message);
+    recordCronRun('comment-scan', null, e.message);
+    logSystemEvent('error', `Comment scan failed: ${e.message}`);
   }
 }, { timezone: 'America/Los_Angeles' });
 console.log('[CommentQueue] Scan scheduled: 10 AM, 2 PM, 6 PM PST daily');
@@ -8474,8 +8534,12 @@ cron.schedule('55 1 * * *', () => {
   console.log('[Cron] Running nightly backup...');
   try {
     createBackup();
+    recordCronRun('backup');
+    logSystemEvent('backup', 'Nightly backup completed');
   } catch (err) {
     console.error('[Cron] Backup failed:', err);
+    recordCronRun('backup', null, err.message);
+    logSystemEvent('error', `Backup failed: ${err.message}`);
   }
 }, {
   timezone: 'America/Los_Angeles'
@@ -8902,8 +8966,12 @@ cron.schedule('0 2 * * *', () => {
   console.log('[Cron] Running nightly optimization...');
   try {
     runOptimization();
+    recordCronRun('optimization');
+    logSystemEvent('cron', 'Nightly optimization completed');
   } catch (err) {
     console.error('[Cron] Optimization failed:', err);
+    recordCronRun('optimization', null, err.message);
+    logSystemEvent('error', `Optimization failed: ${err.message}`);
   }
 }, {
   timezone: 'America/Los_Angeles'
@@ -9071,8 +9139,12 @@ cron.schedule('0 8 * * *', () => {
   console.log('[Cron] Generating morning summary...');
   try {
     generateDailySummary();
+    recordCronRun('daily-summary');
+    logSystemEvent('cron', 'Daily summary generated');
   } catch (err) {
     console.error('[Cron] Daily summary failed:', err);
+    recordCronRun('daily-summary', null, err.message);
+    logSystemEvent('error', `Daily summary failed: ${err.message}`);
   }
 }, {
   timezone: 'America/Los_Angeles'
@@ -9088,8 +9160,12 @@ cron.schedule('0 9 * * *', () => {
   console.log('[Cron] Converting repost candidates...');
   try {
     convertRepostCandidates();
+    recordCronRun('repost-convert');
+    logSystemEvent('cron', 'Repost candidate conversion completed');
   } catch (err) {
     console.error('[Cron] Repost conversion failed:', err);
+    recordCronRun('repost-convert', null, err.message);
+    logSystemEvent('error', `Repost conversion failed: ${err.message}`);
   }
 }, {
   timezone: 'America/Los_Angeles'
@@ -9116,8 +9192,12 @@ cron.schedule('0 0 * * 1', () => {
       cache.missionControl = null;
       console.log('[Cron] Reset idea batch task to assigned');
     }
+    recordCronRun('weekly-idea-reset');
+    logSystemEvent('cron', 'Weekly idea batch task reset');
   } catch (err) {
     console.error('[Cron] Weekly reset error:', err);
+    recordCronRun('weekly-idea-reset', null, err.message);
+    logSystemEvent('error', `Weekly idea reset failed: ${err.message}`);
   }
 }, {
   timezone: 'America/Los_Angeles'
@@ -9202,7 +9282,14 @@ function snapshotTwitterMetrics() {
 
 cron.schedule('0 6 * * *', () => {
   console.log('[Cron] Running daily Twitter metrics snapshot...');
-  snapshotTwitterMetrics();
+  try {
+    snapshotTwitterMetrics();
+    recordCronRun('twitter-metrics');
+    logSystemEvent('cron', 'Twitter metrics snapshot completed');
+  } catch (err) {
+    recordCronRun('twitter-metrics', null, err.message);
+    logSystemEvent('error', `Twitter metrics failed: ${err.message}`);
+  }
 }, {
   timezone: 'America/Los_Angeles'
 });
@@ -9216,14 +9303,19 @@ cron.schedule('0 7 * * 1', () => {
     const existing = readWeeklyReport(prevWeekId);
     if (existing) {
       console.log(`[Cron] Weekly report for ${prevWeekId} already exists, skipping.`);
+      recordCronRun('weekly-report', 'skipped');
       return;
     }
     console.log(`[Cron] Generating weekly report for ${prevWeekId}...`);
     const report = generateWeeklyReport(prevWeekId);
     saveWeeklyReport(prevWeekId, report);
     console.log(`[Cron] Weekly report saved: ${report.content.postsPublished} posts, ${report.agents.totalCompleted} tasks completed, $${report.costs.totalSpent} spent`);
+    recordCronRun('weekly-report');
+    logSystemEvent('cron', `Weekly report generated for ${prevWeekId}`);
   } catch (err) {
     console.error('[Cron] Weekly report generation failed:', err);
+    recordCronRun('weekly-report', null, err.message);
+    logSystemEvent('error', `Weekly report failed: ${err.message}`);
   }
 }, { timezone: 'America/Los_Angeles' });
 console.log('[Cron] Weekly report generation scheduled for Monday 7:00 AM PST');
@@ -9452,8 +9544,15 @@ Rules:
 }
 
 // Sunday at 10 PM PST — after all daily jobs, well before Monday's midnight reset
-cron.schedule('0 22 * * 0', () => {
-  weeklyProjectReview();
+cron.schedule('0 22 * * 0', async () => {
+  try {
+    await weeklyProjectReview();
+    recordCronRun('weekly-review');
+    logSystemEvent('cron', 'Weekly project review completed');
+  } catch (err) {
+    recordCronRun('weekly-review', null, err.message);
+    logSystemEvent('error', `Weekly review failed: ${err.message}`);
+  }
 }, { timezone: 'America/Los_Angeles' });
 console.log('[Cron] Weekly project review scheduled for Sunday 10:00 PM PST');
 
@@ -9465,11 +9564,16 @@ cron.schedule('0 6 * * *', async () => {
     const state = getAutoPipelineState();
     if (!state.config?.enabled) {
       console.log('[Cron] Auto-pipeline disabled, skipping.');
+      recordCronRun('auto-pipeline', 'disabled');
       return;
     }
     await runAutoPipeline();
+    recordCronRun('auto-pipeline');
+    logSystemEvent('pipeline', 'Auto-pipeline completed');
   } catch (err) {
     console.error('[Cron] Auto-pipeline error:', err);
+    recordCronRun('auto-pipeline', null, err.message);
+    logSystemEvent('error', `Auto-pipeline failed: ${err.message}`);
   }
 }, { timezone: 'America/Los_Angeles' });
 console.log('[Cron] Auto-pipeline scheduled for 6:00 AM PST (when enabled)');
@@ -11048,8 +11152,12 @@ ${candidateList}`
 cron.schedule('0 11,15,19 * * *', async () => {
   try {
     await scanForEngagementTargets();
+    recordCronRun('engagement-scan');
+    logSystemEvent('cron', 'Engagement target scan completed');
   } catch (e) {
     console.error('[EngagementScan] Scheduled scan failed:', e.message);
+    recordCronRun('engagement-scan', null, e.message);
+    logSystemEvent('error', `Engagement scan failed: ${e.message}`);
   }
 }, { timezone: 'America/Los_Angeles' });
 console.log('[EngagementScan] Scheduled: 11 AM, 3 PM, 7 PM PST daily');
@@ -11173,11 +11281,95 @@ async function executeEngagementActions() {
 cron.schedule('15 11,15,19 * * *', async () => {
   try {
     await executeEngagementActions();
+    recordCronRun('engagement-execute');
+    logSystemEvent('cron', 'Engagement actions executed');
   } catch (e) {
     console.error('[EngagementExec] Scheduled execution failed:', e.message);
+    recordCronRun('engagement-execute', null, e.message);
+    logSystemEvent('error', `Engagement execution failed: ${e.message}`);
   }
 }, { timezone: 'America/Los_Angeles' });
 console.log('[EngagementExec] Scheduled: 11:15 AM, 3:15 PM, 7:15 PM PST daily');
+
+// ============================================================================
+// SYSTEM API ENDPOINTS (Mission Control Dashboard)
+// ============================================================================
+
+app.get('/api/system/events', (req, res) => {
+  try {
+    const typeFilter = req.query.type;
+    let events = systemEventLog.slice().reverse();
+    if (typeFilter) {
+      events = events.filter(e => e.type === typeFilter);
+    }
+    res.json({ events: events.slice(0, 50) });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/system/crons', (req, res) => {
+  try {
+    const crons = Object.values(cronRegistry);
+    res.json({ crons });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+function getApprovalQueue() {
+  try {
+    if (fs.existsSync(APPROVAL_QUEUE_FILE)) {
+      return JSON.parse(fs.readFileSync(APPROVAL_QUEUE_FILE, 'utf8'));
+    }
+  } catch (e) {
+    console.error('Error reading approval queue:', e);
+  }
+  return { approvals: [] };
+}
+
+function saveApprovalQueue(data) {
+  fs.writeFileSync(APPROVAL_QUEUE_FILE, JSON.stringify(data, null, 2));
+}
+
+app.get('/api/system/approvals', (req, res) => {
+  try {
+    const data = getApprovalQueue();
+    res.json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/system/approvals/:id/decide', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { decision } = req.body;
+    if (!['approved', 'denied'].includes(decision)) {
+      return res.status(400).json({ error: 'Decision must be "approved" or "denied"' });
+    }
+
+    const data = getApprovalQueue();
+    const approval = data.approvals.find(a => a.id === id);
+    if (!approval) {
+      return res.status(404).json({ error: 'Approval not found' });
+    }
+
+    approval.decision = decision;
+    approval.decidedAt = new Date().toISOString();
+    saveApprovalQueue(data);
+
+    logSystemEvent('debug', `Approval ${id} ${decision}: ${approval.description || approval.taskId}`, { approvalId: id, decision });
+
+    res.json({ success: true, approval });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // ============================================================================
 // START SERVER
@@ -11200,19 +11392,24 @@ async function start() {
     next();
   });
 
-  // Serve Mission Control static files with security options
+  // Serve Mission Control data files (JSON, etc.) but NOT index.html
+  // The React SPA now handles /mission-control route via Vite
   const MISSION_CONTROL_DIR = path.join(BASE_DIR, 'mission-control');
-  app.use('/mission-control', express.static(MISSION_CONTROL_DIR, {
-    dotfiles: 'ignore',
-    index: 'index.html',
-    extensions: ['html', 'json', 'md', 'css', 'js'],
-    setHeaders: (res, filePath) => {
-      res.set('X-Content-Type-Options', 'nosniff');
-      if (filePath.endsWith('.json')) {
-        res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  app.use('/mission-control', (req, res, next) => {
+    // Skip index.html — let Vite serve the React SPA for /mission-control
+    if (req.path === '/' || req.path === '/index.html') return next();
+    return express.static(MISSION_CONTROL_DIR, {
+      dotfiles: 'ignore',
+      index: false,
+      extensions: ['json', 'md'],
+      setHeaders: (res, filePath) => {
+        res.set('X-Content-Type-Options', 'nosniff');
+        if (filePath.endsWith('.json')) {
+          res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+        }
       }
-    }
-  }));
+    })(req, res, next);
+  });
 
   // Vite dev middleware (handles React HMR, module serving, etc.)
   app.use(vite.middlewares);
