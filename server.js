@@ -3457,6 +3457,7 @@ ${platformInstructions}
 Return a JSON object where each key is the platform name. For most platforms, the value has a "content" field. Exceptions:
 - **instagram**: { "cardText": "...", "caption": "..." }
 - **reddit**: { "title": "...", "body": "..." }
+- **medium**: { "title": "...", "content": "...", "topics": ["topic1", "topic2", "topic3", "topic4", "topic5"] } (exactly 5 Medium topics/tags)
 - **twitter**: { "content": "..." } (if a thread, separate tweets with ---)
 
 Example structure:
@@ -3465,7 +3466,7 @@ Example structure:
   "bluesky": { "content": "post text here" },
   "instagram": { "cardText": "short quote", "caption": "longer caption with #hashtags" },
   "reddit": { "title": "Discussion title", "body": "Discussion body..." },
-  "medium": { "content": "Essay paragraph..." }
+  "medium": { "title": "Article Title", "content": "Article body...", "topics": ["Philosophy", "Self Improvement", "Life", "Mindfulness", "Psychology"] }
 }
 
 Only include the platforms requested: ${validPlatforms.join(', ')}`;
@@ -3570,6 +3571,10 @@ async function runAutoPipeline() {
 
         if (platform === 'reddit' && draft.title && draft.body) {
           item.content = `${draft.title}\n\n${draft.body}`;
+        }
+        if (platform === 'medium') {
+          if (draft.title) item.title = draft.title;
+          if (draft.topics) item.topics = draft.topics;
         }
         if (platform === 'instagram' && draft.cardText) {
           item.content = draft.cardText;
@@ -3691,6 +3696,9 @@ app.post('/api/ideas/:id/fast-track', writeLimiter, async (req, res) => {
 
       if (platform === 'reddit' && draft.title && draft.body) {
         item.content = `${draft.title}\n\n${draft.body}`;
+      }
+      if (platform === 'medium' && draft.title) {
+        item.title = draft.title;
       }
       if (platform === 'instagram' && draft.cardText) {
         item.content = draft.cardText;

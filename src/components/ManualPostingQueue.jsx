@@ -73,6 +73,14 @@ export default function ManualPostingQueue() {
     return <LoadingState />
   }
 
+  // Compute last post time per platform from posted array
+  const lastPostedByPlatform = {}
+  for (const item of (data.posted || [])) {
+    if (!lastPostedByPlatform[item.platform] && item.postedAt) {
+      lastPostedByPlatform[item.platform] = item.postedAt
+    }
+  }
+
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
@@ -102,6 +110,7 @@ export default function ManualPostingQueue() {
           maxPosts={data.settings?.platforms?.instagram?.maxPostsPerDay || 2}
           canPost={data.canPostInstagram}
           warmupMode={data.settings?.warmupMode}
+          lastPosted={lastPostedByPlatform.instagram}
           isActive={platformFilter === 'instagram'}
           onClick={() => setPlatformFilter(platformFilter === 'instagram' ? null : 'instagram')}
         />
@@ -112,6 +121,7 @@ export default function ManualPostingQueue() {
           maxPosts={data.settings?.platforms?.threads?.maxPostsPerDay || 3}
           canPost={data.canPostThreads}
           warmupMode={data.settings?.warmupMode}
+          lastPosted={lastPostedByPlatform.threads}
           isActive={platformFilter === 'threads'}
           onClick={() => setPlatformFilter(platformFilter === 'threads' ? null : 'threads')}
         />
@@ -122,6 +132,7 @@ export default function ManualPostingQueue() {
           maxPosts={data.settings?.platforms?.bluesky?.maxPostsPerDay || 5}
           canPost={data.canPostBluesky}
           warmupMode={data.settings?.warmupMode}
+          lastPosted={lastPostedByPlatform.bluesky}
           isActive={platformFilter === 'bluesky'}
           onClick={() => setPlatformFilter(platformFilter === 'bluesky' ? null : 'bluesky')}
         />
@@ -132,6 +143,7 @@ export default function ManualPostingQueue() {
           maxPosts={data.settings?.platforms?.twitter?.maxPostsPerDay || 5}
           canPost={data.canPostTwitter}
           warmupMode={data.settings?.warmupMode}
+          lastPosted={lastPostedByPlatform.twitter}
           isActive={platformFilter === 'twitter'}
           onClick={() => setPlatformFilter(platformFilter === 'twitter' ? null : 'twitter')}
         />
@@ -142,6 +154,7 @@ export default function ManualPostingQueue() {
           maxPosts={data.settings?.platforms?.reddit?.maxPostsPerDay || 3}
           canPost={data.canPostReddit}
           warmupMode={data.settings?.warmupMode}
+          lastPosted={lastPostedByPlatform.reddit}
           isActive={platformFilter === 'reddit'}
           onClick={() => setPlatformFilter(platformFilter === 'reddit' ? null : 'reddit')}
         />
@@ -152,6 +165,7 @@ export default function ManualPostingQueue() {
           maxPosts={data.settings?.platforms?.medium?.maxPostsPerDay || 1}
           canPost={data.canPostMedium}
           warmupMode={data.settings?.warmupMode}
+          lastPosted={lastPostedByPlatform.medium}
           isActive={platformFilter === 'medium'}
           onClick={() => setPlatformFilter(platformFilter === 'medium' ? null : 'medium')}
         />
@@ -250,7 +264,18 @@ const PLATFORM_STYLE = {
   medium: { bg: 'bg-green-50', border: 'border-green-200', hover: 'hover:border-green-300', text: 'text-green-700', ring: 'ring-green-600', activeBg: 'bg-green-100' },
 }
 
-function PlatformStatus({ platform, icon, postsToday, maxPosts, canPost, warmupMode, isActive, onClick }) {
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  return `${days}d ago`
+}
+
+function PlatformStatus({ platform, icon, postsToday, maxPosts, canPost, warmupMode, lastPosted, isActive, onClick }) {
   const remaining = maxPosts - postsToday
   const ps = PLATFORM_STYLE[platform] || PLATFORM_STYLE.twitter
 
@@ -280,8 +305,11 @@ function PlatformStatus({ platform, icon, postsToday, maxPosts, canPost, warmupM
           <span className="text-sm font-normal ml-1">left</span>
         </div>
       </div>
+      <p className="text-xs text-neutral-500 mt-2">
+        {lastPosted ? `Last post: ${timeAgo(lastPosted)}` : 'No posts yet'}
+      </p>
       {warmupMode && (
-        <p className="text-xs text-amber-600 mt-2">Warmup limits active</p>
+        <p className="text-xs text-amber-600 mt-1">Warmup limits active</p>
       )}
     </button>
   )
@@ -295,6 +323,7 @@ const VOICE_COLORS = {
 }
 
 function QueueItem({ item, canPost, onUpdate }) {
+  const [hidden, setHidden] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [publishStatus, setPublishStatus] = useState(null) // 'publishing' | 'success' | 'error'
   const [publishError, setPublishError] = useState(null)
@@ -321,6 +350,7 @@ function QueueItem({ item, canPost, onUpdate }) {
 
   const handleMarkPosted = async () => {
     setIsUpdating(true)
+    setHidden(true)
     try {
       await fetch(`/api/posting-queue/${item.id}/posted`, {
         method: 'POST',
@@ -330,6 +360,7 @@ function QueueItem({ item, canPost, onUpdate }) {
       onUpdate()
     } catch (err) {
       console.error('Error marking as posted:', err)
+      setHidden(false)
     }
     setIsUpdating(false)
   }
@@ -424,6 +455,8 @@ function QueueItem({ item, canPost, onUpdate }) {
       console.error('Failed to select option:', err)
     }
   }
+
+  if (hidden) return null
 
   const isReady = !item.canvaRequired || item.canvaComplete
   const isFailed = item.status === 'failed'
@@ -524,6 +557,20 @@ function QueueItem({ item, canPost, onUpdate }) {
             <p className="text-neutral-800 whitespace-pre-wrap line-clamp-3">{item.content}</p>
           )}
 
+          {item.title && (
+            <p className="text-sm font-semibold text-neutral-700 mt-1">
+              Title: {item.title}
+            </p>
+          )}
+
+          {item.topics?.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {item.topics.map(topic => (
+                <span key={topic} className="text-xs px-2 py-0.5 bg-neutral-100 text-neutral-600 rounded-full">{topic}</span>
+              ))}
+            </div>
+          )}
+
           {item.caption && (
             <p className="text-sm text-neutral-500 mt-2 line-clamp-2">
               Caption: {item.caption}
@@ -586,7 +633,11 @@ function QueueItem({ item, canPost, onUpdate }) {
           {/* All platforms get Copy & Open */}
           {isReady && (
             <button
-              onClick={() => handleCopyAndOpen(item.platform === 'instagram' ? `Instagram Post:\n\n${item.content}${item.caption ? '\n\n' + item.caption : ''}` : item.content)}
+              onClick={() => handleCopyAndOpen(
+                item.platform === 'instagram' ? `Instagram Post:\n\n${item.content}${item.caption ? '\n\n' + item.caption : ''}` :
+                item.platform === 'medium' ? `${item.title ? item.title + '\n\n' : ''}${item.content}${item.topics?.length ? '\n\nTopics: ' + item.topics.join(', ') : ''}` :
+                item.content
+              )}
               className="flex items-center gap-1 px-3 py-1.5 text-sm bg-neutral-800 text-white rounded hover:bg-neutral-900"
             >
               {copyFeedback === 'content' ? <Check size={14} /> : <Copy size={14} />}
