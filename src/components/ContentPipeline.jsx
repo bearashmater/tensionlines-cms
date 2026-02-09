@@ -1,5 +1,6 @@
 import useSWR from 'swr'
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getIdeas, getDrafts, getIdeaStats } from '../lib/api'
 import { formatDate, getStatusColor } from '../lib/formatters'
 import { Lightbulb, FileText, TrendingUp, Target, Flame, Calendar, CheckCircle, Clock, AlertTriangle, Search, Filter, Grid, List, ChevronDown, ChevronUp, Tag, X, Rocket, Loader } from 'lucide-react'
@@ -813,12 +814,14 @@ function LoadingState() {
 // ============================================================================
 
 function FastTrackButton({ ideaId }) {
+  const navigate = useNavigate()
   const [state, setState] = useState('idle') // idle | loading | success | error
   const [message, setMessage] = useState('')
 
   const handleFastTrack = async (e) => {
     e.stopPropagation()
     if (state === 'loading') return
+    if (state === 'success') { navigate('/posting-queue'); return }
     setState('loading')
     setMessage('')
     try {
@@ -826,8 +829,7 @@ function FastTrackButton({ ideaId }) {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Fast-track failed')
       setState('success')
-      setMessage(`${data.draftCount} drafts queued for review`)
-      setTimeout(() => { setState('idle'); setMessage('') }, 4000)
+      setMessage(`${data.draftCount} drafts queued — tap to review`)
     } catch (err) {
       setState('error')
       setMessage(err.message)
@@ -841,7 +843,7 @@ function FastTrackButton({ ideaId }) {
         onClick={handleFastTrack}
         disabled={state === 'loading'}
         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-          state === 'success' ? 'bg-green-600 text-white' :
+          state === 'success' ? 'bg-green-600 text-white hover:bg-green-700 cursor-pointer' :
           state === 'error' ? 'bg-red-600 text-white' :
           state === 'loading' ? 'bg-neutral-400 text-white cursor-wait' :
           'bg-neutral-800 text-white hover:bg-neutral-700'
