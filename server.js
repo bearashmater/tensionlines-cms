@@ -3641,6 +3641,89 @@ app.post('/api/auto-pipeline/run', writeLimiter, async (req, res) => {
 });
 
 /**
+ * POST /api/ideas/:id/fast-track — Generate drafts for all platforms and queue them in one click
+ */
+app.post('/api/ideas/:id/fast-track', writeLimiter, async (req, res) => {
+  try {
+    const ideaId = req.params.id;
+    cache.ideasBank = null; // Force fresh parse
+    const ideas = parseIdeasBank();
+    const idea = ideas.find(i => i.id === ideaId || `#${i.id}` === ideaId);
+    if (!idea) {
+      return res.status(404).json({ error: `Idea #${ideaId} not found` });
+    }
+
+    // Build source text from idea fields
+    const parts = [];
+    if (idea.quote) parts.push(`Quote: "${idea.quote}"`);
+    if (idea.tension) parts.push(`Tension: ${idea.tension}`);
+    if (idea.paradox) parts.push(`Paradox: ${idea.paradox}`);
+    if (idea.notes) parts.push(`Notes: ${idea.notes}`);
+    if (idea.text && !idea.quote) parts.push(idea.text);
+    const sourceText = parts.join('\n\n');
+
+    if (!sourceText.trim()) {
+      return res.status(400).json({ error: `Idea #${ideaId} has no text content` });
+    }
+
+    const platforms = ['twitter', 'bluesky', 'instagram', 'reddit', 'medium'];
+    const { drafts, validPlatforms } = await generatePlatformDrafts(sourceText, 'nietzsche', platforms);
+
+    // Queue each platform draft
+    const queue = getPostingQueue();
+    let draftCount = 0;
+    for (const platform of validPlatforms) {
+      if (!drafts[platform]) continue;
+      const draft = drafts[platform];
+
+      const item = {
+        id: `post-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        createdAt: new Date().toISOString(),
+        status: 'pending-review',
+        platform,
+        content: draft.content || draft.title || draft.cardText || '',
+        caption: draft.caption || '',
+        parts: [],
+        createdBy: 'nietzsche',
+        ideaId: idea.id,
+        source: 'fast-track'
+      };
+
+      if (platform === 'reddit' && draft.title && draft.body) {
+        item.content = `${draft.title}\n\n${draft.body}`;
+      }
+      if (platform === 'instagram' && draft.cardText) {
+        item.content = draft.cardText;
+        item.caption = draft.caption || '';
+      }
+
+      queue.queue.push(item);
+      draftCount++;
+    }
+    savePostingQueue(queue);
+
+    // Record in auto-pipeline state so daily cron won't re-process
+    const state = getAutoPipelineState();
+    if (!state.processedIds.includes(idea.id)) {
+      state.processedIds.push(idea.id);
+      saveAutoPipelineState(state);
+    }
+
+    console.log(`[FastTrack] Idea #${idea.id} → ${draftCount} drafts queued.`);
+    res.json({ success: true, draftCount, platforms: validPlatforms, ideaId: idea.id });
+  } catch (error) {
+    console.error('[FastTrack] Error:', error);
+    if (error.message?.includes('parse') || error instanceof SyntaxError) {
+      return res.status(502).json({ error: 'Failed to parse Claude response as JSON' });
+    }
+    if (error.status === 401) {
+      return res.status(502).json({ error: 'Invalid Anthropic API key' });
+    }
+    res.status(502).json({ error: 'Fast-track generation failed', detail: error.message });
+  }
+});
+
+/**
  * GET /api/auto-pipeline/status — Current state, last run, eligible ideas
  */
 app.get('/api/auto-pipeline/status', (req, res) => {

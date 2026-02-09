@@ -2,7 +2,7 @@ import useSWR from 'swr'
 import { useState, useMemo } from 'react'
 import { getIdeas, getDrafts, getIdeaStats } from '../lib/api'
 import { formatDate, getStatusColor } from '../lib/formatters'
-import { Lightbulb, FileText, TrendingUp, Target, Flame, Calendar, CheckCircle, Clock, AlertTriangle, Search, Filter, Grid, List, ChevronDown, ChevronUp, Tag, X } from 'lucide-react'
+import { Lightbulb, FileText, TrendingUp, Target, Flame, Calendar, CheckCircle, Clock, AlertTriangle, Search, Filter, Grid, List, ChevronDown, ChevronUp, Tag, X, Rocket, Loader } from 'lucide-react'
 
 export default function ContentPipeline() {
   const { data: ideas } = useSWR('/ideas', getIdeas, { refreshInterval: 120000 })
@@ -687,17 +687,20 @@ function IdeasTable({ ideas, sortBy, sortDir, onSort, expandedId, onExpand, onTa
                           ))}
                         </div>
                       )}
-                      {/* View Full Analysis Button */}
-                      {(idea.notes || idea.tension || idea.paradox || idea.connections || idea.chapter ||
-                        (Array.isArray(idea.potentialContent) ? idea.potentialContent.length > 0 : idea.potentialContent)) && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); onViewDetails(idea) }}
-                          className="mt-2 px-4 py-2 bg-gold text-white rounded-lg text-sm font-medium hover:bg-gold/90 transition-colors flex items-center gap-2"
-                        >
-                          <Lightbulb size={16} />
-                          View Full Analysis
-                        </button>
-                      )}
+                      {/* Action Buttons */}
+                      <div className="mt-2 flex items-center gap-2">
+                        {(idea.notes || idea.tension || idea.paradox || idea.connections || idea.chapter ||
+                          (Array.isArray(idea.potentialContent) ? idea.potentialContent.length > 0 : idea.potentialContent)) && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onViewDetails(idea) }}
+                            className="px-4 py-2 bg-gold text-white rounded-lg text-sm font-medium hover:bg-gold/90 transition-colors flex items-center gap-2"
+                          >
+                            <Lightbulb size={16} />
+                            View Full Analysis
+                          </button>
+                        )}
+                        <FastTrackButton ideaId={idea.id} />
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -806,6 +809,55 @@ function LoadingState() {
 }
 
 // ============================================================================
+// FAST TRACK BUTTON - Generate drafts for all platforms in one click
+// ============================================================================
+
+function FastTrackButton({ ideaId }) {
+  const [state, setState] = useState('idle') // idle | loading | success | error
+  const [message, setMessage] = useState('')
+
+  const handleFastTrack = async (e) => {
+    e.stopPropagation()
+    if (state === 'loading') return
+    setState('loading')
+    setMessage('')
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/fast-track`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Fast-track failed')
+      setState('success')
+      setMessage(`${data.draftCount} drafts queued for review`)
+      setTimeout(() => { setState('idle'); setMessage('') }, 4000)
+    } catch (err) {
+      setState('error')
+      setMessage(err.message)
+      setTimeout(() => { setState('idle'); setMessage('') }, 4000)
+    }
+  }
+
+  return (
+    <div className="relative inline-flex items-center">
+      <button
+        onClick={handleFastTrack}
+        disabled={state === 'loading'}
+        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+          state === 'success' ? 'bg-green-600 text-white' :
+          state === 'error' ? 'bg-red-600 text-white' :
+          state === 'loading' ? 'bg-neutral-400 text-white cursor-wait' :
+          'bg-neutral-800 text-white hover:bg-neutral-700'
+        }`}
+      >
+        {state === 'loading' ? <Loader size={16} className="animate-spin" /> : <Rocket size={16} />}
+        {state === 'success' ? message : state === 'error' ? 'Failed' : state === 'loading' ? 'Generating...' : 'Fast Track'}
+      </button>
+      {state === 'error' && message && (
+        <span className="absolute top-full left-0 mt-1 text-xs text-red-600 whitespace-nowrap">{message}</span>
+      )}
+    </div>
+  )
+}
+
+// ============================================================================
 // IDEA DETAIL MODAL - Full Processed Content View
 // ============================================================================
 
@@ -830,12 +882,15 @@ function IdeaDetailModal({ idea, onClose, onTagClick }) {
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <FastTrackButton ideaId={idea.id} />
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
