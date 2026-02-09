@@ -19,7 +19,8 @@ import {
   Loader2,
   Copy,
   Hash,
-  BookOpen
+  BookOpen,
+  Sparkles
 } from 'lucide-react'
 import PlatformStatusBadges from './PlatformStatusBadges'
 
@@ -315,6 +316,15 @@ function PlatformStatus({ platform, icon, postsToday, maxPosts, canPost, warmupM
   )
 }
 
+const PHILOSOPHER_BY_PLATFORM = {
+  twitter: 'nietzsche',
+  bluesky: 'heraclitus',
+  threads: 'heraclitus',
+  reddit: 'diogenes',
+  medium: 'plato',
+  instagram: 'heraclitus',
+}
+
 const VOICE_COLORS = {
   strong: { bg: 'bg-green-50', text: 'text-green-700', dot: 'bg-green-500' },
   good: { bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-500' },
@@ -331,15 +341,18 @@ function QueueItem({ item, canPost, onUpdate }) {
   const [voiceCheckLoading, setVoiceCheckLoading] = useState(false)
   const [copyFeedback, setCopyFeedback] = useState(null) // null | 'content' | option index
   const [expanded, setExpanded] = useState(false)
+  const [improving, setImproving] = useState(false)
 
-  const handleVoiceCheck = async () => {
+  const runVoiceCheck = async () => {
+    const philosopher = item.createdBy || PHILOSOPHER_BY_PLATFORM[item.platform]
+    if (!philosopher || philosopher === 'unknown') return
     setVoiceCheckLoading(true)
     try {
       const content = [item.content, item.caption].filter(Boolean).join('\n\n')
       const res = await fetch('/api/voice-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, philosopher: item.createdBy, platform: item.platform })
+        body: JSON.stringify({ content, philosopher, platform: item.platform })
       })
       const data = await res.json()
       if (res.ok) setVoiceCheck(data)
@@ -347,6 +360,47 @@ function QueueItem({ item, canPost, onUpdate }) {
       console.error('Voice check error:', err)
     }
     setVoiceCheckLoading(false)
+  }
+
+  // Auto-run voice check on mount
+  useEffect(() => {
+    const philosopher = item.createdBy || PHILOSOPHER_BY_PLATFORM[item.platform]
+    if (philosopher && philosopher !== 'unknown') {
+      runVoiceCheck()
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleImprove = async () => {
+    setImproving(true)
+    try {
+      const content = [item.content, item.caption].filter(Boolean).join('\n\n')
+      const philosopher = item.createdBy || PHILOSOPHER_BY_PLATFORM[item.platform] || 'nietzsche'
+      const res = await fetch('/api/voice-improve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content,
+          philosopher,
+          platform: item.platform,
+          issues: voiceCheck?.issues,
+          suggestions: voiceCheck?.suggestions
+        })
+      })
+      const data = await res.json()
+      if (res.ok && data.improved) {
+        // Update the queue item with improved content
+        await fetch(`/api/posting-queue/${item.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: data.improved })
+        })
+        setVoiceCheck(null)
+        onUpdate()
+      }
+    } catch (err) {
+      console.error('Improve error:', err)
+    }
+    setImproving(false)
   }
 
   const handleMarkPosted = async () => {
@@ -620,13 +674,23 @@ function QueueItem({ item, canPost, onUpdate }) {
 
           {/* Voice check result inline */}
           {voiceCheck && (
-            <div className={`flex items-center gap-2 mt-2 text-xs ${(VOICE_COLORS[voiceCheck.verdict] || VOICE_COLORS.good).text}`}>
-              <span className={`w-2 h-2 rounded-full ${(VOICE_COLORS[voiceCheck.verdict] || VOICE_COLORS.good).dot}`} />
-              <span className="font-medium">{voiceCheck.score}</span>
-              <span>{voiceCheck.verdict}</span>
-              {voiceCheck.issues?.length > 0 && (
-                <span className="text-neutral-400">— {voiceCheck.issues[0].description}</span>
-              )}
+            <div className="mt-2">
+              <div className={`flex items-center gap-2 text-xs ${(VOICE_COLORS[voiceCheck.verdict] || VOICE_COLORS.good).text}`}>
+                <span className={`w-2 h-2 rounded-full ${(VOICE_COLORS[voiceCheck.verdict] || VOICE_COLORS.good).dot}`} />
+                <span className="font-medium">{voiceCheck.score}</span>
+                <span>{voiceCheck.verdict}</span>
+                {voiceCheck.issues?.length > 0 && (
+                  <span className="text-neutral-400">— {voiceCheck.issues[0].description}</span>
+                )}
+              </div>
+              <button
+                onClick={handleImprove}
+                disabled={improving}
+                className="flex items-center gap-1 mt-2 px-3 py-1.5 text-xs font-medium bg-purple-100 text-purple-700 rounded hover:bg-purple-200 disabled:opacity-50"
+              >
+                {improving ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                {improving ? 'Improving...' : 'Improve it'}
+              </button>
             </div>
           )}
 
@@ -693,7 +757,7 @@ function QueueItem({ item, canPost, onUpdate }) {
           )}
           {item.createdBy && item.createdBy !== 'unknown' && (
             <button
-              onClick={handleVoiceCheck}
+              onClick={runVoiceCheck}
               disabled={voiceCheckLoading}
               className="flex items-center gap-1 px-3 py-1.5 text-sm text-purple-600 hover:bg-purple-50 rounded disabled:opacity-50"
             >
@@ -703,6 +767,11 @@ function QueueItem({ item, canPost, onUpdate }) {
                 <ShieldCheck size={14} />
               )}
               Voice Check
+              {voiceCheck && (
+                <span className={`ml-1 px-1.5 py-0.5 text-xs rounded-full font-medium ${(VOICE_COLORS[voiceCheck.verdict] || VOICE_COLORS.good).text} ${(VOICE_COLORS[voiceCheck.verdict] || VOICE_COLORS.good).bg}`}>
+                  {voiceCheck.score}
+                </span>
+              )}
             </button>
           )}
           <button

@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom'
 import useSWR from 'swr'
 import { getChapter, getBooks } from '../lib/api'
 import { formatNumber } from '../lib/formatters'
-import { FileText, Lightbulb, BookOpen } from 'lucide-react'
+import { FileText, Lightbulb, BookOpen, Printer } from 'lucide-react'
 import { BackButton, PageHeader } from './Navigation'
 
 export default function ChapterDetail() {
@@ -41,11 +41,35 @@ export default function ChapterDetail() {
       <BackButton to="/book" label="Back to Books" />
 
       {/* Header */}
-      <PageHeader 
-        title={fullTitle}
-        subtitle={book?.name}
-        icon={<BookOpen size={28} />}
-      />
+      <div className="flex items-start justify-between">
+        <PageHeader
+          title={fullTitle}
+          subtitle={book?.name}
+          icon={<BookOpen size={28} />}
+        />
+        {chapter.wordCount > 0 && (
+          <div className="flex gap-2 mt-1">
+            <a
+              href={`/print/${bookId}/chapter/${chapterNum}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 hover:text-black transition-colors"
+            >
+              <Printer size={14} />
+              Print Chapter
+            </a>
+            <a
+              href={`/print/${bookId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 hover:text-black transition-colors"
+            >
+              <Printer size={14} />
+              Print Book
+            </a>
+          </div>
+        )}
+      </div>
 
       {/* Chapter Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

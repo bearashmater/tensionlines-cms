@@ -2287,7 +2287,7 @@ app.patch('/api/posting-queue/:id', (req, res) => {
     }
 
     // Update allowed fields
-    const allowedFields = ['canvaComplete', 'status', 'content', 'caption', 'parts', 'selectedOption'];
+    const allowedFields = ['canvaComplete', 'status', 'content', 'caption', 'parts', 'selectedOption', 'tags', 'subreddit', 'createdBy'];
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
         item[field] = req.body[field];
@@ -3452,6 +3452,16 @@ const AUTO_PIPELINE_CONFIG_DEFAULTS = {
   maxIdeasPerRun: 3
 };
 
+// Each platform's designated philosopher voice
+const PHILOSOPHER_BY_PLATFORM = {
+  twitter: 'nietzsche',
+  bluesky: 'heraclitus',
+  threads: 'heraclitus',
+  reddit: 'diogenes',
+  medium: 'plato',
+  instagram: 'heraclitus',
+};
+
 function getAutoPipelineState() {
   try {
     if (fs.existsSync(AUTO_PIPELINE_STATE_FILE)) {
@@ -3475,27 +3485,34 @@ async function generatePlatformDrafts(sourceText, philosopher, platforms) {
   const client = getAnthropicClient();
   if (!client) throw new Error('Anthropic API key not configured');
 
-  // Read philosopher SOUL.md for voice
-  let soulContent = '';
-  const soulPath = path.join(PHILOSOPHERS_DIR, philosopher, 'SOUL.md');
-  if (fs.existsSync(soulPath)) {
-    soulContent = fs.readFileSync(soulPath, 'utf8');
-    if (soulContent.length > 2000) soulContent = soulContent.substring(0, 2000) + '\n...(truncated)';
-  }
-
   const validPlatforms = platforms.filter(p => PLATFORM_SPECS[p]);
   if (validPlatforms.length === 0) throw new Error('No valid platforms specified');
 
+  // Build per-platform voice definitions using each platform's designated philosopher
+  const voiceSections = [];
+  for (const p of validPlatforms) {
+    const platPhilosopher = PHILOSOPHER_BY_PLATFORM[p] || philosopher;
+    const soulPath = path.join(PHILOSOPHERS_DIR, platPhilosopher, 'SOUL.md');
+    if (fs.existsSync(soulPath)) {
+      let soul = fs.readFileSync(soulPath, 'utf8');
+      if (soul.length > 1500) soul = soul.substring(0, 1500) + '\n...(truncated)';
+      voiceSections.push(`### Voice for ${p} (${platPhilosopher}):\n${soul}`);
+    }
+  }
+
   const platformInstructions = validPlatforms.map(p => {
     const spec = PLATFORM_SPECS[p];
-    return `### ${spec.label}\n${spec.format}`;
+    const platPhilosopher = PHILOSOPHER_BY_PLATFORM[p] || philosopher;
+    return `### ${spec.label} (voice: ${platPhilosopher})\n${spec.format}`;
   }).join('\n\n');
 
   const systemPrompt = `You are a social media content writer for TensionLines — a philosophy brand that makes deep ideas accessible and provocative for modern audiences.
 
-${soulContent ? `## Voice & Personality (from the philosopher's SOUL.md):\n${soulContent}\n` : ''}
+Each platform has a DIFFERENT philosopher voice. You MUST write each platform's draft in its designated philosopher's voice.
+
+${voiceSections.length > 0 ? voiceSections.join('\n\n') + '\n' : ''}
 ## Rules:
-- Write in the philosopher's distinctive voice — not academic, but sharp, alive, and contemporary.
+- Write EACH platform's draft in that platform's designated philosopher voice — they should sound distinctly different.
 - Never use generic motivational language. Be specific. Be surprising.
 - Each platform draft should feel native to that platform, not just reformatted.
 - Respect character limits strictly.
@@ -3620,7 +3637,7 @@ async function runAutoPipeline() {
           content: draft.content || draft.title || draft.cardText || '',
           caption: draft.caption || '',
           parts: [],
-          createdBy: config.philosopher || 'nietzsche',
+          createdBy: PHILOSOPHER_BY_PLATFORM[platform] || config.philosopher || 'nietzsche',
           ideaId: idea.id,
           source: 'auto-pipeline'
         };
@@ -3927,6 +3944,59 @@ Keep issues, suggestions, and strengths to 1-3 items each. Be specific, not gene
   } catch (error) {
     console.error('Voice check error:', error);
     res.status(500).json({ error: 'Voice check failed' });
+  }
+});
+
+app.post('/api/voice-improve', writeLimiter, async (req, res) => {
+  try {
+    const client = getAnthropicClient();
+    if (!client) {
+      return res.status(500).json({ error: 'Anthropic API key not configured' });
+    }
+
+    const { content, philosopher, platform, issues, suggestions } = req.body;
+    if (!content || !philosopher) {
+      return res.status(400).json({ error: 'content and philosopher are required' });
+    }
+    if (!isValidPhilosopher(philosopher)) {
+      return res.status(400).json({ error: 'Invalid philosopher name' });
+    }
+
+    // Read SOUL.md
+    const soulPath = path.join(PHILOSOPHERS_DIR, philosopher, 'SOUL.md');
+    if (!fs.existsSync(soulPath)) {
+      return res.status(404).json({ error: `No SOUL.md found for ${philosopher}` });
+    }
+    const soulRaw = fs.readFileSync(soulPath, 'utf8');
+    const voiceDefinition = extractVoiceSections(soulRaw);
+
+    const feedbackLines = [];
+    if (issues?.length) feedbackLines.push(`Issues found: ${issues.map(i => i.description).join('; ')}`);
+    if (suggestions?.length) feedbackLines.push(`Suggestions: ${suggestions.join('; ')}`);
+
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 1024,
+      system: `You are a content rewriter for TensionLines, a philosophy brand. Rewrite content to better match a philosopher's voice. Return ONLY the improved text, no explanation or JSON wrapping.`,
+      messages: [{
+        role: 'user',
+        content: `## Voice Definition for "${philosopher}"
+${voiceDefinition}
+
+## Original Content${platform ? ` (for ${platform})` : ''}
+${content}
+
+${feedbackLines.length > 0 ? `## Voice Check Feedback\n${feedbackLines.join('\n')}\n` : ''}
+## Task
+Rewrite this content to strongly match ${philosopher}'s voice. Keep the same core message and approximate length but make it sound authentically like ${philosopher}. ${platform ? `Optimize for ${platform}.` : ''} Return ONLY the rewritten text.`
+      }]
+    });
+
+    const improved = response.content[0]?.text?.trim() || '';
+    res.json({ improved, philosopher, platform });
+  } catch (error) {
+    console.error('Voice improve error:', error);
+    res.status(500).json({ error: 'Voice improvement failed' });
   }
 });
 

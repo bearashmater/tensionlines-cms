@@ -1,10 +1,10 @@
 import useSWR, { mutate } from 'swr'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getDashboard, getActivities, search } from '../lib/api'
+import { getDashboard, getActivities, search, getBooks } from '../lib/api'
 import { fetcher } from '../lib/api'
 import { formatDate, formatPercent, formatNumber, formatStatus, getStatusColor } from '../lib/formatters'
-import { Users, ListTodo, Lightbulb, Bell, TrendingUp, Search, FileText, X, Users as UsersIcon, ChevronRight, AlertTriangle, BarChart3, DollarSign, PenLine, ArrowUpRight, ArrowDownRight, Inbox } from 'lucide-react'
+import { Users, ListTodo, Lightbulb, Bell, TrendingUp, Search, FileText, X, Users as UsersIcon, ChevronRight, AlertTriangle, BarChart3, DollarSign, PenLine, ArrowUpRight, ArrowDownRight, Inbox, Book } from 'lucide-react'
 
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -24,6 +24,10 @@ export default function Dashboard() {
   )
 
   const { data: analytics } = useSWR('/api/analytics', fetcher, {
+    refreshInterval: 300000
+  })
+
+  const { data: books } = useSWR('/books', getBooks, {
     refreshInterval: 300000
   })
 
@@ -310,6 +314,43 @@ export default function Dashboard() {
           </div>
         </Link>
       )}
+
+      {/* Book Progress */}
+      {books && books.length > 0 && (() => {
+        const book1 = books.find(b => b.id === 'book1-philosophy') || books[0]
+        const currentChapter = book1.chapters?.find(c => c.status === 'Drafting' || c.status === 'In Progress')
+          || book1.chapters?.find(c => c.currentWords === 0 && c.status !== 'Complete')
+        return (
+          <Link to="/book" className="card card-hover block">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-accent-tertiary">
+                  <Book size={20} className="text-gold" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-serif font-semibold">{book1.name}</h2>
+                  <p className="text-sm text-neutral-500">{book1.phase || 'Planning'}</p>
+                </div>
+              </div>
+              <span className="text-2xl font-bold text-gold">
+                {formatNumber(book1.totalWords)}<span className="text-sm text-neutral-500 font-normal"> / {formatNumber(book1.targetWords)}</span>
+              </span>
+            </div>
+            <div className="w-full bg-neutral-200 rounded-full h-3 mb-3">
+              <div
+                className="bg-gold h-3 rounded-full transition-all duration-500"
+                style={{ width: `${book1.percentComplete}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-sm text-neutral-600">
+              <span>{book1.percentComplete}% complete</span>
+              {currentChapter && (
+                <span>Next: Chapter {currentChapter.number}{currentChapter.title ? ` — ${currentChapter.title}` : ''}</span>
+              )}
+            </div>
+          </Link>
+        )
+      })()}
 
       {/* Recent Activity */}
       <Link to="/tasks" className="card card-hover block">

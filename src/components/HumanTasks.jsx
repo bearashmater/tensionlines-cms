@@ -108,7 +108,7 @@ export default function HumanTasks() {
 
   // Queue counts
   const replyCount = replyQueueData?.queue?.filter(i => i.status === 'ready' || i.status === 'scheduled').length || 0
-  const postingCount = postingQueue?.queue?.filter(i => i.status === 'ready' || i.status === 'scheduled').length || 0
+  const postingCount = postingQueue?.queue?.filter(i => i.status === 'ready' || i.status === 'scheduled' || i.status === 'pending-review').length || 0
   const commentCount = commentQueueData?.queue?.filter(i => i.status === 'ready' || i.status === 'scheduled' || i.status === 'draft').length || 0
 
   return (
@@ -161,14 +161,6 @@ export default function HumanTasks() {
           <p className="text-xs text-neutral-500 mt-1">ready to post</p>
         </button>
       </div>
-
-      {/* Inline Posting Queue (kept for quick access) */}
-      {postingQueue && (
-        <PostingQueueSection
-          queue={postingQueue}
-          onUpdate={mutateQueue}
-        />
-      )}
 
       {sortedTasks.length > 0 ? (
         <div className="space-y-4">
