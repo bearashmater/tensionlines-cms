@@ -385,6 +385,7 @@ function QueueItem({ item, canPost, onUpdate }) {
 
   const platformComposeUrls = {
     twitter: 'https://x.com/compose/post',
+    bluesky: 'https://bsky.app/',
     instagram: 'https://www.canva.com/',
     reddit: 'https://www.reddit.com/submit',
     medium: 'https://medium.com/new-story',
@@ -582,23 +583,8 @@ function QueueItem({ item, canPost, onUpdate }) {
               Canva Done
             </button>
           )}
-          {/* Bluesky gets a real Publish button */}
-          {item.platform === 'bluesky' && isReady && canPost && (
-            <button
-              onClick={handlePublishBluesky}
-              disabled={publishStatus === 'publishing'}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-            >
-              {publishStatus === 'publishing' ? (
-                <RefreshCw size={14} className="animate-spin" />
-              ) : (
-                <Send size={14} />
-              )}
-              {isFailed ? 'Retry' : 'Publish to Bluesky'}
-            </button>
-          )}
-          {/* All non-bluesky platforms get Copy & Open */}
-          {item.platform !== 'bluesky' && isReady && (
+          {/* All platforms get Copy & Open */}
+          {isReady && (
             <button
               onClick={() => handleCopyAndOpen(item.platform === 'instagram' ? `Instagram Post:\n\n${item.content}${item.caption ? '\n\n' + item.caption : ''}` : item.content)}
               className="flex items-center gap-1 px-3 py-1.5 text-sm bg-neutral-800 text-white rounded hover:bg-neutral-900"
@@ -607,8 +593,8 @@ function QueueItem({ item, canPost, onUpdate }) {
               {copyFeedback === 'content' ? 'Copied!' : 'Copy & Open'}
             </button>
           )}
-          {/* Non-bluesky platforms get manual Mark Posted */}
-          {item.platform !== 'bluesky' && isReady && (
+          {/* Mark Posted */}
+          {isReady && (
             <button
               onClick={handleMarkPosted}
               disabled={isUpdating}
