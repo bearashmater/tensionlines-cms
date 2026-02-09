@@ -33,6 +33,7 @@ import WeeklyReport from './components/WeeklyReport'
 import AgentMessages from './components/AgentMessages'
 import AudienceSegmentation from './components/AudienceSegmentation'
 import EngagementActions from './components/EngagementActions'
+import AutoPipeline from './components/AutoPipeline'
 
 // Navigation structure with grouping
 const navGroups = [
@@ -74,6 +75,7 @@ const navGroups = [
       { to: '/content', icon: <FileText size={20} />, label: 'Pipeline' },
       { to: '/ideas', icon: <Lightbulb size={20} />, label: 'Ideas Bank' },
       { to: '/repurpose', icon: <Sparkles size={20} />, label: 'Repurpose' },
+      { to: '/auto-pipeline', icon: <Zap size={20} />, label: 'Auto-Pipeline' },
       { to: '/book', icon: <Book size={20} />, label: 'Book Progress' }
     ]
   },
@@ -191,6 +193,7 @@ function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenu
             <Route path="/ideas" element={<ContentPipeline />} />
             <Route path="/posting-queue" element={<ManualPostingQueue />} />
             <Route path="/repurpose" element={<RepurposeEngine />} />
+            <Route path="/auto-pipeline" element={<AutoPipeline />} />
             <Route path="/reply-queue" element={<ReplyQueue />} />
             <Route path="/comments" element={<CommentQueue />} />
             <Route path="/engagement" element={<EngagementActions />} />

@@ -66,7 +66,8 @@ export function Breadcrumbs({ location }) {
     'outreach': 'Outreach Effectiveness',
     'audience': 'Audience Segmentation',
     'weekly-report': 'Weekly Report',
-    'messages': 'Messages'
+    'messages': 'Messages',
+    'auto-pipeline': 'Auto-Pipeline'
   }
 
   if (pathSegments.length === 0) {

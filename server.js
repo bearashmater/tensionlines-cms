@@ -183,6 +183,7 @@ const WEEKLY_REPORTS_DIR = path.join(BASE_DIR, 'mission-control', 'weekly-report
 const AUDIENCE_SEGMENTS_FILE = path.join(BASE_DIR, 'mission-control', 'audience-segments.json');
 const FOLLOWS_TRACKER_FILE = path.join(BASE_DIR, 'content', 'queue', 'follows-tracker.json');
 const ENGAGEMENT_ACTIONS_FILE = path.join(BASE_DIR, 'content', 'queue', 'engagement-actions.json');
+const AUTO_PIPELINE_STATE_FILE = path.join(BASE_DIR, 'content', 'queue', 'auto-pipeline-state.json');
 
 // Claude API client (lazy — only created when ANTHROPIC_API_KEY is set)
 let anthropicClient = null;
@@ -2135,20 +2136,29 @@ app.get('/api/posting-queue', (req, res) => {
     const postsToday = {
       instagram: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'instagram').length,
       threads: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'threads').length,
-      bluesky: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'bluesky').length
+      bluesky: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'bluesky').length,
+      twitter: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'twitter').length,
+      reddit: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'reddit').length,
+      medium: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'medium').length
     };
 
     // Check rate limits
     const instagramSettings = settings.platforms?.instagram || { maxPostsPerDay: 2 };
     const threadsSettings = settings.platforms?.threads || { maxPostsPerDay: 3 };
     const blueskySettings = settings.platforms?.bluesky || { maxPostsPerDay: 5 };
+    const twitterSettings = settings.platforms?.twitter || { maxPostsPerDay: 5 };
+    const redditSettings = settings.platforms?.reddit || { maxPostsPerDay: 3 };
+    const mediumSettings = settings.platforms?.medium || { maxPostsPerDay: 1 };
 
     res.json({
       ...queue,
       postsToday,
       canPostInstagram: postsToday.instagram < instagramSettings.maxPostsPerDay,
       canPostThreads: postsToday.threads < threadsSettings.maxPostsPerDay,
-      canPostBluesky: postsToday.bluesky < blueskySettings.maxPostsPerDay
+      canPostBluesky: postsToday.bluesky < blueskySettings.maxPostsPerDay,
+      canPostTwitter: postsToday.twitter < twitterSettings.maxPostsPerDay,
+      canPostReddit: postsToday.reddit < redditSettings.maxPostsPerDay,
+      canPostMedium: postsToday.medium < mediumSettings.maxPostsPerDay
     });
   } catch (error) {
     console.error('Error getting posting queue:', error);
@@ -2165,7 +2175,7 @@ app.post('/api/posting-queue', (req, res) => {
     const { platform, content, caption, parts, canvaComplete, scheduledFor, metadata, postUrl, createdBy, taskId } = req.body;
 
     // Validate required fields
-    if (!platform || !['instagram', 'threads', 'bluesky', 'twitter'].includes(platform)) {
+    if (!platform || !['instagram', 'threads', 'bluesky', 'twitter', 'reddit', 'medium'].includes(platform)) {
       return res.status(400).json({ error: 'Invalid platform' });
     }
 
@@ -3288,7 +3298,6 @@ app.post('/api/repurpose', async (req, res) => {
       if (!sourceIdea) {
         return res.status(404).json({ error: `Idea ${ideaId} not found` });
       }
-      // Build rich source from idea fields
       const parts = [];
       if (sourceIdea.quote) parts.push(`Quote: "${sourceIdea.quote}"`);
       if (sourceIdea.tension) parts.push(`Tension: ${sourceIdea.tension}`);
@@ -3302,108 +3311,20 @@ app.post('/api/repurpose', async (req, res) => {
       return res.status(400).json({ error: 'Provide either ideaId or rawText' });
     }
 
-    // Read philosopher SOUL.md for voice
-    let soulContent = '';
-    const soulPath = path.join(PHILOSOPHERS_DIR, philosopher, 'SOUL.md');
-    if (fs.existsSync(soulPath)) {
-      soulContent = fs.readFileSync(soulPath, 'utf8');
-      // Trim to first 2000 chars to stay within reasonable prompt size
-      if (soulContent.length > 2000) soulContent = soulContent.substring(0, 2000) + '\n...(truncated)';
-    }
-
-    // Build platform instructions
-    const validPlatforms = platforms.filter(p => PLATFORM_SPECS[p]);
-    if (validPlatforms.length === 0) {
-      return res.status(400).json({ error: 'No valid platforms specified' });
-    }
-    const platformInstructions = validPlatforms.map(p => {
-      const spec = PLATFORM_SPECS[p];
-      return `### ${spec.label}\n${spec.format}`;
-    }).join('\n\n');
-
-    const systemPrompt = `You are a social media content writer for TensionLines — a philosophy brand that makes deep ideas accessible and provocative for modern audiences.
-
-${soulContent ? `## Voice & Personality (from the philosopher's SOUL.md):\n${soulContent}\n` : ''}
-## Rules:
-- Write in the philosopher's distinctive voice — not academic, but sharp, alive, and contemporary.
-- Never use generic motivational language. Be specific. Be surprising.
-- Each platform draft should feel native to that platform, not just reformatted.
-- Respect character limits strictly.
-- Return ONLY valid JSON, no markdown fences.`;
-
-    const userPrompt = `Take this idea and create a draft for each platform listed below.
-
-## Source Idea:
-${sourceText}
-
-## Platforms:
-${platformInstructions}
-
-## Output Format:
-Return a JSON object where each key is the platform name. For most platforms, the value has a "content" field. Exceptions:
-- **instagram**: { "cardText": "...", "caption": "..." }
-- **reddit**: { "title": "...", "body": "..." }
-- **twitter**: { "content": "..." } (if a thread, separate tweets with ---)
-
-Example structure:
-{
-  "twitter": { "content": "tweet text here" },
-  "bluesky": { "content": "post text here" },
-  "instagram": { "cardText": "short quote", "caption": "longer caption with #hashtags" },
-  "reddit": { "title": "Discussion title", "body": "Discussion body..." },
-  "medium": { "content": "Essay paragraph..." }
-}
-
-Only include the platforms requested: ${validPlatforms.join(', ')}`;
-
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 2048,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }]
-    });
-
-    // Parse response
-    const responseText = message.content[0]?.text || '';
-    let drafts;
-    try {
-      // Strip markdown fences if present
-      const cleaned = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      drafts = JSON.parse(cleaned);
-    } catch (parseErr) {
-      return res.status(502).json({ error: 'Failed to parse Claude response as JSON', raw: responseText });
-    }
-
-    // Add char counts and validate
-    for (const platform of validPlatforms) {
-      if (!drafts[platform]) continue;
-      const draft = drafts[platform];
-      if (draft.content) {
-        draft.charCount = draft.content.length;
-      }
-      if (draft.cardText) {
-        draft.cardTextCharCount = draft.cardText.length;
-      }
-      if (draft.caption) {
-        draft.captionCharCount = draft.caption.length;
-      }
-      if (draft.title) {
-        draft.titleCharCount = draft.title.length;
-      }
-      if (draft.body) {
-        draft.bodyWordCount = draft.body.split(/\s+/).length;
-      }
-    }
+    const { drafts, usage } = await generatePlatformDrafts(sourceText, philosopher, platforms);
 
     res.json({
       drafts,
       sourceIdea: sourceIdea ? { id: sourceIdea.id, quote: sourceIdea.quote, date: sourceIdea.date } : null,
       philosopher,
       model: 'claude-sonnet-4-5-20250929',
-      usage: message.usage
+      usage
     });
   } catch (error) {
     console.error('Repurpose error:', error);
+    if (error.message?.includes('parse') || error instanceof SyntaxError) {
+      return res.status(502).json({ error: 'Failed to parse Claude response as JSON' });
+    }
     if (error.status === 401) {
       return res.status(502).json({ error: 'Invalid Anthropic API key' });
     }
@@ -3460,6 +3381,309 @@ app.post('/api/repurpose/queue', (req, res) => {
   } catch (error) {
     console.error('Repurpose queue error:', error);
     res.status(500).json({ error: 'Failed to add drafts to queue' });
+  }
+});
+
+// ============================================================================
+// AUTO-PIPELINE: Idea-to-Draft Automation
+// ============================================================================
+
+const AUTO_PIPELINE_CONFIG_DEFAULTS = {
+  enabled: false,
+  cronSchedule: '0 6 * * *', // 6 AM PST daily
+  philosopher: 'nietzsche',
+  platforms: ['twitter', 'bluesky', 'instagram', 'reddit', 'medium'],
+  maxIdeasPerRun: 3
+};
+
+function getAutoPipelineState() {
+  try {
+    if (fs.existsSync(AUTO_PIPELINE_STATE_FILE)) {
+      return JSON.parse(fs.readFileSync(AUTO_PIPELINE_STATE_FILE, 'utf8'));
+    }
+  } catch (err) {
+    console.error('[AutoPipeline] Error reading state:', err.message);
+  }
+  return { config: { ...AUTO_PIPELINE_CONFIG_DEFAULTS }, processedIds: [], runs: [] };
+}
+
+function saveAutoPipelineState(state) {
+  fs.writeFileSync(AUTO_PIPELINE_STATE_FILE, JSON.stringify(state, null, 2));
+}
+
+/**
+ * Shared helper: generate platform drafts from source text via Claude API.
+ * Extracted from /api/repurpose so both manual and auto-pipeline can reuse it.
+ */
+async function generatePlatformDrafts(sourceText, philosopher, platforms) {
+  const client = getAnthropicClient();
+  if (!client) throw new Error('Anthropic API key not configured');
+
+  // Read philosopher SOUL.md for voice
+  let soulContent = '';
+  const soulPath = path.join(PHILOSOPHERS_DIR, philosopher, 'SOUL.md');
+  if (fs.existsSync(soulPath)) {
+    soulContent = fs.readFileSync(soulPath, 'utf8');
+    if (soulContent.length > 2000) soulContent = soulContent.substring(0, 2000) + '\n...(truncated)';
+  }
+
+  const validPlatforms = platforms.filter(p => PLATFORM_SPECS[p]);
+  if (validPlatforms.length === 0) throw new Error('No valid platforms specified');
+
+  const platformInstructions = validPlatforms.map(p => {
+    const spec = PLATFORM_SPECS[p];
+    return `### ${spec.label}\n${spec.format}`;
+  }).join('\n\n');
+
+  const systemPrompt = `You are a social media content writer for TensionLines — a philosophy brand that makes deep ideas accessible and provocative for modern audiences.
+
+${soulContent ? `## Voice & Personality (from the philosopher's SOUL.md):\n${soulContent}\n` : ''}
+## Rules:
+- Write in the philosopher's distinctive voice — not academic, but sharp, alive, and contemporary.
+- Never use generic motivational language. Be specific. Be surprising.
+- Each platform draft should feel native to that platform, not just reformatted.
+- Respect character limits strictly.
+- Return ONLY valid JSON, no markdown fences.`;
+
+  const userPrompt = `Take this idea and create a draft for each platform listed below.
+
+## Source Idea:
+${sourceText}
+
+## Platforms:
+${platformInstructions}
+
+## Output Format:
+Return a JSON object where each key is the platform name. For most platforms, the value has a "content" field. Exceptions:
+- **instagram**: { "cardText": "...", "caption": "..." }
+- **reddit**: { "title": "...", "body": "..." }
+- **twitter**: { "content": "..." } (if a thread, separate tweets with ---)
+
+Example structure:
+{
+  "twitter": { "content": "tweet text here" },
+  "bluesky": { "content": "post text here" },
+  "instagram": { "cardText": "short quote", "caption": "longer caption with #hashtags" },
+  "reddit": { "title": "Discussion title", "body": "Discussion body..." },
+  "medium": { "content": "Essay paragraph..." }
+}
+
+Only include the platforms requested: ${validPlatforms.join(', ')}`;
+
+  const message = await client.messages.create({
+    model: 'claude-sonnet-4-5-20250929',
+    max_tokens: 2048,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userPrompt }]
+  });
+
+  const responseText = message.content[0]?.text || '';
+  const cleaned = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const drafts = JSON.parse(cleaned);
+
+  // Add char counts
+  for (const platform of validPlatforms) {
+    if (!drafts[platform]) continue;
+    const draft = drafts[platform];
+    if (draft.content) draft.charCount = draft.content.length;
+    if (draft.cardText) draft.cardTextCharCount = draft.cardText.length;
+    if (draft.caption) draft.captionCharCount = draft.caption.length;
+    if (draft.title) draft.titleCharCount = draft.title.length;
+    if (draft.body) draft.bodyWordCount = draft.body.split(/\s+/).length;
+  }
+
+  return { drafts, validPlatforms, usage: message.usage };
+}
+
+/**
+ * Core auto-pipeline: process captured ideas into platform drafts
+ */
+async function runAutoPipeline() {
+  const state = getAutoPipelineState();
+  const config = state.config || AUTO_PIPELINE_CONFIG_DEFAULTS;
+
+  console.log('[AutoPipeline] Starting run...');
+
+  // Get captured ideas not yet processed
+  cache.ideasBank = null; // Force fresh parse
+  const allIdeas = parseIdeasBank();
+  const processedSet = new Set(state.processedIds || []);
+  const eligible = allIdeas.filter(i => i.status === 'captured' && !processedSet.has(i.id));
+
+  if (eligible.length === 0) {
+    console.log('[AutoPipeline] No new captured ideas to process.');
+    const run = { timestamp: new Date().toISOString(), ideasProcessed: 0, draftsQueued: 0, status: 'empty' };
+    state.runs.unshift(run);
+    if (state.runs.length > 20) state.runs = state.runs.slice(0, 20);
+    saveAutoPipelineState(state);
+    return run;
+  }
+
+  const toProcess = eligible.slice(0, config.maxIdeasPerRun || 3);
+  console.log(`[AutoPipeline] Processing ${toProcess.length} ideas: ${toProcess.map(i => '#' + i.id).join(', ')}`);
+
+  let totalDraftsQueued = 0;
+  const processedThisRun = [];
+  const errors = [];
+
+  for (const idea of toProcess) {
+    try {
+      // Build source text from idea fields
+      const parts = [];
+      if (idea.quote) parts.push(`Quote: "${idea.quote}"`);
+      if (idea.tension) parts.push(`Tension: ${idea.tension}`);
+      if (idea.paradox) parts.push(`Paradox: ${idea.paradox}`);
+      if (idea.notes) parts.push(`Notes: ${idea.notes}`);
+      if (idea.text && !idea.quote) parts.push(idea.text);
+      const sourceText = parts.join('\n\n');
+
+      if (!sourceText.trim()) {
+        console.log(`[AutoPipeline] Idea #${idea.id} has no text content, skipping.`);
+        state.processedIds.push(idea.id);
+        continue;
+      }
+
+      const { drafts, validPlatforms } = await generatePlatformDrafts(
+        sourceText,
+        config.philosopher || 'nietzsche',
+        config.platforms || ['twitter', 'bluesky', 'instagram', 'reddit', 'medium']
+      );
+
+      // Queue each platform draft with pending-review status
+      const queue = getPostingQueue();
+      for (const platform of validPlatforms) {
+        if (!drafts[platform]) continue;
+        const draft = drafts[platform];
+
+        const item = {
+          id: `post-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          createdAt: new Date().toISOString(),
+          status: 'pending-review',
+          platform,
+          content: draft.content || draft.title || draft.cardText || '',
+          caption: draft.caption || '',
+          parts: [],
+          createdBy: config.philosopher || 'nietzsche',
+          ideaId: idea.id,
+          source: 'auto-pipeline'
+        };
+
+        if (platform === 'reddit' && draft.title && draft.body) {
+          item.content = `${draft.title}\n\n${draft.body}`;
+        }
+        if (platform === 'instagram' && draft.cardText) {
+          item.content = draft.cardText;
+          item.caption = draft.caption || '';
+        }
+
+        queue.queue.push(item);
+        totalDraftsQueued++;
+      }
+      savePostingQueue(queue);
+
+      state.processedIds.push(idea.id);
+      processedThisRun.push(idea.id);
+      console.log(`[AutoPipeline] Idea #${idea.id} → ${validPlatforms.length} drafts queued.`);
+    } catch (err) {
+      console.error(`[AutoPipeline] Error processing idea #${idea.id}:`, err.message);
+      errors.push({ ideaId: idea.id, error: err.message });
+    }
+  }
+
+  // Create notification
+  try {
+    const mc = getMissionControl();
+    mc.notifications.unshift({
+      id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      type: 'auto_pipeline',
+      title: 'Auto-Pipeline Complete',
+      message: `${processedThisRun.length} idea${processedThisRun.length !== 1 ? 's' : ''} auto-drafted → ${totalDraftsQueued} drafts queued for review.${errors.length ? ` (${errors.length} error${errors.length !== 1 ? 's' : ''})` : ''}`,
+      from: 'auto-pipeline',
+      read: false,
+      createdAt: new Date().toISOString(),
+      priority: 'medium',
+      actionRequired: true,
+      metadata: { processedIds: processedThisRun, draftsQueued: totalDraftsQueued, errors: errors.length }
+    });
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+    cache.missionControl = null;
+  } catch (notifErr) {
+    console.error('[AutoPipeline] Failed to create notification:', notifErr.message);
+  }
+
+  const run = {
+    timestamp: new Date().toISOString(),
+    ideasProcessed: processedThisRun.length,
+    ideaIds: processedThisRun,
+    draftsQueued: totalDraftsQueued,
+    errors,
+    status: errors.length ? 'partial' : 'success'
+  };
+  state.runs.unshift(run);
+  if (state.runs.length > 20) state.runs = state.runs.slice(0, 20);
+  saveAutoPipelineState(state);
+
+  console.log(`[AutoPipeline] Run complete: ${processedThisRun.length} ideas → ${totalDraftsQueued} drafts.`);
+  return run;
+}
+
+/**
+ * POST /api/auto-pipeline/run — Manual trigger
+ */
+app.post('/api/auto-pipeline/run', writeLimiter, async (req, res) => {
+  try {
+    const result = await runAutoPipeline();
+    res.json({ success: true, ...result });
+  } catch (err) {
+    console.error('[AutoPipeline] Manual run error:', err);
+    res.status(500).json({ error: 'Auto-pipeline run failed', detail: err.message });
+  }
+});
+
+/**
+ * GET /api/auto-pipeline/status — Current state, last run, eligible ideas
+ */
+app.get('/api/auto-pipeline/status', (req, res) => {
+  try {
+    const state = getAutoPipelineState();
+    const config = state.config || AUTO_PIPELINE_CONFIG_DEFAULTS;
+
+    cache.ideasBank = null;
+    const allIdeas = parseIdeasBank();
+    const processedSet = new Set(state.processedIds || []);
+    const eligible = allIdeas.filter(i => i.status === 'captured' && !processedSet.has(i.id));
+
+    res.json({
+      config,
+      eligibleIdeas: eligible.length,
+      processedCount: (state.processedIds || []).length,
+      lastRun: state.runs?.[0] || null,
+      recentRuns: (state.runs || []).slice(0, 10)
+    });
+  } catch (err) {
+    console.error('[AutoPipeline] Status error:', err);
+    res.status(500).json({ error: 'Failed to get pipeline status' });
+  }
+});
+
+/**
+ * PATCH /api/auto-pipeline/config — Update pipeline config
+ */
+app.patch('/api/auto-pipeline/config', writeLimiter, (req, res) => {
+  try {
+    const state = getAutoPipelineState();
+    const { enabled, philosopher, platforms, maxIdeasPerRun } = req.body;
+
+    if (typeof enabled === 'boolean') state.config.enabled = enabled;
+    if (philosopher && isValidPhilosopher(philosopher)) state.config.philosopher = philosopher;
+    if (Array.isArray(platforms)) state.config.platforms = platforms.filter(p => PLATFORM_SPECS[p]);
+    if (typeof maxIdeasPerRun === 'number' && maxIdeasPerRun > 0 && maxIdeasPerRun <= 10) state.config.maxIdeasPerRun = maxIdeasPerRun;
+
+    saveAutoPipelineState(state);
+    res.json({ success: true, config: state.config });
+  } catch (err) {
+    console.error('[AutoPipeline] Config update error:', err);
+    res.status(500).json({ error: 'Failed to update config' });
   }
 });
 
@@ -5820,6 +6044,278 @@ app.get('/api/books/:bookId/chapters/:chapterNum', (req, res) => {
     res.json(chapter);
   } catch (error) {
     console.error(error); res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Print-friendly pages for book content
+ */
+
+function printPageHTML(title, bodyContent) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${title} — TensionLines</title>
+<style>
+  @page {
+    margin: 1in 1.25in;
+    @bottom-center { content: counter(page); }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 12pt;
+    line-height: 1.7;
+    color: #1a1a1a;
+    max-width: 36em;
+    margin: 0 auto;
+    padding: 2em 1em;
+  }
+  h1 {
+    font-size: 24pt;
+    font-weight: normal;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.5em;
+    page-break-after: avoid;
+  }
+  h2 {
+    font-size: 14pt;
+    font-weight: bold;
+    margin-top: 2em;
+    margin-bottom: 0.75em;
+    page-break-after: avoid;
+  }
+  h3 { font-size: 12pt; font-weight: bold; margin-top: 1.5em; margin-bottom: 0.5em; }
+  p { margin-bottom: 0.8em; text-indent: 0; }
+  blockquote {
+    font-style: italic;
+    margin: 1.5em 0;
+    padding-left: 1.5em;
+    border-left: 2px solid #999;
+    color: #444;
+  }
+  blockquote p { margin-bottom: 0.3em; }
+  hr {
+    border: none;
+    text-align: center;
+    margin: 2em 0;
+  }
+  hr::after {
+    content: '* * *';
+    color: #999;
+    letter-spacing: 0.5em;
+    font-size: 10pt;
+  }
+  em { font-style: italic; }
+  strong { font-weight: bold; }
+  .book-title-page {
+    text-align: center;
+    padding-top: 30vh;
+    page-break-after: always;
+  }
+  .book-title-page h1 { font-size: 36pt; margin-bottom: 0.3em; }
+  .book-title-page .subtitle { font-size: 14pt; color: #666; font-style: italic; }
+  .chapter-break { page-break-before: always; }
+  .word-count {
+    font-family: -apple-system, sans-serif;
+    font-size: 9pt;
+    color: #999;
+    text-align: right;
+    margin-bottom: 2em;
+  }
+  @media print {
+    body { padding: 0; max-width: none; }
+    .no-print { display: none; }
+  }
+  .print-bar {
+    font-family: -apple-system, sans-serif;
+    font-size: 11px;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 20px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .print-bar a, .print-bar button {
+    font-size: 11px;
+    color: #333;
+    text-decoration: none;
+    background: white;
+    border: 1px solid #ccc;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .print-bar a:hover, .print-bar button:hover { background: #eee; }
+  @media print { .print-bar { display: none; } }
+</style>
+</head>
+<body>
+${bodyContent}
+</body>
+</html>`;
+}
+
+function markdownToHTML(md) {
+  // Phase 1: Extract blockquotes before any processing
+  const lines = md.split('\n');
+  const blocks = [];
+  let currentBlock = [];
+  let inBlockquote = false;
+
+  for (const line of lines) {
+    const quoteLine = line.match(/^>\s?(.*)/);
+    if (quoteLine) {
+      if (!inBlockquote) {
+        if (currentBlock.length) { blocks.push({ type: 'text', lines: currentBlock }); currentBlock = []; }
+        inBlockquote = true;
+      }
+      currentBlock.push(quoteLine[1]);
+    } else {
+      if (inBlockquote) {
+        blocks.push({ type: 'blockquote', lines: currentBlock }); currentBlock = []; inBlockquote = false;
+      }
+      currentBlock.push(line);
+    }
+  }
+  if (currentBlock.length) blocks.push({ type: inBlockquote ? 'blockquote' : 'text', lines: currentBlock });
+
+  // Phase 2: Convert each block
+  function inlineFormat(text) {
+    text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    text = text.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    return text;
+  }
+
+  let html = '';
+  for (const block of blocks) {
+    if (block.type === 'blockquote') {
+      const content = block.lines.filter(l => l.trim() !== '').map(l => '<p>' + inlineFormat(l) + '</p>').join('\n');
+      html += '<blockquote>\n' + content + '\n</blockquote>\n';
+    } else {
+      // Process text lines: split into paragraphs on blank lines, handle headers/hrs
+      const text = block.lines.join('\n');
+      const sections = text.split(/\n\n+/);
+      for (const section of sections) {
+        const trimmed = section.trim();
+        if (!trimmed) continue;
+        // Headers
+        if (trimmed.match(/^###\s+/)) { html += '<h3>' + inlineFormat(trimmed.replace(/^###\s+/, '')) + '</h3>\n'; }
+        else if (trimmed.match(/^##\s+/)) { html += '<h2>' + inlineFormat(trimmed.replace(/^##\s+/, '')) + '</h2>\n'; }
+        else if (trimmed.match(/^#\s+/)) { html += '<h1>' + inlineFormat(trimmed.replace(/^#\s+/, '')) + '</h1>\n'; }
+        // Horizontal rule
+        else if (trimmed === '---') { html += '<hr>\n'; }
+        // Regular paragraph
+        else { html += '<p>' + inlineFormat(trimmed).replace(/\n/g, '<br>') + '</p>\n'; }
+      }
+    }
+  }
+  return html;
+}
+
+// Print single chapter
+app.get('/print/:bookId/chapter/:chapterNum', (req, res) => {
+  try {
+    const { bookId, chapterNum } = req.params;
+    if (!isValidBookId(bookId)) return res.status(400).send('Invalid book ID');
+
+    const num = parseInt(chapterNum);
+    const chapterPath = path.join(BOOKS_DIR, bookId, 'chapters', 'chapter-' + num + '.md');
+
+    if (!fs.existsSync(chapterPath)) {
+      return res.status(404).send('Chapter not found');
+    }
+
+    const raw = fs.readFileSync(chapterPath, 'utf8');
+    const wordCount = raw.split(/\s+/).filter(w => w).length;
+    const titles = parseChapterTitles(bookId);
+    const title = titles[num] || 'Chapter ' + num;
+    const wcStr = wordCount.toLocaleString();
+
+    const body = '<div class="print-bar no-print">' +
+      '<button onclick="window.print()">Print (Cmd+P)</button> ' +
+      '<a href="/print/' + bookId + '">Full Book</a> ' +
+      '<span style="color:#999">Chapter ' + num + ' &middot; ' + wcStr + ' words</span>' +
+      '</div>' +
+      '<div class="word-count no-print">' + wcStr + ' words</div>' +
+      markdownToHTML(raw);
+
+    res.send(printPageHTML(title, body));
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error rendering chapter');
+  }
+});
+
+// Print full book
+app.get('/print/:bookId', (req, res) => {
+  try {
+    const { bookId } = req.params;
+    if (!isValidBookId(bookId)) return res.status(400).send('Invalid book ID');
+
+    const bookDir = path.join(BOOKS_DIR, bookId);
+    const chaptersDir = path.join(bookDir, 'chapters');
+
+    if (!fs.existsSync(chaptersDir)) {
+      return res.status(404).send('No chapters found');
+    }
+
+    const titles = parseChapterTitles(bookId);
+    const books = getBooksProgress();
+    const book = books.find(b => b.id === bookId);
+    const bookName = book ? book.name : bookId;
+
+    // Gather all chapter files in order
+    const chapterFiles = fs.readdirSync(chaptersDir)
+      .filter(f => f.match(/^chapter-\d+\.md$/))
+      .sort((a, b) => {
+        const numA = parseInt(a.match(/chapter-(\d+)/)[1]);
+        const numB = parseInt(b.match(/chapter-(\d+)/)[1]);
+        return numA - numB;
+      });
+
+    if (chapterFiles.length === 0) {
+      return res.status(404).send('No chapters written yet');
+    }
+
+    let totalWords = 0;
+    let chaptersHTML = '';
+    const chapterLinks = [];
+
+    for (const file of chapterFiles) {
+      const num = parseInt(file.match(/chapter-(\d+)/)[1]);
+      const raw = fs.readFileSync(path.join(chaptersDir, file), 'utf8');
+      const wc = raw.split(/\s+/).filter(w => w).length;
+      totalWords += wc;
+      chapterLinks.push('<a href="/print/' + bookId + '/chapter/' + num + '">Ch ' + num + '</a>');
+
+      const breakClass = chaptersHTML ? ' class="chapter-break"' : '';
+      chaptersHTML += '<div' + breakClass + '>' + markdownToHTML(raw) + '</div>';
+    }
+
+    const twStr = totalWords.toLocaleString();
+    const body = '<div class="print-bar no-print">' +
+      '<button onclick="window.print()">Print All (Cmd+P)</button> ' +
+      chapterLinks.join(' ') + ' ' +
+      '<span style="color:#999">' + twStr + ' words total</span>' +
+      '</div>' +
+      '<div class="book-title-page">' +
+      '<h1>' + bookName + '</h1>' +
+      '<div class="subtitle">' + twStr + ' words &middot; Draft</div>' +
+      '</div>' +
+      chaptersHTML;
+
+    res.send(printPageHTML(bookName, body));
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error rendering book');
   }
 });
 
@@ -8869,6 +9365,23 @@ cron.schedule('0 22 * * 0', () => {
   weeklyProjectReview();
 }, { timezone: 'America/Los_Angeles' });
 console.log('[Cron] Weekly project review scheduled for Sunday 10:00 PM PST');
+
+/**
+ * Daily auto-pipeline: generate drafts from captured ideas at 6 AM PST
+ */
+cron.schedule('0 6 * * *', async () => {
+  try {
+    const state = getAutoPipelineState();
+    if (!state.config?.enabled) {
+      console.log('[Cron] Auto-pipeline disabled, skipping.');
+      return;
+    }
+    await runAutoPipeline();
+  } catch (err) {
+    console.error('[Cron] Auto-pipeline error:', err);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[Cron] Auto-pipeline scheduled for 6:00 AM PST (when enabled)');
 
 // Manual trigger endpoint
 app.post('/api/weekly-review', async (req, res) => {

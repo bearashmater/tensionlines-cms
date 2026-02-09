@@ -17,7 +17,9 @@ import {
   RefreshCw,
   ShieldCheck,
   Loader2,
-  Copy
+  Copy,
+  Hash,
+  BookOpen
 } from 'lucide-react'
 import PlatformStatusBadges from './PlatformStatusBadges'
 
@@ -45,6 +47,8 @@ function getPlatformIcon(platform, size = 16) {
     case 'threads': return <MessageCircle size={size} className="text-black" />
     case 'bluesky': return <BlueskyIcon size={size} className="text-blue-500" />
     case 'twitter': return <TwitterIcon size={size} className="text-neutral-800" />
+    case 'reddit': return <Hash size={size} className="text-orange-500" />
+    case 'medium': return <BookOpen size={size} className="text-green-700" />
     default: return null
   }
 }
@@ -76,7 +80,7 @@ export default function ManualPostingQueue() {
         <div>
           <h1 className="text-3xl font-serif font-bold text-black">Posting Queue</h1>
           <div className="flex items-center gap-3 mt-1">
-            <p className="text-neutral-600">Instagram, Threads & Bluesky</p>
+            <p className="text-neutral-600">All platforms</p>
             <PlatformStatusBadges />
           </div>
         </div>
@@ -90,7 +94,7 @@ export default function ManualPostingQueue() {
       </div>
 
       {/* Daily Limits (clickable filters) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <PlatformStatus
           platform="instagram"
           icon={<Instagram size={24} />}
@@ -120,6 +124,36 @@ export default function ManualPostingQueue() {
           warmupMode={data.settings?.warmupMode}
           isActive={platformFilter === 'bluesky'}
           onClick={() => setPlatformFilter(platformFilter === 'bluesky' ? null : 'bluesky')}
+        />
+        <PlatformStatus
+          platform="twitter"
+          icon={<TwitterIcon size={24} className="text-current" />}
+          postsToday={data.postsToday?.twitter || 0}
+          maxPosts={data.settings?.platforms?.twitter?.maxPostsPerDay || 5}
+          canPost={data.canPostTwitter}
+          warmupMode={data.settings?.warmupMode}
+          isActive={platformFilter === 'twitter'}
+          onClick={() => setPlatformFilter(platformFilter === 'twitter' ? null : 'twitter')}
+        />
+        <PlatformStatus
+          platform="reddit"
+          icon={<Hash size={24} />}
+          postsToday={data.postsToday?.reddit || 0}
+          maxPosts={data.settings?.platforms?.reddit?.maxPostsPerDay || 3}
+          canPost={data.canPostReddit}
+          warmupMode={data.settings?.warmupMode}
+          isActive={platformFilter === 'reddit'}
+          onClick={() => setPlatformFilter(platformFilter === 'reddit' ? null : 'reddit')}
+        />
+        <PlatformStatus
+          platform="medium"
+          icon={<BookOpen size={24} />}
+          postsToday={data.postsToday?.medium || 0}
+          maxPosts={data.settings?.platforms?.medium?.maxPostsPerDay || 1}
+          canPost={data.canPostMedium}
+          warmupMode={data.settings?.warmupMode}
+          isActive={platformFilter === 'medium'}
+          onClick={() => setPlatformFilter(platformFilter === 'medium' ? null : 'medium')}
         />
       </div>
 
@@ -153,7 +187,7 @@ export default function ManualPostingQueue() {
             <div className="p-8 text-center text-neutral-500">
               <Clock className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
               <p>{platformFilter ? `No ${platformFilter} items in queue` : 'No items in queue'}</p>
-              <p className="text-sm mt-1">{platformFilter ? 'Click the card again to show all' : 'Add content to post to Instagram, Threads or Bluesky'}</p>
+              <p className="text-sm mt-1">{platformFilter ? 'Click the card again to show all' : 'Add content to the queue or use the auto-pipeline'}</p>
             </div>
           ) : (
             filtered.map(item => (
@@ -163,6 +197,9 @@ export default function ManualPostingQueue() {
                 canPost={
                   item.platform === 'instagram' ? data.canPostInstagram :
                   item.platform === 'bluesky' ? data.canPostBluesky :
+                  item.platform === 'twitter' ? data.canPostTwitter :
+                  item.platform === 'reddit' ? data.canPostReddit :
+                  item.platform === 'medium' ? data.canPostMedium :
                   data.canPostThreads
                 }
                 onUpdate={mutate}
@@ -209,6 +246,8 @@ const PLATFORM_STYLE = {
   twitter: { bg: 'bg-neutral-50', border: 'border-neutral-300', hover: 'hover:border-neutral-400', text: 'text-neutral-800', ring: 'ring-neutral-800', activeBg: 'bg-neutral-100' },
   instagram: { bg: 'bg-pink-50', border: 'border-pink-200', hover: 'hover:border-pink-300', text: 'text-pink-600', ring: 'ring-pink-500', activeBg: 'bg-pink-100' },
   threads: { bg: 'bg-neutral-50', border: 'border-neutral-300', hover: 'hover:border-neutral-400', text: 'text-neutral-800', ring: 'ring-neutral-800', activeBg: 'bg-neutral-100' },
+  reddit: { bg: 'bg-orange-50', border: 'border-orange-200', hover: 'hover:border-orange-300', text: 'text-orange-600', ring: 'ring-orange-500', activeBg: 'bg-orange-100' },
+  medium: { bg: 'bg-green-50', border: 'border-green-200', hover: 'hover:border-green-300', text: 'text-green-700', ring: 'ring-green-600', activeBg: 'bg-green-100' },
 }
 
 function PlatformStatus({ platform, icon, postsToday, maxPosts, canPost, warmupMode, isActive, onClick }) {
@@ -670,50 +709,37 @@ function AddToQueueModal({ onClose, onAdd }) {
           {/* Platform Selection */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">Platform</label>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setPlatform('instagram')}
-                className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${
-                  platform === 'instagram'
-                    ? 'border-pink-500 bg-pink-50 text-pink-700'
-                    : 'border-neutral-200 hover:border-neutral-300'
-                }`}
-              >
-                <Instagram size={20} />
-                Instagram
-              </button>
-              <button
-                type="button"
-                onClick={() => setPlatform('threads')}
-                className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${
-                  platform === 'threads'
-                    ? 'border-black bg-neutral-100 text-black'
-                    : 'border-neutral-200 hover:border-neutral-300'
-                }`}
-              >
-                <MessageCircle size={20} />
-                Threads
-              </button>
-              <button
-                type="button"
-                onClick={() => setPlatform('bluesky')}
-                className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${
-                  platform === 'bluesky'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-neutral-200 hover:border-neutral-300'
-                }`}
-              >
-                <BlueskyIcon size={20} />
-                Bluesky
-              </button>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: 'instagram', label: 'Instagram', icon: <Instagram size={18} />, active: 'border-pink-500 bg-pink-50 text-pink-700' },
+                { id: 'threads', label: 'Threads', icon: <MessageCircle size={18} />, active: 'border-black bg-neutral-100 text-black' },
+                { id: 'bluesky', label: 'Bluesky', icon: <BlueskyIcon size={18} />, active: 'border-blue-500 bg-blue-50 text-blue-700' },
+                { id: 'twitter', label: 'Twitter', icon: <TwitterIcon size={18} />, active: 'border-neutral-800 bg-neutral-100 text-neutral-800' },
+                { id: 'reddit', label: 'Reddit', icon: <Hash size={18} />, active: 'border-orange-500 bg-orange-50 text-orange-700' },
+                { id: 'medium', label: 'Medium', icon: <BookOpen size={18} />, active: 'border-green-600 bg-green-50 text-green-700' },
+              ].map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setPlatform(p.id)}
+                  className={`p-2.5 rounded-lg border flex items-center justify-center gap-2 text-sm ${
+                    platform === p.id ? p.active : 'border-neutral-200 hover:border-neutral-300'
+                  }`}
+                >
+                  {p.icon}
+                  {p.label}
+                </button>
+              ))}
             </div>
           </div>
 
           {/* Content */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              {platform === 'instagram' ? 'Quote/Text for Canva Design' : 'Post Content'}
+              {platform === 'instagram' ? 'Quote/Text for Canva Design' :
+               platform === 'reddit' ? 'Title + Body (separate with blank line)' :
+               platform === 'medium' ? 'Essay Content' :
+               'Post Content'}
             </label>
             <textarea
               value={content}
@@ -721,15 +747,23 @@ function AddToQueueModal({ onClose, onAdd }) {
               placeholder={
                 platform === 'instagram' ? 'The quote or text that will go on the image...' :
                 platform === 'bluesky' ? 'Your Bluesky post content (300 chars max)...' :
-                'Your Threads post content...'
+                platform === 'reddit' ? 'Discussion title\n\nBody text goes here...' :
+                platform === 'medium' ? 'Your essay paragraph or section...' :
+                platform === 'twitter' ? 'Your tweet (280 chars max)...' :
+                'Your post content...'
               }
-              rows={4}
+              rows={platform === 'reddit' || platform === 'medium' ? 6 : 4}
               className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200"
               required
             />
             {platform === 'bluesky' && (
               <p className={`text-xs mt-1 ${content.length > 300 ? 'text-red-600' : 'text-neutral-400'}`}>
                 {content.length} / 300 characters
+              </p>
+            )}
+            {platform === 'twitter' && (
+              <p className={`text-xs mt-1 ${content.length > 280 ? 'text-red-600' : 'text-neutral-400'}`}>
+                {content.length} / 280 characters
               </p>
             )}
           </div>
@@ -761,6 +795,20 @@ function AddToQueueModal({ onClose, onAdd }) {
             <p className="text-sm text-blue-600 flex items-center gap-2">
               <Send size={14} />
               Bluesky posts are published automatically via API
+            </p>
+          )}
+
+          {platform === 'reddit' && (
+            <p className="text-sm text-orange-600 flex items-center gap-2">
+              <Hash size={14} />
+              Manual posting — copy and post to the relevant subreddit
+            </p>
+          )}
+
+          {platform === 'medium' && (
+            <p className="text-sm text-green-700 flex items-center gap-2">
+              <BookOpen size={14} />
+              Manual posting — copy and publish on Medium
             </p>
           )}
 
