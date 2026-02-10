@@ -538,6 +538,9 @@ function QueueItem({ item, canPost, onUpdate }) {
             <span className="text-sm font-medium capitalize">
               {item.platform === 'twitter' ? 'Twitter / X' : item.platform}
             </span>
+            <span className="px-1.5 py-0.5 text-[10px] bg-neutral-100 text-neutral-500 rounded font-medium uppercase tracking-wide">
+              Manual
+            </span>
             {item.platform === 'reddit' && (
               <span className="text-xs text-orange-600 font-medium">
                 r/{item.subreddit || 'thetensionlines'}
@@ -944,7 +947,7 @@ function AddToQueueModal({ onClose, onAdd }) {
           {platform === 'bluesky' && (
             <p className="text-sm text-blue-600 flex items-center gap-2">
               <Send size={14} />
-              Bluesky posts are published automatically via API
+              Manual posting — copy and publish on Bluesky
             </p>
           )}
 
