@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Cloud, Hand, Instagram, MessageCircle, Hash, BookOpen } from 'lucide-react'
+import { Cloud, Hand, Instagram, MessageCircle, Hash, BookOpen, Newspaper } from 'lucide-react'
 
 function BlueskyIcon({ size = 12, className = '' }) {
   return (
@@ -24,6 +24,7 @@ const PLATFORMS = [
   { key: 'twitter', label: 'Twitter / X', icon: TwitterIcon, color: 'neutral' },
   { key: 'reddit', label: 'Reddit', icon: ({ size }) => <Hash size={size} />, color: 'orange' },
   { key: 'medium', label: 'Medium', icon: ({ size }) => <BookOpen size={size} />, color: 'green' },
+  { key: 'substack', label: 'Substack', icon: ({ size }) => <Newspaper size={size} />, color: 'orange' },
 ]
 
 const MODE_STYLES = {

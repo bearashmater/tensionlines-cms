@@ -21,7 +21,8 @@ import {
   Hash,
   BookOpen,
   Sparkles,
-  Cloud
+  Cloud,
+  Newspaper
 } from 'lucide-react'
 import PlatformStatusBadges from './PlatformStatusBadges'
 
@@ -51,6 +52,7 @@ function getPlatformIcon(platform, size = 16) {
     case 'twitter': return <TwitterIcon size={size} className="text-neutral-800" />
     case 'reddit': return <Hash size={size} className="text-orange-500" />
     case 'medium': return <BookOpen size={size} className="text-green-700" />
+    case 'substack': return <Newspaper size={size} className="text-orange-600" />
     default: return null
   }
 }
@@ -107,7 +109,7 @@ export default function ManualPostingQueue() {
       </div>
 
       {/* Daily Limits (clickable filters) */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         <PlatformStatus
           platform="instagram"
           icon={<Instagram size={24} />}
@@ -174,6 +176,17 @@ export default function ManualPostingQueue() {
           isActive={platformFilter === 'medium'}
           onClick={() => setPlatformFilter(platformFilter === 'medium' ? null : 'medium')}
         />
+        <PlatformStatus
+          platform="substack"
+          icon={<Newspaper size={24} />}
+          postsToday={data.postsToday?.substack || 0}
+          maxPosts={data.settings?.platforms?.substack?.maxPostsPerDay || 1}
+          canPost={data.canPostSubstack}
+          warmupMode={data.settings?.warmupMode}
+          lastPosted={lastPostedByPlatform.substack}
+          isActive={platformFilter === 'substack'}
+          onClick={() => setPlatformFilter(platformFilter === 'substack' ? null : 'substack')}
+        />
       </div>
 
       {/* Warmup Warning */}
@@ -219,6 +232,7 @@ export default function ManualPostingQueue() {
                   item.platform === 'twitter' ? data.canPostTwitter :
                   item.platform === 'reddit' ? data.canPostReddit :
                   item.platform === 'medium' ? data.canPostMedium :
+                  item.platform === 'substack' ? (data.canPostSubstack !== false) :
                   data.canPostThreads
                 }
                 postingMode={postingModes?.[item.platform] || 'manual'}
@@ -268,6 +282,7 @@ const PLATFORM_STYLE = {
   threads: { bg: 'bg-neutral-50', border: 'border-neutral-300', hover: 'hover:border-neutral-400', text: 'text-neutral-800', ring: 'ring-neutral-800', activeBg: 'bg-neutral-100' },
   reddit: { bg: 'bg-orange-50', border: 'border-orange-200', hover: 'hover:border-orange-300', text: 'text-orange-600', ring: 'ring-orange-500', activeBg: 'bg-orange-100' },
   medium: { bg: 'bg-green-50', border: 'border-green-200', hover: 'hover:border-green-300', text: 'text-green-700', ring: 'ring-green-600', activeBg: 'bg-green-100' },
+  substack: { bg: 'bg-orange-50', border: 'border-orange-200', hover: 'hover:border-orange-300', text: 'text-orange-600', ring: 'ring-orange-500', activeBg: 'bg-orange-100' },
 }
 
 function timeAgo(dateStr) {
@@ -327,6 +342,7 @@ const PHILOSOPHER_BY_PLATFORM = {
   threads: 'heraclitus',
   reddit: 'diogenes',
   medium: 'plato',
+  substack: 'plato',
   instagram: 'heraclitus',
 }
 
@@ -480,6 +496,7 @@ function QueueItem({ item, canPost, postingMode, onUpdate }) {
     instagram: 'https://www.canva.com/',
     reddit: 'https://www.reddit.com/r/thetensionlines/submit',
     medium: 'https://medium.com/new-story',
+    substack: 'https://substack.com/home',
     threads: 'https://www.threads.net/',
   }
 
@@ -756,6 +773,7 @@ function QueueItem({ item, canPost, postingMode, onUpdate }) {
               onClick={() => handleCopyAndOpen(
                 item.platform === 'instagram' ? `Instagram Post:\n\n${item.content}${item.caption ? '\n\n' + item.caption : ''}` :
                 item.platform === 'medium' ? `${item.title ? item.title + '\n\n' : ''}${item.content}${item.topics?.length ? '\n\nTopics: ' + item.topics.join(', ') : ''}` :
+                item.platform === 'substack' ? `${item.title ? item.title + '\n\n' : ''}${item.content}` :
                 item.platform === 'reddit' ? `${item.content}${item.tags?.length ? '\n\nTags: ' + item.tags.join(', ') : ''}` :
                 item.content
               )}
@@ -892,6 +910,7 @@ function AddToQueueModal({ onClose, onAdd }) {
                 { id: 'twitter', label: 'Twitter', icon: <TwitterIcon size={18} />, active: 'border-neutral-800 bg-neutral-100 text-neutral-800' },
                 { id: 'reddit', label: 'Reddit', icon: <Hash size={18} />, active: 'border-orange-500 bg-orange-50 text-orange-700' },
                 { id: 'medium', label: 'Medium', icon: <BookOpen size={18} />, active: 'border-green-600 bg-green-50 text-green-700' },
+                { id: 'substack', label: 'Substack', icon: <Newspaper size={18} />, active: 'border-orange-500 bg-orange-50 text-orange-700' },
               ].map(p => (
                 <button
                   key={p.id}
@@ -914,6 +933,7 @@ function AddToQueueModal({ onClose, onAdd }) {
               {platform === 'instagram' ? 'Quote/Text for Canva Design' :
                platform === 'reddit' ? 'Title + Body (separate with blank line)' :
                platform === 'medium' ? 'Essay Content' :
+               platform === 'substack' ? 'Subject + Newsletter Content (separate with blank line)' :
                'Post Content'}
             </label>
             <textarea
@@ -924,10 +944,11 @@ function AddToQueueModal({ onClose, onAdd }) {
                 platform === 'bluesky' ? 'Your Bluesky post content (300 chars max)...' :
                 platform === 'reddit' ? 'Discussion title\n\nBody text goes here...' :
                 platform === 'medium' ? 'Your essay paragraph or section...' :
+                platform === 'substack' ? 'Subject line\n\nNewsletter content...' :
                 platform === 'twitter' ? 'Your tweet (280 chars max)...' :
                 'Your post content...'
               }
-              rows={platform === 'reddit' || platform === 'medium' ? 6 : 4}
+              rows={platform === 'reddit' || platform === 'medium' || platform === 'substack' ? 6 : 4}
               className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200"
               required
             />
@@ -984,6 +1005,13 @@ function AddToQueueModal({ onClose, onAdd }) {
             <p className="text-sm text-green-700 flex items-center gap-2">
               <BookOpen size={14} />
               Manual posting — copy and publish on Medium
+            </p>
+          )}
+
+          {platform === 'substack' && (
+            <p className="text-sm text-orange-600 flex items-center gap-2">
+              <Newspaper size={14} />
+              Manual posting — copy and publish on Substack
             </p>
           )}
 

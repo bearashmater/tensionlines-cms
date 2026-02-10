@@ -3337,6 +3337,9 @@ app.get('/api/platforms/status', async (req, res) => {
   // Medium
   results.medium = { connected: false, mode: postingModes.medium || 'manual', message: 'Manual posting' };
 
+  // Substack
+  results.substack = { connected: false, mode: postingModes.substack || 'manual', message: 'Manual posting' };
+
   res.json(results);
 });
 
@@ -3349,7 +3352,8 @@ app.get('/api/settings/posting-modes', (req, res) => {
     threads: 'manual',
     instagram: 'manual',
     reddit: 'manual',
-    medium: 'manual'
+    medium: 'manual',
+    substack: 'manual'
   });
 });
 
@@ -3360,11 +3364,11 @@ app.patch('/api/settings/posting-modes', (req, res) => {
     if (!queue.settings.postingModes) {
       queue.settings.postingModes = {
         twitter: 'manual', bluesky: 'manual', threads: 'manual',
-        instagram: 'manual', reddit: 'manual', medium: 'manual'
+        instagram: 'manual', reddit: 'manual', medium: 'manual', substack: 'manual'
       };
     }
     const validModes = ['manual', 'auto'];
-    const validPlatforms = ['twitter', 'bluesky', 'threads', 'instagram', 'reddit', 'medium'];
+    const validPlatforms = ['twitter', 'bluesky', 'threads', 'instagram', 'reddit', 'medium', 'substack'];
     for (const [platform, mode] of Object.entries(req.body)) {
       if (validPlatforms.includes(platform) && validModes.includes(mode)) {
         queue.settings.postingModes[platform] = mode;
@@ -3388,7 +3392,8 @@ const PLATFORM_SPECS = {
   bluesky: { label: 'Bluesky', limit: 300, format: 'Conversational, observation-style. Single post. Must be ≤300 characters.' },
   instagram: { label: 'Instagram', limit: 2200, format: 'Two parts: 1) "cardText" — a bold quote for a Canva image card, under 100 characters. 2) "caption" — a longer reflection with relevant hashtags, up to ~2200 characters.' },
   reddit: { label: 'Reddit', limit: 300, format: 'Discussion-starter. Return "title" (compelling question or statement) and "body" (thoughtful, ~300 words, no hashtags). Invites conversation.' },
-  medium: { label: 'Medium', limit: 200, format: 'Essay paragraph. Rich, flowing prose. Could be a section opener. ~200 words.' }
+  medium: { label: 'Medium', limit: 200, format: 'Essay paragraph. Rich, flowing prose. Could be a section opener. ~200 words.' },
+  substack: { label: 'Substack', limit: 500, format: 'Newsletter excerpt. Compelling opening hook (1-2 sentences), then a thoughtful exploration (~300-500 words). Should feel like the start of something the reader wants to finish. Include a provocative subject line as "title".' }
 };
 
 /**
@@ -3521,6 +3526,7 @@ const PHILOSOPHER_BY_PLATFORM = {
   threads: 'heraclitus',
   reddit: 'diogenes',
   medium: 'plato',
+  substack: 'plato',
   instagram: 'heraclitus',
 };
 
