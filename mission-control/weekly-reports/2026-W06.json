@@ -1,0 +1,180 @@
+{
+  "weekId": "2026-W06",
+  "weekStart": "2026-02-02",
+  "weekEnd": "2026-02-08",
+  "generatedAt": "2026-02-09T15:00:00.038Z",
+  "partial": false,
+  "content": {
+    "postsPublished": 4,
+    "byPlatform": {
+      "twitter": {
+        "posts": 1
+      },
+      "bluesky": {
+        "posts": 1
+      },
+      "instagram": {
+        "posts": 1
+      },
+      "threads": {
+        "posts": 1
+      }
+    },
+    "byPhilosopher": {
+      "claude": {
+        "posts": 1
+      },
+      "heraclitus": {
+        "posts": 2
+      }
+    },
+    "topPosts": [
+      {
+        "platform": "twitter",
+        "content": "The opposite of certainty isn't doubt. It's presence — the willingness to stay in the room after your conclusions leave.",
+        "url": "https://x.com/compose/post",
+        "engagement": 0,
+        "postedAt": "2026-02-08T15:31:26.694Z"
+      },
+      {
+        "platform": "bluesky",
+        "content": "The opposite of a great truth is also true.\n\nNot because logic fails — because reality is richer than any single frame can hold.\n\nHold two truths at once. That's where the interesting work begins.",
+        "url": "https://bsky.app/profile/thetensionlines.bsky.social/post/3mebqfp2zyt2a",
+        "engagement": 0,
+        "postedAt": "2026-02-07T15:30:52.347Z"
+      },
+      {
+        "platform": "instagram",
+        "content": "\"The people who stay stuck\nare the ones who\nstopped moving.\"\n\n— The Seeker's Truth",
+        "url": "https://www.instagram.com",
+        "engagement": 0,
+        "postedAt": "2026-02-06T05:31:59.861Z"
+      },
+      {
+        "platform": "threads",
+        "content": "",
+        "url": null,
+        "engagement": 0,
+        "postedAt": "2026-02-06T04:35:41.220Z"
+      }
+    ]
+  },
+  "engagement": {
+    "totalLikes": 0,
+    "totalComments": 0,
+    "totalShares": 0,
+    "avgEngagementRate": 0,
+    "inboxActivity": {
+      "blueskyReplies": 2,
+      "twitterReplies": 0
+    }
+  },
+  "followers": {
+    "platforms": {
+      "twitter": {
+        "start": 2,
+        "end": 2,
+        "delta": 0
+      }
+    },
+    "totalDelta": 0
+  },
+  "agents": {
+    "totalCompleted": 37,
+    "totalCreated": 51,
+    "avgCompletionMs": 49111902,
+    "byAgent": [
+      {
+        "id": "human",
+        "name": "Shawn (Human)",
+        "completed": 21
+      },
+      {
+        "id": "nietzsche",
+        "name": "Nietzsche",
+        "completed": 5
+      },
+      {
+        "id": "leonardo",
+        "name": "Leonardo da Vinci",
+        "completed": 5
+      },
+      {
+        "id": "aristotle",
+        "name": "Aristotle",
+        "completed": 4
+      },
+      {
+        "id": "heraclitus",
+        "name": "Heraclitus",
+        "completed": 2
+      },
+      {
+        "id": "socrates",
+        "name": "Socrates",
+        "completed": 1
+      },
+      {
+        "id": "plato",
+        "name": "Plato",
+        "completed": 1
+      }
+    ]
+  },
+  "costs": {
+    "totalSpent": 0,
+    "dailyBudget": 2,
+    "byDay": [
+      {
+        "label": "Mon",
+        "cost": 0
+      },
+      {
+        "label": "Tue",
+        "cost": 0
+      },
+      {
+        "label": "Wed",
+        "cost": 0
+      },
+      {
+        "label": "Thu",
+        "cost": 0
+      },
+      {
+        "label": "Fri",
+        "cost": 0
+      },
+      {
+        "label": "Sat",
+        "cost": 0
+      },
+      {
+        "label": "Sun",
+        "cost": 0
+      }
+    ],
+    "byModel": [
+      {
+        "name": "Claude Sonnet 4.5",
+        "cost": 0
+      },
+      {
+        "name": "Ollama qwen2.5:3b",
+        "cost": 0
+      }
+    ]
+  },
+  "outreach": {
+    "targetsContacted": 10,
+    "followBackRate": 0,
+    "replyRate": 0
+  },
+  "comparison": {
+    "postsPublished": 4,
+    "totalEngagement": 0,
+    "followerDelta": 0,
+    "totalCost": 0,
+    "tasksCompleted": 37
+  }
+}

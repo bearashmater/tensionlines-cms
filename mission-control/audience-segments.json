@@ -45,9 +45,90 @@
           "engagementRate": 0
         }
       ]
+    },
+    {
+      "id": "snap-1770526971979",
+      "takenAt": "2026-02-08T05:02:51.979Z",
+      "totalPeople": 31,
+      "activeSegments": 6,
+      "overallEngagementRate": 6,
+      "segments": [
+        {
+          "theme": "Philosophy (General)",
+          "memberCount": 17,
+          "activeCount": 1,
+          "engagementRate": 6
+        },
+        {
+          "theme": "Creative Expression",
+          "memberCount": 6,
+          "activeCount": 0,
+          "engagementRate": 0
+        },
+        {
+          "theme": "Polarity & Paradox",
+          "memberCount": 3,
+          "activeCount": 1,
+          "engagementRate": 33
+        },
+        {
+          "theme": "Movement & Stillness",
+          "memberCount": 2,
+          "activeCount": 0,
+          "engagementRate": 0
+        },
+        {
+          "theme": "Identity & Meaning",
+          "memberCount": 2,
+          "activeCount": 0,
+          "engagementRate": 0
+        },
+        {
+          "theme": "Religion & Ethics",
+          "memberCount": 1,
+          "activeCount": 0,
+          "engagementRate": 0
+        }
+      ]
     }
   ],
-  "lastComputed": "2026-02-08T04:52:39.866Z",
+  "lastComputed": "2026-02-08T05:02:51.979Z",
   "computeVersion": 1,
-  "recommendations": []
+  "recommendations": [
+    {
+      "segment": "Polarity & Paradox",
+      "title": "Embracing Contradiction: How Opposing Forces Create Meaning",
+      "rationale": "This segment has the highest engagement (33%), indicating strong interest in paradoxical thinking. Doubling down on paradox-focused content will capitalize on proven resonance and deepen relationships with these highly engaged users.",
+      "platform": "both",
+      "philosopher": "heraclitus"
+    },
+    {
+      "segment": "Philosophy (General)",
+      "title": "Philosophy in 60 Seconds: Core Concepts Explained Simply",
+      "rationale": "Largest segment (17 people) but low engagement (6%). Short-form, accessible content reduces barriers to engagement for this general audience and can convert silent followers into active participants.",
+      "platform": "twitter",
+      "philosopher": "marcus"
+    },
+    {
+      "segment": "Creative Expression",
+      "title": "The Artist's Rebellion: Philosophy as Creative Practice",
+      "rationale": "Zero engagement suggests mismatch between current content and segment interests. Framing philosophy as creative rebellion rather than abstract theory aligns with this audience's values and unlocks dormant potential.",
+      "platform": "bluesky",
+      "philosopher": "diogenes"
+    },
+    {
+      "segment": "Identity & Meaning",
+      "title": "Who Are We Really? Identity Beyond Society's Labels",
+      "rationale": "Segment shows zero engagement despite clear thematic alignment. Deep, introspective content on existential identity questions directly addresses their core concerns and differentiates from generic philosophy posts.",
+      "platform": "both",
+      "philosopher": "hypatia"
+    },
+    {
+      "segment": "Movement & Stillness",
+      "title": "The Paradox of Rest: Why Doing Nothing Is Doing Everything",
+      "rationale": "Zero engagement in a niche segment suggests current messaging misses the mark. Connecting movement/stillness philosophy to practical modern tensions (productivity culture, burnout) creates immediate relevance.",
+      "platform": "bluesky",
+      "philosopher": "heraclitus"
+    }
+  ]
 }

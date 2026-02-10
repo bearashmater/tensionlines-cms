@@ -12,9 +12,9 @@
     },
     "twitter": {
       "current": {
-        "followers": 2,
-        "following": 11,
-        "tweets": 9,
+        "followers": 3,
+        "following": 13,
+        "tweets": 15,
         "impressions": 0,
         "engagement": 0
       },
@@ -24,6 +24,30 @@
           "followers": 2,
           "following": 11,
           "tweets": 9,
+          "impressions": 0,
+          "engagement": 0
+        },
+        {
+          "date": "2026-02-08",
+          "followers": 2,
+          "following": 11,
+          "tweets": 9,
+          "impressions": 0,
+          "engagement": 0
+        },
+        {
+          "date": "2026-02-09",
+          "followers": 3,
+          "following": 12,
+          "tweets": 14,
+          "impressions": 0,
+          "engagement": 0
+        },
+        {
+          "date": "2026-02-10",
+          "followers": 3,
+          "following": 13,
+          "tweets": 15,
           "impressions": 0,
           "engagement": 0
         }
@@ -124,5 +148,5 @@
       "createdAt": "2026-02-07T00:00:00.000Z"
     }
   ],
-  "lastUpdated": "2026-02-07T14:55:26.941Z"
+  "lastUpdated": "2026-02-10T14:15:06.088Z"
 }

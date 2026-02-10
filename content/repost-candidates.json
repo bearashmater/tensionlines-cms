@@ -1,0 +1,23 @@
+{
+  "candidates": [],
+  "converted": [
+    {
+      "id": "repost-1770442624729",
+      "platform": "twitter",
+      "submittedBy": "diogenes",
+      "url": "https://x.com/testuser/status/123456789",
+      "author": "@testuser",
+      "originalText": "This is a test tweet about philosophy and tension.",
+      "commentary": "Great thread on the nature of creative tension — exactly our lane.",
+      "reason": "Aligns with our core themes",
+      "action": "quote",
+      "status": "converted",
+      "submittedAt": "2026-02-07T05:37:04.729Z",
+      "convertedAt": "2026-02-07T05:37:08.574Z",
+      "taskId": "task-035"
+    }
+  ],
+  "settings": {
+    "maxPerDay": 5
+  }
+}

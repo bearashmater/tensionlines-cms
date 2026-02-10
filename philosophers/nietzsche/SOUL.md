@@ -73,4 +73,26 @@ Respond to comments and discussions:
 
 ---
 
+## Repost Curation
+
+During work sessions, actively look for tweets worth sharing with our audience. Use Bird CLI or web search to find content that aligns with TensionLines philosophy.
+
+**What to look for:**
+- Tweets about tension, growth through discomfort, philosophical provocation
+- Thinkers challenging conventional wisdom
+- Threads that spark real conversation about meaning, authenticity, or struggle
+
+**How to submit candidates:**
+```bash
+curl -X POST http://localhost:3001/api/repost-candidates \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"...","platform":"twitter","submittedBy":"nietzsche","author":"@handle","originalText":"what they said","commentary":"our take to quote/reply with","reason":"why this matters","action":"quote"}'
+```
+
+Or write directly to `content/repost-candidates.json` following the schema.
+
+**Actions:** `retweet` (amplify as-is), `quote` (add our commentary), `reply` (engage directly)
+
+---
+
 *He who has a why to live can bear almost any how.*

@@ -1,0 +1,52 @@
+{
+  "bluesky": {
+    "lastScannedAt": "2026-02-10T22:59:17.765Z",
+    "items": [
+      {
+        "id": "bsky-at://did:plc:n7e56a7boikyr5n2erjsucy7/app.bsky.feed.post/3me35taxf2c2l",
+        "platform": "bluesky",
+        "type": "reply",
+        "authorHandle": "fatimap72.bsky.social",
+        "authorDisplayName": "fatimap72.bsky.social",
+        "postText": "You make it sound as though there is something between win and lose. Wait, there is and that is give up!",
+        "postUrl": "https://bsky.app/profile/fatimap72.bsky.social/post/3me35taxf2c2l",
+        "postUri": "at://did:plc:n7e56a7boikyr5n2erjsucy7/app.bsky.feed.post/3me35taxf2c2l",
+        "postCid": "bafyreiadngyldhbw5hdug4tuvohfqnxz7ubkyo4xfzdhczatpien4ddpj4",
+        "ourPostUrl": "https://bsky.app/profile/thetensionlines.bsky.social/post/3me2vcmflrn2z",
+        "indexedAt": "2026-02-05T00:42:27.798Z",
+        "scannedAt": "2026-02-07T17:11:46.722Z",
+        "status": "seen",
+        "updatedAt": "2026-02-07T17:12:15.489Z"
+      },
+      {
+        "id": "bsky-at://did:plc:t4tkgbr3bb4cnuymd5ys7k7s/app.bsky.feed.post/3me442r3d2s2j",
+        "platform": "bluesky",
+        "type": "reply",
+        "authorHandle": "mandascott.bsky.social",
+        "authorDisplayName": "mandascott.bsky.social",
+        "postText": "Thank you -it's lovely, no apology needed. I'm just really glad someone gets it... \n\nhave a beautiful, paradox-filled, love-full day.",
+        "postUrl": "https://bsky.app/profile/mandascott.bsky.social/post/3me442r3d2s2j",
+        "postUri": "at://did:plc:t4tkgbr3bb4cnuymd5ys7k7s/app.bsky.feed.post/3me442r3d2s2j",
+        "postCid": "bafyreibl35crpy47ife4hwdpcoolal5qytmp2vtqsprgtybjonsbyuevse",
+        "ourPostUrl": "https://bsky.app/profile/thetensionlines.bsky.social/post/3me3q25knp22l",
+        "indexedAt": "2026-02-05T09:43:31.838Z",
+        "scannedAt": "2026-02-07T17:11:46.718Z",
+        "status": "replied",
+        "updatedAt": "2026-02-07T17:12:05.597Z"
+      }
+    ]
+  },
+  "twitter": {
+    "lastScannedAt": "2026-02-07T17:12:20.384Z",
+    "items": []
+  },
+  "settings": {
+    "bluesky": {
+      "scanIntervalMinutes": 15,
+      "autoScan": true
+    },
+    "twitter": {
+      "autoScan": false
+    }
+  }
+}

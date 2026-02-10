@@ -1,6 +1,6 @@
 {
   "config": {
-    "enabled": false,
+    "enabled": true,
     "cronSchedule": "0 6 * * *",
     "philosopher": "nietzsche",
     "platforms": [
@@ -8,15 +8,60 @@
       "bluesky",
       "instagram",
       "reddit",
-      "medium"
+      "medium",
+      "substack"
     ],
     "maxIdeasPerRun": 3
   },
   "processedIds": [
     "011",
-    "012"
+    "012",
+    "029",
+    "013"
   ],
   "runs": [
+    {
+      "timestamp": "2026-02-10T14:02:33.026Z",
+      "ideasProcessed": 0,
+      "ideaIds": [],
+      "draftsQueued": 0,
+      "errors": [
+        {
+          "ideaId": "014",
+          "error": "Unterminated string in JSON at position 8736 (line 23 column 2916)"
+        },
+        {
+          "ideaId": "015",
+          "error": "Unterminated string in JSON at position 8433 (line 23 column 2495)"
+        },
+        {
+          "ideaId": "016",
+          "error": "Unterminated string in JSON at position 8390 (line 23 column 2221)"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "timestamp": "2026-02-10T03:00:42.880Z",
+      "ideasProcessed": 0,
+      "ideaIds": [],
+      "draftsQueued": 0,
+      "errors": [
+        {
+          "ideaId": "013",
+          "error": "401 {\"type\":\"error\",\"error\":{\"type\":\"authentication_error\",\"message\":\"invalid x-api-key\"},\"request_id\":\"req_011CXyeC1rXwzbJRaqekPSXZ\"}"
+        },
+        {
+          "ideaId": "014",
+          "error": "401 {\"type\":\"error\",\"error\":{\"type\":\"authentication_error\",\"message\":\"invalid x-api-key\"},\"request_id\":\"req_011CXyeC2o63y5d9uKkeu3aF\"}"
+        },
+        {
+          "ideaId": "015",
+          "error": "401 {\"type\":\"error\",\"error\":{\"type\":\"authentication_error\",\"message\":\"invalid x-api-key\"},\"request_id\":\"req_011CXyeC3chNN9fZWYxGc2wU\"}"
+        }
+      ],
+      "status": "partial"
+    },
     {
       "timestamp": "2026-02-09T04:03:20.912Z",
       "ideasProcessed": 1,

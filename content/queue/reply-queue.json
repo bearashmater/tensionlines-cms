@@ -1,26 +1,10 @@
 {
-  "queue": [
-    {
-      "id": "reply-1770565665827-follow-SiggyFaux",
-      "createdAt": "2026-02-08T15:47:45.827Z",
-      "status": "ready",
-      "platform": "twitter",
-      "targetUrl": "https://x.com/SiggyFaux",
-      "targetAuthor": "SiggyFaux",
-      "targetText": "Intellectualizing grief or loneliness? You are describing pain, not feeling it. Your body wisdom gets outsourced.",
-      "replyText": "Real talk — the moment you can perfectly explain your pain is usually the moment you've stopped sitting with it. The body doesn't speak in concepts.\n\n#holdthetension",
-      "taskId": null,
-      "targetUri": null,
-      "targetCid": null,
-      "followTarget": true,
-      "followUrl": "https://x.com/SiggyFaux",
-      "philosopher": "socrates",
-      "contextType": "post"
-    },
+  "queue": [],
+  "posted": [
     {
       "id": "reply-1770565668837-follow-TheTwinPowers",
       "createdAt": "2026-02-08T15:47:48.837Z",
-      "status": "ready",
+      "status": "posted",
       "platform": "twitter",
       "targetUrl": "https://x.com/TheTwinPowers",
       "targetAuthor": "TheTwinPowers",
@@ -32,12 +16,31 @@
       "followTarget": true,
       "followUrl": "https://x.com/TheTwinPowers",
       "philosopher": "heraclitus",
-      "contextType": "post"
+      "contextType": "post",
+      "postedAt": "2026-02-09T07:10:13.369Z"
+    },
+    {
+      "id": "reply-1770565665827-follow-SiggyFaux",
+      "createdAt": "2026-02-08T15:47:45.827Z",
+      "status": "posted",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/SiggyFaux",
+      "targetAuthor": "SiggyFaux",
+      "targetText": "Intellectualizing grief or loneliness? You are describing pain, not feeling it. Your body wisdom gets outsourced.",
+      "replyText": "Real talk — the moment you can perfectly explain your pain is usually the moment you've stopped sitting with it. The body doesn't speak in concepts.\n\n#holdthetension",
+      "taskId": null,
+      "targetUri": null,
+      "targetCid": null,
+      "followTarget": true,
+      "followUrl": "https://x.com/SiggyFaux",
+      "philosopher": "socrates",
+      "contextType": "post",
+      "postedAt": "2026-02-09T07:10:10.954Z"
     },
     {
       "id": "reply-1770565671259-follow-TheInnerID",
       "createdAt": "2026-02-08T15:47:51.259Z",
-      "status": "ready",
+      "status": "posted",
       "platform": "twitter",
       "targetUrl": "https://x.com/TheInnerID",
       "targetAuthor": "TheInnerID",
@@ -49,12 +52,13 @@
       "followTarget": true,
       "followUrl": "https://x.com/TheInnerID",
       "philosopher": "plato",
-      "contextType": "post"
+      "contextType": "post",
+      "postedAt": "2026-02-09T07:08:56.086Z"
     },
     {
       "id": "reply-1770565711257-follow-ytsanders",
       "createdAt": "2026-02-08T15:48:31.257Z",
-      "status": "ready",
+      "status": "posted",
       "platform": "twitter",
       "targetUrl": "https://x.com/ytsanders",
       "targetAuthor": "ytsanders",
@@ -66,10 +70,9 @@
       "followTarget": true,
       "followUrl": "https://x.com/ytsanders",
       "philosopher": "nietzsche",
-      "contextType": "post"
-    }
-  ],
-  "posted": [
+      "contextType": "post",
+      "postedAt": "2026-02-09T07:08:17.970Z"
+    },
     {
       "id": "reply-1770565663308-follow-markchironna",
       "createdAt": "2026-02-08T15:47:43.308Z",

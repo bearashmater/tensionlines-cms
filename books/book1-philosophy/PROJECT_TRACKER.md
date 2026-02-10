@@ -77,12 +77,12 @@
 
 | Chapter | Target | Current | Status |
 |---------|--------|---------|--------|
-| Ch 1 | 8,000 | 0 | Organized |
+| Ch 1 | 8,000 | 1,505 | Section 1 drafted |
 | Ch 2 | 12,000 | 0 | Organized |
 | Ch 3 | 10,000 | 0 | Organized |
 | Ch 4 | 10,000 | 0 | Organized |
 | Ch 5 | 10,000 | 0 | Not Started |
-| **Total** | 50,000 | 0 | |
+| **Total** | 50,000 | 1,505 | |
 
 ## Source Ideas (from ideas-bank.md)
 
@@ -129,7 +129,7 @@
 **Target pace:** ~2,000 words/week (with buffer for revision weeks)
 
 ### Month 1 — Chapter 1: The Buzz (Feb 2026)
-- [ ] Week of Feb 9: Section 1 (Opening Hook) — 1,500 words
+- [x] Week of Feb 9: Section 1 (Opening Hook) — 1,500 words ✅ (1,505 words drafted)
 - [ ] Week of Feb 16: Section 2 (Ecclesiastes) — 2,000 words
 - [ ] Week of Feb 23: Section 3 (Exodus) — 2,000 words
 - [ ] Week of Mar 2: Sections 4-5 (Core Proposition + Roadmap) — 2,500 words

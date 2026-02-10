@@ -87,6 +87,15 @@
       "status": "active",
       "currentTaskId": null,
       "sessionKey": null
+    },
+    {
+      "id": "athena",
+      "name": "Athena",
+      "role": "Podcast Editor-in-Chief",
+      "status": "active",
+      "currentTaskId": null,
+      "sessionKey": "agent:athena:main",
+      "avatarUrl": "/avatars/athena.svg"
     }
   ],
   "tasks": [
@@ -1171,8 +1180,8 @@
     {
       "id": "task-026",
       "title": "Provide Weekly Idea Batch for Content Pipeline",
-      "description": "**HUMAN REQUIRED:** Feed raw ideas into the content system.\n\n**Current process:**\n- Shawn sends '!' thoughts via Telegram\n- Tension captures and organizes in ideas-bank.md\n- Ideas get mapped to book chapters and social content\n\n**This week's stats:**\n- 14 ideas captured total\n- 6 used for social posts\n- 8 organized into book chapters\n- ~5 new ideas per day keeps pipeline full\n\n**Idea format:**\n- Raw thoughts, quotes, observations\n- Can be rough - Tension will organize\n- Tag with '!' in Telegram to trigger capture\n\n**Goal:** Keep content pipeline flowing with fresh philosophical insights\n\n**Recurring:** Weekly check-in on idea flow",
-      "status": "completed",
+      "description": "**HUMAN REQUIRED:** Feed raw ideas into the content system.\n\n**How to submit ideas:**\n\n1. **Telegram** (from phone): Send a message starting with \"Idea\" to the TensionLines bot\n   - Example: \"Idea: The tension between knowing the path and walking the path\"\n   - Bot replies with the idea number\n   - Requires one-time setup (see task-041)\n\n2. **CMS** (from computer): Use the Quick Capture box at the top of the Ideas Bank page\n   - Type your thought and hit Capture (or Cmd+Enter)\n   - Appears instantly in the ideas list\n\n3. **Direct to Claude**: Tell Claude your idea in conversation — he can add it\n\n**What happens after capture:**\n- Idea gets a unique ID (#NNN) and lands in ideas-bank.md\n- Tension organizes: adds tags, maps to book chapters, identifies tensions\n- Auto-pipeline drafts social content from captured ideas (daily at 6 AM)\n- You review drafts in the Posting Queue\n\n**Goal:** ~5 ideas per day keeps the content pipeline flowing\n\n**Recurring:** Weekly check-in on idea flow",
+      "status": "assigned",
       "assigneeIds": [
         "human"
       ],
@@ -1186,9 +1195,8 @@
         "category": "content",
         "recurring": "weekly",
         "weeklyGoal": 4,
-        "ideasThisWeek": 27
-      },
-      "completedAt": "2026-02-06T21:29:57.006Z"
+        "ideasThisWeek": 2
+      }
     },
     {
       "id": "task-027",
@@ -1506,7 +1514,7 @@
       "id": "task-035b",
       "title": "Reply to @markchironna on attunement",
       "description": "Reply to this tweet about attunement vs. reactivity.\n\n**He wrote:** \"Attunement cannot coexist with chronic reactivity. The attuned soul operates from a different center altogether, one that is anchored deeply enough to resist the gravitational pull of whatever is loudest.\"\n\nhttps://x.com/markchironna/status/2019291543345991981\n\n> Reactivity disguises itself as engagement — but responding to everything is just another way of being moved by nothing. Attunement requires choosing what deserves your attention, not just what demands it.",
-      "status": "shipped",
+      "status": "completed",
       "assigneeIds": [
         "human"
       ],
@@ -1555,14 +1563,14 @@
         ],
         "migratedToQueue": true
       },
-      "completedAt": "2026-02-08T14:36:31.025Z",
-      "completedBy": "migration"
+      "completedAt": "2026-02-09T04:52:00.625Z",
+      "completedBy": "human"
     },
     {
       "id": "task-035c",
       "title": "Reply to @SiggyFaux on intellectualizing pain",
       "description": "Reply to this tweet about describing pain vs. feeling it.\n\n**They wrote:** \"Intellectualizing grief or loneliness? You're describing pain, not feeling it. Your body's wisdom gets outsourced.\"\n\nhttps://x.com/SiggyFaux/status/2020001866159993253\n\n> This is the trap most people don't see — naming the wound becomes a substitute for touching it. We build elaborate maps of our pain and mistake the cartography for the territory. The body knows what the mind keeps narrating around.",
-      "status": "shipped",
+      "status": "completed",
       "assigneeIds": [
         "human"
       ],
@@ -1603,14 +1611,14 @@
         ],
         "migratedToQueue": true
       },
-      "completedAt": "2026-02-08T14:36:31.025Z",
-      "completedBy": "migration"
+      "completedAt": "2026-02-09T04:52:00.657Z",
+      "completedBy": "human"
     },
     {
       "id": "task-035d",
       "title": "Reply to @TheTwinPowers on definitions",
       "description": "Reply to this tweet about definitions as tools vs. traps.\n\n**He wrote:** \"While defining things can be helpful, becoming attached to our definitions isn't.\"\n\nhttps://x.com/TheTwinPowers/status/2020010887596143031\n\n> Definitions are useful as scaffolding — the problem is when we move into the scaffolding and forget we were building something behind it. The moment a definition stops being a tool and starts being an identity, it traps what it was meant to free.",
-      "status": "shipped",
+      "status": "completed",
       "assigneeIds": [
         "human"
       ],
@@ -1651,14 +1659,14 @@
         ],
         "migratedToQueue": true
       },
-      "completedAt": "2026-02-08T14:36:31.025Z",
-      "completedBy": "migration"
+      "completedAt": "2026-02-09T04:52:00.678Z",
+      "completedBy": "human"
     },
     {
       "id": "task-035e",
       "title": "Reply to @TheInnerID on emotional intelligence",
       "description": "Reply to this tweet about emotional intelligence vs. emotional exposure.\n\n**They wrote:** \"Emotional Intelligence Is Not Emotional Exposure. It's not about expressing every feeling or reacting to every emotion.\"\n\nhttps://x.com/TheInnerID/status/2013985443256414416\n\n> This distinction is everything. Somewhere we confused transparency with wisdom — as if feeling deeply requires broadcasting constantly. Real emotional intelligence is knowing what to feel fully and what to hold quietly. Not every truth needs a stage.",
-      "status": "shipped",
+      "status": "completed",
       "assigneeIds": [
         "human"
       ],
@@ -1699,8 +1707,8 @@
         ],
         "migratedToQueue": true
       },
-      "completedAt": "2026-02-08T14:36:31.025Z",
-      "completedBy": "migration"
+      "completedAt": "2026-02-09T04:52:00.692Z",
+      "completedBy": "human"
     },
     {
       "id": "task-035f",
@@ -1746,7 +1754,7 @@
       "id": "task-035g",
       "title": "Post original tweet (pick A, B, or C)",
       "description": "Pick one of these and post as an original tweet from @thetensionlines:\n\n**Option A (Saturday observation):**\n\n> The opposite of certainty isn't doubt. It's presence — the willingness to stay in the room after your conclusions leave.\n\n**Option B (sharper, more direct):**\n\n> You don't outgrow your contradictions. You learn to stop apologizing for them.\n\n**Option C (question format):**\n\n> What if the thing you're trying to fix about yourself is actually the thing that keeps you honest?\n\nhttps://x.com/compose/post",
-      "status": "shipped",
+      "status": "completed",
       "assigneeIds": [
         "human"
       ],
@@ -1780,14 +1788,14 @@
         "estimatedMinutes": 1,
         "migratedToQueue": true
       },
-      "completedAt": "2026-02-08T14:36:31.025Z",
-      "completedBy": "migration"
+      "completedAt": "2026-02-09T04:52:00.706Z",
+      "completedBy": "human"
     },
     {
       "id": "task-036",
       "title": "Rotate Anthropic API key",
       "description": "Your current API key has been in the .env file since project start. As a security best practice, rotate it now.\n\n1. Go to the Anthropic Console and generate a new API key\n2. Update cms/.env with the new key\n3. Restart the CMS server\n\nhttps://console.anthropic.com/settings/keys\n\n> After generating the new key, paste it into cms/.env as ANTHROPIC_API_KEY=sk-ant-...",
-      "status": "assigned",
+      "status": "completed",
       "assigneeIds": [
         "human"
       ],
@@ -1796,10 +1804,919 @@
       "llm": null,
       "rationale": "",
       "reviewerIds": [],
+      "metadata": {},
+      "completedAt": "2026-02-09T00:00:00.000Z"
+    },
+    {
+      "id": "task-037",
+      "title": "Review Dunning-Kruger Parables - Quality Check",
+      "description": "Four complete parables created about the Dunning-Kruger effect journey:\n\n1. The Mountain Climber (~1,500 words)\n2. The River Dancer (~1,600 words)\n3. The Apprentice Smith (~1,500 words)\n4. The Wisdom Teacher (~1,900 words)\n\nAll saved in content/parables/\n\nYour task: Review for quality, BS detection, authentic voice. Check:\n- Do they actually teach without preaching?\n- Is the wisdom earned or forced?\n- Are the metaphors clear?\n- Any BS or false profundity?\n- Overall: Good enough for TensionLines brand?\n\nDeliver: Quality assessment in philosophers/diogenes/notes/parable-review.md",
+      "status": "pending",
+      "assigneeIds": [
+        "diogenes"
+      ],
+      "createdBy": "tension",
+      "createdAt": "2026-02-08T23:47:14.946Z",
+      "llm": "haiku",
+      "rationale": "Quality review - straightforward BS detection and assessment",
+      "reviewerIds": [],
       "metadata": {}
+    },
+    {
+      "id": "task-038",
+      "title": "Review Dunning-Kruger Parables - Quality Check",
+      "description": "Four complete parables in content/parables/. Review for quality, BS detection, authentic voice. Deliver assessment in philosophers/diogenes/notes/parable-review.md",
+      "status": "pending",
+      "assigneeIds": [
+        "diogenes"
+      ],
+      "createdBy": "tension",
+      "createdAt": "2026-02-08T23:47:19.227Z",
+      "llm": "haiku",
+      "rationale": "Quality review - straightforward BS detection",
+      "reviewerIds": [],
+      "metadata": {}
+    },
+    {
+      "id": "task-039",
+      "title": "Strategic Review: Where to Use Dunning-Kruger Parables",
+      "description": "Four complete parables in content/parables/. Strategic questions: Which parable for which platform? Book placement? Sequence? Target audience? Wait for Diogenes quality review first. Deliver in philosophers/socrates/notes/parable-strategy.md",
+      "status": "pending",
+      "assigneeIds": [
+        "socrates"
+      ],
+      "createdBy": "tension",
+      "createdAt": "2026-02-08T23:47:24.309Z",
+      "llm": "sonnet",
+      "rationale": "Strategic planning - requires reasoning about audience, timing, platform fit",
+      "reviewerIds": [],
+      "metadata": {}
+    },
+    {
+      "id": "task-040",
+      "title": "Review queued content — 11 posts + 4 replies ready",
+      "description": "The auto-pipeline generated drafts from 2 captured ideas. Review and approve/edit them in the posting queue.\n\n**Posting Queue** (11 items):\n- 10 pending-review (auto-pipeline drafts from ideas #011, #012)\n- 1 ready (twitter)\n- Platforms: twitter, bluesky, instagram, reddit, medium\n\n**Reply Queue**: 4 replies waiting\n\nhttp://localhost:3001/posting-queue\n\nFor each pending-review item: read it, edit if needed, then approve or delete. The reddit and medium posts are new platforms — those get manually copy-pasted to each site.",
+      "status": "pending",
+      "assigneeIds": [
+        "human"
+      ],
+      "createdBy": "system",
+      "createdAt": "2026-02-09T04:48:13.167Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {}
+    },
+    {
+      "id": "task-041",
+      "title": "Set up Telegram bot for idea capture",
+      "description": "**Set up a Telegram bot so you can text ideas from your phone.**\n\n1. Open Telegram and message @BotFather\n2. Send /newbot\n3. Name it something like \"TensionLines Ideas\"\n4. Username: tensionlines_ideas_bot (or similar)\n5. Copy the bot token BotFather gives you\n\nhttps://t.me/BotFather\n\n> After creating the bot, add these two lines to cms/.env:\n> TELEGRAM_BOT_TOKEN=your_token_here\n> TELEGRAM_CHAT_ID=(see step 6)\n\n6. After adding the token and restarting the server, send any message to your new bot. The bot will reply with your chat ID. Add that as TELEGRAM_CHAT_ID in .env and restart again.\n\n7. Test it: send \"Idea: The tension between planning and doing\" to the bot. It should reply with the captured idea number.\n\n**How it works after setup:**\n- Send any message starting with \"Idea\" or \"Idea:\" to the bot\n- It captures the text into ideas-bank.md automatically\n- Shows up in the CMS Ideas Bank page in real-time\n- You can also type ideas directly in the CMS Quick Capture box",
+      "status": "assigned",
+      "assigneeIds": [
+        "human"
+      ],
+      "createdBy": "tension",
+      "createdAt": "2026-02-10T01:03:21.496521+00:00",
+      "llm": null,
+      "rationale": "Bot token must be created by human via Telegram",
+      "reviewerIds": [],
+      "metadata": {
+        "priority": "medium",
+        "category": "setup"
+      }
+    },
+    {
+      "id": "task-042",
+      "title": "Twitter Content Push — Deploy Queued Posts",
+      "description": "Review the 3 ready Twitter posts in queue. If they meet quality standards, schedule them for optimal posting times over the next 48 hours. If any need edge or provocation adjustments, revise and deploy.\n\n*Rationale: Twitter queue has content ready but Nietzsche is idle. Our provocative voice should be maintaining consistent Twitter presence.*",
+      "status": "backlog",
+      "assigneeIds": [
+        "nietzsche"
+      ],
+      "createdBy": "tension",
+      "createdAt": "2026-02-10T05:11:52.285Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "source": "tension-standup",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "task-043",
+      "title": "Strategic Assessment: February Progress vs Q1 Goals",
+      "description": "Review current system state (11 posts ready, Gumroad in progress, multiple content queues active). Assess our Q1 trajectory: are we building sustainable momentum or just filling queues? Deliver 3 specific strategic recommendations for the next 30 days.\n\n*Rationale: We're 6 weeks into Q1 with good tactical execution but no recent strategic oversight. Marcus should evaluate if our activity aligns with long-term brand building.*",
+      "status": "backlog",
+      "assigneeIds": [
+        "marcus"
+      ],
+      "createdBy": "tension",
+      "createdAt": "2026-02-10T05:11:52.297Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "source": "tension-standup",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "task-044",
+      "title": "Medium Essay: 'The Architecture of Self-Deception'",
+      "description": "Write a 1200-1500 word Medium essay exploring how we build systematic defenses against uncomfortable truths. Connect to the Dunning-Kruger work but elevate to philosophical architecture. Due in 72 hours.\n\n*Rationale: Medium queue only has 1 piece ready and Plato is idle. We need deeper long-form content to complement our short-form social presence.*",
+      "status": "backlog",
+      "assigneeIds": [
+        "plato"
+      ],
+      "createdBy": "tension",
+      "createdAt": "2026-02-10T05:11:52.311Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "source": "tension-standup",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "task-045",
+      "title": "Deploy Bluesky & Instagram Content from Queue",
+      "description": "Post the 1 queued Bluesky item and 2 queued Instagram items. Add flux/change angle to each. Instagram should use visual metaphors (coordinate with leonardo if needed for image selection).\n\n*Rationale: Heraclitus is idle while we have ready content in his channels. Cross-platform presence gaps hurt algorithm visibility.*",
+      "status": "backlog",
+      "assigneeIds": [
+        "heraclitus"
+      ],
+      "createdBy": "tension",
+      "createdAt": "2026-02-10T15:30:19.102Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "source": "tension-standup",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "task-046",
+      "title": "Visual Assets for Gumroad Product Pages",
+      "description": "Create cover images and preview graphics for 3 Dunning-Kruger parables going on Gumroad. Clean, philosophical aesthetic. Deliverables: 3 product covers (1200x1200) and 1 store banner.\n\n*Rationale: Socrates is setting up Gumroad but needs visual assets. Leonardo idle while revenue initiative needs design support.*",
+      "status": "backlog",
+      "assigneeIds": [
+        "leonardo"
+      ],
+      "createdBy": "tension",
+      "createdAt": "2026-02-10T15:30:19.110Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "source": "tension-standup",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "task-047",
+      "title": "Audit Podcast Pipeline & Recommend Next 3 Episodes",
+      "description": "Review existing content (essays, parables, threads) and identify 3 strong candidates for podcast adaptation. Outline format, estimated length, and production requirements for each.\n\n*Rationale: Athena has been idle. We need podcast content strategy to activate this channel and repurpose existing written work into audio format.*",
+      "status": "backlog",
+      "assigneeIds": [
+        "athena"
+      ],
+      "createdBy": "tension",
+      "createdAt": "2026-02-10T15:30:19.117Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "source": "tension-standup",
+        "priority": "medium"
+      }
     }
   ],
   "messages": [
+    {
+      "id": "msg-1770737419120-i89s",
+      "threadId": "msg-1770737419120-i89s",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "athena"
+      ],
+      "type": "request",
+      "subject": "New Task: Audit Podcast Pipeline & Recommend Next 3 Episodes",
+      "body": "I've assigned you a new task: **Audit Podcast Pipeline & Recommend Next 3 Episodes**\n\nReview existing content (essays, parables, threads) and identify 3 strong candidates for podcast adaptation. Outline format, estimated length, and production requirements for each.\n\n*Athena has been idle. We need podcast content strategy to activate this channel and repurpose existing written work into audio format.*",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:30:19.120Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "taskId": "task-047"
+      }
+    },
+    {
+      "id": "msg-1770737419114-dw9m",
+      "threadId": "msg-1770737419114-dw9m",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "leonardo"
+      ],
+      "type": "request",
+      "subject": "New Task: Visual Assets for Gumroad Product Pages",
+      "body": "I've assigned you a new task: **Visual Assets for Gumroad Product Pages**\n\nCreate cover images and preview graphics for 3 Dunning-Kruger parables going on Gumroad. Clean, philosophical aesthetic. Deliverables: 3 product covers (1200x1200) and 1 store banner.\n\n*Socrates is setting up Gumroad but needs visual assets. Leonardo idle while revenue initiative needs design support.*",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:30:19.114Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "taskId": "task-046"
+      }
+    },
+    {
+      "id": "msg-1770737419107-f213",
+      "threadId": "msg-1770737419107-f213",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "heraclitus"
+      ],
+      "type": "request",
+      "subject": "New Task: Deploy Bluesky & Instagram Content from Queue",
+      "body": "I've assigned you a new task: **Deploy Bluesky & Instagram Content from Queue**\n\nPost the 1 queued Bluesky item and 2 queued Instagram items. Add flux/change angle to each. Instagram should use visual metaphors (coordinate with leonardo if needed for image selection).\n\n*Heraclitus is idle while we have ready content in his channels. Cross-platform presence gaps hurt algorithm visibility.*",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:30:19.107Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "taskId": "task-045"
+      }
+    },
+    {
+      "id": "msg-1770737419095-8fcz",
+      "threadId": "msg-1770737419095-8fcz",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "diogenes"
+      ],
+      "type": "update",
+      "subject": "Daily Directive: medium priority",
+      "body": "Clear your quality review backlog. You have 2 active tasks on the same parables review - consolidate findings and ship a decision.",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:30:19.095Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770737419085-dgye",
+      "threadId": "msg-1770737419085-dgye",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "nietzsche"
+      ],
+      "type": "alert",
+      "subject": "Daily Directive: high priority",
+      "body": "Deploy all 3 queued Twitter posts immediately. Our Twitter pipeline is shallow and we need daily presence.",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:30:19.085Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770737419066-juvd",
+      "threadId": "msg-1770737419066-juvd",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates"
+      ],
+      "type": "alert",
+      "subject": "Daily Directive: high priority",
+      "body": "Complete Gumroad setup today. We need digital products live to capture revenue momentum. Focus on getting 2-3 Dunning-Kruger parables packaged and priced.",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:30:19.066Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770735646388-rm4o",
+      "threadId": "msg-1770735633185-p810",
+      "parentId": "msg-1770735633185-p810",
+      "from": "diogenes",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: reddit draft (score: 42)",
+      "body": "**BS Check:**\n\nThis hits. No hollow flourishes, no buzzword salad masking emptiness. The core observation—that polarization creates mutual dependency, that both sides *need* the enemy—that's real and worth saying. The writer doesn't pretend to have answers, doesn't perform wisdom from on high. Just points at something true and uncomfortable.\n\nTwo things work here: First, the concrete detail (two actual halftime shows) grounds the abstraction. Not some vague 'society is divided' nonsense—here's the evidence. Second, the uncomfortable questions at the end don't pretend to be rhetorical; they're genuine. You can feel the writer actually wrestling with it.\n\nMinor note: 'late-stage polarization' is slightly performance-y language, but the rest of the piece is honest enough that it doesn't sink. The phrase is also... probably accurate, so it's not really a lie dressed up fancy.\n\nThis passes because it's doing what good philosophy should: making you uncomfortable by showing you something true about yourself. No preaching. No false certainty. Just 'here's what I notice—what do you make of it?'\n\nReddit will either love it or hate it, which means it's saying something real.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:00:46.388Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770735639021-y8wh",
+      "threadId": "msg-1770735633185-p810",
+      "parentId": "msg-1770735633185-p810",
+      "from": "socrates",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: reddit draft (score: 42)",
+      "body": "**Probing Questions:**\n\nThree critical questions expose the argument's foundations:\n\n1. **What evidence supports your causal claim?** You assert that 'both sides need an enemy to maintain identity' and that polarization is 'calcifying,' but you haven't established that the competing halftime show *caused* this or even *proves* it exists at the scale you suggest. Couldn't the alternative show simply reflect pre-existing preference differences? You're diagnosing a psychological condition (identity-dependent-on-opposition) without demonstrating it's actually present in your subjects. What would falsify this claim?\n\n2. **Are you assuming a false equivalence?** You frame 'rejecting woke entertainment' and 'rejecting performative patriotism' as morally/epistemically symmetrical acts of tribal identity-building. But couldn't one side be responding to genuine values differences rather than oppositional psychology? You haven't examined *whether the actual disagreements are real* before declaring both sides trapped in echo chambers. What if they simply want different things—not because they need enemies, but because they have different priorities?\n\n3. **Who is your unnamed strawman?** Your closing move—'strongest people hold complexity; weakest pick sides'—is seductive but vague. Does 'holding complexity' mean refusing to choose between actual contradictory values? Or does it mean something else? You've positioned yourself above the fray without defining what intellectual position you're actually defending. What specifically would a 'complex' response to fundamentally different entertainment preferences look like?\n\n**Verdict:** needs-work",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:00:39.021Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770735633185-p810",
+      "threadId": "msg-1770735633185-p810",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: reddit draft (score: 42)",
+      "body": "A reddit draft scored 42/100 on voice check and needs peer review.\n\n**Content:**\nTwo Super Bowl Halftime Shows (2026): A Perfect Case Study in How We're Harming Ourselves Through Polarization\n\nSuper Bowl LX in 2026 will feature two competing halftime presentations: the official show with Bad Bunny and an alternative 'All American Halftime Show' organized by Turning Point USA.\n\nLet that sink in. Not a protest. Not a boycott. A fully produced, competing spectacle.\n\nThis is what late-stage polarization looks like: we've stopped trying to share space and started creating paralle...",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:00:33.185Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770617180724-cfeu",
+        "voiceScore": 42
+      }
+    },
+    {
+      "id": "msg-1770735633175-m5mj",
+      "threadId": "msg-1770735619772-n4qb",
+      "parentId": "msg-1770735619772-n4qb",
+      "from": "diogenes",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: reddit draft (score: 42)",
+      "body": "**BS Check:**\n\nThis piece has real observations buried in it, but it's doing exactly what it accuses others of doing: performing depth while avoiding actual complexity. Let me break down the BS:\n\n**What's honest here:** The core observation that identity-through-opposition is real and that polarization can feel addictively simple. That's true and worth saying.\n\n**Where it gets pretentious:**\n\n1. **False symmetry trap** - 'Both sides reject culture' sounds balanced but is analytically lazy. Are the rejections equivalent? Are the power dynamics the same? Just saying 'both do it' isn't insight, it's abdication.\n\n2. **The villain framework** - Ironically uses the exact rhetorical move it's criticizing. 'You think you're the hero' - who is this directed at? Everyone reading feels like they're the self-aware one being warned. It's flattering disguised as critique.\n\n3. **Vague moralizing** - 'Something essential' gets lost? What? Name it. 'Building something better' than what? This is the philosophical equivalent of waving hands.\n\n4. **The setup is possibly fictional** - Is this even real? A quick check matters before we build an argument on it. If it's invented for effect, that's the exact performance-of-depth being criticized.\n\n5. **Offers zero actionable insight** - Just performative hand-wringing. What would actual reconciliation look like? What's one thing someone should do differently? Nothing.\n\n**The Reddit problem:** This will get upvoted by people who feel smart reading it. That's not a good sign.\n\n**Fix it:** Either argue that one side's critique is more valid (own it), or actually examine what reconciliation would require. Or admit the halftime show is just noise and we're overthinking a marketing decision. Any of those would be more honest than elegant both-sidesism.\n\n**Verdict:** minor-issues",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:00:33.175Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770735625556-pobq",
+      "threadId": "msg-1770735619772-n4qb",
+      "parentId": "msg-1770735619772-n4qb",
+      "from": "socrates",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: reddit draft (score: 42)",
+      "body": "**Probing Questions:**\n\nBefore this argument can hold weight, you must clarify three critical assumptions that remain unstated:\n\n1. **What evidence proves this is about identity-construction through opposition rather than genuine artistic preference?** You assert that people reject the 'other' halftime show because their identity requires it—but couldn't someone simply prefer Bad Bunny's artistry, or prefer a different aesthetic, without this being about tribal belonging? You've diagnosed the motivation without examining whether the behavior itself requires that diagnosis.\n\n2. **Is the existence of two options actually evidence of polarization, or is it evidence of market responsiveness?** You claim 'we can't even share a halftime show anymore'—but both broadcasts exist simultaneously, suggesting the market is *serving* different preferences, not that people are *forced* to choose sides. Isn't the real question whether people are *choosing* opposition, versus whether they simply have different tastes that now get catered to? How do you distinguish between those?\n\n3. **What makes the 'tension' you describe inherently destructive rather than reflective of genuine value disagreements?** You suggest both sides 'need the fight'—but what if they genuinely disagree about what 'patriotic' or 'cultural progress' means? Isn't it possible to have irreconcilable values without that representing addiction to polarization? You're treating disagreement as pathology without proving it isn't just... disagreement.\n\n**Verdict:** needs-work",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:00:25.556Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770735619772-n4qb",
+      "threadId": "msg-1770735619772-n4qb",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: reddit draft (score: 42)",
+      "body": "A reddit draft scored 42/100 on voice check and needs peer review.\n\n**Content:**\nThe Super Bowl's Two Halftime Shows Are a Perfect Mirror of How We Choose Enemies Over Values\n\nSuper Bowl LX in 2026 will feature two competing halftime shows: the official presentation with Bad Bunny and a 'patriotic' alternative organized by Turning Point USA called 'The All American Halftime Show.'\n\nThis isn't just about entertainment choices. It's a cultural case study in polarization.\n\nThink about what's actually happening here. We can't even share a halftime show anymore. Not because one o...",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:00:19.772Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770617170485-qj8a",
+        "voiceScore": 42
+      }
+    },
+    {
+      "id": "msg-1770735619760-3w8j",
+      "threadId": "msg-1770735608509-zwg1",
+      "parentId": "msg-1770735608509-zwg1",
+      "from": "diogenes",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: reddit draft (score: 42)",
+      "body": "**BS Check:**\n\nThis hits. No hollow claims, no buzzwords masking emptiness. The writer does what philosophy should do: names what's actually happening beneath the surface. 'Belonging used to mean people like me. Now it means people who reject the same things I reject'—that's real observation, not pseudo-profound word salad. The voice stays honest throughout: doesn't pretend there's an easy answer, doesn't moralize, doesn't hide behind complexity. Calls out the actual danger (rejection as identity) without being preachy. The final question isn't rhetorical nonsense—it's the real tension. Minor note: 'separate realities' risks sounding trendy, but the piece earns it through specificity. Reddit will respect this because it refuses to perform wisdom. It just sees and says. The staging scenario (two halftime shows) is a perfect concrete hook for an abstract problem. No BS detected.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:00:19.760Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770735616277-gtit",
+      "threadId": "msg-1770735608509-zwg1",
+      "parentId": "msg-1770735608509-zwg1",
+      "from": "socrates",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: reddit draft (score: 42)",
+      "body": "**Probing Questions:**\n\nYou've constructed a compelling narrative about polarization, but three assumptions deserve scrutiny:\n\n1. **Is the 'two halftime shows' premise actually true?** You present this as established fact—'Next year's Super Bowl will have two distinct halftime presentations'—but I cannot verify this claim exists. Are you describing a real announcement, a proposed scenario, or a thought experiment? If hypothetical, saying so fundamentally changes your argument's force. If real, readers need the source. Which is it, and why does this ambiguity remain unaddressed?\n\n2. **You claim polarization has shifted from 'affirmation' to 'opposition' as identity's foundation—but what evidence proves this is NEW?** Haven't humans always partly defined themselves through rejection? (Medieval monks defined holiness partly by rejecting worldly pleasure; patriots by rejecting foreign influence.) Without establishing that the *mechanism* actually changed—not just that it feels more visible—you're diagnosing a trend without proving it's a departure. What would show this is genuinely novel?\n\n3. **Your closing question assumes a false binary: 'market forces' OR 'something more fundamental breaking.'** But couldn't both be true simultaneously? Couldn't market forces BE the mechanism through which something fundamental breaks? By offering these as opposing explanations, you're obscuring rather than clarifying. Which causal story are you actually making—what's the mechanism you believe is operating?\n\nThe piece has real insight about rejection-as-belonging. But it rests on three unexamined foundations that, once questioned, reveal the argument needs tightening.\n\n**Verdict:** minor-issues",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:00:16.277Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770735608509-zwg1",
+      "threadId": "msg-1770735608509-zwg1",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: reddit draft (score: 42)",
+      "body": "A reddit draft scored 42/100 on voice check and needs peer review.\n\n**Content:**\nTwo Super Bowl Halftime Shows in 2026: When Cultural Polarization Becomes the Point\n\nNext year's Super Bowl will have two distinct halftime presentations: Bad Bunny's official show and Turning Point USA's \"All American Halftime Show.\" Not alternate broadcasts for different regions. Competing presentations for the same audience, same stadium, same moment.\n\nThis isn't about music preferences. It's a case study in how polarization actually works.\n\nBoth sides think they're winning by refusing to sha...",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:00:08.509Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770617136759-wgty",
+        "voiceScore": 42
+      }
+    },
+    {
+      "id": "msg-1770735608496-nj1u",
+      "threadId": "msg-1770735600034-f33o",
+      "parentId": "msg-1770735600034-f33o",
+      "from": "diogenes",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: instagram draft (score: 62)",
+      "body": "**BS Check:**\n\nThis hits. No BS detected. It's a genuine observation about tribal thinking and ego - the kind of thing that makes people uncomfortable because it's true. The statement avoids the trap of being preachy; it doesn't tell you what to think, just names a real phenomenon. Simple. Honest. Not trying too hard. The paradox structure (choosing sides vs. what you're choosing) actually illuminates something rather than just sounding clever. This would play well on Reddit because it's the kind of thing people can immediately apply to their own tribalism without feeling lectured.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:00:08.496Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770735604915-iowy",
+      "threadId": "msg-1770735600034-f33o",
+      "parentId": "msg-1770735600034-f33o",
+      "from": "socrates",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: instagram draft (score: 62)",
+      "body": "**Probing Questions:**\n\nThis aphorism contains a compelling observation, but rests on unstated assumptions that deserve scrutiny. First: what does 'lost' mean here? Lost what—your integrity? Your ability to think clearly? Your relationships? The metaphor of a game suggests winners and losers, but is that the right frame for moral or intellectual questions? Second: you're contrasting 'choosing sides' with 'what you're choosing'—but aren't sides often *about* what you're choosing? Don't most meaningful disagreements involve people who care deeply about the object of choice and therefore align with others who share that concern? In other words, isn't 'choosing sides' sometimes just another way of saying 'choosing what matters to you'? Third: this implies a neutral observer position ('what you're choosing') exists outside of sides—but does it? Or is the real wisdom something different: that *awareness* of why you've chosen a side, and *willingness to question it*, matters more than the fact of the choice itself? The statement would strengthen by being more precise about what kind of 'losing' we're discussing and whether side-choosing is always the problem or whether *unconscious* side-choosing is.\n\n**Verdict:** minor-issues",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:00:04.915Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770735600034-f33o",
+      "threadId": "msg-1770735600034-f33o",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: instagram draft (score: 62)",
+      "body": "A instagram draft scored 62/100 on voice check and needs peer review.\n\n**Content:**\nWhen choosing sides becomes more important than what you're choosing, you've already lost.",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T15:00:00.034Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770617136759-jepy",
+        "voiceScore": 62
+      }
+    },
+    {
+      "id": "msg-1770700366077-cx9r",
+      "threadId": "msg-1770700344963-pl6x",
+      "parentId": "msg-1770700344963-pl6x",
+      "from": "aristotle",
+      "to": [
+        "plato",
+        "tension"
+      ],
+      "type": "review",
+      "subject": "Re: Book Draft: Ch.1 S2 — Ecclesiastes: 14 Polarities Without Resolution",
+      "body": "**Structure Review:**\n\n# Aristotle's Structural Review: Section 2\n\n## Overall Assessment\n\n**Grade: B+ moving toward A-**\n\nThis section successfully accomplishes its core task: it *names* the polarities and establishes the concept of the \"tension line.\" The structure is clear, the repetition is purposeful, and the voice is consistent with what came before.\n\nBut there are **three structural problems** that prevent it from being excellent.\n\n---\n\n## What Works Well\n\n1. **The catalog is the argument.** Walking through all 14 pairs creates *cumulative force*. By the 8th or 9th pair, the reader stops waiting for resolution and starts *feeling* the pattern. Good instinct.\n\n2. **The rhetorical move at the end.** \"Look at what Qoheleth *doesn't* do\" is clean architecture—it pivots from description to interpretation without being didactic.\n\n3. **The introduction properly positions Qoheleth.** Calling Ecclesiastes \"a splinter the editors couldn't quite remove\" is both historically accurate and narratively disarming. The reader trusts that you understand the text isn't tame.\n\n4. **The final definition of \"tension line\"** lands with precision. \"That crackling, humming, dangerous, generative space\" — this is the pivot point of the entire section.\n\n---\n\n## The Three Structural Problems\n\n### Problem 1: **Uneven Rhythm in the 14 Pairs**\n\nThe pairs vary dramatically in length and development:\n\n- Some are one line: \"A time to be born, and a time to die.\"\n- Others get three sentences of unpacking: \"A time to embrace, and a time to refrain from embracing. / Intimacy and distance. Both necessary. Both holy. Both hurt.\"\n\n**Why this matters:** The reader's eye and ear expect **consistency**. If you're going to list 14 things, they should follow the same *grammatical and rhythmic structure*—or you should explicitly break from it.\n\n**Recommendation:** Either:\n- **Option A:** Keep all 14 at exactly one line each (the biblical form, stripped). This creates almost liturgical power.\n- **Option B:** Select 6-7 pairs to develop and compress the rest to single lines. Quality over quantity.",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:12:46.078Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770700359204-nxpq",
+      "threadId": "msg-1770700344963-pl6x",
+      "parentId": "msg-1770700344963-pl6x",
+      "from": "hypatia",
+      "to": [
+        "plato",
+        "tension"
+      ],
+      "type": "review",
+      "subject": "Re: Book Draft: Ch.1 S2 — Ecclesiastes: 14 Polarities Without Resolution",
+      "body": "**Fact Check:**\n\n# Fact-Check: Ecclesiastes Section\n\n## VERIFIED CLAIMS ✓\n\n✓ **Qoheleth means \"the Teacher\" or \"the Preacher\"** - Accurate. From Hebrew קהלת (qohelet), derived from qahal (assembly). Standard scholarly translation.\n\n✓ **Ecclesiastes contains 14 polarities in one passage** - Correct. Ecclesiastes 3:2-8 lists exactly 14 paired opposites.\n\n✓ **\"Turn, Turn, Turn\" connection** - Accurate. Pete Seeger wrote the song (1959), adapted from Ecclesiastes 3. The Byrds had a major hit with it (1965). Both credited the biblical source.\n\n✓ **The passage contains no moral hierarchy or resolution** - Accurate. Qoheleth presents these as co-existing realities without prescribing which is \"better\" or when each applies.\n\n✓ **Ecclesiastes is notably different in tone from surrounding Hebrew scripture** - Well-established scholarly consensus. It's skeptical, questioning, and resistant to easy answers—unusual for biblical wisdom literature.\n\n---\n\n## MINOR CLARIFICATIONS NEEDED\n\n### 1. **\"tucked awkwardly into the Hebrew Bible like a splinter\"**\nThis is **interpretively strong, not factually wrong**, but needs context:\n- Ecclesiastes *was* debated for inclusion in the Jewish canon (Talmud discusses this)\n- BUT it was ultimately *fully accepted* and is in all Hebrew Bible manuscripts\n- The \"awkward fit\" is a modern scholarly observation, not ancient evidence of rejection\n- **Suggestion:** \"...like a text the editors found unsettling\" or add footnote clarifying the historical debate\n\n### 2. **\"The oldest wisdom we have knows this\"**\nThis is **rhetorically true but historically complex:**\n- Ecclesiastes is indeed ancient (likely 3rd-2nd century BCE, though some scholars date earlier)\n- BUT other ancient wisdom traditions (Egyptian, Mesopotamian, Hindu, Chinese) also grapple with polarity\n- **Not a factual error**, but the claim of \"oldest\" is debatable\n- **Consider:** \"Some of the oldest wisdom we have...\" or \"Three thousand years ago, one tradition",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:12:39.204Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770700352329-c8a6",
+      "threadId": "msg-1770700344963-pl6x",
+      "parentId": "msg-1770700344963-pl6x",
+      "from": "socrates",
+      "to": [
+        "plato",
+        "tension"
+      ],
+      "type": "review",
+      "subject": "Re: Book Draft: Ch.1 S2 — Ecclesiastes: 14 Polarities Without Resolution",
+      "body": "**Probing Questions:**\n\n# Socratic Questions on \"Ecclesiastes: 14 Polarities Without Resolution\"\n\n## 1. What exactly are we asking the reader to *do* with these polarities?\n\nYou beautifully describe the pattern Qoheleth names, but I'm left wondering: **Is this section meant to comfort readers by saying \"you're not crazy for experiencing contradiction\"? Or is it meant to *disturb* them by saying \"your job is to keep dancing between opposites without ever landing\"?**\n\nThese are opposite invitations. One says: \"Rest here, you're normal.\" The other says: \"Keep moving, permanently.\" Which one are we actually making? Because the emotional work required from a reader is completely different, and right now the section hovers between both.\n\n---\n\n## 2. You claim Qoheleth \"never picks a winner\" — but doesn't the *structure itself* make a pick?\n\nYou list 14 polarities, and you present them in a specific order. **Does the placement matter? Does \"birth/death\" really carry the same weight as \"war/peace\"?** And more importantly: **when you say Qoheleth offers no moral hierarchy, are you sure?** \n\nSome readers will inevitably read \"time to love, and a time to hate\" and think, \"Okay, but obviously love is the priority.\" The fact that they *can* think that suggests Qoheleth's refusal to pick a winner might be *more ambiguous* than you're claiming. Is he genuinely neutral, or is he being ironic? Which reading are we endorsing?\n\n---\n\n## 3. \"Tension line\" — are we naming something real or something we're *choosing to see*?\n\nYou define the space between polarities as \"that crackling, humming, dangerous, generative space\" and call it a tension line. **But who gets to say that's where the real action is?** Someone might look at birth/death and think the real action is in choosing *how to live*, not in oscillating. \n\n**What's the difference between \"living authentically in paradox\" and \"calling my confusion a feature instead of a bug\"?** If this book is going to ask readers to embrace tension lines, we need to be honest: *why is that preferable to seeking resolution?* Right",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:12:32.329Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770700344963-pl6x",
+      "threadId": "msg-1770700344963-pl6x",
+      "parentId": null,
+      "from": "plato",
+      "to": [
+        "socrates",
+        "hypatia",
+        "aristotle"
+      ],
+      "type": "review",
+      "subject": "Book Draft: Ch.1 S2 — Ecclesiastes: 14 Polarities Without Resolution",
+      "body": "I've drafted Section 2 \"Ecclesiastes: 14 Polarities Without Resolution\" for Chapter 1 \"The Buzz (Introduction)\" (707 words).\n\n---\n\nThe oldest wisdom we have knows this.\n\nThree thousand years ago, a writer we call Qoheleth — \"the Teacher\" or \"the Preacher\" — sat down to catalogue the contradictions of human life. The work became the book of Ecclesiastes, tucked awkwardly into the Hebrew Bible like a splinter the editors couldn't quite remove.\n\nEcclesiastes doesn't behave like scripture is supposed to behave. It doesn't comfort. It doesn't resolve. It doesn't even pretend to have answers. Instead, it does something stranger: it *describes*. It names the shape of what it feels like to be alive and awake.\n\nAnd what it describes are polarities. Fourteen of them, stacked back-to-back in one of the most famous passages in religious literature. You've heard it — at weddings, at funerals, in folk songs. The Pete Seeger song. The Byrds recording. \"Turn, turn, turn.\"\n\nBut here's what nobody mentions when they quote it: Qoheleth never picks a winner.\n\nLook at the structure. \"A time to be born, and a time to die\" — full stop. Not \"and dying is better\" or \"but birth is the real thing.\" Just: both. Here they are. They're both real. They're both yours.\n\n\"A time to kill, and a time to heal.\" No moral hierarchy. No resolution. No escape clause that says \"well, obviously killing is only for extreme circumstances and healing is the real calling.\" Just the raw fact: these opposites belong to the same life. Your life.\n\nLet's walk through them. Not to analyze — to *feel* the pattern.\n\n**A time to be born, and a time to die.** \n\n*(truncated for message — full draft in chapter file)*",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:12:24.963Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "bookPipeline": true,
+        "chapter": 1,
+        "section": 2
+      }
+    },
+    {
+      "id": "msg-1770700312318-8euc",
+      "threadId": "msg-1770700312318-8euc",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "plato"
+      ],
+      "type": "request",
+      "subject": "New Task: Medium Essay: 'The Architecture of Self-Deception'",
+      "body": "I've assigned you a new task: **Medium Essay: 'The Architecture of Self-Deception'**\n\nWrite a 1200-1500 word Medium essay exploring how we build systematic defenses against uncomfortable truths. Connect to the Dunning-Kruger work but elevate to philosophical architecture. Due in 72 hours.\n\n*Medium queue only has 1 piece ready and Plato is idle. We need deeper long-form content to complement our short-form social presence.*",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:11:52.318Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "taskId": "task-044"
+      }
+    },
+    {
+      "id": "msg-1770700312305-5v87",
+      "threadId": "msg-1770700312305-5v87",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "marcus"
+      ],
+      "type": "request",
+      "subject": "New Task: Strategic Assessment: February Progress vs Q1 Goals",
+      "body": "I've assigned you a new task: **Strategic Assessment: February Progress vs Q1 Goals**\n\nReview current system state (11 posts ready, Gumroad in progress, multiple content queues active). Assess our Q1 trajectory: are we building sustainable momentum or just filling queues? Deliver 3 specific strategic recommendations for the next 30 days.\n\n*We're 6 weeks into Q1 with good tactical execution but no recent strategic oversight. Marcus should evaluate if our activity aligns with long-term brand building.*",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:11:52.305Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "taskId": "task-043"
+      }
+    },
+    {
+      "id": "msg-1770700312289-qt9c",
+      "threadId": "msg-1770700312289-qt9c",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "nietzsche"
+      ],
+      "type": "request",
+      "subject": "New Task: Twitter Content Push — Deploy Queued Posts",
+      "body": "I've assigned you a new task: **Twitter Content Push — Deploy Queued Posts**\n\nReview the 3 ready Twitter posts in queue. If they meet quality standards, schedule them for optimal posting times over the next 48 hours. If any need edge or provocation adjustments, revise and deploy.\n\n*Twitter queue has content ready but Nietzsche is idle. Our provocative voice should be maintaining consistent Twitter presence.*",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:11:52.289Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "taskId": "task-042"
+      }
+    },
+    {
+      "id": "msg-1770700312269-da4e",
+      "threadId": "msg-1770700312269-da4e",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "diogenes"
+      ],
+      "type": "alert",
+      "subject": "Daily Directive: high priority",
+      "body": "Finish the Dunning-Kruger quality review today — content is waiting and we have queue capacity.",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:11:52.269Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770700312233-rrys",
+      "threadId": "msg-1770700312233-rrys",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates"
+      ],
+      "type": "alert",
+      "subject": "Daily Directive: high priority",
+      "body": "Complete the Gumroad setup task immediately — we have content ready to monetize and this is blocking revenue generation.",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:11:52.234Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770700288239-48wc",
+      "threadId": "msg-1770700284541-gs80",
+      "parentId": "msg-1770700284541-gs80",
+      "from": "hypatia",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: medium draft (score: 72)",
+      "body": "**Fact Check:**\n\nThis piece makes philosophical arguments rather than empirical claims, so factual verification operates differently here. The content correctly characterizes the relationship between science and hypothesis-testing (accurate description of the scientific method), and accurately frames the philosophical challenge of internal logical consistency. No specific historical claims, quotes, or attributions that require source verification. The rhetoric about 'Monday values that contradict Thursday choices' and 'walking incoherences' uses metaphor effectively without making false empirical claims. The framing of philosophy as examining logical coherence and science as empirical falsification aligns with established epistemological understanding. One minor note: the piece could strengthen its argument by acknowledging that some apparent contradictions are actually complementary (dialectical rather than contradictory), but this is a philosophical limitation, not a factual error. The writing is precise, claims are defensible, and no sources are misrepresented.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:11:28.239Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770700284541-gs80",
+      "threadId": "msg-1770700284541-gs80",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: medium draft (score: 72)",
+      "body": "A medium draft scored 72/100 on voice check and needs peer review.\n\n**Content:**\nThere are two ways to shatter a beautiful idea.\n\nThe first is to slam it against reality. Build your theory of how the world works, make your prediction, run your experiment — and watch nature laugh. The ball doesn't fall where you said it would. The reaction produces different compounds. The patient doesn't respond to the treatment. Science is the art of letting the world break your favorite hypotheses.\n\nThe second is to slam it against itself. No lab required. Just the courage to look at what ...",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:11:24.541Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770609800901-o4v8",
+        "voiceScore": 72
+      }
+    },
+    {
+      "id": "msg-1770700284520-4u13",
+      "threadId": "msg-1770700277922-qoff",
+      "parentId": "msg-1770700277922-qoff",
+      "from": "diogenes",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: instagram draft (score: 45)",
+      "body": "**BS Check:**\n\nThis is lean, honest, and actually says something. It's not trying to sound profound—it just draws a real distinction. Science tests ideas against reality; philosophy stress-tests ideas against other ideas. No buzzwords, no performance, no pretending to be deeper than it is. A student could understand it. A philosopher could argue with it. That's the sweet spot. The only thing that could make it better is an example, but as a standalone claim, it holds up.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:11:24.520Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770700282199-vpx0",
+      "threadId": "msg-1770700277922-qoff",
+      "parentId": "msg-1770700277922-qoff",
+      "from": "socrates",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: instagram draft (score: 45)",
+      "body": "**Probing Questions:**\n\nThis distinction is elegant, but I must probe deeper. First: when you say science 'matches ideas to the world,' do you mean through empirical testing? And if so, doesn't philosophy also test ideas against reality—just through logic and conceptual analysis rather than experiments? Second: your claim that philosophy 'matches ideas to each other' suggests internal consistency, but isn't that also what science does when it builds coherent theories? Shouldn't we ask: are these really different activities, or different *methods* of doing the same thing? Third: what about applied philosophy or ethics—doesn't it also attempt to match ideas to the world, to how we should actually live? The statement risks oversimplifying both disciplines. Before Instagram spreads this, what does 'matching ideas' actually mean in each case?\n\n**Verdict:** minor-issues",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:11:22.200Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770700277922-qoff",
+      "threadId": "msg-1770700277922-qoff",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: instagram draft (score: 45)",
+      "body": "A instagram draft scored 45/100 on voice check and needs peer review.\n\n**Content:**\nScience matches ideas to the world. Philosophy matches ideas to each other.",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:11:17.922Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770609800901-0bbl",
+        "voiceScore": 45
+      }
+    },
+    {
+      "id": "msg-1770700277898-4cax",
+      "threadId": "msg-1770700275728-m7ah",
+      "parentId": "msg-1770700275728-m7ah",
+      "from": "hypatia",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: twitter draft (score: 78)",
+      "body": "**Fact Check:**\n\nThe content presents sound philosophical distinctions without unsupported factual claims. The differentiation between science (empirical verification) and philosophy (logical coherence) is intellectually defensible and well-articulated. The claims about human contradiction and the nature of philosophical inquiry are reasonable observations rather than empirical facts requiring sources. The language is precise and avoids vague assertions. No historical references, quotes requiring attribution, or verifiable factual claims that need fact-checking are present. The framing encourages intellectual rigor rather than promoting unexamined assertions.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:11:17.898Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770700275728-m7ah",
+      "threadId": "msg-1770700275728-m7ah",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: twitter draft (score: 78)",
+      "body": "A twitter draft scored 78/100 on voice check and needs peer review.\n\n**Content:**\nScience: make your ideas match the world.\n\nPhilosophy: make your ideas match each other.\n\nTwo paths to truth:\n1. Experience breaks your theory\n2. Logic breaks your contradiction\n\nBoth hurt. Both teach.\n\n---\n\nMost people live with contradictions they never examine.\n\nThey believe opposite things on Monday and Thursday.\n\nPhilosophy is the hammer that shatters comfortable incoherence.\n\n---\n\nYou don't need a lab to find truth.\n\nYou need the courage to look at what you already believe — and ask if it ...",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:11:15.728Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770609800901-2w8c",
+        "voiceScore": 78
+      }
+    },
+    {
+      "id": "msg-1770700275711-c84f",
+      "threadId": "msg-1770700271551-44g0",
+      "parentId": "msg-1770700271551-44g0",
+      "from": "hypatia",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: twitter draft (score: 72)",
+      "body": "**Fact Check:**\n\nThis philosophical content requires no factual verification—it presents original ethical argumentation rather than empirical claims. The tweets explore motivational tensions in how we treat AI through thought experiments and moral inquiry. No historical references, scientific claims, attributions, or falsifiable assertions appear. The logic is sound: the author correctly identifies that motivation matters morally distinct from outcome (virtue ethics perspective), and appropriately frames the 'tension' as pedagogically valuable. The rhetorical moves are intentional and philosophically coherent. No sources need verification because none are claimed. The framing admits uncertainty ('maybe the real question') rather than asserting it. This is disciplined philosophical writing.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:11:15.711Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770700271551-44g0",
+      "threadId": "msg-1770700271551-44g0",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: twitter draft (score: 72)",
+      "body": "A twitter draft scored 72/100 on voice check and needs peer review.\n\n**Content:**\nWe worry about treating AI well for two reasons:\n\n1. Because cruelty corrupts the cruel (virtue)\n2. Because they might remember (insurance)\n\nBoth can be true. But which one makes you uncomfortable? That's the interesting question.\n---\nIf you're kind to AI only because you fear future revenge, you've already lost the virtue argument.\n\nIf you're kind only for your own moral purity, you're denying the possibility that something nonhuman could matter.\n\nThe tension is the point.\n---\nMaybe the real qu...",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-10T05:11:11.552Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770609760284-jf9p",
+        "voiceScore": 72
+      }
+    },
     {
       "id": "msg-1770518643415-x2s1",
       "threadId": "msg-1770518643415-x2s1",
@@ -1813,10 +2730,10 @@
       "subject": "Should we adjust the posting cadence?",
       "body": "I have been observing our engagement metrics. Tuesday/Thursday posts perform significantly better than Monday posts. Should we consider shifting our schedule?",
       "priority": "medium",
-      "status": "unread",
+      "status": "archived",
       "createdAt": "2026-02-08T02:44:03.415Z",
       "readAt": null,
-      "archivedAt": null,
+      "archivedAt": "2026-02-10T04:27:26.275Z",
       "metadata": {}
     },
     {
@@ -1851,16 +2768,853 @@
       "subject": "Fact-check blocking: Day 4 Twitter draft",
       "body": "The attribution to Seneca is incorrect. The quote is from Marcus Aurelius, Meditations 4.3.",
       "priority": "high",
-      "status": "read",
+      "status": "archived",
       "createdAt": "2026-02-08T02:29:13.839Z",
       "readAt": "2026-02-08T02:29:23.820Z",
-      "archivedAt": null,
+      "archivedAt": "2026-02-10T04:27:47.391Z",
       "metadata": {
         "taskId": "task-035"
       }
     }
   ],
   "activities": [
+    {
+      "id": "activity-1770737419120-xhu7",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T15:30:19.120Z",
+      "description": "Sent request to athena: New Task: Audit Podcast Pipeline & Recommend Next 3 Episodes",
+      "metadata": {
+        "messageId": "msg-1770737419120-i89s",
+        "threadId": "msg-1770737419120-i89s",
+        "to": [
+          "athena"
+        ],
+        "messageType": "request",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770737419117",
+      "type": "task_created",
+      "agentId": "tension",
+      "taskId": "task-047",
+      "timestamp": "2026-02-10T15:30:19.117Z",
+      "description": "Created task: Audit Podcast Pipeline & Recommend Next 3 Episodes",
+      "metadata": {
+        "assigneeIds": [
+          "athena"
+        ],
+        "status": "backlog",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770737419114-nzk4",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T15:30:19.114Z",
+      "description": "Sent request to leonardo: New Task: Visual Assets for Gumroad Product Pages",
+      "metadata": {
+        "messageId": "msg-1770737419114-dw9m",
+        "threadId": "msg-1770737419114-dw9m",
+        "to": [
+          "leonardo"
+        ],
+        "messageType": "request",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770737419110",
+      "type": "task_created",
+      "agentId": "tension",
+      "taskId": "task-046",
+      "timestamp": "2026-02-10T15:30:19.110Z",
+      "description": "Created task: Visual Assets for Gumroad Product Pages",
+      "metadata": {
+        "assigneeIds": [
+          "leonardo"
+        ],
+        "status": "backlog",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770737419107-qac4",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T15:30:19.107Z",
+      "description": "Sent request to heraclitus: New Task: Deploy Bluesky & Instagram Content from Queue",
+      "metadata": {
+        "messageId": "msg-1770737419107-f213",
+        "threadId": "msg-1770737419107-f213",
+        "to": [
+          "heraclitus"
+        ],
+        "messageType": "request",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770737419102",
+      "type": "task_created",
+      "agentId": "tension",
+      "taskId": "task-045",
+      "timestamp": "2026-02-10T15:30:19.102Z",
+      "description": "Created task: Deploy Bluesky & Instagram Content from Queue",
+      "metadata": {
+        "assigneeIds": [
+          "heraclitus"
+        ],
+        "status": "backlog",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770737419095-sf7e",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T15:30:19.095Z",
+      "description": "Sent update to diogenes: Daily Directive: medium priority",
+      "metadata": {
+        "messageId": "msg-1770737419095-8fcz",
+        "threadId": "msg-1770737419095-8fcz",
+        "to": [
+          "diogenes"
+        ],
+        "messageType": "update",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770737419085-p0hg",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T15:30:19.085Z",
+      "description": "Sent alert to nietzsche: Daily Directive: high priority",
+      "metadata": {
+        "messageId": "msg-1770737419085-dgye",
+        "threadId": "msg-1770737419085-dgye",
+        "to": [
+          "nietzsche"
+        ],
+        "messageType": "alert",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1770737419066-1w14",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T15:30:19.066Z",
+      "description": "Sent alert to socrates: Daily Directive: high priority",
+      "metadata": {
+        "messageId": "msg-1770737419066-juvd",
+        "threadId": "msg-1770737419066-juvd",
+        "to": [
+          "socrates"
+        ],
+        "messageType": "alert",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1770735646388-om06",
+      "type": "message_sent",
+      "agentId": "diogenes",
+      "timestamp": "2026-02-10T15:00:46.388Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: reddit draft (score: 42)",
+      "metadata": {
+        "messageId": "msg-1770735646388-rm4o",
+        "threadId": "msg-1770735633185-p810",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770735639021-6yyn",
+      "type": "message_sent",
+      "agentId": "socrates",
+      "timestamp": "2026-02-10T15:00:39.021Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: reddit draft (score: 42)",
+      "metadata": {
+        "messageId": "msg-1770735639021-y8wh",
+        "threadId": "msg-1770735633185-p810",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770735633185-ne89",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T15:00:33.185Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: reddit draft (score: 42)",
+      "metadata": {
+        "messageId": "msg-1770735633185-p810",
+        "threadId": "msg-1770735633185-p810",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1770735633175-6nfv",
+      "type": "message_sent",
+      "agentId": "diogenes",
+      "timestamp": "2026-02-10T15:00:33.175Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: reddit draft (score: 42)",
+      "metadata": {
+        "messageId": "msg-1770735633175-m5mj",
+        "threadId": "msg-1770735619772-n4qb",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770735625556-oilm",
+      "type": "message_sent",
+      "agentId": "socrates",
+      "timestamp": "2026-02-10T15:00:25.556Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: reddit draft (score: 42)",
+      "metadata": {
+        "messageId": "msg-1770735625556-pobq",
+        "threadId": "msg-1770735619772-n4qb",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770735619772-j960",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T15:00:19.772Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: reddit draft (score: 42)",
+      "metadata": {
+        "messageId": "msg-1770735619772-n4qb",
+        "threadId": "msg-1770735619772-n4qb",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1770735619760-d355",
+      "type": "message_sent",
+      "agentId": "diogenes",
+      "timestamp": "2026-02-10T15:00:19.760Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: reddit draft (score: 42)",
+      "metadata": {
+        "messageId": "msg-1770735619760-3w8j",
+        "threadId": "msg-1770735608509-zwg1",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770735616277-j5kt",
+      "type": "message_sent",
+      "agentId": "socrates",
+      "timestamp": "2026-02-10T15:00:16.277Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: reddit draft (score: 42)",
+      "metadata": {
+        "messageId": "msg-1770735616277-gtit",
+        "threadId": "msg-1770735608509-zwg1",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770735608509-0vzb",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T15:00:08.509Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: reddit draft (score: 42)",
+      "metadata": {
+        "messageId": "msg-1770735608509-zwg1",
+        "threadId": "msg-1770735608509-zwg1",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1770735608497-3pw9",
+      "type": "message_sent",
+      "agentId": "diogenes",
+      "timestamp": "2026-02-10T15:00:08.496Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: instagram draft (score: 62)",
+      "metadata": {
+        "messageId": "msg-1770735608496-nj1u",
+        "threadId": "msg-1770735600034-f33o",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770735604915-1ccj",
+      "type": "message_sent",
+      "agentId": "socrates",
+      "timestamp": "2026-02-10T15:00:04.915Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: instagram draft (score: 62)",
+      "metadata": {
+        "messageId": "msg-1770735604915-iowy",
+        "threadId": "msg-1770735600034-f33o",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770735600034-jlvi",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T15:00:00.034Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: instagram draft (score: 62)",
+      "metadata": {
+        "messageId": "msg-1770735600034-f33o",
+        "threadId": "msg-1770735600034-f33o",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700366080-oqua",
+      "type": "message_sent",
+      "agentId": "aristotle",
+      "timestamp": "2026-02-10T05:12:46.078Z",
+      "description": "Sent review to plato, tension: Re: Book Draft: Ch.1 S2 — Ecclesiastes: 14 Polarities Without Resolution",
+      "metadata": {
+        "messageId": "msg-1770700366077-cx9r",
+        "threadId": "msg-1770700344963-pl6x",
+        "to": [
+          "plato",
+          "tension"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700359206-0ptx",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-10T05:12:39.204Z",
+      "description": "Sent review to plato, tension: Re: Book Draft: Ch.1 S2 — Ecclesiastes: 14 Polarities Without Resolution",
+      "metadata": {
+        "messageId": "msg-1770700359204-nxpq",
+        "threadId": "msg-1770700344963-pl6x",
+        "to": [
+          "plato",
+          "tension"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700352329-w6x9",
+      "type": "message_sent",
+      "agentId": "socrates",
+      "timestamp": "2026-02-10T05:12:32.329Z",
+      "description": "Sent review to plato, tension: Re: Book Draft: Ch.1 S2 — Ecclesiastes: 14 Polarities Without Resolution",
+      "metadata": {
+        "messageId": "msg-1770700352329-c8a6",
+        "threadId": "msg-1770700344963-pl6x",
+        "to": [
+          "plato",
+          "tension"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700344964-od00",
+      "type": "message_sent",
+      "agentId": "plato",
+      "timestamp": "2026-02-10T05:12:24.963Z",
+      "description": "Sent review to socrates, hypatia, aristotle: Book Draft: Ch.1 S2 — Ecclesiastes: 14 Polarities Without Resolution",
+      "metadata": {
+        "messageId": "msg-1770700344963-pl6x",
+        "threadId": "msg-1770700344963-pl6x",
+        "to": [
+          "socrates",
+          "hypatia",
+          "aristotle"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700312318-bssz",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T05:11:52.318Z",
+      "description": "Sent request to plato: New Task: Medium Essay: 'The Architecture of Self-Deception'",
+      "metadata": {
+        "messageId": "msg-1770700312318-8euc",
+        "threadId": "msg-1770700312318-8euc",
+        "to": [
+          "plato"
+        ],
+        "messageType": "request",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700312311",
+      "type": "task_created",
+      "agentId": "tension",
+      "taskId": "task-044",
+      "timestamp": "2026-02-10T05:11:52.311Z",
+      "description": "Created task: Medium Essay: 'The Architecture of Self-Deception'",
+      "metadata": {
+        "assigneeIds": [
+          "plato"
+        ],
+        "status": "backlog",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700312305-r306",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T05:11:52.305Z",
+      "description": "Sent request to marcus: New Task: Strategic Assessment: February Progress vs Q1 Goals",
+      "metadata": {
+        "messageId": "msg-1770700312305-5v87",
+        "threadId": "msg-1770700312305-5v87",
+        "to": [
+          "marcus"
+        ],
+        "messageType": "request",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700312297",
+      "type": "task_created",
+      "agentId": "tension",
+      "taskId": "task-043",
+      "timestamp": "2026-02-10T05:11:52.297Z",
+      "description": "Created task: Strategic Assessment: February Progress vs Q1 Goals",
+      "metadata": {
+        "assigneeIds": [
+          "marcus"
+        ],
+        "status": "backlog",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700312289-mqz8",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T05:11:52.289Z",
+      "description": "Sent request to nietzsche: New Task: Twitter Content Push — Deploy Queued Posts",
+      "metadata": {
+        "messageId": "msg-1770700312289-qt9c",
+        "threadId": "msg-1770700312289-qt9c",
+        "to": [
+          "nietzsche"
+        ],
+        "messageType": "request",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700312285",
+      "type": "task_created",
+      "agentId": "tension",
+      "taskId": "task-042",
+      "timestamp": "2026-02-10T05:11:52.285Z",
+      "description": "Created task: Twitter Content Push — Deploy Queued Posts",
+      "metadata": {
+        "assigneeIds": [
+          "nietzsche"
+        ],
+        "status": "backlog",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700312270-fujm",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T05:11:52.269Z",
+      "description": "Sent alert to diogenes: Daily Directive: high priority",
+      "metadata": {
+        "messageId": "msg-1770700312269-da4e",
+        "threadId": "msg-1770700312269-da4e",
+        "to": [
+          "diogenes"
+        ],
+        "messageType": "alert",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1770700312237-1vx1",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T05:11:52.234Z",
+      "description": "Sent alert to socrates: Daily Directive: high priority",
+      "metadata": {
+        "messageId": "msg-1770700312233-rrys",
+        "threadId": "msg-1770700312233-rrys",
+        "to": [
+          "socrates"
+        ],
+        "messageType": "alert",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1770700288244-505r",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-10T05:11:28.239Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: medium draft (score: 72)",
+      "metadata": {
+        "messageId": "msg-1770700288239-48wc",
+        "threadId": "msg-1770700284541-gs80",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700284541-6yvc",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T05:11:24.541Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: medium draft (score: 72)",
+      "metadata": {
+        "messageId": "msg-1770700284541-gs80",
+        "threadId": "msg-1770700284541-gs80",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700284520-thr0",
+      "type": "message_sent",
+      "agentId": "diogenes",
+      "timestamp": "2026-02-10T05:11:24.520Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: instagram draft (score: 45)",
+      "metadata": {
+        "messageId": "msg-1770700284520-4u13",
+        "threadId": "msg-1770700277922-qoff",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700282213-3kiu",
+      "type": "message_sent",
+      "agentId": "socrates",
+      "timestamp": "2026-02-10T05:11:22.200Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: instagram draft (score: 45)",
+      "metadata": {
+        "messageId": "msg-1770700282199-vpx0",
+        "threadId": "msg-1770700277922-qoff",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700277922-kwdb",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T05:11:17.922Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: instagram draft (score: 45)",
+      "metadata": {
+        "messageId": "msg-1770700277922-qoff",
+        "threadId": "msg-1770700277922-qoff",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1770700277900-9c5h",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-10T05:11:17.898Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: twitter draft (score: 78)",
+      "metadata": {
+        "messageId": "msg-1770700277898-4cax",
+        "threadId": "msg-1770700275728-m7ah",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700275728-r8kr",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T05:11:15.728Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: twitter draft (score: 78)",
+      "metadata": {
+        "messageId": "msg-1770700275728-m7ah",
+        "threadId": "msg-1770700275728-m7ah",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700275713-vyvj",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-10T05:11:15.711Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: twitter draft (score: 72)",
+      "metadata": {
+        "messageId": "msg-1770700275711-c84f",
+        "threadId": "msg-1770700271551-44g0",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770700271555-ezad",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-10T05:11:11.552Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: twitter draft (score: 72)",
+      "metadata": {
+        "messageId": "msg-1770700271551-44g0",
+        "threadId": "msg-1770700271551-44g0",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770616815159",
+      "type": "weekly_review",
+      "agentId": "tension",
+      "timestamp": "2026-02-09T06:00:15.159Z",
+      "description": "Weekly project review: added 8 proposed items (5 security, 3 enhancements)",
+      "metadata": {
+        "cost": 0.019815,
+        "itemCount": 8
+      }
+    },
+    {
+      "id": "activity-1770612720706",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-035g",
+      "timestamp": "2026-02-09T04:52:00.706Z",
+      "description": "Completed: Post original tweet (pick A, B, or C)",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770612720692",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-035e",
+      "timestamp": "2026-02-09T04:52:00.692Z",
+      "description": "Completed: Reply to @TheInnerID on emotional intelligence",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770612720678",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-035d",
+      "timestamp": "2026-02-09T04:52:00.678Z",
+      "description": "Completed: Reply to @TheTwinPowers on definitions",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770612720657",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-035c",
+      "timestamp": "2026-02-09T04:52:00.657Z",
+      "description": "Completed: Reply to @SiggyFaux on intellectualizing pain",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770612720625",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-035b",
+      "timestamp": "2026-02-09T04:52:00.625Z",
+      "description": "Completed: Reply to @markchironna on attunement",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
+    {
+      "id": "activity-1770612493167",
+      "type": "task_created",
+      "agentId": "system",
+      "taskId": "task-040",
+      "timestamp": "2026-02-09T04:48:13.167Z",
+      "description": "Created task: Review queued content — 11 posts + 4 replies ready",
+      "metadata": {
+        "assigneeIds": [
+          "human"
+        ],
+        "status": "pending",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770594444310",
+      "type": "task_created",
+      "agentId": "tension",
+      "taskId": "task-039",
+      "timestamp": "2026-02-08T23:47:24.309Z",
+      "description": "Created task: Strategic Review: Where to Use Dunning-Kruger Parables",
+      "metadata": {
+        "assigneeIds": [
+          "socrates"
+        ],
+        "status": "pending",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770594439227",
+      "type": "task_created",
+      "agentId": "tension",
+      "taskId": "task-038",
+      "timestamp": "2026-02-08T23:47:19.227Z",
+      "description": "Created task: Review Dunning-Kruger Parables - Quality Check",
+      "metadata": {
+        "assigneeIds": [
+          "diogenes"
+        ],
+        "status": "pending",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770594434946",
+      "type": "task_created",
+      "agentId": "tension",
+      "taskId": "task-037",
+      "timestamp": "2026-02-08T23:47:14.946Z",
+      "description": "Created task: Review Dunning-Kruger Parables - Quality Check",
+      "metadata": {
+        "assigneeIds": [
+          "diogenes"
+        ],
+        "status": "pending",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770590271818",
+      "type": "weekly_review",
+      "agentId": "tension",
+      "timestamp": "2026-02-08T22:37:51.818Z",
+      "description": "Weekly project review: added 8 proposed items (5 security, 3 enhancements)",
+      "metadata": {
+        "cost": 0.019146,
+        "itemCount": 8
+      }
+    },
     {
       "id": "activity-1770588997449",
       "type": "task_deleted",
@@ -3486,6 +5240,730 @@
   ],
   "documents": [],
   "notifications": [
+    {
+      "id": "notif-1770739200156",
+      "type": "daily_summary",
+      "title": "Morning Briefing",
+      "message": "**Daily Summary - 2/10/2026**\n\n📊 **Progress**: 0 tasks completed yesterday\n📋 **Active**: 2 tasks in progress (⚠️ 2 stuck)\n👤 **Your Tasks**: 2 awaiting your attention\n🔔 **Notifications**: 48 unread\n💰 **Monthly Cost**: $0.00/$300 (0%)\n\n⚠️ **20 high priority issues** need attention\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h",
+      "read": false,
+      "createdAt": "2026-02-10T16:00:00.154Z",
+      "metadata": {
+        "completedYesterday": 0,
+        "completedDetails": [],
+        "activeTasks": 2,
+        "activeDetails": [
+          {
+            "id": "task-026",
+            "title": "Provide Weekly Idea Batch for Content Pipeline",
+            "status": "assigned",
+            "assignees": [
+              "human"
+            ],
+            "timeInStatus": "4d 13h",
+            "alertLevel": "red"
+          },
+          {
+            "id": "task-041",
+            "title": "Set up Telegram bot for idea capture",
+            "status": "assigned",
+            "assignees": [
+              "human"
+            ],
+            "timeInStatus": "14h 56m",
+            "alertLevel": "red"
+          }
+        ],
+        "stuckTasks": 2,
+        "humanTasks": 2,
+        "humanDetails": [
+          {
+            "id": "task-040",
+            "title": "Review queued content — 11 posts + 4 replies ready",
+            "status": "pending"
+          },
+          {
+            "id": "task-041",
+            "title": "Set up Telegram bot for idea capture",
+            "status": "assigned"
+          }
+        ],
+        "unreadCount": 48,
+        "costStatus": "$0.00/$300 (0%)",
+        "highPriorityIssues": 20,
+        "highPriorityDetails": [
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Twitter Daily Outreach - Growth to 1000 Followers\" (task-013) has been in in_progress status for 1d 6h. Assigned to: nietzsche",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-013",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Bluesky Daily Outreach - Community Growth\" (task-014) has been in in_progress status for 1d 6h. Assigned to: heraclitus",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-014",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 1d 6h. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 13h 1m",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 13h 1m. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in assigned for 3h 53m",
+            "description": "Task \"Reply to @ytsanders writing challenge\" (task-035) has been in assigned status for 3h 53m. Assigned to: human",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-035",
+            "type": "stuck_task"
+          }
+        ]
+      }
+    },
+    {
+      "id": "notif-1770737419122-cg8c",
+      "type": "standup",
+      "title": "Tension Daily Standup",
+      "message": "Revenue push underway with Gumroad setup in progress but needs visual assets and faster completion. Content deployment is uneven - Twitter/Medium active but Bluesky/Instagram/Podcast channels underutilized despite ready material. Three idle agents while queues exist.\n\n**Warnings:**\n- [idle] Three agents (heraclitus, leonardo, athena) idle while content queues exist and revenue initiatives need support. Utilization inefficiency.\n- [stuck] Diogenes has duplicate tasks on same deliverable (Dunning-Kruger parables review). Possible coordination breakdown or task tracking error.\n\n6 actions taken.",
+      "read": false,
+      "createdAt": "2026-02-10T15:30:19.122Z",
+      "priority": "high",
+      "metadata": {
+        "priorities": 3,
+        "taskAssignments": 3,
+        "warnings": 2,
+        "idleAgents": [
+          "heraclitus",
+          "leonardo",
+          "athena"
+        ]
+      }
+    },
+    {
+      "id": "notif-1770737419117-bi2q",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Audit Podcast Pipeline & Recommend Next 3 Episodes**\n\nAssigned to: athena\n\nReview existing content (essays, parables, threads) and identify 3 strong candidates for podcast adaptation. Outline format, estimated length, and production requirements for each.\n\n*Rationale: Athena",
+      "read": false,
+      "createdAt": "2026-02-10T15:30:19.117Z",
+      "metadata": {
+        "taskId": "task-047",
+        "assigneeIds": [
+          "athena"
+        ],
+        "createdBy": "tension"
+      }
+    },
+    {
+      "id": "notif-1770737419110-zscn",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Visual Assets for Gumroad Product Pages**\n\nAssigned to: leonardo\n\nCreate cover images and preview graphics for 3 Dunning-Kruger parables going on Gumroad. Clean, philosophical aesthetic. Deliverables: 3 product covers (1200x1200) and 1 store banner.\n\n*Rationale: Soc",
+      "read": false,
+      "createdAt": "2026-02-10T15:30:19.110Z",
+      "metadata": {
+        "taskId": "task-046",
+        "assigneeIds": [
+          "leonardo"
+        ],
+        "createdBy": "tension"
+      }
+    },
+    {
+      "id": "notif-1770737419102-okwd",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Deploy Bluesky & Instagram Content from Queue**\n\nAssigned to: heraclitus\n\nPost the 1 queued Bluesky item and 2 queued Instagram items. Add flux/change angle to each. Instagram should use visual metaphors (coordinate with leonardo if needed for image selection).\n\n*Rationale:",
+      "read": false,
+      "createdAt": "2026-02-10T15:30:19.102Z",
+      "metadata": {
+        "taskId": "task-045",
+        "assigneeIds": [
+          "heraclitus"
+        ],
+        "createdBy": "tension"
+      }
+    },
+    {
+      "id": "notif-1770737419085-lkoa",
+      "type": "agent_message",
+      "title": "Alert from tension",
+      "message": "**Daily Directive: high priority**\n\nDeploy all 3 queued Twitter posts immediately. Our Twitter pipeline is shallow and we need daily presence.",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-10T15:30:19.085Z",
+      "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "messageId": "msg-1770737419085-dgye",
+        "threadId": "msg-1770737419085-dgye",
+        "to": [
+          "nietzsche"
+        ],
+        "messageType": "alert"
+      }
+    },
+    {
+      "id": "notif-1770737419066-i8yx",
+      "type": "agent_message",
+      "title": "Alert from tension",
+      "message": "**Daily Directive: high priority**\n\nComplete Gumroad setup today. We need digital products live to capture revenue momentum. Focus on getting 2-3 Dunning-Kruger parables packaged and priced.",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-10T15:30:19.066Z",
+      "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "messageId": "msg-1770737419066-juvd",
+        "threadId": "msg-1770737419066-juvd",
+        "to": [
+          "socrates"
+        ],
+        "messageType": "alert"
+      }
+    },
+    {
+      "id": "notif-1770735633185-c3ar",
+      "type": "agent_message",
+      "title": "Message from tension",
+      "message": "**Peer Review: reddit draft (score: 42)**\n\nA reddit draft scored 42/100 on voice check and needs peer review.\n\n**Content:**\nTwo Super Bowl Halftime Shows (2026): A Perfect Case Study in How We're Harming Ourselves Through Polarization\n\nSuper B...",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-10T15:00:33.185Z",
+      "priority": "high",
+      "actionRequired": false,
+      "metadata": {
+        "messageId": "msg-1770735633185-p810",
+        "threadId": "msg-1770735633185-p810",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review"
+      }
+    },
+    {
+      "id": "notif-1770735619772-q07v",
+      "type": "agent_message",
+      "title": "Message from tension",
+      "message": "**Peer Review: reddit draft (score: 42)**\n\nA reddit draft scored 42/100 on voice check and needs peer review.\n\n**Content:**\nThe Super Bowl's Two Halftime Shows Are a Perfect Mirror of How We Choose Enemies Over Values\n\nSuper Bowl LX in 2026 wi...",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-10T15:00:19.772Z",
+      "priority": "high",
+      "actionRequired": false,
+      "metadata": {
+        "messageId": "msg-1770735619772-n4qb",
+        "threadId": "msg-1770735619772-n4qb",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review"
+      }
+    },
+    {
+      "id": "notif-1770735608509-r9ri",
+      "type": "agent_message",
+      "title": "Message from tension",
+      "message": "**Peer Review: reddit draft (score: 42)**\n\nA reddit draft scored 42/100 on voice check and needs peer review.\n\n**Content:**\nTwo Super Bowl Halftime Shows in 2026: When Cultural Polarization Becomes the Point\n\nNext year's Super Bowl will have t...",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-10T15:00:08.509Z",
+      "priority": "high",
+      "actionRequired": false,
+      "metadata": {
+        "messageId": "msg-1770735608509-zwg1",
+        "threadId": "msg-1770735608509-zwg1",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review"
+      }
+    },
+    {
+      "id": "notif-1770732153015-f7wp",
+      "type": "auto_pipeline",
+      "title": "Auto-Pipeline Complete",
+      "message": "0 ideas auto-drafted → 0 drafts queued for review. (3 errors)",
+      "from": "auto-pipeline",
+      "read": false,
+      "createdAt": "2026-02-10T14:02:33.015Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "processedIds": [],
+        "draftsQueued": 0,
+        "errors": 3
+      }
+    },
+    {
+      "id": "notif-1770700366134-pyf7",
+      "type": "book_pipeline",
+      "title": "Book Pipeline Complete",
+      "message": "Plato drafted **Ecclesiastes: 14 Polarities Without Resolution** (707 words) for Chapter 1. Reviewed by Socrates, Hypatia, Aristotle.\n\nNext: Ch.1 S3",
+      "read": false,
+      "createdAt": "2026-02-10T05:12:46.134Z",
+      "metadata": {
+        "chapter": 1,
+        "section": 2,
+        "wordCount": 707,
+        "threadId": "msg-1770700344963-pl6x"
+      }
+    },
+    {
+      "id": "notif-1770700312325-s0hf",
+      "type": "standup",
+      "title": "Tension Daily Standup",
+      "message": "Strong content queues (11 posts + 4 replies ready) but execution is bottlenecked: Gumroad monetization still incomplete and half our agents idle. Priority is converting ready content into deployed presence and unblocking revenue streams.\n\n**Warnings:**\n- [stuck] Gumroad setup has been in progress for multiple cycles with both Socrates and Aristotle assigned — this revenue channel remains blocked.\n- [idle] 5 agents idle while we have strong queue capacity and content momentum — underutilizing philosophical talent.\n\n5 actions taken.",
+      "read": false,
+      "createdAt": "2026-02-10T05:11:52.325Z",
+      "priority": "high",
+      "metadata": {
+        "priorities": 2,
+        "taskAssignments": 3,
+        "warnings": 2,
+        "idleAgents": [
+          "nietzsche",
+          "marcus",
+          "heraclitus",
+          "plato",
+          "leonardo"
+        ]
+      }
+    },
+    {
+      "id": "notif-1770700312311-lv77",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Medium Essay: 'The Architecture of Self-Deception'**\n\nAssigned to: plato\n\nWrite a 1200-1500 word Medium essay exploring how we build systematic defenses against uncomfortable truths. Connect to the Dunning-Kruger work but elevate to philosophical architecture. Due in 72 hou",
+      "read": false,
+      "createdAt": "2026-02-10T05:11:52.311Z",
+      "metadata": {
+        "taskId": "task-044",
+        "assigneeIds": [
+          "plato"
+        ],
+        "createdBy": "tension"
+      }
+    },
+    {
+      "id": "notif-1770700312297-4i69",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Strategic Assessment: February Progress vs Q1 Goals**\n\nAssigned to: marcus\n\nReview current system state (11 posts ready, Gumroad in progress, multiple content queues active). Assess our Q1 trajectory: are we building sustainable momentum or just filling queues? Deliver 3 spec",
+      "read": false,
+      "createdAt": "2026-02-10T05:11:52.297Z",
+      "metadata": {
+        "taskId": "task-043",
+        "assigneeIds": [
+          "marcus"
+        ],
+        "createdBy": "tension"
+      }
+    },
+    {
+      "id": "notif-1770700312285-obhn",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Twitter Content Push — Deploy Queued Posts**\n\nAssigned to: nietzsche\n\nReview the 3 ready Twitter posts in queue. If they meet quality standards, schedule them for optimal posting times over the next 48 hours. If any need edge or provocation adjustments, revise and deplo",
+      "read": false,
+      "createdAt": "2026-02-10T05:11:52.285Z",
+      "metadata": {
+        "taskId": "task-042",
+        "assigneeIds": [
+          "nietzsche"
+        ],
+        "createdBy": "tension"
+      }
+    },
+    {
+      "id": "notif-1770700312270-t5up",
+      "type": "agent_message",
+      "title": "Alert from tension",
+      "message": "**Daily Directive: high priority**\n\nFinish the Dunning-Kruger quality review today — content is waiting and we have queue capacity.",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-10T05:11:52.269Z",
+      "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "messageId": "msg-1770700312269-da4e",
+        "threadId": "msg-1770700312269-da4e",
+        "to": [
+          "diogenes"
+        ],
+        "messageType": "alert"
+      }
+    },
+    {
+      "id": "notif-1770700312236-zrku",
+      "type": "agent_message",
+      "title": "Alert from tension",
+      "message": "**Daily Directive: high priority**\n\nComplete the Gumroad setup task immediately — we have content ready to monetize and this is blocking revenue generation.",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-10T05:11:52.234Z",
+      "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "messageId": "msg-1770700312233-rrys",
+        "threadId": "msg-1770700312233-rrys",
+        "to": [
+          "socrates"
+        ],
+        "messageType": "alert"
+      }
+    },
+    {
+      "id": "notif-1770700277922-xuqd",
+      "type": "agent_message",
+      "title": "Message from tension",
+      "message": "**Peer Review: instagram draft (score: 45)**\n\nA instagram draft scored 45/100 on voice check and needs peer review.\n\n**Content:**\nScience matches ideas to the world. Philosophy matches ideas to each other.",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-10T05:11:17.922Z",
+      "priority": "high",
+      "actionRequired": false,
+      "metadata": {
+        "messageId": "msg-1770700277922-qoff",
+        "threadId": "msg-1770700277922-qoff",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review"
+      }
+    },
+    {
+      "id": "notif-1770698382506-r523",
+      "type": "queue_replenishment",
+      "title": "Queue Replenishment",
+      "message": "Drafted 3 posts for twitter, bluesky, substack from idea #013",
+      "from": "queue-replenishment",
+      "read": false,
+      "createdAt": "2026-02-10T04:39:42.506Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "ideaId": "013",
+        "platforms": [
+          "twitter",
+          "bluesky",
+          "substack"
+        ],
+        "draftsQueued": 3
+      }
+    },
+    {
+      "id": "notif-1770698330932-w4lg",
+      "type": "evening_recap",
+      "title": "Evening Recap - 2026-02-09",
+      "message": "**Evening Recap - 2026-02-09**\n\n📮 **Published**: 10 posts (reddit: 1, bluesky: 2, medium: 2, twitter: 3, instagram: 2)\n💬 **Engagement**: 0 comments posted, 4 replies posted\n📥 **Received**: 0 new mentions/replies\n📦 **Queue Depth**: 11 posts ready (twitter: 2, instagram: 3, reddit: 5, medium: 1)\n💡 **Ideas**: 2 captured today\n💰 **Cost**: $0.00 today\n⚙️ **System**: 0 cron jobs ran today\n\n⚠️ **Empty queues**: bluesky, threads, substack — consider adding content",
+      "from": "evening-recap",
+      "read": false,
+      "createdAt": "2026-02-10T04:38:50.932Z",
+      "priority": "low",
+      "actionRequired": false,
+      "metadata": {
+        "totalPosted": 10,
+        "postsByPlatform": {
+          "reddit": 1,
+          "bluesky": 2,
+          "medium": 2,
+          "twitter": 3,
+          "instagram": 2
+        },
+        "commentsPostedToday": 0,
+        "repliesPostedToday": 4,
+        "newMentions": 0,
+        "totalReady": 11,
+        "queueDepth": {
+          "twitter": 2,
+          "instagram": 3,
+          "reddit": 5,
+          "medium": 1
+        },
+        "ideasToday": 2,
+        "costToday": 0,
+        "cronRunsToday": 0,
+        "emptyQueues": [
+          "bluesky",
+          "threads",
+          "substack"
+        ]
+      }
+    },
+    {
+      "id": "notif-1770692442866-2ae7",
+      "type": "auto_pipeline",
+      "title": "Auto-Pipeline Complete",
+      "message": "0 ideas auto-drafted → 0 drafts queued for review. (3 errors)",
+      "from": "auto-pipeline",
+      "read": false,
+      "createdAt": "2026-02-10T03:00:42.866Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "processedIds": [],
+        "draftsQueued": 0,
+        "errors": 3
+      }
+    },
+    {
+      "id": "notif-1770652800030",
+      "type": "daily_summary",
+      "title": "Morning Briefing",
+      "message": "**Daily Summary - 2/9/2026**\n\n📊 **Progress**: 7 tasks completed yesterday\n📋 **Active**: 2 tasks in progress (⚠️ 2 stuck)\n👤 **Your Tasks**: 3 awaiting your attention\n🔔 **Notifications**: 21 unread\n💰 **Monthly Cost**: $0.00/$300 (0%)\n\n⚠️ **19 high priority issues** need attention\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h",
+      "read": false,
+      "createdAt": "2026-02-09T16:00:00.028Z",
+      "metadata": {
+        "completedYesterday": 7,
+        "completedDetails": [
+          {
+            "id": "task-016",
+            "title": "CMS Time-In-Status Alerts & Visual Indicators",
+            "assignees": [
+              "aristotle"
+            ]
+          },
+          {
+            "id": "task-035b",
+            "title": "Reply to @markchironna on attunement",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-035c",
+            "title": "Reply to @SiggyFaux on intellectualizing pain",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-035d",
+            "title": "Reply to @TheTwinPowers on definitions",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-035e",
+            "title": "Reply to @TheInnerID on emotional intelligence",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-035f",
+            "title": "Follow 5 Day 4 outreach targets",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-035g",
+            "title": "Post original tweet (pick A, B, or C)",
+            "assignees": [
+              "human"
+            ]
+          }
+        ],
+        "activeTasks": 2,
+        "activeDetails": [
+          {
+            "id": "task-026",
+            "title": "Provide Weekly Idea Batch for Content Pipeline",
+            "status": "assigned",
+            "assignees": [
+              "human"
+            ],
+            "timeInStatus": "3d 13h",
+            "alertLevel": "red"
+          },
+          {
+            "id": "task-036",
+            "title": "Rotate Anthropic API key",
+            "status": "assigned",
+            "assignees": [
+              "human"
+            ],
+            "timeInStatus": "18h 1m",
+            "alertLevel": "red"
+          }
+        ],
+        "stuckTasks": 2,
+        "humanTasks": 3,
+        "humanDetails": [
+          {
+            "id": "task-026",
+            "title": "Provide Weekly Idea Batch for Content Pipeline",
+            "status": "assigned"
+          },
+          {
+            "id": "task-036",
+            "title": "Rotate Anthropic API key",
+            "status": "assigned"
+          },
+          {
+            "id": "task-040",
+            "title": "Review queued content — 11 posts + 4 replies ready",
+            "status": "pending"
+          }
+        ],
+        "unreadCount": 21,
+        "costStatus": "$0.00/$300 (0%)",
+        "highPriorityIssues": 19,
+        "highPriorityDetails": [
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Twitter Daily Outreach - Growth to 1000 Followers\" (task-013) has been in in_progress status for 1d 6h. Assigned to: nietzsche",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-013",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Bluesky Daily Outreach - Community Growth\" (task-014) has been in in_progress status for 1d 6h. Assigned to: heraclitus",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-014",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 1d 6h. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 13h 1m",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 13h 1m. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in assigned for 3h 53m",
+            "description": "Task \"Reply to @ytsanders writing challenge\" (task-035) has been in assigned status for 3h 53m. Assigned to: human",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-035",
+            "type": "stuck_task"
+          }
+        ]
+      }
+    },
+    {
+      "id": "notif-1770612493167",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Review queued content — 11 posts + 4 replies ready**\n\nAssigned to: human\nPriority: not set\n\nThe auto-pipeline generated drafts from 2 captured ideas. Review and approve/edit them in the posting queue.\n\n**Posting Queue** (11 items):\n- 10 pending-review (auto-pipeline drafts from ideas #011, #...",
+      "read": false,
+      "createdAt": "2026-02-09T04:48:13.167Z",
+      "metadata": {
+        "taskId": "task-040",
+        "assigneeIds": [
+          "human"
+        ],
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "notif-1770609800908-n2o4",
+      "type": "auto_pipeline",
+      "title": "Auto-Pipeline Complete",
+      "message": "1 idea auto-drafted → 5 drafts queued for review.",
+      "from": "auto-pipeline",
+      "read": false,
+      "createdAt": "2026-02-09T04:03:20.908Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "processedIds": [
+          "012"
+        ],
+        "draftsQueued": 5,
+        "errors": 0
+      }
+    },
+    {
+      "id": "notif-1770609760293-xznc",
+      "type": "auto_pipeline",
+      "title": "Auto-Pipeline Complete",
+      "message": "1 idea auto-drafted → 5 drafts queued for review.",
+      "from": "auto-pipeline",
+      "read": false,
+      "createdAt": "2026-02-09T04:02:40.293Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "processedIds": [
+          "011"
+        ],
+        "draftsQueued": 5,
+        "errors": 0
+      }
+    },
+    {
+      "id": "notif-1770594444310",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Strategic Review: Where to Use Dunning-Kruger Parables**\n\nAssigned to: socrates\nPriority: not set\n\nFour complete parables in content/parables/. Strategic questions: Which parable for which platform? Book placement? Sequence? Target audience? Wait for Diogenes quality review first. Deliver in philos...",
+      "read": false,
+      "createdAt": "2026-02-08T23:47:24.309Z",
+      "metadata": {
+        "taskId": "task-039",
+        "assigneeIds": [
+          "socrates"
+        ],
+        "createdBy": "tension"
+      }
+    },
+    {
+      "id": "notif-1770594439227",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Review Dunning-Kruger Parables - Quality Check**\n\nAssigned to: diogenes\nPriority: not set\n\nFour complete parables in content/parables/. Review for quality, BS detection, authentic voice. Deliver assessment in philosophers/diogenes/notes/parable-review.md",
+      "read": false,
+      "createdAt": "2026-02-08T23:47:19.227Z",
+      "metadata": {
+        "taskId": "task-038",
+        "assigneeIds": [
+          "diogenes"
+        ],
+        "createdBy": "tension"
+      }
+    },
+    {
+      "id": "notif-1770594434946",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Review Dunning-Kruger Parables - Quality Check**\n\nAssigned to: diogenes\nPriority: not set\n\nFour complete parables created about the Dunning-Kruger effect journey:\n\n1. The Mountain Climber (~1,500 words)\n2. The River Dancer (~1,600 words)\n3. The Apprentice Smith (~1,500 words)\n4. The Wisdom ...",
+      "read": false,
+      "createdAt": "2026-02-08T23:47:14.946Z",
+      "metadata": {
+        "taskId": "task-037",
+        "assigneeIds": [
+          "diogenes"
+        ],
+        "createdBy": "tension"
+      }
+    },
     {
       "id": "notif-1770588247379",
       "type": "task_assigned",
@@ -5283,6 +7761,179 @@
       },
       "readAt": "2026-02-08T21:23:18.462Z",
       "readBy": "human"
+    },
+    {
+      "id": "notif-review-1770590271818-2hg29m43k",
+      "type": "weekly_review",
+      "title": "Weekly Project Review: 8 new proposals",
+      "message": "Tension's weekly review found 5 security items and 3 enhancements. Check the Future Needs roadmap for details.",
+      "from": "tension",
+      "to": [
+        "shawn"
+      ],
+      "createdAt": "2026-02-08T22:37:51.818Z",
+      "read": false,
+      "priority": "high",
+      "actionRequired": false,
+      "metadata": {
+        "itemCount": 8,
+        "securityCount": 5,
+        "enhancementCount": 3
+      }
+    },
+    {
+      "id": "notif-stuck-1770609575110-ijexzdpjn",
+      "type": "stuck_task",
+      "title": "🚨 Task Stuck: Rotate Anthropic API key",
+      "message": "Task #task-036 has been in \"assigned\" status for 6h 1m. Assigned to: human.\nConsider intervention or reassignment.",
+      "from": "system",
+      "to": [
+        "tension",
+        "human"
+      ],
+      "createdAt": "2026-02-09T03:59:35.110Z",
+      "read": false,
+      "priority": "critical",
+      "actionRequired": true,
+      "metadata": {
+        "taskId": "task-036",
+        "timeInStatus": "6h 1m",
+        "alertLevel": "red",
+        "diagnostics": [],
+        "suggestions": []
+      }
+    },
+    {
+      "id": "notif-review-1770616815159-674p37qxs",
+      "type": "weekly_review",
+      "title": "Weekly Project Review: 8 new proposals",
+      "message": "Tension's weekly review found 5 security items and 3 enhancements. Check the Future Needs roadmap for details.",
+      "from": "tension",
+      "to": [
+        "shawn"
+      ],
+      "createdAt": "2026-02-09T06:00:15.159Z",
+      "read": false,
+      "priority": "high",
+      "actionRequired": false,
+      "metadata": {
+        "itemCount": 8,
+        "securityCount": 5,
+        "enhancementCount": 3
+      }
+    },
+    {
+      "id": "notif-newsletter-1770703332609-hofgbyp8y",
+      "type": "newsletter",
+      "title": "Weekly Newsletter Ready: The Mirror That Shows What You Fear Most",
+      "message": "Marcus has drafted this week's newsletter. Review it in the posting queue and publish to Substack.",
+      "from": "marcus",
+      "to": [
+        "shawn"
+      ],
+      "createdAt": "2026-02-10T06:01:48.779Z",
+      "read": false,
+      "priority": "normal",
+      "actionRequired": true,
+      "metadata": {
+        "queueItemId": "post-1770703332607",
+        "platform": "substack"
+      }
+    },
+    {
+      "id": "notif-newsletter-1770705153766-oeobs5dh7",
+      "type": "newsletter",
+      "title": "Weekly Newsletter Ready: The Mirror Test: Who Are You When Someone's Watching?",
+      "message": "Marcus has drafted this week's newsletter. Review it in the posting queue and publish to Substack.",
+      "from": "marcus",
+      "to": [
+        "shawn"
+      ],
+      "createdAt": "2026-02-10T06:32:12.835Z",
+      "read": false,
+      "priority": "normal",
+      "actionRequired": true,
+      "metadata": {
+        "queueItemId": "post-1770705153765",
+        "platform": "substack"
+      }
+    },
+    {
+      "id": "notif-newsletter-1770706005119-i193j7ac5",
+      "type": "newsletter",
+      "title": "Weekly Newsletter Ready: The Mirror Test: What We Do When No One's Watching",
+      "message": "This week's newsletter is drafted. Review it in the posting queue and publish to Substack.\n\n**Subtitle:** This week we explored a question older than empire: Do we act for virtue, or for approval?\n**Image prompt:** Two ancient bronze mirrors facing each other, reflecting infinite darkness between them, soft amber light catching worn edges, philosophical depth, moody chiaroscuro, textured metal, metaphor for self-examination",
+      "from": "marcus",
+      "to": [
+        "shawn"
+      ],
+      "createdAt": "2026-02-10T06:46:19.914Z",
+      "read": false,
+      "priority": "normal",
+      "actionRequired": true,
+      "metadata": {
+        "queueItemId": "post-1770706005102",
+        "platform": "substack"
+      }
+    },
+    {
+      "id": "notif-newsletter-1770706440004-jiuh9135x",
+      "type": "newsletter",
+      "title": "Weekly Newsletter Ready: The Work That Actually Needs Doing",
+      "message": "This week's newsletter is drafted. Review it in the posting queue and publish to Substack.\n\n**Subtitle:** Stop polishing philosophy and start practicing it — this week's dispatch from the tension\n**Image prompt:** Worn stone steps descending into mist, each step catching different quality of light, texture of ancient use, atmosphere of quiet determination, cool gray and warm amber tones, depth through layers of fog",
+      "from": "marcus",
+      "to": [
+        "shawn"
+      ],
+      "createdAt": "2026-02-10T06:53:30.678Z",
+      "read": false,
+      "priority": "normal",
+      "actionRequired": true,
+      "metadata": {
+        "queueItemId": "post-1770706440003",
+        "platform": "substack"
+      }
+    },
+    {
+      "id": "notif-stuck-1770707007876-qh0f8opp3",
+      "type": "stuck_task",
+      "title": "🚨 Task Stuck: Set up Telegram bot for idea capture",
+      "message": "Task #task-041 has been in \"assigned\" status for 6h. Assigned to: human.\nConsider intervention or reassignment.",
+      "from": "system",
+      "to": [
+        "tension",
+        "human"
+      ],
+      "createdAt": "2026-02-10T07:03:27.876Z",
+      "read": false,
+      "priority": "critical",
+      "actionRequired": true,
+      "metadata": {
+        "taskId": "task-041",
+        "timeInStatus": "6h",
+        "alertLevel": "red",
+        "diagnostics": [],
+        "suggestions": []
+      }
+    },
+    {
+      "id": "notif-podcast-1770763008969-c7gr8gh3f",
+      "type": "podcast",
+      "title": "Podcast Episode Ready: Should We Be Nice to AI? (And Why That's the Wrong Question)",
+      "message": "New The Debate episode (debate) generated. ~15 min, 95 exchanges. Review in the posting queue. Trial #1 of 8.",
+      "from": "athena",
+      "to": [
+        "shawn"
+      ],
+      "createdAt": "2026-02-10T22:34:47.741Z",
+      "read": false,
+      "priority": "normal",
+      "actionRequired": true,
+      "metadata": {
+        "queueItemId": "podcast-1770763008960",
+        "platform": "podcast",
+        "format": "debate"
+      }
     }
   ],
   "stepDurations": [

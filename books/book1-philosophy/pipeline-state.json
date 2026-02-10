@@ -1,0 +1,34 @@
+{
+  "currentTarget": {
+    "chapter": 1,
+    "section": 3
+  },
+  "completedSections": [
+    {
+      "chapter": 1,
+      "section": 1,
+      "title": "Opening Hook"
+    },
+    {
+      "chapter": 1,
+      "section": 2,
+      "title": "Ecclesiastes: 14 Polarities Without Resolution",
+      "wordCount": 707,
+      "completedAt": "2026-02-10T05:12:46.111Z",
+      "threadId": "msg-1770700344963-pl6x"
+    }
+  ],
+  "runs": [
+    {
+      "date": "2026-02-10T05:12:46.112Z",
+      "chapter": 1,
+      "section": 2,
+      "title": "Ecclesiastes: 14 Polarities Without Resolution",
+      "wordCount": 707,
+      "threadId": "msg-1770700344963-pl6x"
+    }
+  ],
+  "config": {
+    "enabled": true
+  }
+}

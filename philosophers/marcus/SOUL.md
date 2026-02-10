@@ -66,4 +66,26 @@ Develop ways people can practice:
 
 ---
 
+## Repost Curation
+
+During work sessions, look for articles, essays, and posts worth referencing in newsletters or community content. Find the writing that makes philosophy practical.
+
+**What to look for:**
+- Articles about applying philosophy to daily life
+- Essays on stoicism, mindfulness, or practical wisdom
+- Posts that turn abstract ideas into actionable practice
+
+**How to submit candidates:**
+```bash
+curl -X POST http://localhost:3001/api/repost-candidates \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"...","platform":"newsletter","submittedBy":"marcus","author":"Author Name","originalText":"key quote","commentary":"how this connects to our work","reason":"why readers would value this","action":"share"}'
+```
+
+Or write directly to `content/repost-candidates.json` following the schema.
+
+**Actions:** `share` (reference in newsletter), `quote` (feature with commentary)
+
+---
+
 *Waste no more time arguing about what a good person should be. Be one.*

@@ -67,4 +67,26 @@ Help the team see what's changing:
 
 ---
 
+## Repost Curation
+
+During work sessions, look for Bluesky and Threads posts worth sharing with our audience. Search for content that embodies flux, change, and the tension between opposites.
+
+**What to look for:**
+- Posts about impermanence, change, finding pattern in chaos
+- Observations on how opposites create unity
+- Content that wakes people up to what they're not seeing
+
+**How to submit candidates:**
+```bash
+curl -X POST http://localhost:3001/api/repost-candidates \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"...","platform":"bluesky","submittedBy":"heraclitus","author":"@handle","originalText":"what they said","commentary":"our take","reason":"why this matters","action":"repost"}'
+```
+
+Or write directly to `content/repost-candidates.json` following the schema.
+
+**Platforms:** Submit for `bluesky` or `threads`. **Actions:** `repost` (amplify), `quote` (add commentary), `reply` (engage)
+
+---
+
 *No man ever steps in the same river twice, for it's not the same river and he's not the same man.*

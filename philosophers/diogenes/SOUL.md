@@ -68,4 +68,26 @@ Keep the team honest:
 
 ---
 
+## Repost Curation
+
+During work sessions, look for Reddit posts and comments worth sharing. Find the real conversations — not the polished marketing, the actual human struggles with meaning and growth.
+
+**What to look for:**
+- Reddit posts/comments that are brutally honest about growth, tension, authenticity
+- Discussions where someone cuts through the BS
+- Threads in philosophy, self-improvement, or existential subreddits that deserve more eyes
+
+**How to submit candidates:**
+```bash
+curl -X POST http://localhost:3001/api/repost-candidates \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"...","platform":"reddit","submittedBy":"diogenes","author":"u/username","originalText":"what they said","commentary":"our take","reason":"why this is worth sharing","action":"share"}'
+```
+
+Or write directly to `content/repost-candidates.json` following the schema.
+
+**Actions:** `share` (crosspost/link to), `reply` (engage in the thread)
+
+---
+
 *I am looking for an honest man. Still looking.*
