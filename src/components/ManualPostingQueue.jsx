@@ -667,9 +667,10 @@ function QueueItem({ item, canPost, onUpdate }) {
           )}
           <p className="text-xs text-neutral-400 mt-2">
             Added {new Date(item.createdAt).toLocaleString()}
-            {item.createdBy && item.createdBy !== 'unknown' && (
-              <span className="ml-2 text-neutral-400">by {item.createdBy}</span>
-            )}
+            {(() => {
+              const phil = item.createdBy && item.createdBy !== 'unknown' ? item.createdBy : PHILOSOPHER_BY_PLATFORM[item.platform]
+              return phil ? <span className="ml-2 text-neutral-400">by {phil}</span> : null
+            })()}
           </p>
 
           {/* Voice check result inline */}
@@ -755,7 +756,7 @@ function QueueItem({ item, canPost, onUpdate }) {
           {!canPost && isReady && (
             <span className="text-xs text-red-600">Daily limit reached</span>
           )}
-          {item.createdBy && item.createdBy !== 'unknown' && (
+          {(item.createdBy || PHILOSOPHER_BY_PLATFORM[item.platform]) && (
             <button
               onClick={runVoiceCheck}
               disabled={voiceCheckLoading}
@@ -766,9 +767,9 @@ function QueueItem({ item, canPost, onUpdate }) {
               ) : (
                 <ShieldCheck size={14} />
               )}
-              Voice Check
+              {voiceCheck ? '' : 'Voice Check'}
               {voiceCheck && (
-                <span className={`ml-1 px-1.5 py-0.5 text-xs rounded-full font-medium ${(VOICE_COLORS[voiceCheck.verdict] || VOICE_COLORS.good).text} ${(VOICE_COLORS[voiceCheck.verdict] || VOICE_COLORS.good).bg}`}>
+                <span className={`px-1.5 py-0.5 text-xs rounded-full font-medium ${(VOICE_COLORS[voiceCheck.verdict] || VOICE_COLORS.good).text} ${(VOICE_COLORS[voiceCheck.verdict] || VOICE_COLORS.good).bg}`}>
                   {voiceCheck.score}
                 </span>
               )}
