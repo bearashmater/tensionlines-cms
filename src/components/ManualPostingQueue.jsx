@@ -22,7 +22,16 @@ import {
   BookOpen,
   Sparkles,
   Cloud,
-  Newspaper
+  Newspaper,
+  Mic,
+  Play,
+  ChevronDown,
+  ChevronUp,
+  RotateCcw,
+  Archive,
+  ThumbsUp,
+  XCircle,
+  Star
 } from 'lucide-react'
 import PlatformStatusBadges from './PlatformStatusBadges'
 
@@ -53,6 +62,7 @@ function getPlatformIcon(platform, size = 16) {
     case 'reddit': return <Hash size={size} className="text-orange-500" />
     case 'medium': return <BookOpen size={size} className="text-green-700" />
     case 'substack': return <Newspaper size={size} className="text-orange-600" />
+    case 'podcast': return <Mic size={size} className="text-purple-600" />
     default: return null
   }
 }
@@ -109,7 +119,7 @@ export default function ManualPostingQueue() {
       </div>
 
       {/* Daily Limits (clickable filters) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
         <PlatformStatus
           platform="instagram"
           icon={<Instagram size={24} />}
@@ -187,6 +197,17 @@ export default function ManualPostingQueue() {
           isActive={platformFilter === 'substack'}
           onClick={() => setPlatformFilter(platformFilter === 'substack' ? null : 'substack')}
         />
+        <PlatformStatus
+          platform="podcast"
+          icon={<Mic size={24} />}
+          postsToday={data.postsToday?.podcast || 0}
+          maxPosts={data.settings?.platforms?.podcast?.maxPostsPerDay || 1}
+          canPost={data.canPostPodcast}
+          warmupMode={false}
+          lastPosted={lastPostedByPlatform.podcast}
+          isActive={platformFilter === 'podcast'}
+          onClick={() => setPlatformFilter(platformFilter === 'podcast' ? null : 'podcast')}
+        />
       </div>
 
       {/* Warmup Warning */}
@@ -233,6 +254,7 @@ export default function ManualPostingQueue() {
                   item.platform === 'reddit' ? data.canPostReddit :
                   item.platform === 'medium' ? data.canPostMedium :
                   item.platform === 'substack' ? (data.canPostSubstack !== false) :
+                  item.platform === 'podcast' ? (data.canPostPodcast !== false) :
                   data.canPostThreads
                 }
                 postingMode={postingModes?.[item.platform] || 'manual'}
@@ -283,6 +305,7 @@ const PLATFORM_STYLE = {
   reddit: { bg: 'bg-orange-50', border: 'border-orange-200', hover: 'hover:border-orange-300', text: 'text-orange-600', ring: 'ring-orange-500', activeBg: 'bg-orange-100' },
   medium: { bg: 'bg-green-50', border: 'border-green-200', hover: 'hover:border-green-300', text: 'text-green-700', ring: 'ring-green-600', activeBg: 'bg-green-100' },
   substack: { bg: 'bg-orange-50', border: 'border-orange-200', hover: 'hover:border-orange-300', text: 'text-orange-600', ring: 'ring-orange-500', activeBg: 'bg-orange-100' },
+  podcast: { bg: 'bg-purple-50', border: 'border-purple-200', hover: 'hover:border-purple-300', text: 'text-purple-600', ring: 'ring-purple-500', activeBg: 'bg-purple-100' },
 }
 
 function timeAgo(dateStr) {
@@ -363,6 +386,11 @@ function QueueItem({ item, canPost, postingMode, onUpdate }) {
   const [copyFeedback, setCopyFeedback] = useState(null) // null | 'content' | option index
   const [expanded, setExpanded] = useState(false)
   const [improving, setImproving] = useState(false)
+  const [scriptExpanded, setScriptExpanded] = useState(false)
+  const [reviewsExpanded, setReviewsExpanded] = useState(false)
+  const [podcastAction, setPodcastAction] = useState(null) // 'rework' | 'salvage' | null
+  const [podcastNotes, setPodcastNotes] = useState('')
+  const [trialRating, setTrialRating] = useState({ soundReal: 0, interesting: 0, notes: '' })
 
   const runVoiceCheck = async () => {
     const philosopher = item.createdBy || PHILOSOPHER_BY_PLATFORM[item.platform]
@@ -542,6 +570,316 @@ function QueueItem({ item, canPost, postingMode, onUpdate }) {
   }
 
   if (hidden) return null
+
+  // --- Podcast-specific rendering ---
+  if (item.platform === 'podcast') {
+    const meta = item.metadata || {}
+    const script = meta.script || []
+    const reviews = meta.reviews || {}
+    const isPendingReview = item.status === 'pending-review'
+
+    const handlePodcastApprove = async () => {
+      setIsUpdating(true)
+      try {
+        await fetch(`/api/podcast/${item.id}/approve`, { method: 'POST' })
+        onUpdate()
+      } catch (err) { console.error('Approve error:', err) }
+      setIsUpdating(false)
+    }
+
+    const handlePodcastRework = async () => {
+      setIsUpdating(true)
+      try {
+        await fetch(`/api/podcast/${item.id}/rework`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notes: podcastNotes })
+        })
+        setPodcastAction(null)
+        setPodcastNotes('')
+        onUpdate()
+      } catch (err) { console.error('Rework error:', err) }
+      setIsUpdating(false)
+    }
+
+    const handlePodcastSalvage = async () => {
+      setIsUpdating(true)
+      try {
+        await fetch(`/api/podcast/${item.id}/salvage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: podcastNotes })
+        })
+        setPodcastAction(null)
+        setPodcastNotes('')
+        onUpdate()
+      } catch (err) { console.error('Salvage error:', err) }
+      setIsUpdating(false)
+    }
+
+    const handlePodcastKill = async () => {
+      if (!confirm('Kill this episode? The topic will be blacklisted from future episodes.')) return
+      setIsUpdating(true)
+      try {
+        await fetch(`/api/podcast/${item.id}/kill`, { method: 'POST' })
+        onUpdate()
+      } catch (err) { console.error('Kill error:', err) }
+      setIsUpdating(false)
+    }
+
+    const handleSubmitTrialReview = async () => {
+      setIsUpdating(true)
+      try {
+        await fetch('/api/podcast/trial-review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            episodeId: item.id,
+            format: meta.format,
+            soundReal: trialRating.soundReal,
+            interesting: trialRating.interesting,
+            notes: trialRating.notes
+          })
+        })
+        onUpdate()
+      } catch (err) { console.error('Trial review error:', err) }
+      setIsUpdating(false)
+    }
+
+    const verdictColors = {
+      pass: 'bg-green-100 text-green-700',
+      'needs-work': 'bg-amber-100 text-amber-700',
+      reject: 'bg-red-100 text-red-700'
+    }
+
+    return (
+      <div className="p-4 bg-purple-50/50 border-l-4 border-purple-400">
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-3">
+          <Mic size={18} className="text-purple-600" />
+          <span className="text-sm font-semibold text-purple-700">Podcast Episode</span>
+          {meta.trialNumber && (
+            <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-600 rounded-full font-medium">
+              Trial #{meta.trialNumber}
+            </span>
+          )}
+          <span className="px-2 py-0.5 text-xs bg-purple-200 text-purple-700 rounded font-medium">
+            {meta.formatName || meta.format}
+          </span>
+          {isPendingReview && (
+            <span className="px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded animate-pulse">
+              Needs Review
+            </span>
+          )}
+          {item.status === 'ready' && (
+            <span className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">
+              Approved
+            </span>
+          )}
+        </div>
+
+        {/* Title + Subtitle */}
+        <h3 className="text-lg font-bold text-neutral-900">{item.title}</h3>
+        {item.subtitle && <p className="text-sm text-neutral-600 italic mt-0.5">{item.subtitle}</p>}
+
+        {/* Stats row */}
+        <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500">
+          <span>{meta.exchangeCount || script.length} exchanges</span>
+          <span>~{meta.estDuration || '?'} min</span>
+          <span>{meta.wordCount || '?'} words</span>
+          <span>Topic: {meta.topic || 'N/A'}</span>
+        </div>
+
+        {/* Agent Reviews */}
+        {Object.keys(reviews).length > 0 && reviews.error === undefined && (
+          <div className="mt-3">
+            <button
+              onClick={() => setReviewsExpanded(!reviewsExpanded)}
+              className="flex items-center gap-1 text-sm font-medium text-neutral-700 hover:text-neutral-900"
+            >
+              {reviewsExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              Agent Reviews ({Object.keys(reviews).length})
+            </button>
+            {reviewsExpanded && (
+              <div className="mt-2 space-y-2">
+                {Object.entries(reviews).map(([agent, review]) => (
+                  <div key={agent} className="flex items-start gap-2 text-sm">
+                    <span className={`px-1.5 py-0.5 text-xs rounded font-medium ${verdictColors[review.verdict] || 'bg-neutral-100 text-neutral-600'}`}>
+                      {review.verdict}
+                    </span>
+                    <span className="font-medium text-neutral-600 capitalize w-16">{agent}</span>
+                    <span className="text-neutral-700">{review.note}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Athena Note */}
+        {meta.athenaNote && (
+          <div className="mt-2 p-2 bg-white rounded border border-purple-200 text-sm text-neutral-700">
+            <span className="font-medium text-purple-600">Editor note:</span> {meta.athenaNote}
+          </div>
+        )}
+
+        {/* Script Viewer */}
+        <div className="mt-3">
+          <button
+            onClick={() => setScriptExpanded(!scriptExpanded)}
+            className="flex items-center gap-1 text-sm font-medium text-neutral-700 hover:text-neutral-900"
+          >
+            {scriptExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            {scriptExpanded ? 'Hide Script' : 'View Script'} ({script.length} lines)
+          </button>
+          {scriptExpanded && (
+            <div className="mt-2 max-h-96 overflow-y-auto bg-white rounded border border-neutral-200 p-3 text-sm space-y-1">
+              {script.map((line, i) => (
+                <div key={i} className={`${line.speaker === 'Shawn' ? 'text-purple-800' : 'text-neutral-700'}`}>
+                  <span className="font-semibold">{line.speaker}:</span>{' '}
+                  <span>{line.text}</span>
+                  {line.direction && <span className="text-xs text-neutral-400 italic ml-1">[{line.direction}]</span>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Practice Exercise */}
+        {meta.practiceExercise && (
+          <div className="mt-2 p-2 bg-amber-50 rounded border border-amber-200 text-sm">
+            <span className="font-medium text-amber-700">Practice:</span> {meta.practiceExercise}
+          </div>
+        )}
+
+        {/* Trial Rating (only for trial episodes awaiting review) */}
+        {meta.trialNumber && isPendingReview && (
+          <div className="mt-3 p-3 bg-white rounded border border-purple-200">
+            <h4 className="text-sm font-semibold text-purple-700 mb-2">Trial Episode Rating</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-neutral-600">Does it sound real? (1-5)</label>
+                <div className="flex gap-1 mt-1">
+                  {[1,2,3,4,5].map(n => (
+                    <button
+                      key={n}
+                      onClick={() => setTrialRating(r => ({ ...r, soundReal: n }))}
+                      className={`w-8 h-8 rounded text-sm font-medium ${trialRating.soundReal >= n ? 'bg-purple-600 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-neutral-600">How interesting? (1-5)</label>
+                <div className="flex gap-1 mt-1">
+                  {[1,2,3,4,5].map(n => (
+                    <button
+                      key={n}
+                      onClick={() => setTrialRating(r => ({ ...r, interesting: n }))}
+                      className={`w-8 h-8 rounded text-sm font-medium ${trialRating.interesting >= n ? 'bg-purple-600 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <textarea
+              value={trialRating.notes}
+              onChange={e => setTrialRating(r => ({ ...r, notes: e.target.value }))}
+              placeholder="Quick notes on this format..."
+              rows={2}
+              className="w-full mt-2 px-2 py-1.5 text-sm border border-neutral-200 rounded focus:outline-none focus:ring-1 focus:ring-purple-300"
+            />
+            <button
+              onClick={handleSubmitTrialReview}
+              disabled={!trialRating.soundReal || !trialRating.interesting || isUpdating}
+              className="mt-2 px-3 py-1.5 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 font-medium"
+            >
+              <Star size={12} className="inline mr-1" />
+              Submit Trial Rating
+            </button>
+          </div>
+        )}
+
+        {/* Rework/Salvage notes form */}
+        {podcastAction && (
+          <div className="mt-3 p-3 bg-white rounded border border-neutral-200">
+            <h4 className="text-sm font-semibold text-neutral-700 mb-2">
+              {podcastAction === 'rework' ? 'Rework Notes' : 'Salvage Reason'}
+            </h4>
+            <textarea
+              value={podcastNotes}
+              onChange={e => setPodcastNotes(e.target.value)}
+              placeholder={podcastAction === 'rework' ? 'What should change in the rework...' : 'What was wrong with this episode...'}
+              rows={2}
+              className="w-full px-2 py-1.5 text-sm border border-neutral-200 rounded focus:outline-none focus:ring-1 focus:ring-amber-300"
+            />
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={podcastAction === 'rework' ? handlePodcastRework : handlePodcastSalvage}
+                disabled={isUpdating}
+                className="px-3 py-1.5 text-xs bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 font-medium"
+              >
+                {isUpdating ? 'Processing...' : podcastAction === 'rework' ? 'Rework Episode' : 'Salvage & Remove'}
+              </button>
+              <button
+                onClick={() => { setPodcastAction(null); setPodcastNotes('') }}
+                className="px-3 py-1.5 text-xs text-neutral-600 hover:text-neutral-800"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        {isPendingReview && !podcastAction && (
+          <div className="flex items-center gap-2 mt-4">
+            <button
+              onClick={handlePodcastApprove}
+              disabled={isUpdating}
+              className="flex items-center gap-1 px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium"
+            >
+              <ThumbsUp size={14} />
+              Approve
+            </button>
+            <button
+              onClick={() => setPodcastAction('rework')}
+              disabled={isUpdating}
+              className="flex items-center gap-1 px-3 py-2 text-sm bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 font-medium"
+            >
+              <RotateCcw size={14} />
+              Rework
+            </button>
+            <button
+              onClick={() => setPodcastAction('salvage')}
+              disabled={isUpdating}
+              className="flex items-center gap-1 px-3 py-2 text-sm bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 font-medium"
+            >
+              <Archive size={14} />
+              Salvage
+            </button>
+            <button
+              onClick={handlePodcastKill}
+              disabled={isUpdating}
+              className="flex items-center gap-1 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg font-medium"
+            >
+              <XCircle size={14} />
+              Kill
+            </button>
+          </div>
+        )}
+
+        {/* Timestamp */}
+        <p className="text-xs text-neutral-400 mt-3">
+          Generated {new Date(item.createdAt).toLocaleString()} by athena
+        </p>
+      </div>
+    )
+  }
 
   const isReady = !item.canvaRequired || item.canvaComplete
   const isFailed = item.status === 'failed'

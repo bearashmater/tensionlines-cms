@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 export default function RecurringTasks() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, daily, weekly, monthly, quarterly, yearly
+  const [filter, setFilter] = useState('all');
   const [assigneeFilter, setAssigneeFilter] = useState('all');
+  const [expandedId, setExpandedId] = useState(null);
 
   useEffect(() => {
     fetchTasks();
@@ -25,6 +26,7 @@ export default function RecurringTasks() {
   };
 
   const getTimeUntil = (dueDate) => {
+    if (!dueDate) return { text: 'manual', urgent: false };
     const now = new Date();
     const due = new Date(dueDate);
     const diff = due - now;
@@ -59,13 +61,37 @@ export default function RecurringTasks() {
     return icons[frequency] || '🔁';
   };
 
+  const formatDate = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
+  };
+
+  const timeSince = (iso) => {
+    if (!iso) return null;
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    const hours = Math.floor(mins / 60);
+    const days = Math.floor(hours / 24);
+    if (days > 0) return `${days}d ago`;
+    if (hours > 0) return `${hours}h ago`;
+    if (mins > 0) return `${mins}m ago`;
+    return 'just now';
+  };
+
   const filteredTasks = tasks.filter(task => {
     if (filter !== 'all' && task.frequency !== filter) return false;
     if (assigneeFilter !== 'all' && task.assignee !== assigneeFilter) return false;
     return true;
   });
 
-  // Group by frequency
   const grouped = {
     daily: filteredTasks.filter(t => t.frequency === 'daily'),
     weekly: filteredTasks.filter(t => t.frequency === 'weekly'),
@@ -154,52 +180,119 @@ export default function RecurringTasks() {
                 {freqTasks.map(task => {
                   const timeUntil = getTimeUntil(task.nextDue);
                   const statusColor = getStatusColor(task.status);
+                  const isExpanded = expandedId === task.id;
 
                   return (
                     <div
                       key={task.id}
-                      className="bg-white border-l-4 rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow"
+                      className={`bg-white border-l-4 rounded-lg shadow-sm hover:shadow-md transition-shadow ${isExpanded ? 'ring-2 ring-blue-200' : ''}`}
                       style={{ borderLeftColor: statusColor }}
                     >
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-semibold text-gray-900">
-                          {task.name}
-                        </h3>
-                        <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            timeUntil.urgent
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-blue-100 text-blue-700'
-                          }`}
-                        >
-                          {timeUntil.text}
-                        </span>
+                      {/* Clickable header */}
+                      <div
+                        className="p-4 cursor-pointer select-none"
+                        onClick={() => setExpandedId(isExpanded ? null : task.id)}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
+                              ▶
+                            </span>
+                            <h3 className="font-semibold text-gray-900">
+                              {task.name}
+                            </h3>
+                          </div>
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              timeUntil.urgent
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-blue-100 text-blue-700'
+                            }`}
+                          >
+                            {timeUntil.text}
+                          </span>
+                        </div>
+
+                        <p className="text-gray-600 text-sm mb-3 ml-6">
+                          {task.description}
+                        </p>
+
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-500 ml-6">
+                          <span>👤 {task.assignee}</span>
+                          <span>📅 {task.schedule}</span>
+                          <span>
+                            {task.automationType === 'cron' ? '⚙️ Automated' : '🖐️ Manual'}
+                          </span>
+                          <span
+                            className="px-2 py-1 rounded"
+                            style={{
+                              backgroundColor: `${statusColor}20`,
+                              color: statusColor
+                            }}
+                          >
+                            {task.status}
+                          </span>
+                          {task.lastRun && (
+                            <span className="text-gray-400">
+                              last ran {timeSince(task.lastRun)}
+                            </span>
+                          )}
+                        </div>
+
+                        {task.blockedReason && (
+                          <div className="mt-3 ml-6 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                            🚫 {task.blockedReason}
+                          </div>
+                        )}
                       </div>
 
-                      <p className="text-gray-600 text-sm mb-3">
-                        {task.description}
-                      </p>
-
-                      <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                        <span>👤 {task.assignee}</span>
-                        <span>📅 {task.schedule}</span>
-                        <span>
-                          {task.automationType === 'cron' ? '⚙️ Automated' : '🖐️ Manual'}
-                        </span>
-                        <span
-                          className="px-2 py-1 rounded"
-                          style={{
-                            backgroundColor: `${statusColor}20`,
-                            color: statusColor
-                          }}
-                        >
-                          {task.status}
-                        </span>
-                      </div>
-
-                      {task.blockedReason && (
-                        <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-                          🚫 {task.blockedReason}
+                      {/* Expanded detail panel */}
+                      {isExpanded && (
+                        <div className="border-t border-gray-100 bg-gray-50 p-4 ml-6 mr-4 mb-4 rounded-b-lg">
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="font-medium text-gray-700">Next Due</span>
+                              <p className="text-gray-600 mt-1">
+                                {task.nextDue ? formatDate(task.nextDue) : 'Manual — no fixed schedule'}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-700">Last Run</span>
+                              <p className="text-gray-600 mt-1">
+                                {task.lastRun ? formatDate(task.lastRun) : 'Never run'}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-700">Total Runs</span>
+                              <p className="text-gray-600 mt-1">
+                                {task.runCount != null ? task.runCount : '—'}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-700">Last Result</span>
+                              <p className="mt-1">
+                                {task.lastError ? (
+                                  <span className="text-red-600">{task.lastError}</span>
+                                ) : task.lastResult ? (
+                                  <span className="text-green-700">{task.lastResult}</span>
+                                ) : (
+                                  <span className="text-gray-400">—</span>
+                                )}
+                              </p>
+                            </div>
+                            {task.cronId && (
+                              <div>
+                                <span className="font-medium text-gray-700">Cron ID</span>
+                                <p className="text-gray-500 mt-1 font-mono text-xs">{task.cronId}</p>
+                              </div>
+                            )}
+                            <div>
+                              <span className="font-medium text-gray-700">Type</span>
+                              <p className="text-gray-600 mt-1">
+                                {task.automationType === 'cron' ? 'Automated (server cron)' : 'Manual (Shawn)'}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>

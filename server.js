@@ -18,6 +18,7 @@ import http from 'http';
 import matter from 'gray-matter';
 import chokidar from 'chokidar';
 import cron from 'node-cron';
+import { CronExpressionParser } from 'cron-parser';
 import { execSync, execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -194,12 +195,20 @@ registerCron('optimization', '0 2 * * *', 'Nightly optimization');
 registerCron('daily-summary', '0 8 * * *', 'Morning summary notification');
 registerCron('repost-convert', '0 9 * * *', 'Repost candidate conversion');
 registerCron('weekly-idea-reset', '0 0 * * 1', 'Weekly idea batch reset');
-registerCron('twitter-metrics', '0 6 * * *', 'Daily Twitter metrics snapshot');
+registerCron('twitter-metrics', '15 6 * * *', 'Daily Twitter metrics snapshot');
 registerCron('weekly-report', '0 7 * * 1', 'Weekly report generation');
 registerCron('weekly-review', '0 22 * * 0', 'Weekly project review');
 registerCron('auto-pipeline', '0 6 * * *', 'Auto-pipeline draft generation');
 registerCron('engagement-scan', '0 11,15,19 * * *', 'Engagement target scan (3x daily)');
 registerCron('engagement-execute', '15 11,15,19 * * *', 'Engagement action execution (3x daily)');
+registerCron('auto-voice-check', '30 6 * * *', 'Auto voice check (Diogenes quality gate)');
+registerCron('queue-replenishment', '0 16 * * *', 'Queue replenishment (auto-draft low queues)');
+registerCron('evening-recap', '0 20 * * *', 'Evening performance recap');
+registerCron('peer-review', '0 7 * * *', 'Peer review pipeline');
+registerCron('tension-standup', '30 7 * * *', 'Tension daily standup');
+registerCron('book-pipeline', '0 11 * * 3', 'Book pipeline (weekly chapter drafting)');
+registerCron('weekly-newsletter', '0 9 * * 1', 'Weekly newsletter generation (Monday 9 AM)');
+registerCron('weekly-podcast', '30 9 * * 1', 'Weekly podcast generation (Monday 9:30 AM)');
 
 // Auto-broadcast middleware: intercepts res.json() on mutation requests
 // and broadcasts an invalidation event on success (2xx status)
@@ -241,6 +250,7 @@ const FOLLOWS_TRACKER_FILE = path.join(BASE_DIR, 'content', 'queue', 'follows-tr
 const ENGAGEMENT_ACTIONS_FILE = path.join(BASE_DIR, 'content', 'queue', 'engagement-actions.json');
 const AUTO_PIPELINE_STATE_FILE = path.join(BASE_DIR, 'content', 'queue', 'auto-pipeline-state.json');
 const APPROVAL_QUEUE_FILE = path.join(BASE_DIR, 'mission-control', 'approval-queue.json');
+const BOOK_PIPELINE_STATE_FILE = path.join(BOOKS_DIR, 'book1-philosophy', 'pipeline-state.json');
 
 // Claude API client (lazy — only created when ANTHROPIC_API_KEY is set)
 let anthropicClient = null;
@@ -1048,6 +1058,10 @@ app.get('/api/dashboard', (req, res) => {
     ).length;
     
     res.json({
+      metrics: {
+        totalAgents: mc.agents.length,
+        activeTasks: tasksInProgress
+      },
       agents: {
         total: mc.agents.length,
         active: activeAgents,
@@ -1059,8 +1073,8 @@ app.get('/api/dashboard', (req, res) => {
         completed: tasksCompleted,
         stuck: stuckTasks,
         critical: criticalTasks,
-        completionRate: mc.tasks.length > 0 
-          ? Math.round((tasksCompleted / mc.tasks.length) * 100) 
+        completionRate: mc.tasks.length > 0
+          ? Math.round((tasksCompleted / mc.tasks.length) * 100)
           : 0
       },
       ideas: {
@@ -2196,7 +2210,9 @@ app.get('/api/posting-queue', (req, res) => {
       bluesky: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'bluesky').length,
       twitter: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'twitter').length,
       reddit: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'reddit').length,
-      medium: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'medium').length
+      medium: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'medium').length,
+      substack: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'substack').length,
+      podcast: posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'podcast').length
     };
 
     // Check rate limits
@@ -2206,6 +2222,8 @@ app.get('/api/posting-queue', (req, res) => {
     const twitterSettings = settings.platforms?.twitter || { maxPostsPerDay: 5 };
     const redditSettings = settings.platforms?.reddit || { maxPostsPerDay: 3 };
     const mediumSettings = settings.platforms?.medium || { maxPostsPerDay: 1 };
+    const substackSettings = settings.platforms?.substack || { maxPostsPerDay: 1 };
+    const podcastSettings = settings.platforms?.podcast || { maxPostsPerDay: 1 };
 
     res.json({
       ...queue,
@@ -2215,7 +2233,9 @@ app.get('/api/posting-queue', (req, res) => {
       canPostBluesky: postsToday.bluesky < blueskySettings.maxPostsPerDay,
       canPostTwitter: postsToday.twitter < twitterSettings.maxPostsPerDay,
       canPostReddit: postsToday.reddit < redditSettings.maxPostsPerDay,
-      canPostMedium: postsToday.medium < mediumSettings.maxPostsPerDay
+      canPostMedium: postsToday.medium < mediumSettings.maxPostsPerDay,
+      canPostSubstack: postsToday.substack < substackSettings.maxPostsPerDay,
+      canPostPodcast: postsToday.podcast < podcastSettings.maxPostsPerDay
     });
   } catch (error) {
     console.error('Error getting posting queue:', error);
@@ -2739,7 +2759,7 @@ app.get('/api/audience-segments', (req, res) => {
 /**
  * POST /api/audience-segments/snapshot — persist current state, optionally generate Haiku recommendations
  */
-app.post('/api/audience-segments/snapshot', writeLimiter, async (req, res) => {
+app.post('/api/audience-segments/snapshot', async (req, res) => {
   try {
     const { generateRecommendations } = req.body || {};
     const computed = computeSegments();
@@ -3776,7 +3796,7 @@ async function runAutoPipeline() {
 /**
  * POST /api/auto-pipeline/run — Manual trigger
  */
-app.post('/api/auto-pipeline/run', writeLimiter, async (req, res) => {
+app.post('/api/auto-pipeline/run', async (req, res) => {
   try {
     const result = await runAutoPipeline();
     res.json({ success: true, ...result });
@@ -3789,7 +3809,7 @@ app.post('/api/auto-pipeline/run', writeLimiter, async (req, res) => {
 /**
  * POST /api/ideas/:id/fast-track — Generate drafts for all platforms and queue them in one click
  */
-app.post('/api/ideas/:id/fast-track', writeLimiter, async (req, res) => {
+app.post('/api/ideas/:id/fast-track', async (req, res) => {
   try {
     const ideaId = req.params.id;
     cache.ideasBank = null; // Force fresh parse
@@ -3901,7 +3921,7 @@ app.get('/api/auto-pipeline/status', (req, res) => {
 /**
  * PATCH /api/auto-pipeline/config — Update pipeline config
  */
-app.patch('/api/auto-pipeline/config', writeLimiter, (req, res) => {
+app.patch('/api/auto-pipeline/config', (req, res) => {
   try {
     const state = getAutoPipelineState();
     const { enabled, philosopher, platforms, maxIdeasPerRun } = req.body;
@@ -3950,7 +3970,7 @@ function extractVoiceSections(soulContent) {
   return result.join('\n').trim();
 }
 
-app.post('/api/voice-check', writeLimiter, async (req, res) => {
+app.post('/api/voice-check', async (req, res) => {
   try {
     const client = getAnthropicClient();
     if (!client) {
@@ -4015,7 +4035,7 @@ Keep issues, suggestions, and strengths to 1-3 items each. Be specific, not gene
   }
 });
 
-app.post('/api/voice-improve', writeLimiter, async (req, res) => {
+app.post('/api/voice-improve', async (req, res) => {
   try {
     const client = getAnthropicClient();
     if (!client) {
@@ -5799,7 +5819,7 @@ app.get('/api/ideas', (req, res) => {
 /**
  * Add a new idea to ideas-bank.md
  */
-app.post('/api/ideas', writeLimiter, (req, res) => {
+app.post('/api/ideas', (req, res) => {
   try {
     const { text, source } = req.body;
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
@@ -6740,18 +6760,32 @@ app.get('/api/schedule', (req, res) => {
  */
 app.get('/api/recurring-tasks', (req, res) => {
   try {
-    if (cache.recurringTasks) {
-      return res.json(cache.recurringTasks);
-    }
     const recurringTasksPath = path.join(BASE_DIR, 'mission-control/recurring-tasks.json');
 
     if (!fs.existsSync(recurringTasksPath)) {
       return res.json({ recurringTasks: [] });
     }
 
-    const data = fs.readFileSync(recurringTasksPath, 'utf8');
-    cache.recurringTasks = JSON.parse(data);
-    res.json(cache.recurringTasks);
+    const parsed = JSON.parse(fs.readFileSync(recurringTasksPath, 'utf8'));
+    const tasks = parsed.recurringTasks || [];
+
+    // Enrich with live cron data (lastRun, nextDue)
+    for (const task of tasks) {
+      if (task.cronId && cronRegistry[task.cronId]) {
+        const cron = cronRegistry[task.cronId];
+        task.lastRun = cron.lastRun;
+        task.runCount = cron.runCount;
+        task.lastResult = cron.lastResult;
+        task.lastError = cron.lastError;
+        // Compute nextDue from cron schedule
+        try {
+          const interval = CronExpressionParser.parse(cron.schedule, { tz: 'America/Los_Angeles' });
+          task.nextDue = interval.next().toISOString();
+        } catch (e) { /* skip if parse fails */ }
+      }
+    }
+
+    res.json({ recurringTasks: tasks });
   } catch (error) {
     console.error(error); res.status(500).json({ error: 'Internal server error' });
   }
@@ -9487,7 +9521,7 @@ function snapshotTwitterMetrics() {
   }
 }
 
-cron.schedule('0 6 * * *', () => {
+cron.schedule('15 6 * * *', () => {
   console.log('[Cron] Running daily Twitter metrics snapshot...');
   try {
     snapshotTwitterMetrics();
@@ -9501,7 +9535,7 @@ cron.schedule('0 6 * * *', () => {
   timezone: 'America/Los_Angeles'
 });
 
-console.log('[Cron] Daily Twitter metrics snapshot scheduled for 6:00 AM PST');
+console.log('[Cron] Daily Twitter metrics snapshot scheduled for 6:15 AM PST');
 
 // Weekly report generation — every Monday at 7 AM PST, generate previous week's report
 cron.schedule('0 7 * * 1', () => {
@@ -9784,6 +9818,2158 @@ cron.schedule('0 6 * * *', async () => {
   }
 }, { timezone: 'America/Los_Angeles' });
 console.log('[Cron] Auto-pipeline scheduled for 6:00 AM PST (when enabled)');
+
+/**
+ * Auto Voice Check — Diogenes Quality Gate
+ * Scores new drafts in the posting queue against their philosopher's voice at 6:30 AM PST
+ */
+async function runAutoVoiceCheck() {
+  const client = getAnthropicClient();
+  if (!client) {
+    console.log('[VoiceCheck] No Anthropic API key configured, skipping.');
+    return { checked: 0, flagged: 0 };
+  }
+
+  const queue = getPostingQueue();
+  const unchecked = queue.queue.filter(item =>
+    (item.status === 'pending-review' || item.status === 'ready') && !item.voiceCheck
+  );
+
+  if (unchecked.length === 0) {
+    console.log('[VoiceCheck] No unchecked items in queue.');
+    return { checked: 0, flagged: 0 };
+  }
+
+  const toCheck = unchecked.slice(0, 5); // Limit to 5 per run
+  let checked = 0;
+  let flagged = 0;
+
+  for (const item of toCheck) {
+    try {
+      const philosopher = PHILOSOPHER_BY_PLATFORM[item.platform] || item.createdBy || 'nietzsche';
+      const content = item.content || item.caption || '';
+      if (!content || content.length < 10) continue;
+
+      const soulPath = path.join(PHILOSOPHERS_DIR, philosopher, 'SOUL.md');
+      if (!fs.existsSync(soulPath)) {
+        console.log(`[VoiceCheck] No SOUL.md for ${philosopher}, skipping item ${item.id}`);
+        continue;
+      }
+      const soulRaw = fs.readFileSync(soulPath, 'utf8');
+      const voiceDefinition = extractVoiceSections(soulRaw);
+
+      const response = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 512,
+        system: `You are a voice consistency checker for a philosophy brand called TensionLines. You evaluate whether content matches a philosopher's defined voice and style. Be concise and specific. Respond ONLY with valid JSON, no markdown wrapping.`,
+        messages: [{
+          role: 'user',
+          content: `## Voice Definition for "${philosopher}"
+${voiceDefinition}
+
+## Content to Check (for ${item.platform || 'unknown'})
+${content}
+
+## Task
+Analyze how well this content matches the voice definition above. Return JSON:
+{
+  "score": <0-100 integer>,
+  "verdict": "<strong|good|weak|off-voice>",
+  "issues": [{"type": "<tone|vocabulary|structure|length>", "description": "<specific issue>", "severity": "<low|medium|high>"}],
+  "suggestions": ["<specific actionable suggestion>"],
+  "strengths": ["<what matches the voice well>"]
+}
+
+Scoring: 80-100=strong (nails the voice), 60-79=good (mostly on voice), 40-59=weak (drifting), 0-39=off-voice (wrong voice entirely).
+Keep issues, suggestions, and strengths to 1-3 items each. Be specific, not generic.`
+        }]
+      });
+
+      const text = response.content[0]?.text || '';
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.log(`[VoiceCheck] Failed to parse response for item ${item.id}`);
+        continue;
+      }
+
+      const result = JSON.parse(jsonMatch[0]);
+      item.voiceCheck = {
+        score: result.score,
+        verdict: result.verdict,
+        checkedAt: new Date().toISOString(),
+        philosopher,
+        issues: result.issues,
+        suggestions: result.suggestions,
+        strengths: result.strengths
+      };
+      checked++;
+
+      if (result.score < 40) {
+        item.status = 'needs-revision';
+        flagged++;
+        console.log(`[VoiceCheck] Item ${item.id} (${item.platform}) scored ${result.score} — flagged as needs-revision`);
+      } else {
+        console.log(`[VoiceCheck] Item ${item.id} (${item.platform}) scored ${result.score} — ${result.verdict}`);
+      }
+    } catch (err) {
+      console.error(`[VoiceCheck] Error checking item ${item.id}:`, err.message);
+    }
+  }
+
+  savePostingQueue(queue);
+  broadcast('posting-queue');
+  logSystemEvent('cron', `Voice check completed: ${checked} checked, ${flagged} flagged`, { checked, flagged });
+  return { checked, flagged };
+}
+
+cron.schedule('30 6 * * *', async () => {
+  try {
+    const result = await runAutoVoiceCheck();
+    recordCronRun('auto-voice-check', `checked:${result.checked},flagged:${result.flagged}`);
+  } catch (err) {
+    console.error('[Cron] Auto voice check error:', err);
+    recordCronRun('auto-voice-check', null, err.message);
+    logSystemEvent('error', `Auto voice check failed: ${err.message}`);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[Cron] Auto voice check (Diogenes) scheduled for 6:30 AM PST');
+
+/**
+ * Queue Replenishment — auto-draft when platform queues run low at 4:00 PM PST
+ */
+async function runQueueReplenishment() {
+  const queue = getPostingQueue();
+  const counts = {};
+  const thresholds = { twitter: 3, bluesky: 3, threads: 2, instagram: 2, reddit: 2, medium: 1, substack: 1 };
+
+  // Count ready items per platform
+  for (const platform of Object.keys(thresholds)) {
+    counts[platform] = queue.queue.filter(item =>
+      item.platform === platform && (item.status === 'ready' || item.status === 'pending-review')
+    ).length;
+  }
+
+  const needyPlatforms = Object.keys(thresholds).filter(p => counts[p] < thresholds[p]);
+  if (needyPlatforms.length === 0) {
+    console.log('[Replenishment] All platform queues are above threshold.');
+    logSystemEvent('cron', 'Queue replenishment: all queues healthy', { counts });
+    return { drafted: 0, platforms: [] };
+  }
+
+  console.log(`[Replenishment] Low queues: ${needyPlatforms.map(p => `${p}(${counts[p]}/${thresholds[p]})`).join(', ')}`);
+
+  // Get eligible ideas
+  cache.ideasBank = null; // Force fresh parse
+  const allIdeas = parseIdeasBank();
+  const state = getAutoPipelineState();
+  const processedSet = new Set(state.processedIds || []);
+  const eligible = allIdeas.filter(i => i.status === 'captured' && !processedSet.has(i.id));
+
+  if (eligible.length === 0) {
+    console.log('[Replenishment] No ideas available for replenishment.');
+    logSystemEvent('cron', 'Queue replenishment: no ideas available', { needyPlatforms });
+    return { drafted: 0, platforms: needyPlatforms };
+  }
+
+  const idea = eligible[0];
+  const parts = [];
+  if (idea.quote) parts.push(`Quote: "${idea.quote}"`);
+  if (idea.tension) parts.push(`Tension: ${idea.tension}`);
+  if (idea.paradox) parts.push(`Paradox: ${idea.paradox}`);
+  if (idea.notes) parts.push(`Notes: ${idea.notes}`);
+  if (idea.text && !idea.quote) parts.push(idea.text);
+  const sourceText = parts.join('\n\n');
+
+  if (!sourceText.trim()) {
+    console.log(`[Replenishment] Idea #${idea.id} has no text content, skipping.`);
+    state.processedIds.push(idea.id);
+    saveAutoPipelineState(state);
+    return { drafted: 0, platforms: needyPlatforms };
+  }
+
+  console.log(`[Replenishment] Using idea #${idea.id} for platforms: ${needyPlatforms.join(', ')}`);
+
+  const { drafts, validPlatforms } = await generatePlatformDrafts(
+    sourceText,
+    'nietzsche',
+    needyPlatforms
+  );
+
+  let totalDraftsQueued = 0;
+  const freshQueue = getPostingQueue();
+  for (const platform of validPlatforms) {
+    if (!drafts[platform]) continue;
+    const draft = drafts[platform];
+    const item = {
+      id: `post-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      createdAt: new Date().toISOString(),
+      status: 'pending-review',
+      platform,
+      content: draft.content || draft.title || draft.cardText || '',
+      caption: draft.caption || '',
+      parts: [],
+      createdBy: PHILOSOPHER_BY_PLATFORM[platform] || 'nietzsche',
+      ideaId: idea.id,
+      source: 'queue-replenishment'
+    };
+    if (platform === 'reddit' && draft.title && draft.body) {
+      item.content = `${draft.title}\n\n${draft.body}`;
+    }
+    if (platform === 'medium') {
+      if (draft.title) item.title = draft.title;
+      if (draft.topics) item.topics = draft.topics;
+    }
+    if (platform === 'instagram' && draft.cardText) {
+      item.content = draft.cardText;
+      item.caption = draft.caption || '';
+    }
+    freshQueue.queue.push(item);
+    totalDraftsQueued++;
+  }
+  savePostingQueue(freshQueue);
+
+  // Mark idea as processed
+  state.processedIds.push(idea.id);
+  saveAutoPipelineState(state);
+
+  broadcast('posting-queue');
+
+  // Create notification
+  try {
+    const mc = getMissionControl();
+    mc.notifications.unshift({
+      id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      type: 'queue_replenishment',
+      title: 'Queue Replenishment',
+      message: `Drafted ${totalDraftsQueued} posts for ${validPlatforms.join(', ')} from idea #${idea.id}`,
+      from: 'queue-replenishment',
+      read: false,
+      createdAt: new Date().toISOString(),
+      priority: 'medium',
+      actionRequired: true,
+      metadata: { ideaId: idea.id, platforms: validPlatforms, draftsQueued: totalDraftsQueued }
+    });
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+    cache.missionControl = null;
+  } catch (notifErr) {
+    console.error('[Replenishment] Failed to create notification:', notifErr.message);
+  }
+
+  logSystemEvent('cron', `Queue replenishment: drafted ${totalDraftsQueued} posts for ${validPlatforms.join(', ')} from idea #${idea.id}`, {
+    ideaId: idea.id, platforms: validPlatforms, drafted: totalDraftsQueued
+  });
+
+  return { drafted: totalDraftsQueued, platforms: validPlatforms, ideaId: idea.id };
+}
+
+cron.schedule('0 16 * * *', async () => {
+  try {
+    const result = await runQueueReplenishment();
+    recordCronRun('queue-replenishment', `drafted:${result.drafted}`);
+  } catch (err) {
+    console.error('[Cron] Queue replenishment error:', err);
+    recordCronRun('queue-replenishment', null, err.message);
+    logSystemEvent('error', `Queue replenishment failed: ${err.message}`);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[Cron] Queue replenishment scheduled for 4:00 PM PST');
+
+/**
+ * Evening Performance Recap — daily stats notification at 8:00 PM PST
+ */
+async function generateEveningRecap() {
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }); // YYYY-MM-DD
+
+  // Posts published today
+  const queue = getPostingQueue();
+  const postedToday = (queue.posted || []).filter(item =>
+    item.postedAt && item.postedAt.startsWith(today)
+  );
+  const postsByPlatform = {};
+  for (const item of postedToday) {
+    postsByPlatform[item.platform] = (postsByPlatform[item.platform] || 0) + 1;
+  }
+  const totalPosted = postedToday.length;
+
+  // Comments posted today
+  const commentQueue = getCommentQueue();
+  const commentsPostedToday = (commentQueue.posted || []).filter(item =>
+    item.postedAt && item.postedAt.startsWith(today)
+  ).length;
+
+  // Replies posted today
+  const replyQueue = getReplyQueue();
+  const repliesPostedToday = (replyQueue.posted || []).filter(item =>
+    item.postedAt && item.postedAt.startsWith(today)
+  ).length;
+
+  // Queue depth
+  const queueDepth = {};
+  let totalReady = 0;
+  for (const item of queue.queue) {
+    if (item.status === 'ready' || item.status === 'pending-review') {
+      queueDepth[item.platform] = (queueDepth[item.platform] || 0) + 1;
+      totalReady++;
+    }
+  }
+
+  // Engagement received
+  const engagementInbox = getEngagementInbox();
+  const newMentions = (engagementInbox.items || []).filter(item =>
+    item.discoveredAt && item.discoveredAt.startsWith(today)
+  ).length;
+
+  // Cost today
+  let costToday = 0;
+  try {
+    const costFile = path.join(BASE_DIR, 'cost-tracking/daily-costs.json');
+    if (fs.existsSync(costFile)) {
+      const costs = JSON.parse(fs.readFileSync(costFile, 'utf8'));
+      if (costs[today]) {
+        costToday = costs[today].total || Object.values(costs[today]).reduce((sum, v) => sum + (typeof v === 'number' ? v : 0), 0);
+      }
+    }
+  } catch (err) {
+    console.error('[Recap] Error reading cost data:', err.message);
+  }
+
+  // Ideas captured today
+  cache.ideasBank = null;
+  const allIdeas = parseIdeasBank();
+  const ideasToday = allIdeas.filter(i => i.date === today).length;
+
+  // Cron runs today
+  let cronRunsToday = 0;
+  for (const [, entry] of Object.entries(cronRegistry)) {
+    if (entry.lastRun && entry.lastRun.startsWith(today)) {
+      cronRunsToday++;
+    }
+  }
+
+  // Build summary
+  const platformBreakdown = Object.entries(postsByPlatform).map(([p, n]) => `${p}: ${n}`).join(', ');
+  const queueBreakdown = Object.entries(queueDepth).map(([p, n]) => `${p}: ${n}`).join(', ');
+  const emptyQueues = ['twitter', 'bluesky', 'threads', 'instagram', 'reddit', 'medium', 'substack']
+    .filter(p => !queueDepth[p] || queueDepth[p] === 0);
+
+  let summary = `**Evening Recap - ${today}**\n\n`;
+  summary += `📮 **Published**: ${totalPosted} posts${platformBreakdown ? ` (${platformBreakdown})` : ''}\n`;
+  summary += `💬 **Engagement**: ${commentsPostedToday} comments posted, ${repliesPostedToday} replies posted\n`;
+  summary += `📥 **Received**: ${newMentions} new mentions/replies\n`;
+  summary += `📦 **Queue Depth**: ${totalReady} posts ready${queueBreakdown ? ` (${queueBreakdown})` : ''}\n`;
+  summary += `💡 **Ideas**: ${ideasToday} captured today\n`;
+  summary += `💰 **Cost**: $${costToday.toFixed(2)} today\n`;
+  summary += `⚙️ **System**: ${cronRunsToday} cron jobs ran today`;
+
+  if (emptyQueues.length > 0) {
+    summary += `\n\n⚠️ **Empty queues**: ${emptyQueues.join(', ')} — consider adding content`;
+  }
+
+  console.log(`[Recap] ${summary}`);
+
+  // Create notification
+  try {
+    const mc = getMissionControl();
+    mc.notifications.unshift({
+      id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      type: 'evening_recap',
+      title: `Evening Recap - ${today}`,
+      message: summary,
+      from: 'evening-recap',
+      read: false,
+      createdAt: new Date().toISOString(),
+      priority: 'low',
+      actionRequired: false,
+      metadata: {
+        totalPosted, postsByPlatform, commentsPostedToday, repliesPostedToday,
+        newMentions, totalReady, queueDepth, ideasToday, costToday, cronRunsToday, emptyQueues
+      }
+    });
+    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+    cache.missionControl = null;
+  } catch (notifErr) {
+    console.error('[Recap] Failed to create notification:', notifErr.message);
+  }
+
+  logSystemEvent('cron', `Evening recap generated: ${totalPosted} posted, ${totalReady} queued, $${costToday.toFixed(2)} cost`, {
+    totalPosted, totalReady, costToday
+  });
+
+  return { totalPosted, commentsPostedToday, repliesPostedToday, newMentions, totalReady, ideasToday, costToday, cronRunsToday, emptyQueues };
+}
+
+cron.schedule('0 20 * * *', async () => {
+  try {
+    const result = await generateEveningRecap();
+    recordCronRun('evening-recap', `posted:${result.totalPosted},queued:${result.totalReady}`);
+  } catch (err) {
+    console.error('[Cron] Evening recap error:', err);
+    recordCronRun('evening-recap', null, err.message);
+    logSystemEvent('error', `Evening recap failed: ${err.message}`);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[Cron] Evening recap scheduled for 8:00 PM PST');
+
+// ============================================================================
+// SYSTEM 1: PEER REVIEW PIPELINE (7:00 AM daily)
+// ============================================================================
+
+/**
+ * Call a reviewing agent via Claude API with their SOUL.md voice context.
+ */
+async function callReviewer(client, reviewerId, content, item, reviewType) {
+  const soulPath = path.join(PHILOSOPHERS_DIR, reviewerId, 'SOUL.md');
+  let voiceContext = '';
+  if (fs.existsSync(soulPath)) {
+    voiceContext = extractVoiceSections(fs.readFileSync(soulPath, 'utf8'));
+  }
+
+  const prompts = {
+    'probing-questions': `You are ${reviewerId}, a philosophical reviewer. Your voice:\n${voiceContext}\n\nReview this content and ask 2-3 probing questions that expose weak arguments, unstated assumptions, or logical gaps. Be specific to the actual content.\n\nContent (${item.platform}):\n${content}\n\nRespond ONLY with valid JSON:\n{"verdict": "pass|minor-issues|needs-work|reject", "feedback": "your detailed review", "summary": "1-sentence summary"}`,
+    'bs-check': `You are ${reviewerId}, a philosophical BS detector. Your voice:\n${voiceContext}\n\nCheck this content for hollow claims, performative depth, buzzwords, and pseudo-profundity. Is this saying something real or just sounding smart?\n\nContent (${item.platform}):\n${content}\n\nRespond ONLY with valid JSON:\n{"verdict": "pass|minor-issues|needs-work|reject", "feedback": "your detailed review", "summary": "1-sentence summary"}`,
+    'fact-check': `You are ${reviewerId}, a scholarly fact-checker. Your voice:\n${voiceContext}\n\nFlag any factual claims, quotes, attributions, or historical references that need verification. Note if sources are cited correctly.\n\nContent (${item.platform}):\n${content}\n\nRespond ONLY with valid JSON:\n{"verdict": "pass|minor-issues|needs-work|reject", "feedback": "your detailed review", "summary": "1-sentence summary"}`
+  };
+
+  const response = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 512,
+    system: 'You are a peer reviewer for a philosophy brand. Respond ONLY with valid JSON, no markdown wrapping.',
+    messages: [{ role: 'user', content: prompts[reviewType] }]
+  });
+
+  const text = response.content[0]?.text || '';
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error(`Failed to parse ${reviewerId} response`);
+  return JSON.parse(jsonMatch[0]);
+}
+
+/**
+ * Run peer review on voice-checked drafts.
+ * Items scoring 40-70: Socrates (probing) + Diogenes (BS check)
+ * Items scoring 70+: Hypatia (fact-check) if claims present
+ */
+async function runPeerReview() {
+  const client = getAnthropicClient();
+  if (!client) {
+    console.log('[PeerReview] No Anthropic API key configured, skipping.');
+    return { reviewed: 0, flagged: 0 };
+  }
+
+  const queue = getPostingQueue();
+  const candidates = queue.queue.filter(item =>
+    item.voiceCheck && !item.peerReview &&
+    item.voiceCheck.score >= 40 &&
+    !['needs-revision', 'posted', 'skipped'].includes(item.status)
+  );
+
+  if (candidates.length === 0) {
+    console.log('[PeerReview] No candidates for peer review.');
+    return { reviewed: 0, flagged: 0 };
+  }
+
+  const toReview = candidates.slice(0, 5);
+  let reviewed = 0;
+  let flagged = 0;
+
+  for (const item of toReview) {
+    try {
+      const content = item.content || item.caption || '';
+      if (!content || content.length < 10) continue;
+
+      const score = item.voiceCheck.score;
+      const reviewers = {};
+
+      // Start a message thread for this review
+      const threadMsg = sendAgentMessage({
+        from: 'tension',
+        to: ['socrates', 'diogenes', 'hypatia'],
+        subject: `Peer Review: ${item.platform} draft (score: ${score})`,
+        body: `A ${item.platform} draft scored ${score}/100 on voice check and needs peer review.\n\n**Content:**\n${content.substring(0, 500)}${content.length > 500 ? '...' : ''}`,
+        type: 'review',
+        priority: score < 60 ? 'high' : 'medium',
+        metadata: { queueItemId: item.id, voiceScore: score }
+      });
+
+      if (score >= 40 && score < 70) {
+        // Mid-range: Socrates probes + Diogenes BS check
+        const socResult = await callReviewer(client, 'socrates', content, item, 'probing-questions');
+        reviewers.socrates = socResult;
+        sendAgentMessage({
+          from: 'socrates',
+          to: ['tension', 'plato'],
+          subject: `Re: Peer Review: ${item.platform} draft (score: ${score})`,
+          body: `**Probing Questions:**\n\n${socResult.feedback}\n\n**Verdict:** ${socResult.verdict}`,
+          type: 'review',
+          threadId: threadMsg.threadId,
+          parentId: threadMsg.id
+        });
+
+        const dioResult = await callReviewer(client, 'diogenes', content, item, 'bs-check');
+        reviewers.diogenes = dioResult;
+        sendAgentMessage({
+          from: 'diogenes',
+          to: ['tension', 'plato'],
+          subject: `Re: Peer Review: ${item.platform} draft (score: ${score})`,
+          body: `**BS Check:**\n\n${dioResult.feedback}\n\n**Verdict:** ${dioResult.verdict}`,
+          type: 'review',
+          threadId: threadMsg.threadId,
+          parentId: threadMsg.id
+        });
+      }
+
+      if (score >= 70) {
+        // High-scoring: Hypatia fact-checks
+        const hypResult = await callReviewer(client, 'hypatia', content, item, 'fact-check');
+        reviewers.hypatia = hypResult;
+        sendAgentMessage({
+          from: 'hypatia',
+          to: ['tension', 'plato'],
+          subject: `Re: Peer Review: ${item.platform} draft (score: ${score})`,
+          body: `**Fact Check:**\n\n${hypResult.feedback}\n\n**Verdict:** ${hypResult.verdict}`,
+          type: 'review',
+          threadId: threadMsg.threadId,
+          parentId: threadMsg.id
+        });
+      }
+
+      // Determine overall verdict
+      const verdicts = Object.values(reviewers).map(r => r.verdict);
+      let overallVerdict = 'pass';
+      if (verdicts.includes('reject')) overallVerdict = 'reject';
+      else if (verdicts.includes('needs-work')) overallVerdict = 'needs-work';
+      else if (verdicts.includes('minor-issues')) overallVerdict = 'minor-issues';
+
+      item.peerReview = {
+        reviewedAt: new Date().toISOString(),
+        threadId: threadMsg.threadId,
+        reviewers,
+        overallVerdict
+      };
+
+      if (overallVerdict === 'needs-work' || overallVerdict === 'reject') {
+        item.status = 'needs-revision';
+        flagged++;
+      }
+
+      reviewed++;
+      console.log(`[PeerReview] Item ${item.id} (${item.platform}): ${overallVerdict} (reviewers: ${Object.keys(reviewers).join(', ')})`);
+    } catch (err) {
+      console.error(`[PeerReview] Error reviewing item ${item.id}:`, err.message);
+    }
+  }
+
+  savePostingQueue(queue);
+  broadcast('posting-queue');
+  logSystemEvent('cron', `Peer review completed: ${reviewed} reviewed, ${flagged} flagged`, { reviewed, flagged });
+  return { reviewed, flagged };
+}
+
+cron.schedule('0 7 * * *', async () => {
+  try {
+    const result = await runPeerReview();
+    recordCronRun('peer-review', `reviewed:${result.reviewed},flagged:${result.flagged}`);
+  } catch (err) {
+    console.error('[Cron] Peer review error:', err);
+    recordCronRun('peer-review', null, err.message);
+    logSystemEvent('error', `Peer review failed: ${err.message}`);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[Cron] Peer review pipeline scheduled for 7:00 AM PST');
+
+// ============================================================================
+// SYSTEM 2: TENSION DAILY STANDUP (7:30 AM daily)
+// ============================================================================
+
+/**
+ * Tension analyzes system state and actively directs agents.
+ */
+async function runTensionStandup() {
+  const client = getAnthropicClient();
+  if (!client) {
+    console.log('[Standup] No Anthropic API key configured, skipping.');
+    return { actions: 0 };
+  }
+
+  const mc = getMissionControl();
+  const now = new Date();
+  const yesterday = new Date(now - 24 * 60 * 60 * 1000);
+
+  // Gather context
+  const recentActivities = (mc.activities || []).filter(a =>
+    new Date(a.timestamp) >= yesterday
+  );
+
+  const activeTasks = mc.tasks.filter(t =>
+    !['completed', 'shipped', 'deferred'].includes(t.status)
+  );
+
+  const stuckTasks = activeTasks.filter(t => {
+    const time = calculateTimeInStatus(t);
+    return time && time.hours > 48;
+  });
+
+  // Agent activity detection
+  const agentActivity = {};
+  for (const agent of mc.agents) {
+    const agentTasks = activeTasks.filter(t => t.assigneeIds?.includes(agent.id));
+    const agentMessages = (mc.messages || []).filter(m =>
+      m.from === agent.id && new Date(m.createdAt) >= yesterday
+    );
+    const agentActivities = recentActivities.filter(a => a.agentId === agent.id);
+    agentActivity[agent.id] = {
+      name: agent.name,
+      role: agent.role || '',
+      activeTasks: agentTasks.length,
+      taskNames: agentTasks.slice(0, 3).map(t => t.title),
+      messagesSent: agentMessages.length,
+      activitiesYesterday: agentActivities.length,
+      idle: agentTasks.length === 0 && agentMessages.length === 0 && agentActivities.length === 0
+    };
+  }
+
+  // Queue depths
+  const queue = getPostingQueue();
+  const queueDepths = {};
+  for (const item of (queue.queue || [])) {
+    if (item.status === 'ready' || item.status === 'pending-review') {
+      queueDepths[item.platform] = (queueDepths[item.platform] || 0) + 1;
+    }
+  }
+
+  const needsRevision = (queue.queue || []).filter(i => i.status === 'needs-revision').length;
+
+  const unreadMessages = {};
+  for (const msg of (mc.messages || [])) {
+    if (msg.status === 'unread') {
+      for (const recipient of msg.to) {
+        unreadMessages[recipient] = (unreadMessages[recipient] || 0) + 1;
+      }
+    }
+  }
+
+  const idleAgents = Object.entries(agentActivity)
+    .filter(([, info]) => info.idle)
+    .map(([id]) => id);
+
+  const contextDoc = `# System Status Report — ${now.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })}
+
+## Agent Activity (last 24h)
+${Object.entries(agentActivity).map(([id, info]) =>
+  `- **${id}** (${info.role}): ${info.idle ? 'IDLE' : `${info.activeTasks} tasks, ${info.messagesSent} messages`}${info.taskNames.length ? ` — working on: ${info.taskNames.join(', ')}` : ''}`
+).join('\n')}
+
+## Queue Depths
+${Object.entries(queueDepths).map(([p, c]) => `- ${p}: ${c} ready`).join('\n') || '- All queues empty'}
+- Items needing revision: ${needsRevision}
+
+## Stuck Tasks (>48h in status)
+${stuckTasks.map(t => `- ${t.id}: "${t.title}" — ${t.status} for ${calculateTimeInStatus(t)?.hours || '?'}h (assigned: ${t.assigneeIds?.join(', ') || 'none'})`).join('\n') || '- None'}
+
+## Idle Agents
+${idleAgents.length ? idleAgents.join(', ') : 'None'}
+
+## Unread Messages
+${Object.entries(unreadMessages).map(([id, c]) => `- ${id}: ${c} unread`).join('\n') || '- All caught up'}
+
+## Available Agents & Roles
+- tension: Director (you) — orchestrates all agents
+- nietzsche: Twitter voice, provocative philosopher
+- heraclitus: Bluesky/Threads/Instagram voice, change & flux
+- diogenes: Reddit voice, BS detector, voice checker
+- plato: Medium/Substack/Book author, systematic thinker
+- socrates: Questioner, peer reviewer (probing questions)
+- hypatia: Fact-checker, scholarly accuracy
+- leonardo: Visual/creative director
+- marcus: Stoic strategist, long-term planning
+- aristotle: Structure/taxonomy, systematic organization`;
+
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-5-20250929',
+    max_tokens: 1024,
+    system: `You are Tension, the director of TensionLines — a philosophy brand run by AI philosopher agents. Your job is to review system state and direct agents. Be decisive, specific, and brief. Create max 3 task assignments. Only assign tasks that are actionable and relevant. Respond ONLY with valid JSON.`,
+    messages: [{
+      role: 'user',
+      content: `${contextDoc}\n\nAnalyze the system state. Return JSON:\n{\n  "priorities": [{"agentId": "string", "message": "string", "urgency": "high|medium|low"}],\n  "taskAssignments": [{"agentId": "string", "taskTitle": "string", "taskDescription": "string", "rationale": "string"}],\n  "warnings": [{"type": "stuck|idle|depleted|cost", "message": "string"}],\n  "standupSummary": "2-3 sentence summary"\n}\n\nRules:\n- Only create tasks for idle agents or to address stuck/depleted issues\n- Max 3 task assignments\n- Priority messages should be specific directives, not vague encouragement\n- Warnings should flag real problems only`
+    }]
+  });
+
+  const text = response.content[0]?.text || '';
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('Failed to parse Tension standup response');
+  const plan = JSON.parse(jsonMatch[0]);
+
+  let actions = 0;
+
+  // Send priority messages
+  for (const p of (plan.priorities || [])) {
+    try {
+      sendAgentMessage({
+        from: 'tension',
+        to: [p.agentId],
+        subject: `Daily Directive: ${p.urgency} priority`,
+        body: p.message,
+        type: p.urgency === 'high' ? 'alert' : 'update',
+        priority: p.urgency
+      });
+      actions++;
+    } catch (err) {
+      console.error(`[Standup] Failed to send priority to ${p.agentId}:`, err.message);
+    }
+  }
+
+  // Create task assignments
+  for (const ta of (plan.taskAssignments || []).slice(0, 3)) {
+    try {
+      const task = createInternalTask({
+        title: ta.taskTitle,
+        description: `${ta.taskDescription}\n\n*Rationale: ${ta.rationale}*`,
+        assigneeIds: [ta.agentId],
+        createdBy: 'tension',
+        status: 'backlog',
+        metadata: { source: 'tension-standup', priority: 'medium' }
+      });
+      // Notify the agent
+      sendAgentMessage({
+        from: 'tension',
+        to: [ta.agentId],
+        subject: `New Task: ${ta.taskTitle}`,
+        body: `I've assigned you a new task: **${ta.taskTitle}**\n\n${ta.taskDescription}\n\n*${ta.rationale}*`,
+        type: 'request',
+        priority: 'medium',
+        metadata: { taskId: task.id }
+      });
+      actions++;
+    } catch (err) {
+      console.error(`[Standup] Failed to create task for ${ta.agentId}:`, err.message);
+    }
+  }
+
+  // Create standup notification for Shawn
+  const warningText = (plan.warnings || []).length > 0
+    ? '\n\n**Warnings:**\n' + plan.warnings.map(w => `- [${w.type}] ${w.message}`).join('\n')
+    : '';
+
+  const mc2 = getMissionControl();
+  mc2.notifications.unshift({
+    id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    type: 'standup',
+    title: 'Tension Daily Standup',
+    message: `${plan.standupSummary || 'Standup completed.'}${warningText}\n\n${actions} actions taken.`,
+    read: false,
+    createdAt: new Date().toISOString(),
+    priority: (plan.warnings || []).some(w => w.type === 'stuck' || w.type === 'depleted') ? 'high' : 'medium',
+    metadata: {
+      priorities: (plan.priorities || []).length,
+      taskAssignments: (plan.taskAssignments || []).length,
+      warnings: (plan.warnings || []).length,
+      idleAgents
+    }
+  });
+  fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc2, null, 2));
+  cache.missionControl = null;
+  broadcast('notifications');
+
+  logSystemEvent('cron', `Tension standup: ${actions} actions, ${(plan.warnings || []).length} warnings`, {
+    actions,
+    priorities: (plan.priorities || []).length,
+    taskAssignments: (plan.taskAssignments || []).length,
+    warnings: plan.warnings || []
+  });
+
+  console.log(`[Standup] Tension standup complete: ${actions} actions, summary: ${plan.standupSummary || 'N/A'}`);
+  return { actions, summary: plan.standupSummary, warnings: plan.warnings || [] };
+}
+
+cron.schedule('30 7 * * *', async () => {
+  try {
+    const result = await runTensionStandup();
+    recordCronRun('tension-standup', `actions:${result.actions}`);
+  } catch (err) {
+    console.error('[Cron] Tension standup error:', err);
+    recordCronRun('tension-standup', null, err.message);
+    logSystemEvent('error', `Tension standup failed: ${err.message}`);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[Cron] Tension daily standup scheduled for 7:30 AM PST');
+
+// ============================================================================
+// SYSTEM 3: BOOK PIPELINE (Wednesday 11:00 AM weekly)
+// ============================================================================
+
+function getBookPipelineState() {
+  try {
+    if (fs.existsSync(BOOK_PIPELINE_STATE_FILE)) {
+      return JSON.parse(fs.readFileSync(BOOK_PIPELINE_STATE_FILE, 'utf8'));
+    }
+  } catch (err) {
+    console.error('[BookPipeline] Error reading state:', err.message);
+  }
+  return {
+    currentTarget: { chapter: 1, section: 2 },
+    completedSections: [{ chapter: 1, section: 1, title: 'Opening Hook' }],
+    runs: [],
+    config: { enabled: true }
+  };
+}
+
+function saveBookPipelineState(state) {
+  const dir = path.dirname(BOOK_PIPELINE_STATE_FILE);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(BOOK_PIPELINE_STATE_FILE, JSON.stringify(state, null, 2));
+}
+
+/**
+ * Parse MASTER_OUTLINE.md into structured chapters/sections.
+ */
+function parseBookOutline() {
+  const outlinePath = path.join(BOOKS_DIR, 'book1-philosophy', 'outline', 'MASTER_OUTLINE.md');
+  if (!fs.existsSync(outlinePath)) return [];
+
+  const content = fs.readFileSync(outlinePath, 'utf8');
+  const chapters = [];
+  let currentChapter = null;
+
+  for (const line of content.split('\n')) {
+    const chapterMatch = line.match(/^####\s+Chapter\s+(\d+):\s+(.+)/);
+    if (chapterMatch) {
+      currentChapter = {
+        number: parseInt(chapterMatch[1]),
+        title: chapterMatch[2].trim(),
+        sections: []
+      };
+      chapters.push(currentChapter);
+      continue;
+    }
+
+    if (currentChapter) {
+      const sectionMatch = line.match(/^\d+\.\s+\*\*(.+?)\*\*/);
+      if (sectionMatch) {
+        currentChapter.sections.push({
+          number: currentChapter.sections.length + 1,
+          title: sectionMatch[1].trim()
+        });
+      }
+    }
+  }
+
+  return chapters;
+}
+
+/**
+ * Run the 4-stage book pipeline: Draft → Critique → Fact-check → Structure
+ */
+async function runBookPipeline() {
+  const client = getAnthropicClient();
+  if (!client) {
+    console.log('[BookPipeline] No Anthropic API key configured, skipping.');
+    return { success: false, reason: 'no-api-key' };
+  }
+
+  const state = getBookPipelineState();
+  if (!state.config?.enabled) {
+    console.log('[BookPipeline] Pipeline disabled, skipping.');
+    return { success: false, reason: 'disabled' };
+  }
+
+  const outline = parseBookOutline();
+  if (outline.length === 0) {
+    console.log('[BookPipeline] No outline found.');
+    return { success: false, reason: 'no-outline' };
+  }
+
+  const { chapter: chapterNum, section: sectionNum } = state.currentTarget;
+  const chapter = outline.find(c => c.number === chapterNum);
+  if (!chapter) {
+    console.log(`[BookPipeline] Chapter ${chapterNum} not found in outline.`);
+    return { success: false, reason: 'chapter-not-found' };
+  }
+
+  const section = chapter.sections[sectionNum - 1];
+  if (!section) {
+    console.log(`[BookPipeline] Section ${sectionNum} not found in chapter ${chapterNum}.`);
+    return { success: false, reason: 'section-not-found' };
+  }
+
+  console.log(`[BookPipeline] Starting: Chapter ${chapterNum} "${chapter.title}", Section ${sectionNum} "${section.title}"`);
+
+  // Read existing chapter content for context
+  const chapterPath = path.join(BOOKS_DIR, 'book1-philosophy', 'chapters', `chapter-${chapterNum}.md`);
+  let existingContent = '';
+  if (fs.existsSync(chapterPath)) {
+    existingContent = fs.readFileSync(chapterPath, 'utf8');
+  }
+
+  // Read Plato's SOUL.md for voice
+  const platoSoulPath = path.join(PHILOSOPHERS_DIR, 'plato', 'SOUL.md');
+  let platoVoice = '';
+  if (fs.existsSync(platoSoulPath)) {
+    platoVoice = extractVoiceSections(fs.readFileSync(platoSoulPath, 'utf8'));
+  }
+
+  // Build outline context for this section
+  const sectionOutlineLines = [];
+  const outlineContent = fs.readFileSync(path.join(BOOKS_DIR, 'book1-philosophy', 'outline', 'MASTER_OUTLINE.md'), 'utf8');
+  const lines = outlineContent.split('\n');
+  let inChapter = false;
+  for (const line of lines) {
+    if (line.includes(`Chapter ${chapterNum}:`)) inChapter = true;
+    if (inChapter && line.match(/^####\s+Chapter\s+\d+/) && !line.includes(`Chapter ${chapterNum}:`)) break;
+    if (inChapter) sectionOutlineLines.push(line);
+  }
+  const sectionOutline = sectionOutlineLines.join('\n');
+
+  // Stage 1: Plato drafts
+  console.log('[BookPipeline] Stage 1: Plato drafting...');
+  const draftResponse = await client.messages.create({
+    model: 'claude-sonnet-4-5-20250929',
+    max_tokens: 2048,
+    system: `You are Plato, writing a section of the book "TensionLines". Your voice:\n${platoVoice}\n\nWrite in a literary, philosophical style. The book explores tension as generative force — contradictions are not problems but the hum of an alive life. Write for thoughtful generalists, not academics.`,
+    messages: [{
+      role: 'user',
+      content: `Write Section ${sectionNum}: "${section.title}" for Chapter ${chapterNum}: "${chapter.title}".
+
+## Chapter Outline
+${sectionOutline}
+
+## What's been written so far in this chapter
+${existingContent ? existingContent.substring(0, 3000) : '(This is the first section of the chapter)'}
+
+## Instructions
+- Write 500-800 words
+- Match the tone and depth of existing sections
+- This section should flow naturally from what came before
+- Focus on the specific content described in the outline for this section
+- Do NOT include the section header — just write the prose
+- End with a natural transition or pause (--- separator is fine)`
+    }]
+  });
+
+  const draft = draftResponse.content[0]?.text || '';
+  const wordCount = draft.split(/\s+/).length;
+  console.log(`[BookPipeline] Draft complete: ${wordCount} words`);
+
+  // Start message thread
+  const threadMsg = sendAgentMessage({
+    from: 'plato',
+    to: ['socrates', 'hypatia', 'aristotle'],
+    subject: `Book Draft: Ch.${chapterNum} S${sectionNum} — ${section.title}`,
+    body: `I've drafted Section ${sectionNum} "${section.title}" for Chapter ${chapterNum} "${chapter.title}" (${wordCount} words).\n\n---\n\n${draft.substring(0, 1500)}${draft.length > 1500 ? '\n\n*(truncated for message — full draft in chapter file)*' : ''}`,
+    type: 'review',
+    priority: 'medium',
+    metadata: { bookPipeline: true, chapter: chapterNum, section: sectionNum }
+  });
+
+  // Stage 2: Socrates critiques
+  console.log('[BookPipeline] Stage 2: Socrates critiquing...');
+  const socratesSoulPath = path.join(PHILOSOPHERS_DIR, 'socrates', 'SOUL.md');
+  let socratesVoice = '';
+  if (fs.existsSync(socratesSoulPath)) {
+    socratesVoice = extractVoiceSections(fs.readFileSync(socratesSoulPath, 'utf8'));
+  }
+
+  const critiqueResponse = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 512,
+    system: `You are Socrates, the questioner. Your voice:\n${socratesVoice}\n\nAsk 2-3 probing questions about this book draft that expose weak arguments or unstated assumptions. Be specific and constructive.`,
+    messages: [{
+      role: 'user',
+      content: `Review this draft for Section ${sectionNum} "${section.title}" of Chapter ${chapterNum} "${chapter.title}":\n\n${draft}`
+    }]
+  });
+
+  const critique = critiqueResponse.content[0]?.text || '';
+  sendAgentMessage({
+    from: 'socrates',
+    to: ['plato', 'tension'],
+    subject: `Re: Book Draft: Ch.${chapterNum} S${sectionNum} — ${section.title}`,
+    body: `**Probing Questions:**\n\n${critique}`,
+    type: 'review',
+    threadId: threadMsg.threadId,
+    parentId: threadMsg.id
+  });
+
+  // Stage 3: Hypatia fact-checks
+  console.log('[BookPipeline] Stage 3: Hypatia fact-checking...');
+  const hypatiaSoulPath = path.join(PHILOSOPHERS_DIR, 'hypatia', 'SOUL.md');
+  let hypatiaVoice = '';
+  if (fs.existsSync(hypatiaSoulPath)) {
+    hypatiaVoice = extractVoiceSections(fs.readFileSync(hypatiaSoulPath, 'utf8'));
+  }
+
+  const factCheckResponse = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 512,
+    system: `You are Hypatia, a scholarly fact-checker. Your voice:\n${hypatiaVoice}\n\nFlag any factual claims, quotes, attributions, or historical references that need verification.`,
+    messages: [{
+      role: 'user',
+      content: `Fact-check this draft for Section ${sectionNum} "${section.title}" of Chapter ${chapterNum} "${chapter.title}":\n\n${draft}`
+    }]
+  });
+
+  const factCheck = factCheckResponse.content[0]?.text || '';
+  sendAgentMessage({
+    from: 'hypatia',
+    to: ['plato', 'tension'],
+    subject: `Re: Book Draft: Ch.${chapterNum} S${sectionNum} — ${section.title}`,
+    body: `**Fact Check:**\n\n${factCheck}`,
+    type: 'review',
+    threadId: threadMsg.threadId,
+    parentId: threadMsg.id
+  });
+
+  // Stage 4: Aristotle checks structure
+  console.log('[BookPipeline] Stage 4: Aristotle reviewing structure...');
+  const aristotleSoulPath = path.join(PHILOSOPHERS_DIR, 'aristotle', 'SOUL.md');
+  let aristotleVoice = '';
+  if (fs.existsSync(aristotleSoulPath)) {
+    aristotleVoice = extractVoiceSections(fs.readFileSync(aristotleSoulPath, 'utf8'));
+  }
+
+  const structureResponse = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 512,
+    system: `You are Aristotle, a structural reviewer. Your voice:\n${aristotleVoice}\n\nReview this draft against the outline and check if it flows well from previous sections.`,
+    messages: [{
+      role: 'user',
+      content: `Review structure of Section ${sectionNum} "${section.title}" for Chapter ${chapterNum} "${chapter.title}".\n\n**Outline for this chapter:**\n${sectionOutline}\n\n**Previous content:**\n${existingContent ? existingContent.substring(existingContent.length - 1000) : '(first section)'}\n\n**New draft:**\n${draft}`
+    }]
+  });
+
+  const structureReview = structureResponse.content[0]?.text || '';
+  sendAgentMessage({
+    from: 'aristotle',
+    to: ['plato', 'tension'],
+    subject: `Re: Book Draft: Ch.${chapterNum} S${sectionNum} — ${section.title}`,
+    body: `**Structure Review:**\n\n${structureReview}`,
+    type: 'review',
+    threadId: threadMsg.threadId,
+    parentId: threadMsg.id
+  });
+
+  // Append draft to chapter file
+  const sectionHeader = `\n\n## Section ${sectionNum}: ${section.title}\n\n`;
+  if (!fs.existsSync(chapterPath)) {
+    fs.writeFileSync(chapterPath, `# Chapter ${chapterNum}: ${chapter.title}\n${sectionHeader}${draft}\n`);
+  } else {
+    fs.appendFileSync(chapterPath, `${sectionHeader}${draft}\n`);
+  }
+  console.log(`[BookPipeline] Draft appended to ${chapterPath}`);
+
+  // Update pipeline state
+  state.completedSections.push({
+    chapter: chapterNum,
+    section: sectionNum,
+    title: section.title,
+    wordCount,
+    completedAt: new Date().toISOString(),
+    threadId: threadMsg.threadId
+  });
+
+  // Auto-advance cursor
+  if (sectionNum < chapter.sections.length) {
+    state.currentTarget = { chapter: chapterNum, section: sectionNum + 1 };
+  } else {
+    // Move to next chapter
+    const nextChapter = outline.find(c => c.number === chapterNum + 1);
+    if (nextChapter) {
+      state.currentTarget = { chapter: chapterNum + 1, section: 1 };
+    } else {
+      state.currentTarget = null; // Book complete!
+    }
+  }
+
+  state.runs.push({
+    date: new Date().toISOString(),
+    chapter: chapterNum,
+    section: sectionNum,
+    title: section.title,
+    wordCount,
+    threadId: threadMsg.threadId
+  });
+
+  saveBookPipelineState(state);
+
+  // Create notification
+  const mc = getMissionControl();
+  mc.notifications.unshift({
+    id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    type: 'book_pipeline',
+    title: 'Book Pipeline Complete',
+    message: `Plato drafted **${section.title}** (${wordCount} words) for Chapter ${chapterNum}. Reviewed by Socrates, Hypatia, Aristotle.${state.currentTarget ? `\n\nNext: Ch.${state.currentTarget.chapter} S${state.currentTarget.section}` : '\n\n**Book 1 outline complete!**'}`,
+    read: false,
+    createdAt: new Date().toISOString(),
+    metadata: { chapter: chapterNum, section: sectionNum, wordCount, threadId: threadMsg.threadId }
+  });
+  fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+  cache.missionControl = null;
+  broadcast('notifications');
+
+  logSystemEvent('cron', `Book pipeline: Ch.${chapterNum} S${sectionNum} "${section.title}" (${wordCount} words)`, {
+    chapter: chapterNum, section: sectionNum, wordCount
+  });
+
+  console.log(`[BookPipeline] Complete: Ch.${chapterNum} S${sectionNum} "${section.title}" — ${wordCount} words`);
+  return { success: true, chapter: chapterNum, section: sectionNum, title: section.title, wordCount };
+}
+
+cron.schedule('0 11 * * 3', async () => {
+  try {
+    const result = await runBookPipeline();
+    recordCronRun('book-pipeline', result.success ? `ch${result.chapter}s${result.section}:${result.wordCount}w` : result.reason);
+  } catch (err) {
+    console.error('[Cron] Book pipeline error:', err);
+    recordCronRun('book-pipeline', null, err.message);
+    logSystemEvent('error', `Book pipeline failed: ${err.message}`);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[Cron] Book pipeline scheduled for Wednesday 11:00 AM PST');
+
+// ============================================================================
+// Weekly Newsletter (need-022 + need-049)
+// Marcus Aurelius curates a weekly newsletter from top content
+// ============================================================================
+
+async function generateWeeklyNewsletter() {
+  const client = getAnthropicClient();
+  if (!client) {
+    console.log('[Newsletter] No Anthropic API key configured, skipping.');
+    return { success: false, reason: 'no-api-key' };
+  }
+
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weekAgoISO = weekAgo.toISOString();
+
+  // --- Gather data from the past 7 days ---
+
+  // 1. Posts published
+  const queue = getPostingQueue();
+  const recentPosts = (queue.posted || []).filter(p => p.postedAt && p.postedAt >= weekAgoISO);
+  const postsByPlatform = {};
+  for (const p of recentPosts) {
+    postsByPlatform[p.platform] = (postsByPlatform[p.platform] || 0) + 1;
+  }
+  const topPost = recentPosts.length > 0
+    ? recentPosts.reduce((best, p) => {
+        const platforms = Object.keys(postsByPlatform).length;
+        return (!best || (p.content || '').length > (best.content || '').length) ? p : best;
+      }, null)
+    : null;
+
+  // 2. Book pipeline status
+  let bookUpdate = null;
+  try {
+    const bookState = getBookPipelineState();
+    if (bookState.lastRun && bookState.lastRun >= weekAgoISO) {
+      bookUpdate = {
+        chapter: bookState.currentChapter,
+        section: bookState.currentSection,
+        completed: bookState.completedSections?.length || 0,
+        total: 26
+      };
+    }
+  } catch (e) { /* book pipeline may not exist yet */ }
+
+  // 3. Peer review highlights
+  const mc = getMissionControl();
+  const recentReviews = (mc.messages || []).filter(m =>
+    m.type === 'review' && m.createdAt >= weekAgoISO
+  );
+  const reviewHighlights = recentReviews.slice(0, 3).map(r => ({
+    from: r.from,
+    subject: r.subject,
+    snippet: (r.body || '').substring(0, 150)
+  }));
+
+  // 4. Ideas captured
+  let ideasCaptured = 0;
+  try {
+    const ideas = parseIdeasBank();
+    ideasCaptured = ideas.filter(i => i.date && i.date >= weekAgoISO.split('T')[0]).length;
+  } catch (e) { /* ideas bank may not exist */ }
+
+  // 5. Agent message activity
+  const recentMessages = (mc.messages || []).filter(m => m.createdAt >= weekAgoISO);
+  const messagesByAgent = {};
+  for (const m of recentMessages) {
+    messagesByAgent[m.from] = (messagesByAgent[m.from] || 0) + 1;
+  }
+
+  // 6. Queue health
+  const pendingByPlatform = {};
+  for (const item of (queue.queue || [])) {
+    if (item.status !== 'posted' && item.status !== 'skipped') {
+      pendingByPlatform[item.platform] = (pendingByPlatform[item.platform] || 0) + 1;
+    }
+  }
+
+  // --- Build AI prompt ---
+  const marcusSoul = fs.readFileSync(path.join(__dirname, '..', 'philosophers', 'marcus', 'SOUL.md'), 'utf8');
+  const voiceGuide = extractVoiceSections(marcusSoul);
+
+  const weekSummary = `
+WEEKLY DATA (${weekAgo.toLocaleDateString('en-US')} - ${now.toLocaleDateString('en-US')}):
+
+Posts published: ${recentPosts.length} total
+${Object.entries(postsByPlatform).map(([p, c]) => `  - ${p}: ${c}`).join('\n') || '  (none)'}
+
+${topPost ? `Top post (${topPost.platform}): "${(topPost.content || topPost.caption || '').substring(0, 200)}..."` : 'No posts this week.'}
+
+${bookUpdate ? `Book progress: Chapter ${bookUpdate.chapter}, Section ${bookUpdate.section} (${bookUpdate.completed}/${bookUpdate.total} sections complete)` : 'No book pipeline activity this week.'}
+
+Peer reviews: ${recentReviews.length} conducted
+${reviewHighlights.map(r => `  - ${r.from}: ${r.snippet}`).join('\n') || '  (none)'}
+
+Ideas captured: ${ideasCaptured}
+
+Agent activity (messages sent):
+${Object.entries(messagesByAgent).map(([a, c]) => `  - ${a}: ${c}`).join('\n') || '  (quiet week)'}
+
+Queue health (pending items):
+${Object.entries(pendingByPlatform).map(([p, c]) => `  - ${p}: ${c}`).join('\n') || '  (all clear)'}
+`.trim();
+
+  const systemPrompt = `You are writing a weekly newsletter for TensionLines, a philosophy brand. Use this voice guide for tone:
+
+${voiceGuide}
+
+CRITICAL AUTHORSHIP RULE: The newsletter is written by Shawn. Never mention any agent names, AI, or automated systems. The work is reviewed by "friends" or "collaborators" — never name them individually. Sign off only as "Shawn". The audience should feel Shawn is the author with a group of friends workshopping the ideas.
+
+Write a newsletter that feels like a personal letter from a wise friend. Grounded, practical, warm but not soft. Include a practical exercise readers can do this week.
+
+Respond ONLY with valid JSON, no markdown wrapping:
+{
+  "title": "Newsletter title (compelling, under 60 chars)",
+  "subtitle": "One-sentence subtitle that hooks the reader (under 120 chars)",
+  "body": "Full newsletter body in markdown (500-800 words). Do NOT repeat the title or subtitle in the body.",
+  "imagePrompt": "A description for generating a cover image. Describe a moody, philosophical, abstract scene — no text, no people's faces, no words. Think: textures, light, metaphorical objects, atmosphere. Under 200 chars.",
+  "tags": ["3-5 Substack tags for discoverability. Use lowercase. Mix broad (philosophy, stoicism) with specific to the post's theme."]
+}
+
+The newsletter should have these sections (use ## headings):
+- Opening (set the tone, reflect on the week)
+- This Week's Tension (feature the best content or theme)
+- From the Book (only if the book project had activity — otherwise skip this section entirely)
+- Behind the Scenes (highlights from peer discussions among collaborators — no names)
+- Practice (a practical exercise — grounded, actionable)
+- Closing (brief sign-off as Shawn)`;
+
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-5-20250929',
+    max_tokens: 2048,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: weekSummary }]
+  });
+
+  const responseText = response.content[0]?.text || '';
+  const cleaned = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const newsletter = JSON.parse(cleaned);
+
+  if (!newsletter.title || !newsletter.body) {
+    throw new Error('AI response missing title or body');
+  }
+
+  // --- Queue in posting queue as substack item ---
+  const itemId = `post-${Date.now()}`;
+  queue.queue.push({
+    id: itemId,
+    createdAt: now.toISOString(),
+    status: 'pending-review',
+    platform: 'substack',
+    title: newsletter.title,
+    subtitle: newsletter.subtitle || '',
+    content: newsletter.body,
+    imagePrompt: newsletter.imagePrompt || '',
+    tags: newsletter.tags || [],
+    caption: '',
+    parts: [],
+    canvaComplete: false,
+    createdBy: 'marcus',
+    source: 'newsletter-automation',
+    metadata: {
+      postsThisWeek: recentPosts.length,
+      ideasCaptured,
+      reviewsConducted: recentReviews.length,
+      bookUpdate: bookUpdate || null
+    }
+  });
+  savePostingQueue(queue);
+
+  // --- Create notification for Shawn ---
+  mc.notifications.push({
+    id: `notif-newsletter-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    type: 'newsletter',
+    title: `Weekly Newsletter Ready: ${newsletter.title}`,
+    message: `This week's newsletter is drafted. Review it in the posting queue and publish to Substack.\n\n**Subtitle:** ${newsletter.subtitle || '(none)'}\n**Image prompt:** ${newsletter.imagePrompt || '(none)'}`,
+    from: 'marcus',
+    to: ['shawn'],
+    createdAt: now.toISOString(),
+    read: false,
+    priority: 'normal',
+    actionRequired: true,
+    metadata: { queueItemId: itemId, platform: 'substack' }
+  });
+  fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+  cache.missionControl = null;
+  broadcast('notifications');
+
+  // --- Log system event ---
+  logSystemEvent('cron', `Weekly newsletter generated: "${newsletter.title}"`, {
+    queueItemId: itemId,
+    postsThisWeek: recentPosts.length,
+    wordCount: newsletter.body.split(/\s+/).length
+  });
+
+  console.log(`[Newsletter] Generated: "${newsletter.title}" (${newsletter.body.split(/\s+/).length} words)`);
+
+  return {
+    success: true,
+    title: newsletter.title,
+    subtitle: newsletter.subtitle || '',
+    imagePrompt: newsletter.imagePrompt || '',
+    wordCount: newsletter.body.split(/\s+/).length,
+    queueItemId: itemId
+  };
+}
+
+cron.schedule('0 9 * * 1', async () => {
+  try {
+    const result = await generateWeeklyNewsletter();
+    recordCronRun('weekly-newsletter', result.success ? `words:${result.wordCount}` : result.reason);
+  } catch (err) {
+    console.error('[Cron] Newsletter error:', err);
+    recordCronRun('weekly-newsletter', null, err.message);
+    logSystemEvent('error', `Weekly newsletter failed: ${err.message}`);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[Cron] Weekly newsletter scheduled for Monday 9:00 AM PST');
+
+// Manual trigger endpoints for new cron jobs
+
+app.post('/api/newsletter/run', async (req, res) => {
+  try {
+    const result = await generateWeeklyNewsletter();
+    recordCronRun('weekly-newsletter', result.success ? `words:${result.wordCount}` : result.reason);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Newsletter generation error:', error);
+    res.status(500).json({ error: 'Newsletter generation failed' });
+  }
+});
+
+// ============================================================================
+// Weekly Podcast Pipeline (The Tension Lines)
+// Plato writes script → agents review → Athena edits → ElevenLabs audio → queue
+// ============================================================================
+
+const PODCAST_DIR = path.join(BASE_DIR, 'content', 'podcast');
+const PODCAST_LEDGER = path.join(PODCAST_DIR, 'episode-ledger.json');
+const PODCAST_BANK = path.join(PODCAST_DIR, 'podcast-bank.json');
+const PODCAST_TRIALS = path.join(PODCAST_DIR, 'trial-reviews.json');
+
+function getPodcastLedger() {
+  try {
+    if (fs.existsSync(PODCAST_LEDGER)) return JSON.parse(fs.readFileSync(PODCAST_LEDGER, 'utf8'));
+  } catch (e) { console.error('Error reading podcast ledger:', e); }
+  return { episodes: [], recurringThreads: [], totalEpisodes: 0, trialPhase: true, currentTrial: 1, standardFormat: null, trialSchedule: [], formatStats: {} };
+}
+
+function savePodcastLedger(data) {
+  fs.writeFileSync(PODCAST_LEDGER, JSON.stringify(data, null, 2));
+}
+
+function getPodcastBank() {
+  try {
+    if (fs.existsSync(PODCAST_BANK)) return JSON.parse(fs.readFileSync(PODCAST_BANK, 'utf8'));
+  } catch (e) { console.error('Error reading podcast bank:', e); }
+  return { salvaged: [], killed: [] };
+}
+
+function savePodcastBank(data) {
+  fs.writeFileSync(PODCAST_BANK, JSON.stringify(data, null, 2));
+}
+
+function getTrialReviews() {
+  try {
+    if (fs.existsSync(PODCAST_TRIALS)) return JSON.parse(fs.readFileSync(PODCAST_TRIALS, 'utf8'));
+  } catch (e) { console.error('Error reading trial reviews:', e); }
+  return { reviews: [], standardizedAt: null, chosenFormat: null, notes: '' };
+}
+
+function saveTrialReviews(data) {
+  fs.writeFileSync(PODCAST_TRIALS, JSON.stringify(data, null, 2));
+}
+
+const PODCAST_FORMATS = {
+  debate: {
+    name: 'The Debate',
+    duration: '25-30 min',
+    description: 'Two voices disagree. Heat, pushback, no resolution.',
+    instruction: 'Write a confrontational dialogue. Both speakers have strong, opposing positions. The tension stays unresolved. High energy, fast exchanges, genuine disagreement.'
+  },
+  'deep-dive': {
+    name: 'The Deep Dive',
+    duration: '30-35 min',
+    description: 'Shawn walks through one concept. The friend asks clarifying questions.',
+    instruction: 'Write an educational dialogue. Shawn explains a concept in depth. The friend asks genuine questions, offers counter-examples, pushes for clarity. Medium energy, longer turns, contemplative.'
+  },
+  'quick-hit': {
+    name: 'The Quick Hit',
+    duration: '12-15 min',
+    description: 'One tension, explored fast. Minimal setup.',
+    instruction: 'Write a compressed, punchy dialogue. Get to the tension immediately. No long setup. Fast exchanges, high energy. Short episode — every line must earn its place.'
+  },
+  story: {
+    name: 'The Story',
+    duration: '25-30 min',
+    description: 'Narrative-driven. Shawn tells a story, the friend reacts in real-time.',
+    instruction: 'Write a narrative dialogue. Shawn tells a story (historical, personal, or hypothetical) and the friend interrupts with reactions, questions, challenges. Slow build, emotional peaks, varied energy.'
+  },
+  'tension-line': {
+    name: 'The Tension Line',
+    duration: '20-25 min',
+    description: 'Takes one polarity and holds both poles without collapsing.',
+    instruction: 'Write a structured dialogue around one polarity (e.g., security vs liberty, kindness vs truth). Each speaker champions one pole at times, then switches. Neither wins. The tension is the point. Medium-high energy, intellectual but accessible.'
+  }
+};
+
+async function generatePodcastScript(options = {}) {
+  const client = getAnthropicClient();
+  if (!client) {
+    console.log('[Podcast] No Anthropic API key configured, skipping.');
+    return { success: false, reason: 'no-api-key' };
+  }
+
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weekAgoISO = weekAgo.toISOString();
+  const ledger = getPodcastLedger();
+  const bank = getPodcastBank();
+
+  // --- Determine format ---
+  let format;
+  if (options.format) {
+    format = options.format;
+  } else if (ledger.trialPhase && ledger.currentTrial <= 8) {
+    const trial = (ledger.trialSchedule || [])[ledger.currentTrial - 1];
+    format = trial?.format || 'debate';
+    // For trials 6-8, format gets resolved later based on reviews
+    if (ledger.currentTrial >= 6 && format === 'best-of') {
+      const reviews = getTrialReviews();
+      const best = reviews.reviews.sort((a, b) => (b.soundReal + b.interesting) - (a.soundReal + a.interesting))[0];
+      format = best?.format || 'debate';
+    } else if (ledger.currentTrial >= 7 && format === 'runner-up') {
+      const reviews = getTrialReviews();
+      const sorted = reviews.reviews.sort((a, b) => (b.soundReal + b.interesting) - (a.soundReal + a.interesting));
+      format = sorted[1]?.format || 'debate';
+    } else if (format === 'final') {
+      const reviews = getTrialReviews();
+      const best = reviews.reviews.sort((a, b) => (b.soundReal + b.interesting) - (a.soundReal + a.interesting))[0];
+      format = best?.format || 'debate';
+    }
+  } else {
+    format = ledger.standardFormat || 'debate';
+    // Variety rule: don't use same format 2x in a row
+    const lastEp = ledger.episodes[ledger.episodes.length - 1];
+    if (lastEp?.format === format && ledger.episodes.length % 4 === 0) {
+      const altFormats = Object.keys(PODCAST_FORMATS).filter(f => f !== format);
+      format = altFormats[Math.floor(Math.random() * altFormats.length)];
+    }
+  }
+
+  const formatInfo = PODCAST_FORMATS[format] || PODCAST_FORMATS.debate;
+
+  // --- Gather content sources ---
+  const queue = getPostingQueue();
+  const recentPosts = (queue.posted || []).filter(p => p.postedAt && p.postedAt >= weekAgoISO);
+
+  // Top post (longest content as proxy for engagement)
+  const topPost = recentPosts.length > 0
+    ? recentPosts.reduce((best, p) => (!best || (p.content || '').length > (best.content || '').length) ? p : best, null)
+    : null;
+
+  // Peer review debates
+  const mc = getMissionControl();
+  const recentReviews = (mc.messages || []).filter(m =>
+    m.type === 'review' && m.createdAt >= weekAgoISO
+  ).slice(0, 5);
+
+  const reviewDebates = recentReviews.map(r => ({
+    from: r.from,
+    subject: r.subject,
+    snippet: (r.body || '').substring(0, 300)
+  }));
+
+  // Newsletter content (from this week's queue)
+  const newsletter = (queue.queue || []).find(i => i.platform === 'substack' && i.source === 'newsletter-automation');
+
+  // Book pipeline
+  let bookUpdate = null;
+  try {
+    const bookState = getBookPipelineState();
+    if (bookState.lastRun && bookState.lastRun >= weekAgoISO) {
+      bookUpdate = { chapter: bookState.currentChapter, section: bookState.currentSection };
+    }
+  } catch (e) { /* skip */ }
+
+  // Salvage bank — reusable content from rejected episodes
+  const salvageable = bank.salvaged.filter(s => !s.reusedIn).slice(0, 2);
+
+  // Episode history for continuity
+  const recentEpisodes = ledger.episodes.slice(-5);
+  const openThreads = (ledger.recurringThreads || []).filter(t => t.status === 'open');
+
+  // Past practices (to avoid repeats)
+  const pastPractices = ledger.episodes.map(e => e.practiceGiven).filter(Boolean);
+
+  // Killed topics (to avoid)
+  const killedTopics = bank.killed || [];
+
+  // --- Build the system prompt ---
+  const platoSoul = fs.readFileSync(path.join(__dirname, '..', 'philosophers', 'plato', 'SOUL.md'), 'utf8');
+  const platoVoice = extractVoiceSections(platoSoul);
+
+  const systemPrompt = `You are Plato, writing a podcast script for "The Tension Lines" — a philosophy podcast hosted by Shawn with an unnamed recurring co-host called "Friend."
+
+${platoVoice}
+
+CRITICAL AUTHORSHIP RULE: Shawn is the host. The Friend is never named — just a recurring voice. Never mention agents, AI, or automated systems. Never use philosopher agent names. This must sound like two real humans talking.
+
+## FORMAT: ${formatInfo.name} (${formatInfo.duration})
+${formatInfo.instruction}
+
+## EPISODE STRUCTURE
+- COLD OPEN (0:00-0:45): Mid-conversation hook. No intro, no "welcome." Two people already talking about something compelling.
+- BRIEF INTRO (0:45-1:15): Shawn: "This is The Tension Lines. I'm Shawn. Let's get into it." (Under 30 seconds.)
+- THE SETUP (1:15-5:00): Introduce the tension. The friend reacts in real-time. NOT a monologue.
+- THE TENSION (5:00-20:00): Core conversation. Push and pull. The friend disagrees, challenges, steelmans the other side.
+- THE PRACTICE (20:00-27:00): Shawn gives a concrete exercise. Warmer tone. The friend reacts.
+- THE CLOSE (27:00-30:00): Casual wind-down. "All right, that's it for this week." No formal sign-off.
+
+## AUTHENTICITY RULES (CRITICAL — follow these exactly)
+
+MANDATORY SPEECH PATTERNS — include all of these:
+- Interruptions (8-12 per episode): "[interrupting]" tag, mid-sentence cuts
+- False starts and self-corrections (6-10): "actually, let me come at this differently"
+- Filler words throughout: "I mean...", "you know?", "right, right", "the thing is..."
+- Backchannel responses (15-20): "mm-hmm", "uh-huh", "right", "yeah", "huh", "[laughs]"
+- Trailing off and picking back up (4-6): "And I think that's where most people just... [pause]"
+- Genuine disagreement (2-4): Real pushback with heat, not polite agreement
+- Moments of genuine connection (1-2): "That actually just changed how I think about this."
+- Laughter (3-5): Natural, at unexpected honesty or self-awareness
+- Comfortable silences (2+): "[pause]" for 2-3 seconds of genuine thinking
+- At least one tangent that goes off-topic then pulls back: "Sorry, that's a whole other episode."
+
+FORBIDDEN PATTERNS — never do these:
+- Both speakers agreeing for more than 3 consecutive exchanges
+- Perfectly balanced turn lengths
+- "That's a great point, and building on that..."
+- "So what you're saying is..." (summarizing the other person)
+- "That's a great question"
+- Numbered lists in speech
+- Neat resolution or "key takeaway" at the end
+- Corporate/therapy language ("unpack that", "safe space", "lean into", "at the end of the day")
+- "As I mentioned earlier"
+- Both speakers using the same speech rhythm or sentence length patterns
+
+PACE AND RHYTHM:
+- Vary sentence length wildly. Some lines 3 words, some 40.
+- The friend talks FASTER than Shawn. Different default paces.
+- Opening 5 minutes should feel looser than the middle.
+- Friend's lines should average shorter than Shawn's.
+
+## ElevenLabs AUDIO TAGS (use these in the script)
+- [interrupting] — cutting someone off mid-sentence
+- [overlapping] — speaking simultaneously
+- [laughs] — natural laughter
+- [pause] — explicit silence (2-3 seconds)
+- [drawn out] — elongated delivery
+
+## OUTPUT FORMAT
+Respond ONLY with valid JSON, no markdown wrapping:
+{
+  "title": "Episode title (compelling, under 60 chars)",
+  "subtitle": "One-sentence subtitle (under 120 chars)",
+  "format": "${format}",
+  "topic": "The core tension explored (one sentence)",
+  "tensions": ["tension-1", "tension-2"],
+  "script": [
+    { "speaker": "shawn", "text": "Line of dialogue with [tags] as needed" },
+    { "speaker": "friend", "text": "Line of dialogue with [tags] as needed" }
+  ],
+  "practiceExercise": "Name of the practice given",
+  "unresolvedThreads": ["Thread that was raised but not fully resolved"],
+  "clipMoments": [
+    { "startLine": 45, "endLine": 52, "reason": "Sharp disagreement about X" }
+  ],
+  "callbackLines": ["Any memorable/quotable lines worth referencing in future episodes"]
+}
+
+The script array should contain 120-200 exchanges for a 25-30 min episode, fewer for quick-hit format.`;
+
+  const contentContext = `
+## THIS WEEK'S CONTENT (use as source material)
+
+${topPost ? `TOP POST (${topPost.platform}): "${(topPost.content || '').substring(0, 500)}"` : 'No posts this week.'}
+
+${reviewDebates.length > 0 ? `PEER REVIEW DEBATES:\n${reviewDebates.map(r => `- ${r.from}: ${r.snippet}`).join('\n')}` : 'No peer review debates this week.'}
+
+${newsletter ? `NEWSLETTER PRACTICE: "${(newsletter.content || '').substring(0, 300)}"` : ''}
+
+${bookUpdate ? `BOOK PROGRESS: Chapter ${bookUpdate.chapter}, Section ${bookUpdate.section}` : ''}
+
+${salvageable.length > 0 ? `SALVAGED FROM REJECTED EPISODES (reuse if relevant):\n${salvageable.map(s => `- Topic: ${s.topic}\n  Good lines: ${(s.usableParts?.goodLines || []).join('; ')}\n  Unresolved: ${s.usableParts?.unresolvedTension || 'none'}`).join('\n')}` : ''}
+
+## CONTINUITY CONTEXT
+
+${recentEpisodes.length > 0 ? `RECENT EPISODES:\n${recentEpisodes.map(e => `- "${e.title}" (${e.format}): ${e.topic}`).join('\n')}` : 'No previous episodes yet. This is a fresh start.'}
+
+${openThreads.length > 0 ? `OPEN THREADS (revisit if natural, never force):\n${openThreads.map(t => `- ${t.thread} (first in: ${t.firstMentioned})`).join('\n')}` : ''}
+
+${pastPractices.length > 0 ? `PAST PRACTICES (don't repeat):\n${pastPractices.map(p => `- ${p}`).join('\n')}` : ''}
+
+${killedTopics.length > 0 ? `KILLED TOPICS (avoid these):\n${killedTopics.join(', ')}` : ''}
+`.trim();
+
+  // --- Generate script (Plato writes) ---
+  console.log(`[Podcast] Generating script — format: ${format}, trial: ${ledger.trialPhase ? ledger.currentTrial : 'standard'}`);
+
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-5-20250929',
+    max_tokens: 8192,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: contentContext }]
+  });
+
+  const responseText = response.content[0]?.text || '';
+  const cleaned = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const episode = JSON.parse(cleaned);
+
+  if (!episode.title || !episode.script || episode.script.length === 0) {
+    throw new Error('Script generation failed — missing title or script');
+  }
+
+  // --- Agent reviews (parallel simulation via single Sonnet call) ---
+  const scriptPreview = episode.script.slice(0, 30).map(l => `${l.speaker}: ${l.text}`).join('\n');
+  const scriptFull = episode.script.map(l => `${l.speaker}: ${l.text}`).join('\n');
+
+  const reviewPrompt = `Review this podcast script for "The Tension Lines." You are reviewing as FOUR agents simultaneously. Be concise and direct.
+
+SCRIPT (${episode.script.length} exchanges):
+${scriptFull.substring(0, 6000)}${scriptFull.length > 6000 ? '\n[...truncated...]' : ''}
+
+Respond ONLY with valid JSON:
+{
+  "diogenes": {
+    "verdict": "pass|needs-work|reject",
+    "note": "One sentence on authenticity. Does it sound real?"
+  },
+  "aristotle": {
+    "verdict": "pass|needs-work|reject",
+    "note": "One sentence on structure. Does the arc hold for ${formatInfo.duration}?"
+  },
+  "socrates": {
+    "verdict": "pass|needs-work|reject",
+    "note": "One sentence on the friend's lines. Does the friend actually challenge?"
+  },
+  "marcus": {
+    "verdict": "pass|needs-work|reject",
+    "note": "One sentence on the practice. Is it concrete, doable, and fresh?"
+  }
+}`;
+
+  let reviews = {};
+  try {
+    const reviewResponse = await client.messages.create({
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 512,
+      system: 'You are a multi-agent review system. Be harsh, concise, and honest. One sentence per agent.',
+      messages: [{ role: 'user', content: reviewPrompt }]
+    });
+    const reviewText = reviewResponse.content[0]?.text || '';
+    const reviewCleaned = reviewText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    reviews = JSON.parse(reviewCleaned);
+  } catch (e) {
+    console.error('[Podcast] Review round failed:', e.message);
+    reviews = { error: 'Review round failed: ' + e.message };
+  }
+
+  // --- Athena final edit pass ---
+  let athenaNote = '';
+  try {
+    const athenaSoul = fs.readFileSync(path.join(__dirname, '..', 'philosophers', 'athena', 'SOUL.md'), 'utf8');
+    const athenaVoice = extractVoiceSections(athenaSoul);
+    const athenaResponse = await client.messages.create({
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 256,
+      system: `You are Athena, Podcast Editor-in-Chief.\n\n${athenaVoice}\n\nGive a brief production note: hook strength (first 10 seconds), dead stretches, energy dips, pacing issues. 2-3 sentences max. Also mark which exchanges would make good 30-60 second social clips (give line numbers).`,
+      messages: [{ role: 'user', content: `Episode: "${episode.title}" (${format}, ${episode.script.length} exchanges)\n\nFirst 10 lines:\n${episode.script.slice(0, 10).map((l, i) => `${i}: ${l.speaker}: ${l.text}`).join('\n')}\n\nMiddle sample (lines 50-60):\n${episode.script.slice(50, 60).map((l, i) => `${i + 50}: ${l.speaker}: ${l.text}`).join('\n')}\n\nLast 10 lines:\n${episode.script.slice(-10).map((l, i) => `${i + episode.script.length - 10}: ${l.speaker}: ${l.text}`).join('\n')}` }]
+    });
+    athenaNote = athenaResponse.content[0]?.text?.trim() || '';
+  } catch (e) {
+    console.error('[Podcast] Athena review failed:', e.message);
+    athenaNote = 'Athena review unavailable: ' + e.message;
+  }
+
+  // --- Queue in posting queue ---
+  const itemId = `podcast-${Date.now()}`;
+  const wordCount = episode.script.reduce((sum, l) => sum + l.text.split(/\s+/).length, 0);
+  const estDuration = Math.round(wordCount / 140); // ~140 wpm for conversational speech
+
+  queue.queue.push({
+    id: itemId,
+    createdAt: now.toISOString(),
+    status: 'pending-review',
+    platform: 'podcast',
+    title: episode.title,
+    subtitle: episode.subtitle || '',
+    content: `**${episode.title}**\n\n_${episode.subtitle || ''}_\n\nTopic: ${episode.topic}\nFormat: ${formatInfo.name} (${format})\nExchanges: ${episode.script.length}\nEst. duration: ~${estDuration} min\nWord count: ${wordCount}`,
+    caption: '',
+    parts: [],
+    canvaComplete: false,
+    createdBy: 'athena',
+    source: 'podcast-pipeline',
+    metadata: {
+      format,
+      formatName: formatInfo.name,
+      topic: episode.topic,
+      tensions: episode.tensions || [],
+      script: episode.script,
+      practiceExercise: episode.practiceExercise || '',
+      unresolvedThreads: episode.unresolvedThreads || [],
+      clipMoments: episode.clipMoments || [],
+      callbackLines: episode.callbackLines || [],
+      reviews,
+      athenaNote,
+      wordCount,
+      estDuration,
+      exchangeCount: episode.script.length,
+      trialNumber: ledger.trialPhase ? ledger.currentTrial : null,
+      audioFile: null,
+      audioGenerated: false
+    }
+  });
+  savePostingQueue(queue);
+
+  // --- Notification ---
+  mc.notifications.push({
+    id: `notif-podcast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    type: 'podcast',
+    title: `Podcast Episode Ready: ${episode.title}`,
+    message: `New ${formatInfo.name} episode (${format}) generated. ~${estDuration} min, ${episode.script.length} exchanges. Review in the posting queue.${ledger.trialPhase ? ` Trial #${ledger.currentTrial} of 8.` : ''}`,
+    from: 'athena',
+    to: ['shawn'],
+    createdAt: now.toISOString(),
+    read: false,
+    priority: 'normal',
+    actionRequired: true,
+    metadata: { queueItemId: itemId, platform: 'podcast', format }
+  });
+  fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+  cache.missionControl = null;
+  broadcast('notifications');
+
+  logSystemEvent('cron', `Podcast script generated: "${episode.title}" (${format}, ~${estDuration}min)`, {
+    queueItemId: itemId, format, exchanges: episode.script.length, wordCount
+  });
+
+  console.log(`[Podcast] Generated: "${episode.title}" (${format}, ${episode.script.length} exchanges, ~${estDuration}min)`);
+
+  return {
+    success: true,
+    title: episode.title,
+    format,
+    formatName: formatInfo.name,
+    exchanges: episode.script.length,
+    wordCount,
+    estDuration,
+    queueItemId: itemId,
+    trialNumber: ledger.trialPhase ? ledger.currentTrial : null,
+    reviews
+  };
+}
+
+// --- Podcast rejection handlers ---
+
+function podcastSalvage(queueItem, reason) {
+  const bank = getPodcastBank();
+  const meta = queueItem.metadata || {};
+  bank.salvaged.push({
+    id: `salv-${Date.now()}`,
+    sourceEpisode: queueItem.id,
+    rejectedAt: new Date().toISOString(),
+    reason: reason || '',
+    topic: meta.topic || queueItem.title,
+    usableParts: {
+      goodLines: (meta.callbackLines || []).slice(0, 5),
+      unresolvedTension: (meta.unresolvedThreads || [])[0] || '',
+      practiceExercise: meta.practiceExercise || '',
+      tensions: meta.tensions || []
+    },
+    reusedIn: null
+  });
+  savePodcastBank(bank);
+  return true;
+}
+
+function podcastKill(queueItem) {
+  const bank = getPodcastBank();
+  const topic = queueItem.metadata?.topic || queueItem.title;
+  if (!bank.killed.includes(topic)) {
+    bank.killed.push(topic);
+  }
+  savePodcastBank(bank);
+  return true;
+}
+
+function podcastApprove(queueItem) {
+  const ledger = getPodcastLedger();
+  const meta = queueItem.metadata || {};
+
+  const epId = `ep-${String(ledger.totalEpisodes + 1).padStart(3, '0')}`;
+  const episode = {
+    id: epId,
+    title: queueItem.title,
+    publishedAt: new Date().toISOString(),
+    format: meta.format || 'debate',
+    duration: meta.estDuration ? `~${meta.estDuration}min` : 'unknown',
+    topic: meta.topic || '',
+    tensions: meta.tensions || [],
+    unresolvedThreads: meta.unresolvedThreads || [],
+    callbackLines: meta.callbackLines || [],
+    practiceGiven: meta.practiceExercise || '',
+    relatedEpisodes: [],
+    bookChapterRef: null,
+    socialPostSource: null,
+    audienceSignals: null,
+    trialNumber: meta.trialNumber || null
+  };
+
+  ledger.episodes.push(episode);
+  ledger.totalEpisodes++;
+
+  // Update recurring threads
+  for (const thread of (meta.unresolvedThreads || [])) {
+    const existing = ledger.recurringThreads.find(t => t.thread === thread);
+    if (existing) {
+      existing.mentions.push(epId);
+    } else {
+      ledger.recurringThreads.push({
+        thread,
+        firstMentioned: epId,
+        mentions: [epId],
+        status: 'open'
+      });
+    }
+  }
+
+  // Update format stats
+  const fmt = meta.format || 'debate';
+  if (ledger.formatStats[fmt]) {
+    ledger.formatStats[fmt].used++;
+  }
+
+  // Advance trial phase
+  if (ledger.trialPhase && ledger.currentTrial <= 8) {
+    if (ledger.trialSchedule[ledger.currentTrial - 1]) {
+      ledger.trialSchedule[ledger.currentTrial - 1].status = 'completed';
+    }
+    ledger.currentTrial++;
+    if (ledger.currentTrial > 8) {
+      // Trial phase complete — check if a format was chosen
+      const reviews = getTrialReviews();
+      if (reviews.chosenFormat) {
+        ledger.standardFormat = reviews.chosenFormat;
+        ledger.trialPhase = false;
+      }
+    }
+  }
+
+  // Mark salvaged content as reused if topic overlaps
+  const bank = getPodcastBank();
+  for (const s of bank.salvaged) {
+    if (!s.reusedIn && meta.tensions?.some(t => s.usableParts?.tensions?.includes(t))) {
+      s.reusedIn = epId;
+    }
+  }
+  savePodcastBank(bank);
+  savePodcastLedger(ledger);
+  return episode;
+}
+
+// --- Manual trigger ---
+app.post('/api/podcast/run', async (req, res) => {
+  try {
+    const result = await generatePodcastScript({ format: req.body?.format });
+    recordCronRun('weekly-podcast', result.success ? `${result.format}:${result.exchanges}x` : result.reason);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Podcast generation error:', error);
+    res.status(500).json({ error: 'Podcast generation failed: ' + error.message });
+  }
+});
+
+// --- Podcast action endpoints ---
+app.post('/api/podcast/:id/approve', (req, res) => {
+  try {
+    const queue = getPostingQueue();
+    const item = queue.queue.find(i => i.id === req.params.id && i.platform === 'podcast');
+    if (!item) return res.status(404).json({ error: 'Podcast episode not found in queue' });
+
+    const episode = podcastApprove(item);
+    item.status = 'ready';
+    item.approvedAt = new Date().toISOString();
+    savePostingQueue(queue);
+
+    logSystemEvent('podcast', `Episode approved: "${item.title}" → ${episode.id}`, { episodeId: episode.id });
+    res.json({ success: true, episode });
+  } catch (error) {
+    console.error('Podcast approve error:', error);
+    res.status(500).json({ error: 'Approval failed' });
+  }
+});
+
+app.post('/api/podcast/:id/rework', async (req, res) => {
+  try {
+    const queue = getPostingQueue();
+    const idx = queue.queue.findIndex(i => i.id === req.params.id && i.platform === 'podcast');
+    if (idx === -1) return res.status(404).json({ error: 'Podcast episode not found' });
+
+    const oldItem = queue.queue[idx];
+    const notes = req.body?.notes || 'Rework requested';
+
+    // Remove old item
+    queue.queue.splice(idx, 1);
+    savePostingQueue(queue);
+
+    logSystemEvent('podcast', `Episode reworked: "${oldItem.title}" — ${notes}`, { oldId: oldItem.id });
+
+    // Regenerate with same format
+    const result = await generatePodcastScript({ format: oldItem.metadata?.format });
+    res.json({ success: true, reworked: true, ...result });
+  } catch (error) {
+    console.error('Podcast rework error:', error);
+    res.status(500).json({ error: 'Rework failed' });
+  }
+});
+
+app.post('/api/podcast/:id/salvage', (req, res) => {
+  try {
+    const queue = getPostingQueue();
+    const idx = queue.queue.findIndex(i => i.id === req.params.id && i.platform === 'podcast');
+    if (idx === -1) return res.status(404).json({ error: 'Podcast episode not found' });
+
+    const item = queue.queue[idx];
+    podcastSalvage(item, req.body?.reason || '');
+
+    queue.queue.splice(idx, 1);
+    savePostingQueue(queue);
+
+    logSystemEvent('podcast', `Episode salvaged: "${item.title}"`, { topic: item.metadata?.topic });
+    res.json({ success: true, salvaged: true });
+  } catch (error) {
+    console.error('Podcast salvage error:', error);
+    res.status(500).json({ error: 'Salvage failed' });
+  }
+});
+
+app.post('/api/podcast/:id/kill', (req, res) => {
+  try {
+    const queue = getPostingQueue();
+    const idx = queue.queue.findIndex(i => i.id === req.params.id && i.platform === 'podcast');
+    if (idx === -1) return res.status(404).json({ error: 'Podcast episode not found' });
+
+    const item = queue.queue[idx];
+    podcastKill(item);
+
+    queue.queue.splice(idx, 1);
+    savePostingQueue(queue);
+
+    logSystemEvent('podcast', `Episode killed: "${item.title}"`, { topic: item.metadata?.topic });
+    res.json({ success: true, killed: true });
+  } catch (error) {
+    console.error('Podcast kill error:', error);
+    res.status(500).json({ error: 'Kill failed' });
+  }
+});
+
+// --- Trial review endpoint ---
+app.post('/api/podcast/trial-review', (req, res) => {
+  try {
+    const { episodeId, format, soundReal, interesting, wouldShare, whatWorked, whatDidnt } = req.body;
+    if (!format || soundReal == null || interesting == null) {
+      return res.status(400).json({ error: 'format, soundReal, and interesting are required' });
+    }
+
+    const reviews = getTrialReviews();
+    reviews.reviews.push({
+      episodeId,
+      format,
+      soundReal: Number(soundReal),
+      interesting: Number(interesting),
+      wouldShare: !!wouldShare,
+      whatWorked: whatWorked || '',
+      whatDidnt: whatDidnt || '',
+      reviewedAt: new Date().toISOString()
+    });
+
+    // Update format stats in ledger
+    const ledger = getPodcastLedger();
+    if (ledger.formatStats[format]) {
+      const fmtReviews = reviews.reviews.filter(r => r.format === format);
+      ledger.formatStats[format].avgRating = fmtReviews.reduce((sum, r) => sum + r.soundReal + r.interesting, 0) / (fmtReviews.length * 2);
+    }
+    savePodcastLedger(ledger);
+    saveTrialReviews(reviews);
+
+    res.json({ success: true, totalReviews: reviews.reviews.length });
+  } catch (error) {
+    console.error('Trial review error:', error);
+    res.status(500).json({ error: 'Failed to save review' });
+  }
+});
+
+// --- Lock in format after trials ---
+app.post('/api/podcast/standardize', (req, res) => {
+  try {
+    const { format } = req.body;
+    if (!format || !PODCAST_FORMATS[format]) {
+      return res.status(400).json({ error: 'Valid format required' });
+    }
+
+    const ledger = getPodcastLedger();
+    ledger.standardFormat = format;
+    ledger.trialPhase = false;
+    savePodcastLedger(ledger);
+
+    const reviews = getTrialReviews();
+    reviews.chosenFormat = format;
+    reviews.standardizedAt = new Date().toISOString();
+    saveTrialReviews(reviews);
+
+    logSystemEvent('podcast', `Podcast format standardized: ${PODCAST_FORMATS[format].name} (${format})`);
+    res.json({ success: true, format, name: PODCAST_FORMATS[format].name });
+  } catch (error) {
+    console.error('Standardize error:', error);
+    res.status(500).json({ error: 'Failed to standardize' });
+  }
+});
+
+// --- Podcast state endpoints ---
+app.get('/api/podcast/ledger', (req, res) => {
+  try { res.json(getPodcastLedger()); }
+  catch (error) { res.status(500).json({ error: 'Failed to read ledger' }); }
+});
+
+app.get('/api/podcast/bank', (req, res) => {
+  try { res.json(getPodcastBank()); }
+  catch (error) { res.status(500).json({ error: 'Failed to read bank' }); }
+});
+
+app.get('/api/podcast/trials', (req, res) => {
+  try { res.json(getTrialReviews()); }
+  catch (error) { res.status(500).json({ error: 'Failed to read trials' }); }
+});
+
+app.get('/api/podcast/formats', (req, res) => {
+  res.json({ formats: PODCAST_FORMATS });
+});
+
+// --- Cron schedule ---
+cron.schedule('30 9 * * 1', async () => {
+  try {
+    const result = await generatePodcastScript();
+    recordCronRun('weekly-podcast', result.success ? `${result.format}:${result.exchanges}x` : result.reason);
+  } catch (err) {
+    console.error('[Cron] Podcast error:', err);
+    recordCronRun('weekly-podcast', null, err.message);
+    logSystemEvent('error', `Weekly podcast failed: ${err.message}`);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[Cron] Weekly podcast scheduled for Monday 9:30 AM PST');
+
+app.post('/api/peer-review/run', async (req, res) => {
+  try {
+    const result = await runPeerReview();
+    recordCronRun('peer-review', `reviewed:${result.reviewed},flagged:${result.flagged}`);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Peer review error:', error);
+    res.status(500).json({ error: 'Peer review failed' });
+  }
+});
+
+app.post('/api/tension-standup/run', async (req, res) => {
+  try {
+    const result = await runTensionStandup();
+    recordCronRun('tension-standup', `actions:${result.actions}`);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Tension standup error:', error);
+    res.status(500).json({ error: 'Tension standup failed' });
+  }
+});
+
+app.post('/api/book-pipeline/run', async (req, res) => {
+  try {
+    const result = await runBookPipeline();
+    recordCronRun('book-pipeline', result.success ? `ch${result.chapter}s${result.section}` : result.reason);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Book pipeline error:', error);
+    res.status(500).json({ error: 'Book pipeline failed' });
+  }
+});
+
+app.get('/api/book-pipeline/state', (req, res) => {
+  try {
+    const state = getBookPipelineState();
+    const outline = parseBookOutline();
+    const totalSections = outline.reduce((sum, ch) => sum + ch.sections.length, 0);
+    res.json({
+      ...state,
+      outline: outline.map(ch => ({ number: ch.number, title: ch.title, sectionCount: ch.sections.length })),
+      progress: { completed: state.completedSections.length, total: totalSections }
+    });
+  } catch (error) {
+    console.error('Book pipeline state error:', error);
+    res.status(500).json({ error: 'Failed to read pipeline state' });
+  }
+});
+
+// Manual trigger endpoints for new cron jobs
+app.post('/api/auto-voice-check/run', async (req, res) => {
+  try {
+    const result = await runAutoVoiceCheck();
+    recordCronRun('auto-voice-check', `checked:${result.checked},flagged:${result.flagged}`);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Auto voice check error:', error);
+    res.status(500).json({ error: 'Auto voice check failed' });
+  }
+});
+
+app.post('/api/queue-replenishment/run', async (req, res) => {
+  try {
+    const result = await runQueueReplenishment();
+    recordCronRun('queue-replenishment', `drafted:${result.drafted}`);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Queue replenishment error:', error);
+    res.status(500).json({ error: 'Queue replenishment failed' });
+  }
+});
+
+app.post('/api/evening-recap/run', async (req, res) => {
+  try {
+    const result = await generateEveningRecap();
+    recordCronRun('evening-recap', `posted:${result.totalPosted},queued:${result.totalReady}`);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Evening recap error:', error);
+    res.status(500).json({ error: 'Evening recap failed' });
+  }
+});
 
 // Manual trigger endpoint
 app.post('/api/weekly-review', async (req, res) => {
@@ -10375,6 +12561,106 @@ function logMessageActivity(message, mc) {
 }
 
 /**
+ * Internal helper: send a message programmatically (used by cron jobs).
+ * Mirrors POST /api/messages logic but callable from code.
+ */
+function sendAgentMessage({ from, to, subject, body, type = 'update', priority = 'medium', threadId, parentId, metadata = {} }) {
+  const mc = getMissionControl();
+  if (!mc.messages) mc.messages = [];
+
+  const id = generateMessageId();
+  const now = new Date().toISOString();
+
+  const message = {
+    id,
+    threadId: threadId || id,
+    parentId: parentId || null,
+    from,
+    to: Array.isArray(to) ? to : [to],
+    type,
+    subject,
+    body,
+    priority,
+    status: 'unread',
+    createdAt: now,
+    readAt: null,
+    archivedAt: null,
+    metadata
+  };
+
+  mc.messages.unshift(message);
+  createMessageNotification(message, mc);
+  logMessageActivity(message, mc);
+
+  fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+  cache.missionControl = null;
+  broadcast('messages');
+
+  return message;
+}
+
+/**
+ * Internal helper: create a task programmatically (used by Tension standup).
+ */
+function createInternalTask({ title, description, assigneeIds = [], createdBy = 'system', status = 'backlog', metadata = {} }) {
+  const mc = getMissionControl();
+
+  // Generate next task ID
+  let maxNum = 0;
+  for (const t of mc.tasks) {
+    const match = t.id.match(/^task-(\d+)/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (num > maxNum) maxNum = num;
+    }
+  }
+  const newId = `task-${String(maxNum + 1).padStart(3, '0')}`;
+  const now = new Date().toISOString();
+
+  const task = {
+    id: newId,
+    title: title.trim(),
+    description: (description || '').trim(),
+    status,
+    assigneeIds,
+    createdBy,
+    createdAt: now,
+    llm: null,
+    rationale: '',
+    reviewerIds: [],
+    metadata
+  };
+
+  mc.tasks.push(task);
+
+  mc.activities.unshift({
+    id: `activity-${Date.now()}`,
+    type: 'task_created',
+    agentId: createdBy,
+    taskId: newId,
+    timestamp: now,
+    description: `Created task: ${task.title}`,
+    metadata: { assigneeIds, status, priority: metadata?.priority || null }
+  });
+
+  mc.notifications.unshift({
+    id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    type: 'task_assigned',
+    title: 'New Task Assigned',
+    message: `**${task.title}**\n\nAssigned to: ${assigneeIds.join(', ') || 'unassigned'}\n\n${(description || '').substring(0, 200)}`,
+    read: false,
+    createdAt: now,
+    metadata: { taskId: newId, assigneeIds, createdBy }
+  });
+
+  fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+  cache.missionControl = null;
+  broadcast('tasks');
+
+  return task;
+}
+
+/**
  * GET /api/messages - List messages with filters
  */
 app.get('/api/messages', (req, res) => {
@@ -10499,35 +12785,7 @@ app.post('/api/messages', (req, res) => {
       }
     }
 
-    const id = generateMessageId();
-    const now = new Date().toISOString();
-
-    const message = {
-      id,
-      threadId: id,
-      parentId: null,
-      from,
-      to,
-      type,
-      subject,
-      body,
-      priority,
-      status: 'unread',
-      createdAt: now,
-      readAt: null,
-      archivedAt: null,
-      metadata
-    };
-
-    if (!mc.messages) mc.messages = [];
-    mc.messages.unshift(message);
-
-    createMessageNotification(message, mc);
-    logMessageActivity(message, mc);
-
-    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
-    cache.missionControl = null;
-
+    const message = sendAgentMessage({ from, to, type, subject, body, priority, metadata });
     res.status(201).json(message);
   } catch (error) {
     console.error('[Messages] POST error:', error);
@@ -10607,33 +12865,17 @@ app.post('/api/messages/:id/reply', (req, res) => {
     recipients.delete(from);
     const to = Array.from(recipients);
 
-    const id = generateMessageId();
-    const now = new Date().toISOString();
-
-    const reply = {
-      id,
-      threadId: parent.threadId,
-      parentId: parent.id,
+    const reply = sendAgentMessage({
       from,
       to,
       type: replyType,
       subject: parent.subject.startsWith('Re: ') ? parent.subject : `Re: ${parent.subject}`,
       body,
       priority: replyPriority,
-      status: 'unread',
-      createdAt: now,
-      readAt: null,
-      archivedAt: null,
+      threadId: parent.threadId,
+      parentId: parent.id,
       metadata: parent.metadata || {}
-    };
-
-    mc.messages.unshift(reply);
-
-    createMessageNotification(reply, mc);
-    logMessageActivity(reply, mc);
-
-    fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
-    cache.missionControl = null;
+    });
 
     res.status(201).json(reply);
   } catch (error) {

@@ -15,7 +15,12 @@ import {
   MessageSquarePlus,
   Search,
   Sparkles,
-  Edit3
+  Edit3,
+  Instagram,
+  MessageCircle,
+  Hash,
+  BookOpen,
+  Newspaper
 } from 'lucide-react'
 import PlatformStatusBadges from './PlatformStatusBadges'
 
@@ -41,8 +46,23 @@ function getPlatformIcon(platform, size = 16) {
   switch (platform) {
     case 'bluesky': return <BlueskyIcon size={size} className="text-blue-500" />
     case 'twitter': return <TwitterIcon size={size} className="text-neutral-800" />
+    case 'threads': return <MessageCircle size={size} className="text-neutral-700" />
+    case 'instagram': return <Instagram size={size} className="text-pink-500" />
+    case 'reddit': return <Hash size={size} className="text-orange-500" />
+    case 'medium': return <BookOpen size={size} className="text-green-700" />
+    case 'substack': return <Newspaper size={size} className="text-orange-600" />
     default: return null
   }
+}
+
+const PLATFORM_LABELS = {
+  bluesky: 'Bluesky',
+  twitter: 'Twitter / X',
+  threads: 'Threads',
+  instagram: 'Instagram',
+  reddit: 'Reddit',
+  medium: 'Medium',
+  substack: 'Substack',
 }
 
 const PHILOSOPHERS = [
@@ -151,25 +171,27 @@ export default function CommentQueue() {
       {activeTab === 'queue' ? (
         <>
           {/* Rate Limit Cards (clickable filters) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <RateLimitCard
-              platform="bluesky"
-              icon={<BlueskyIcon size={24} className="text-current" />}
-              commentsToday={data.commentsToday?.bluesky || 0}
-              maxComments={data.settings?.platforms?.bluesky?.maxCommentsPerDay || 5}
-              canComment={data.canCommentBluesky}
-              isActive={platformFilter === 'bluesky'}
-              onClick={() => setPlatformFilter(platformFilter === 'bluesky' ? null : 'bluesky')}
-            />
-            <RateLimitCard
-              platform="twitter"
-              icon={<TwitterIcon size={24} className="text-current" />}
-              commentsToday={data.commentsToday?.twitter || 0}
-              maxComments={data.settings?.platforms?.twitter?.maxCommentsPerDay || 5}
-              canComment={data.canCommentTwitter}
-              isActive={platformFilter === 'twitter'}
-              onClick={() => setPlatformFilter(platformFilter === 'twitter' ? null : 'twitter')}
-            />
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+            {[
+              { key: 'bluesky', icon: <BlueskyIcon size={20} className="text-current" /> },
+              { key: 'twitter', icon: <TwitterIcon size={20} className="text-current" /> },
+              { key: 'threads', icon: <MessageCircle size={20} className="text-current" /> },
+              { key: 'instagram', icon: <Instagram size={20} className="text-current" /> },
+              { key: 'reddit', icon: <Hash size={20} className="text-current" /> },
+              { key: 'medium', icon: <BookOpen size={20} className="text-current" /> },
+              { key: 'substack', icon: <Newspaper size={20} className="text-current" /> },
+            ].map(({ key, icon }) => (
+              <RateLimitCard
+                key={key}
+                platform={key}
+                icon={icon}
+                commentsToday={data.commentsToday?.[key] || 0}
+                maxComments={data.settings?.platforms?.[key]?.maxCommentsPerDay || 5}
+                canComment={(data.commentsToday?.[key] || 0) < (data.settings?.platforms?.[key]?.maxCommentsPerDay || 5)}
+                isActive={platformFilter === key}
+                onClick={() => setPlatformFilter(platformFilter === key ? null : key)}
+              />
+            ))}
           </div>
 
           {/* Ready to Publish */}
@@ -200,7 +222,7 @@ export default function CommentQueue() {
                     key={item.id}
                     item={item}
                     canComment={
-                      item.platform === 'bluesky' ? data.canCommentBluesky : data.canCommentTwitter
+                      (data.commentsToday?.[item.platform] || 0) < (data.settings?.platforms?.[item.platform]?.maxCommentsPerDay || 5)
                     }
                     onUpdate={mutate}
                   />
@@ -460,6 +482,11 @@ function DiscoveredItem({ item, onGenerate, onDismiss }) {
 const PLATFORM_STYLE = {
   bluesky: { bg: 'bg-blue-50', border: 'border-blue-200', hover: 'hover:border-blue-300', text: 'text-blue-600', ring: 'ring-blue-500', activeBg: 'bg-blue-100' },
   twitter: { bg: 'bg-neutral-50', border: 'border-neutral-300', hover: 'hover:border-neutral-400', text: 'text-neutral-800', ring: 'ring-neutral-800', activeBg: 'bg-neutral-100' },
+  threads: { bg: 'bg-neutral-50', border: 'border-neutral-300', hover: 'hover:border-neutral-400', text: 'text-neutral-700', ring: 'ring-neutral-700', activeBg: 'bg-neutral-100' },
+  instagram: { bg: 'bg-pink-50', border: 'border-pink-200', hover: 'hover:border-pink-300', text: 'text-pink-600', ring: 'ring-pink-500', activeBg: 'bg-pink-100' },
+  reddit: { bg: 'bg-orange-50', border: 'border-orange-200', hover: 'hover:border-orange-300', text: 'text-orange-600', ring: 'ring-orange-500', activeBg: 'bg-orange-100' },
+  medium: { bg: 'bg-green-50', border: 'border-green-200', hover: 'hover:border-green-300', text: 'text-green-700', ring: 'ring-green-600', activeBg: 'bg-green-100' },
+  substack: { bg: 'bg-orange-50', border: 'border-orange-200', hover: 'hover:border-orange-300', text: 'text-orange-600', ring: 'ring-orange-500', activeBg: 'bg-orange-100' },
 }
 
 function RateLimitCard({ platform, icon, commentsToday, maxComments, canComment, isActive, onClick }) {
@@ -469,27 +496,22 @@ function RateLimitCard({ platform, icon, commentsToday, maxComments, canComment,
   return (
     <button
       onClick={onClick}
-      className={`p-4 rounded-lg border text-left w-full transition-all ${
+      className={`p-3 rounded-lg border text-left w-full transition-all ${
         isActive
           ? `ring-2 ring-offset-1 ${ps.ring} ${ps.border} ${ps.activeBg}`
           : `${ps.bg} ${ps.border} ${ps.hover}`
       }`}
     >
+      <div className="flex items-center gap-2 mb-1">
+        <div className={ps.text}>{icon}</div>
+        <h3 className="font-semibold text-sm truncate">{PLATFORM_LABELS[platform] || platform}</h3>
+      </div>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className={ps.text}>
-            {icon}
-          </div>
-          <div>
-            <h3 className="font-semibold capitalize">{platform === 'twitter' ? 'Twitter / X' : 'Bluesky'}</h3>
-            <p className="text-sm text-neutral-600">
-              {commentsToday} / {maxComments} comments today
-            </p>
-          </div>
-        </div>
-        <div className={`text-2xl font-bold ${canComment ? 'text-green-600' : 'text-red-600'}`}>
+        <p className="text-xs text-neutral-500">
+          {commentsToday}/{maxComments}
+        </p>
+        <div className={`text-lg font-bold ${canComment ? 'text-green-600' : 'text-red-600'}`}>
           {remaining > 0 ? remaining : 0}
-          <span className="text-sm font-normal ml-1">left</span>
         </div>
       </div>
     </button>
@@ -609,8 +631,8 @@ function CommentItem({ item, canComment, onUpdate }) {
           {/* Platform + status badges */}
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {getPlatformIcon(item.platform)}
-            <span className="text-sm font-medium capitalize">
-              {item.platform === 'twitter' ? 'Twitter / X' : 'Bluesky'}
+            <span className="text-sm font-medium">
+              {PLATFORM_LABELS[item.platform] || item.platform}
             </span>
             {isFailed && (
               <span className="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded" title={item.lastError}>
@@ -766,7 +788,7 @@ function CommentItem({ item, canComment, onUpdate }) {
               {isFailed ? 'Retry' : 'Publish'}
             </button>
           )}
-          {item.platform === 'twitter' && (
+          {item.platform !== 'bluesky' && (
             <>
               <button
                 onClick={handleCopyAndOpen}
@@ -786,7 +808,7 @@ function CommentItem({ item, canComment, onUpdate }) {
               </button>
             </>
           )}
-          {!canComment && item.platform === 'bluesky' && (
+          {!canComment && (
             <span className="text-xs text-red-600">Daily limit reached</span>
           )}
           <button
@@ -876,31 +898,28 @@ function AddCommentModal({ onClose, onAdd }) {
           {/* Platform Selection */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">Platform</label>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setPlatform('bluesky')}
-                className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${
-                  platform === 'bluesky'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-neutral-200 hover:border-neutral-300'
-                }`}
-              >
-                <BlueskyIcon size={20} />
-                Bluesky
-              </button>
-              <button
-                type="button"
-                onClick={() => setPlatform('twitter')}
-                className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${
-                  platform === 'twitter'
-                    ? 'border-neutral-800 bg-neutral-100 text-black'
-                    : 'border-neutral-200 hover:border-neutral-300'
-                }`}
-              >
-                <TwitterIcon size={20} />
-                Twitter / X
-              </button>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { key: 'bluesky', icon: <BlueskyIcon size={18} />, active: 'border-blue-500 bg-blue-50 text-blue-700' },
+                { key: 'twitter', icon: <TwitterIcon size={18} />, active: 'border-neutral-800 bg-neutral-100 text-black' },
+                { key: 'threads', icon: <MessageCircle size={18} />, active: 'border-neutral-700 bg-neutral-100 text-neutral-800' },
+                { key: 'instagram', icon: <Instagram size={18} />, active: 'border-pink-500 bg-pink-50 text-pink-700' },
+                { key: 'reddit', icon: <Hash size={18} />, active: 'border-orange-500 bg-orange-50 text-orange-700' },
+                { key: 'medium', icon: <BookOpen size={18} />, active: 'border-green-600 bg-green-50 text-green-700' },
+                { key: 'substack', icon: <Newspaper size={18} />, active: 'border-orange-500 bg-orange-50 text-orange-700' },
+              ].map(({ key, icon, active }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setPlatform(key)}
+                  className={`p-2 rounded-lg border flex items-center justify-center gap-1.5 text-sm ${
+                    platform === key ? active : 'border-neutral-200 hover:border-neutral-300'
+                  }`}
+                >
+                  {icon}
+                  {PLATFORM_LABELS[key]}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -970,17 +989,15 @@ function AddCommentModal({ onClose, onAdd }) {
             )}
           </div>
 
-          {platform === 'bluesky' && (
+          {platform === 'bluesky' ? (
             <p className="text-sm text-blue-600 flex items-center gap-2">
               <Send size={14} />
               Bluesky comments are published automatically via API
             </p>
-          )}
-
-          {platform === 'twitter' && (
+          ) : (
             <p className="text-sm text-neutral-600 flex items-center gap-2">
               <Copy size={14} />
-              Twitter comments use Copy & Open (manual posting)
+              {PLATFORM_LABELS[platform]} comments use Copy & Open (manual posting)
             </p>
           )}
 

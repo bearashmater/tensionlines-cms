@@ -1,0 +1,26 @@
+{
+  "episodes": [],
+  "recurringThreads": [],
+  "totalEpisodes": 0,
+  "standardFormat": null,
+  "trialPhase": true,
+  "trialFormats": ["debate", "deep-dive", "quick-hit", "story", "tension-line"],
+  "trialSchedule": [
+    { "trial": 1, "format": "debate", "status": "pending" },
+    { "trial": 2, "format": "deep-dive", "status": "pending" },
+    { "trial": 3, "format": "quick-hit", "status": "pending" },
+    { "trial": 4, "format": "story", "status": "pending" },
+    { "trial": 5, "format": "tension-line", "status": "pending" },
+    { "trial": 6, "format": "best-of", "status": "pending" },
+    { "trial": 7, "format": "runner-up", "status": "pending" },
+    { "trial": 8, "format": "final", "status": "pending" }
+  ],
+  "currentTrial": 1,
+  "formatStats": {
+    "debate": { "used": 0, "avgRating": null },
+    "deep-dive": { "used": 0, "avgRating": null },
+    "quick-hit": { "used": 0, "avgRating": null },
+    "story": { "used": 0, "avgRating": null },
+    "tension-line": { "used": 0, "avgRating": null }
+  }
+}
