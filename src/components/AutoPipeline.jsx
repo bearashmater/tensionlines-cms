@@ -28,7 +28,7 @@ const PHILOSOPHERS = [
   { id: 'marcus', label: 'Marcus Aurelius' }
 ]
 
-const ALL_PLATFORMS = ['twitter', 'bluesky', 'instagram', 'reddit', 'medium']
+const ALL_PLATFORMS = ['twitter', 'bluesky', 'instagram', 'reddit', 'medium', 'substack']
 
 export default function AutoPipeline() {
   const { data: status, error, isLoading } = useSWR('/api/auto-pipeline/status', fetcher, { refreshInterval: 30000 })
@@ -128,27 +128,31 @@ export default function AutoPipeline() {
         <div className="bg-white rounded-lg border border-neutral-200 p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-neutral-500">Status</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              {config.enabled ? (
+                <Power size={20} className="text-green-600" />
+              ) : (
+                <PowerOff size={20} className="text-neutral-400" />
+              )}
+              <span className="text-lg font-semibold">
+                {config.enabled ? 'Active' : 'Paused'}
+              </span>
+            </div>
             <button
               onClick={handleToggle}
               disabled={saving}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                config.enabled
-                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                  : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
-              }`}
+              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none ${
+                config.enabled ? 'bg-green-500' : 'bg-neutral-300'
+              } ${saving ? 'opacity-50' : 'cursor-pointer'}`}
+              role="switch"
+              aria-checked={config.enabled}
             >
-              {config.enabled ? 'Enabled' : 'Disabled'}
+              <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                config.enabled ? 'translate-x-6' : 'translate-x-1'
+              }`} />
             </button>
-          </div>
-          <div className="flex items-center space-x-2">
-            {config.enabled ? (
-              <Power size={20} className="text-green-600" />
-            ) : (
-              <PowerOff size={20} className="text-neutral-400" />
-            )}
-            <span className="text-lg font-semibold">
-              {config.enabled ? 'Active' : 'Paused'}
-            </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">Daily at 6 AM PST</p>
         </div>
