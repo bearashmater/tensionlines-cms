@@ -118,96 +118,38 @@ export default function ManualPostingQueue() {
         </button>
       </div>
 
-      {/* Daily Limits (clickable filters) */}
+      {/* Daily Limits (clickable filters, sorted by most remaining) */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-        <PlatformStatus
-          platform="instagram"
-          icon={<Instagram size={24} />}
-          postsToday={data.postsToday?.instagram || 0}
-          maxPosts={data.settings?.platforms?.instagram?.maxPostsPerDay || 2}
-          canPost={data.canPostInstagram}
-          warmupMode={data.settings?.warmupMode}
-          lastPosted={lastPostedByPlatform.instagram}
-          isActive={platformFilter === 'instagram'}
-          onClick={() => setPlatformFilter(platformFilter === 'instagram' ? null : 'instagram')}
-        />
-        <PlatformStatus
-          platform="threads"
-          icon={<MessageCircle size={24} />}
-          postsToday={data.postsToday?.threads || 0}
-          maxPosts={data.settings?.platforms?.threads?.maxPostsPerDay || 3}
-          canPost={data.canPostThreads}
-          warmupMode={data.settings?.warmupMode}
-          lastPosted={lastPostedByPlatform.threads}
-          isActive={platformFilter === 'threads'}
-          onClick={() => setPlatformFilter(platformFilter === 'threads' ? null : 'threads')}
-        />
-        <PlatformStatus
-          platform="bluesky"
-          icon={<BlueskyIcon size={24} className="text-current" />}
-          postsToday={data.postsToday?.bluesky || 0}
-          maxPosts={data.settings?.platforms?.bluesky?.maxPostsPerDay || 5}
-          canPost={data.canPostBluesky}
-          warmupMode={data.settings?.warmupMode}
-          lastPosted={lastPostedByPlatform.bluesky}
-          isActive={platformFilter === 'bluesky'}
-          onClick={() => setPlatformFilter(platformFilter === 'bluesky' ? null : 'bluesky')}
-        />
-        <PlatformStatus
-          platform="twitter"
-          icon={<TwitterIcon size={24} className="text-current" />}
-          postsToday={data.postsToday?.twitter || 0}
-          maxPosts={data.settings?.platforms?.twitter?.maxPostsPerDay || 5}
-          canPost={data.canPostTwitter}
-          warmupMode={data.settings?.warmupMode}
-          lastPosted={lastPostedByPlatform.twitter}
-          isActive={platformFilter === 'twitter'}
-          onClick={() => setPlatformFilter(platformFilter === 'twitter' ? null : 'twitter')}
-        />
-        <PlatformStatus
-          platform="reddit"
-          icon={<Hash size={24} />}
-          postsToday={data.postsToday?.reddit || 0}
-          maxPosts={data.settings?.platforms?.reddit?.maxPostsPerDay || 3}
-          canPost={data.canPostReddit}
-          warmupMode={data.settings?.warmupMode}
-          lastPosted={lastPostedByPlatform.reddit}
-          isActive={platformFilter === 'reddit'}
-          onClick={() => setPlatformFilter(platformFilter === 'reddit' ? null : 'reddit')}
-        />
-        <PlatformStatus
-          platform="medium"
-          icon={<BookOpen size={24} />}
-          postsToday={data.postsToday?.medium || 0}
-          maxPosts={data.settings?.platforms?.medium?.maxPostsPerDay || 1}
-          canPost={data.canPostMedium}
-          warmupMode={data.settings?.warmupMode}
-          lastPosted={lastPostedByPlatform.medium}
-          isActive={platformFilter === 'medium'}
-          onClick={() => setPlatformFilter(platformFilter === 'medium' ? null : 'medium')}
-        />
-        <PlatformStatus
-          platform="substack"
-          icon={<Newspaper size={24} />}
-          postsToday={data.postsToday?.substack || 0}
-          maxPosts={data.settings?.platforms?.substack?.maxPostsPerDay || 1}
-          canPost={data.canPostSubstack}
-          warmupMode={data.settings?.warmupMode}
-          lastPosted={lastPostedByPlatform.substack}
-          isActive={platformFilter === 'substack'}
-          onClick={() => setPlatformFilter(platformFilter === 'substack' ? null : 'substack')}
-        />
-        <PlatformStatus
-          platform="podcast"
-          icon={<Mic size={24} />}
-          postsToday={data.postsToday?.podcast || 0}
-          maxPosts={data.settings?.platforms?.podcast?.maxPostsPerDay || 1}
-          canPost={data.canPostPodcast}
-          warmupMode={false}
-          lastPosted={lastPostedByPlatform.podcast}
-          isActive={platformFilter === 'podcast'}
-          onClick={() => setPlatformFilter(platformFilter === 'podcast' ? null : 'podcast')}
-        />
+        {[
+          { platform: 'instagram', icon: <Instagram size={24} />, defaultMax: 2, canPost: data.canPostInstagram, warmup: data.settings?.warmupMode },
+          { platform: 'threads', icon: <MessageCircle size={24} />, defaultMax: 3, canPost: data.canPostThreads, warmup: data.settings?.warmupMode },
+          { platform: 'bluesky', icon: <BlueskyIcon size={24} className="text-current" />, defaultMax: 5, canPost: data.canPostBluesky, warmup: data.settings?.warmupMode },
+          { platform: 'twitter', icon: <TwitterIcon size={24} className="text-current" />, defaultMax: 5, canPost: data.canPostTwitter, warmup: data.settings?.warmupMode },
+          { platform: 'reddit', icon: <Hash size={24} />, defaultMax: 3, canPost: data.canPostReddit, warmup: data.settings?.warmupMode },
+          { platform: 'medium', icon: <BookOpen size={24} />, defaultMax: 1, canPost: data.canPostMedium, warmup: data.settings?.warmupMode },
+          { platform: 'substack', icon: <Newspaper size={24} />, defaultMax: 1, canPost: data.canPostSubstack, warmup: data.settings?.warmupMode },
+          { platform: 'podcast', icon: <Mic size={24} />, defaultMax: 1, canPost: data.canPostPodcast, warmup: false },
+        ]
+          .map(p => ({
+            ...p,
+            postsToday: data.postsToday?.[p.platform] || 0,
+            maxPosts: data.settings?.platforms?.[p.platform]?.maxPostsPerDay || p.defaultMax,
+          }))
+          .sort((a, b) => (b.maxPosts - b.postsToday) - (a.maxPosts - a.postsToday))
+          .map(p => (
+          <PlatformStatus
+            key={p.platform}
+            platform={p.platform}
+            icon={p.icon}
+            postsToday={p.postsToday}
+            maxPosts={p.maxPosts}
+            canPost={p.canPost}
+            warmupMode={p.warmup}
+            lastPosted={lastPostedByPlatform[p.platform]}
+            isActive={platformFilter === p.platform}
+            onClick={() => setPlatformFilter(platformFilter === p.platform ? null : p.platform)}
+          />
+        ))}
       </div>
 
       {/* Warmup Warning */}
@@ -326,28 +268,17 @@ function PlatformStatus({ platform, icon, postsToday, maxPosts, canPost, warmupM
   return (
     <button
       onClick={onClick}
-      className={`p-4 rounded-lg border text-left w-full transition-all ${
+      className={`p-4 rounded-lg border text-left w-full transition-all flex flex-col ${
         isActive
           ? `ring-2 ring-offset-1 ${ps.ring} ${ps.border} ${ps.activeBg}`
           : `${ps.bg} ${ps.border} ${ps.hover}`
       }`}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className={ps.text}>
-            {icon}
-          </div>
-          <div>
-            <h3 className="font-semibold capitalize">{platform}</h3>
-            <p className="text-sm text-neutral-600">
-              {postsToday} / {maxPosts} posts today
-            </p>
-          </div>
-        </div>
-        <div className={`text-2xl font-bold ${canPost ? 'text-green-600' : 'text-red-600'}`}>
-          {remaining > 0 ? remaining : 0}
-          <span className="text-sm font-normal ml-1">left</span>
-        </div>
+      <div>
+        <h3 className="font-semibold capitalize">{platform}</h3>
+        <p className="text-sm text-neutral-600">
+          {postsToday} / {maxPosts} posts today
+        </p>
       </div>
       <p className="text-xs text-neutral-500 mt-2">
         {lastPosted ? `Last post: ${timeAgo(lastPosted)}` : 'No posts yet'}
@@ -355,6 +286,13 @@ function PlatformStatus({ platform, icon, postsToday, maxPosts, canPost, warmupM
       {warmupMode && (
         <p className="text-xs text-amber-600 mt-1">Warmup limits active</p>
       )}
+      <div className={`flex items-center gap-2 mt-auto pt-2 ${canPost ? 'text-green-600' : 'text-red-600'}`}>
+        <span className="text-2xl font-bold">
+          {remaining > 0 ? remaining : 0}
+          <span className="text-sm font-normal ml-1">left</span>
+        </span>
+        <div className={ps.text}>{icon}</div>
+      </div>
     </button>
   )
 }
