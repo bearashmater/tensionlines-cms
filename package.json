@@ -28,6 +28,7 @@
     "gray-matter": "^4.0.3",
     "helmet": "^8.1.0",
     "node-cron": "^4.2.1",
+    "node-telegram-bot-api": "^0.67.0",
     "react-markdown": "^10.1.0",
     "recharts": "^3.7.0",
     "ws": "^8.19.0"

@@ -1,17 +1,22 @@
-import useSWR from 'swr'
-import { useState, useMemo } from 'react'
+import useSWR, { mutate as globalMutate } from 'swr'
+import { useState, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getIdeas, getDrafts, getIdeaStats } from '../lib/api'
 import { formatDate, getStatusColor } from '../lib/formatters'
-import { Lightbulb, FileText, TrendingUp, Target, Flame, Calendar, CheckCircle, Clock, AlertTriangle, Search, Filter, Grid, List, ChevronDown, ChevronUp, Tag, X, Rocket, Loader } from 'lucide-react'
+import { Lightbulb, FileText, TrendingUp, Target, Flame, Calendar, CheckCircle, Clock, AlertTriangle, Search, Filter, Grid, List, ChevronDown, ChevronUp, Tag, X, Rocket, Loader, Send, Zap } from 'lucide-react'
 
 export default function ContentPipeline() {
-  const { data: ideas } = useSWR('/ideas', getIdeas, { refreshInterval: 120000 })
+  const { data: ideas, mutate: mutateIdeas } = useSWR('/ideas', getIdeas, { refreshInterval: 120000 })
   const { data: drafts } = useSWR('/drafts', getDrafts, { refreshInterval: 120000 })
-  const { data: stats } = useSWR('/api/ideas/stats',
+  const { data: stats, mutate: mutateStats } = useSWR('/api/ideas/stats',
     () => fetch('/api/ideas/stats').then(r => r.json()),
     { refreshInterval: 60000 }
   )
+
+  const refreshIdeas = () => {
+    mutateIdeas()
+    mutateStats()
+  }
 
   if (!ideas || !drafts) return <LoadingState />
 
@@ -21,6 +26,9 @@ export default function ContentPipeline() {
         <h1 className="text-3xl font-serif font-bold text-black">Content Pipeline</h1>
         <p className="text-neutral-600 mt-1">Ideas → Drafts → Published</p>
       </div>
+
+      {/* Quick Idea Capture */}
+      <IdeaCapture onCaptured={refreshIdeas} />
 
       {/* Idea Stats Dashboard */}
       {stats && <IdeaStatsDashboard stats={stats} />}
@@ -40,6 +48,87 @@ export default function ContentPipeline() {
           ))}
         </div>
       </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// QUICK IDEA CAPTURE
+// ============================================================================
+
+function IdeaCapture({ onCaptured }) {
+  const [text, setText] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [feedback, setFeedback] = useState(null) // { type: 'success'|'error', message }
+  const inputRef = useRef(null)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!text.trim() || submitting) return
+
+    setSubmitting(true)
+    setFeedback(null)
+    try {
+      const res = await fetch('/api/ideas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text.trim(), source: 'cms' })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setFeedback({ type: 'success', message: `Captured as idea #${data.id}` })
+        setText('')
+        onCaptured()
+        setTimeout(() => setFeedback(null), 3000)
+      } else {
+        setFeedback({ type: 'error', message: data.error || 'Failed to capture' })
+      }
+    } catch (err) {
+      setFeedback({ type: 'error', message: 'Network error' })
+    }
+    setSubmitting(false)
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      handleSubmit(e)
+    }
+  }
+
+  return (
+    <div className="card border-2 border-dashed border-gold/40 bg-amber-50/50">
+      <div className="flex items-center gap-2 mb-3">
+        <Zap size={18} className="text-gold" />
+        <h2 className="font-serif font-semibold text-neutral-800">Quick Capture</h2>
+        <span className="text-xs text-neutral-400">Raw thoughts, quotes, observations — Tension will organize</span>
+      </div>
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <textarea
+          ref={inputRef}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Type an idea... (Cmd+Enter to submit)"
+          rows={2}
+          className="flex-1 px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold resize-none bg-white text-sm"
+        />
+        <button
+          type="submit"
+          disabled={!text.trim() || submitting}
+          className="self-end flex items-center gap-1.5 px-4 py-2 bg-gold text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium whitespace-nowrap"
+        >
+          {submitting ? <Loader size={14} className="animate-spin" /> : <Send size={14} />}
+          Capture
+        </button>
+      </form>
+      {feedback && (
+        <div className={`mt-2 text-sm flex items-center gap-1.5 ${
+          feedback.type === 'success' ? 'text-green-600' : 'text-red-600'
+        }`}>
+          {feedback.type === 'success' ? <CheckCircle size={14} /> : <AlertTriangle size={14} />}
+          {feedback.message}
+        </div>
+      )}
     </div>
   )
 }

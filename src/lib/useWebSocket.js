@@ -11,7 +11,7 @@ const CHANNEL_KEYS = {
   notifications: ['/notifications', '/dashboard'],
   analytics: ['/api/analytics', '/api/content/engagement', '/api/engagement-trends'],
   messages: (key) => typeof key === 'string' && key.startsWith('/api/messages'),
-  ideas: ['/api/repost-candidates', '/api/future-needs'],
+  ideas: ['/ideas', '/api/ideas/stats', '/api/repost-candidates', '/api/future-needs'],
   system: ['/api/system/events', '/api/system/crons', '/api/system/approvals'],
 }
 

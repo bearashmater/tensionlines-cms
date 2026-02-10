@@ -23,6 +23,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { createServer as createViteServer } from 'vite';
 import { WebSocketServer } from 'ws';
+import TelegramBot from 'node-telegram-bot-api';
 import { BskyAgent, RichText } from '@atproto/api';
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -5725,6 +5726,75 @@ app.get('/api/ideas', (req, res) => {
     res.json(enriched);
   } catch (error) {
     console.error(error); res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Add a new idea to ideas-bank.md
+ */
+app.post('/api/ideas', writeLimiter, (req, res) => {
+  try {
+    const { text, source } = req.body;
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      return res.status(400).json({ error: 'text is required' });
+    }
+
+    // Find next idea ID
+    const ideas = parseIdeasBank();
+    const maxId = ideas.reduce((max, idea) => {
+      const num = parseInt(idea.id, 10);
+      return num > max ? num : max;
+    }, 0);
+    const nextId = String(maxId + 1).padStart(3, '0');
+
+    // Format timestamp
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', {
+      hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/Los_Angeles'
+    }) + ' PST';
+    const dateStr = now.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }); // YYYY-MM-DD
+
+    // Check if today's date section exists
+    const content = fs.readFileSync(IDEAS_BANK, 'utf8');
+    const dateSectionExists = content.includes(`## ${dateStr}`);
+
+    // Build the new entry
+    let entry = '';
+    if (!dateSectionExists) {
+      entry += `\n## ${dateStr}\n`;
+    }
+    entry += `\n### #${nextId} - ${timeStr}\n`;
+    entry += `**Quote:** "${text.trim()}"\n`;
+    entry += `**Tags:** \n`;
+    entry += `**Status:** 🔵 New\n`;
+    if (source) {
+      entry += `**Source:** ${source}\n`;
+    }
+    entry += '\n---\n';
+
+    // Append to file
+    fs.appendFileSync(IDEAS_BANK, entry);
+
+    // Invalidate cache
+    cache.ideasBank = null;
+
+    // Broadcast update via WebSocket
+    broadcastUpdate('ideas');
+
+    const newIdea = {
+      id: nextId,
+      date: dateStr,
+      capturedAt: timeStr,
+      text: text.trim(),
+      status: 'captured',
+      source: source || 'cms'
+    };
+
+    console.log(`[Ideas] New idea #${nextId} captured via ${source || 'cms'}: "${text.trim().substring(0, 60)}..."`);
+    res.status(201).json(newIdea);
+  } catch (error) {
+    console.error('Error adding idea:', error);
+    res.status(500).json({ error: 'Failed to add idea' });
   }
 });
 
@@ -11492,7 +11562,101 @@ async function start() {
     console.log(`  Mission Control: http://localhost:${PORT}/mission-control/`);
     console.log(`  Bound to localhost only (not accessible from network)`);
     console.log(`  Watching files for changes...\n`);
+
+    // Initialize Telegram bot if token is configured
+    initTelegramBot();
   });
+}
+
+// ============================================================================
+// TELEGRAM BOT - Idea Capture
+// ============================================================================
+
+function initTelegramBot() {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) {
+    console.log('  Telegram bot: disabled (no TELEGRAM_BOT_TOKEN in .env)');
+    return;
+  }
+
+  const allowedChatId = process.env.TELEGRAM_CHAT_ID;
+  const bot = new TelegramBot(token, { polling: true });
+
+  bot.on('polling_error', (err) => {
+    console.error('[Telegram] Polling error:', err.message);
+  });
+
+  bot.on('message', async (msg) => {
+    const chatId = String(msg.chat.id);
+
+    // Security: only accept messages from allowed chat
+    if (allowedChatId && chatId !== allowedChatId) {
+      console.log(`[Telegram] Ignored message from unauthorized chat: ${chatId}`);
+      return;
+    }
+
+    const text = msg.text?.trim();
+    if (!text) return;
+
+    // Check if message starts with "Idea" (case-insensitive)
+    const ideaMatch = text.match(/^idea[:\s]+(.+)/is);
+    if (!ideaMatch) {
+      // If no TELEGRAM_CHAT_ID set yet, help them configure it
+      if (!allowedChatId) {
+        bot.sendMessage(chatId, `Your chat ID is: ${chatId}\nAdd TELEGRAM_CHAT_ID=${chatId} to your .env file.`);
+      }
+      return;
+    }
+
+    const ideaText = ideaMatch[1].trim();
+    if (!ideaText) {
+      bot.sendMessage(chatId, 'Please include your idea after "Idea". Example:\nIdea: The tension between knowing and doing');
+      return;
+    }
+
+    try {
+      // Use the same logic as POST /api/ideas
+      const ideas = parseIdeasBank();
+      const maxId = ideas.reduce((max, idea) => {
+        const num = parseInt(idea.id, 10);
+        return num > max ? num : max;
+      }, 0);
+      const nextId = String(maxId + 1).padStart(3, '0');
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/Los_Angeles'
+      }) + ' PST';
+      const dateStr = now.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+
+      const content = fs.readFileSync(IDEAS_BANK, 'utf8');
+      const dateSectionExists = content.includes(`## ${dateStr}`);
+
+      let entry = '';
+      if (!dateSectionExists) {
+        entry += `\n## ${dateStr}\n`;
+      }
+      entry += `\n### #${nextId} - ${timeStr}\n`;
+      entry += `**Quote:** "${ideaText}"\n`;
+      entry += `**Tags:** \n`;
+      entry += `**Status:** 🔵 New\n`;
+      entry += `**Source:** telegram\n`;
+      entry += '\n---\n';
+
+      fs.appendFileSync(IDEAS_BANK, entry);
+      cache.ideasBank = null;
+      broadcastUpdate('ideas');
+
+      console.log(`[Telegram] Idea #${nextId} captured: "${ideaText.substring(0, 60)}..."`);
+      bot.sendMessage(chatId, `Captured as idea #${nextId}\n"${ideaText.substring(0, 100)}${ideaText.length > 100 ? '...' : ''}"`);
+      logSystemEvent('pipeline', `Idea #${nextId} captured via Telegram`, { ideaId: nextId });
+    } catch (err) {
+      console.error('[Telegram] Error capturing idea:', err);
+      bot.sendMessage(chatId, 'Failed to capture idea. Check server logs.');
+    }
+  });
+
+  console.log('  Telegram bot: active (listening for ideas)');
 }
 
 start().catch((err) => {
