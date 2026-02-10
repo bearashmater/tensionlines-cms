@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Cloud, CloudOff, Instagram, MessageCircle } from 'lucide-react'
+import { Cloud, Hand, Instagram, MessageCircle, Hash, BookOpen } from 'lucide-react'
 
 function BlueskyIcon({ size = 12, className = '' }) {
   return (
@@ -17,93 +17,86 @@ function TwitterIcon({ size = 12, className = '' }) {
   )
 }
 
-const PLATFORM_CONFIG = {
-  bluesky: {
-    label: 'Bluesky',
-    icon: BlueskyIcon,
-    connectedStyle: 'bg-blue-50 text-blue-600 border border-blue-200',
-    manualStyle: 'bg-amber-50 text-amber-600 border border-amber-200',
-    disconnectedStyle: 'bg-red-50 text-red-600 border border-red-200',
+const PLATFORMS = [
+  { key: 'instagram', label: 'Instagram', icon: ({ size }) => <Instagram size={size} />, color: 'pink' },
+  { key: 'threads', label: 'Threads', icon: ({ size }) => <MessageCircle size={size} />, color: 'neutral' },
+  { key: 'bluesky', label: 'Bluesky', icon: BlueskyIcon, color: 'blue' },
+  { key: 'twitter', label: 'Twitter / X', icon: TwitterIcon, color: 'neutral' },
+  { key: 'reddit', label: 'Reddit', icon: ({ size }) => <Hash size={size} />, color: 'orange' },
+  { key: 'medium', label: 'Medium', icon: ({ size }) => <BookOpen size={size} />, color: 'green' },
+]
+
+const MODE_STYLES = {
+  manual: {
+    pink:    'bg-pink-50 text-pink-600 border-pink-200 hover:bg-pink-100',
+    neutral: 'bg-neutral-50 text-neutral-600 border-neutral-300 hover:bg-neutral-100',
+    blue:    'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100',
+    orange:  'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100',
+    green:   'bg-green-50 text-green-700 border-green-200 hover:bg-green-100',
   },
-  twitter: {
-    label: 'Twitter',
-    icon: TwitterIcon,
-    connectedStyle: 'bg-neutral-50 text-neutral-700 border border-neutral-300',
-    manualStyle: 'bg-amber-50 text-amber-600 border border-amber-200',
-    disconnectedStyle: 'bg-red-50 text-red-600 border border-red-200',
-  },
-  instagram: {
-    label: 'Instagram',
-    icon: ({ size }) => <Instagram size={size} />,
-    connectedStyle: 'bg-pink-50 text-pink-600 border border-pink-200',
-    manualStyle: 'bg-amber-50 text-amber-600 border border-amber-200',
-    disconnectedStyle: 'bg-red-50 text-red-600 border border-red-200',
-  },
-  threads: {
-    label: 'Threads',
-    icon: ({ size }) => <MessageCircle size={size} />,
-    connectedStyle: 'bg-neutral-50 text-neutral-700 border border-neutral-300',
-    manualStyle: 'bg-amber-50 text-amber-600 border border-amber-200',
-    disconnectedStyle: 'bg-red-50 text-red-600 border border-red-200',
+  auto: {
+    pink:    'bg-pink-600 text-white border-pink-600 hover:bg-pink-700',
+    neutral: 'bg-neutral-700 text-white border-neutral-700 hover:bg-neutral-800',
+    blue:    'bg-blue-600 text-white border-blue-600 hover:bg-blue-700',
+    orange:  'bg-orange-500 text-white border-orange-500 hover:bg-orange-600',
+    green:   'bg-green-600 text-white border-green-600 hover:bg-green-700',
   },
 }
 
 export default function PlatformStatusBadges() {
-  const [statuses, setStatuses] = useState(null)
+  const [modes, setModes] = useState(null)
+  const [saving, setSaving] = useState(null) // platform key being saved
 
   useEffect(() => {
-    fetch('/api/platforms/status')
+    fetch('/api/settings/posting-modes')
       .then(r => r.json())
-      .then(setStatuses)
-      .catch(() => setStatuses({
-        bluesky: { connected: false },
-        twitter: { connected: false },
-        instagram: { connected: false, mode: 'manual' },
-        threads: { connected: false, mode: 'manual' },
+      .then(setModes)
+      .catch(() => setModes({
+        twitter: 'manual', bluesky: 'manual', threads: 'manual',
+        instagram: 'manual', reddit: 'manual', medium: 'manual',
       }))
   }, [])
 
-  if (!statuses) return null
+  if (!modes) return null
+
+  const toggleMode = async (platform) => {
+    const newMode = modes[platform] === 'manual' ? 'auto' : 'manual'
+    const updated = { ...modes, [platform]: newMode }
+    setModes(updated)
+    setSaving(platform)
+    try {
+      await fetch('/api/settings/posting-modes', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [platform]: newMode })
+      })
+    } catch (err) {
+      // Revert on failure
+      setModes(modes)
+      console.error('Failed to save posting mode:', err)
+    }
+    setSaving(null)
+  }
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
-      {Object.entries(PLATFORM_CONFIG).map(([key, config]) => {
-        const status = statuses[key] || { connected: false }
-        const Icon = config.icon
-        const isManual = status.mode === 'manual'
-        const style = status.connected
-          ? config.connectedStyle
-          : isManual
-            ? config.manualStyle
-            : config.disconnectedStyle
-
-        const statusIcon = status.connected
-          ? <Cloud size={10} />
-          : isManual
-            ? null
-            : <CloudOff size={10} />
-
-        const statusText = status.connected
-          ? ''
-          : isManual
-            ? 'manual'
-            : 'off'
+      {PLATFORMS.map(({ key, label, icon: Icon, color }) => {
+        const mode = modes[key] || 'manual'
+        const isAuto = mode === 'auto'
+        const style = MODE_STYLES[mode]?.[color] || MODE_STYLES.manual.neutral
 
         return (
-          <span
+          <button
             key={key}
-            className={`inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-full ${style}`}
-            title={status.connected
-              ? `${config.label} connected${status.handle ? ` as @${status.handle}` : ''}`
-              : isManual
-                ? `${config.label}: ${status.message || 'Manual posting'}`
-                : `${config.label} disconnected`
-            }
+            onClick={() => toggleMode(key)}
+            disabled={saving === key}
+            className={`inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-full border cursor-pointer transition-all ${style} ${saving === key ? 'opacity-50' : ''}`}
+            title={`${label}: ${isAuto ? 'Auto-post' : 'Manual posting'} — click to toggle`}
           >
             <Icon size={10} />
-            {statusIcon}
-            {statusText && <span>{statusText}</span>}
-          </span>
+            {isAuto ? <Cloud size={9} /> : <Hand size={9} />}
+            <span>{isAuto ? 'auto' : 'manual'}</span>
+          </button>
         )
       })}
     </div>

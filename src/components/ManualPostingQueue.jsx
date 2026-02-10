@@ -20,7 +20,8 @@ import {
   Copy,
   Hash,
   BookOpen,
-  Sparkles
+  Sparkles,
+  Cloud
 } from 'lucide-react'
 import PlatformStatusBadges from './PlatformStatusBadges'
 
@@ -59,6 +60,9 @@ export default function ManualPostingQueue() {
   const [platformFilter, setPlatformFilter] = useState(null)
   const { data, error, isLoading, mutate } = useSWR('/api/posting-queue', fetcher, {
     refreshInterval: 30000
+  })
+  const { data: postingModes } = useSWR('/api/settings/posting-modes', fetcher, {
+    refreshInterval: 60000
   })
 
   if (error) {
@@ -217,6 +221,7 @@ export default function ManualPostingQueue() {
                   item.platform === 'medium' ? data.canPostMedium :
                   data.canPostThreads
                 }
+                postingMode={postingModes?.[item.platform] || 'manual'}
                 onUpdate={mutate}
               />
             ))
@@ -332,7 +337,7 @@ const VOICE_COLORS = {
   'off-voice': { bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' }
 }
 
-function QueueItem({ item, canPost, onUpdate }) {
+function QueueItem({ item, canPost, postingMode, onUpdate }) {
   const [hidden, setHidden] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [publishStatus, setPublishStatus] = useState(null) // 'publishing' | 'success' | 'error'
@@ -420,7 +425,7 @@ function QueueItem({ item, canPost, onUpdate }) {
     setIsUpdating(false)
   }
 
-  const handlePublishBluesky = async () => {
+  const handleAutoPublish = async () => {
     setPublishStatus('publishing')
     setPublishError(null)
     try {
@@ -434,7 +439,7 @@ function QueueItem({ item, canPost, onUpdate }) {
         setTimeout(() => onUpdate(), 1500)
       } else {
         setPublishStatus('error')
-        setPublishError(result.message || 'Unknown error')
+        setPublishError(result.error || result.message || 'Unknown error')
       }
     } catch (err) {
       setPublishStatus('error')
@@ -538,8 +543,12 @@ function QueueItem({ item, canPost, onUpdate }) {
             <span className="text-sm font-medium capitalize">
               {item.platform === 'twitter' ? 'Twitter / X' : item.platform}
             </span>
-            <span className="px-1.5 py-0.5 text-[10px] bg-neutral-100 text-neutral-500 rounded font-medium uppercase tracking-wide">
-              Manual
+            <span className={`px-1.5 py-0.5 text-[10px] rounded font-medium uppercase tracking-wide ${
+              postingMode === 'auto'
+                ? 'bg-blue-100 text-blue-600'
+                : 'bg-neutral-100 text-neutral-500'
+            }`}>
+              {postingMode === 'auto' ? 'Auto' : 'Manual'}
             </span>
             {item.platform === 'reddit' && (
               <span className="text-xs text-orange-600 font-medium">
@@ -702,7 +711,7 @@ function QueueItem({ item, canPost, onUpdate }) {
           {publishStatus === 'publishing' && (
             <div className="flex items-center gap-2 mt-2 text-sm text-blue-600">
               <RefreshCw size={14} className="animate-spin" />
-              Publishing to Bluesky...
+              Publishing to {item.platform}...
             </div>
           )}
           {publishStatus === 'success' && (
@@ -730,7 +739,18 @@ function QueueItem({ item, canPost, onUpdate }) {
               Canva Done
             </button>
           )}
-          {/* All platforms get Copy & Open */}
+          {/* Auto Post button when platform is set to auto */}
+          {isReady && postingMode === 'auto' && publishStatus !== 'success' && (
+            <button
+              onClick={handleAutoPublish}
+              disabled={publishStatus === 'publishing'}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              {publishStatus === 'publishing' ? <Loader2 size={14} className="animate-spin" /> : <Cloud size={14} />}
+              {publishStatus === 'publishing' ? 'Posting...' : 'Auto Post'}
+            </button>
+          )}
+          {/* Copy & Open for manual mode or as fallback */}
           {isReady && (
             <button
               onClick={() => handleCopyAndOpen(
@@ -739,7 +759,9 @@ function QueueItem({ item, canPost, onUpdate }) {
                 item.platform === 'reddit' ? `${item.content}${item.tags?.length ? '\n\nTags: ' + item.tags.join(', ') : ''}` :
                 item.content
               )}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-neutral-800 text-white rounded hover:bg-neutral-900"
+              className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded ${
+                postingMode === 'auto' ? 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300' : 'bg-neutral-800 text-white hover:bg-neutral-900'
+              }`}
             >
               {copyFeedback === 'content' ? <Check size={14} /> : <Copy size={14} />}
               {copyFeedback === 'content' ? 'Copied!' : 'Copy & Open'}

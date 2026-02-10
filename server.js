@@ -3185,25 +3185,30 @@ app.post('/api/posting-queue/:id/publish', async (req, res) => {
     if (idx === -1) return res.status(404).json({ error: 'Item not found' });
 
     const item = queue.queue[idx];
-    if (item.platform !== 'bluesky') {
-      return res.status(400).json({ error: 'Only Bluesky posts can be auto-published' });
+    const platform = item.platform;
+
+    // Check posting mode
+    const postingModes = queue.settings?.postingModes || {};
+    const mode = postingModes[platform] || 'manual';
+    if (mode !== 'auto') {
+      return res.status(400).json({ error: `${platform} is set to manual posting. Toggle to auto in settings.` });
     }
 
     // Server-side rate limit enforcement
-    const settings = queue.settings?.platforms?.bluesky || {};
-    const maxPerDay = settings.maxPostsPerDay || 3;
-    const minHours = settings.minHoursBetweenPosts || 2;
+    const platformSettings = queue.settings?.platforms?.[platform] || {};
+    const maxPerDay = platformSettings.maxPostsPerDay || 5;
+    const minHours = platformSettings.minHoursBetweenPosts || 2;
     const now = new Date();
     const today = now.toISOString().split('T')[0];
     const posted = queue.posted || [];
-    const bskyPostedToday = posted.filter(p => p.postedAt?.startsWith(today) && p.platform === 'bluesky');
+    const postedToday = posted.filter(p => p.postedAt?.startsWith(today) && p.platform === platform);
 
-    if (bskyPostedToday.length >= maxPerDay) {
-      return res.status(429).json({ error: `Daily limit reached (${maxPerDay} posts/day)` });
+    if (postedToday.length >= maxPerDay) {
+      return res.status(429).json({ error: `Daily limit reached (${maxPerDay} posts/day for ${platform})` });
     }
 
-    if (bskyPostedToday.length > 0) {
-      const lastPostedAt = new Date(bskyPostedToday[0].postedAt);
+    if (postedToday.length > 0) {
+      const lastPostedAt = new Date(postedToday[0].postedAt);
       const hoursSinceLast = (now - lastPostedAt) / (1000 * 60 * 60);
       if (hoursSinceLast < minHours) {
         const waitMins = Math.ceil((minHours * 60) - (hoursSinceLast * 60));
@@ -3211,19 +3216,28 @@ app.post('/api/posting-queue/:id/publish', async (req, res) => {
       }
     }
 
-    const result = await postToBluesky(item.content);
+    // Platform-specific publishing
+    let result;
+    switch (platform) {
+      case 'bluesky':
+        result = await postToBluesky(item.content);
+        break;
+      default:
+        return res.status(400).json({ error: `Auto-posting for ${platform} is not yet connected. Use manual Copy & Open for now, or connect the ${platform} API.` });
+    }
 
     item.status = 'posted';
     item.postedAt = new Date().toISOString();
     item.postUrl = result.postUrl;
-    item.bskyUri = result.uri;
+    if (result.uri) item.bskyUri = result.uri;
 
     queue.queue.splice(idx, 1);
     if (!queue.posted) queue.posted = [];
     queue.posted.unshift(item);
     savePostingQueue(queue);
 
-    console.log(`[Bluesky] Published: ${result.postUrl}`);
+    console.log(`[${platform}] Published: ${result.postUrl}`);
+    logSystemEvent('pipeline', `Auto-published to ${platform}: ${result.postUrl}`, { platform, postId: item.id });
     res.json({ success: true, item, postUrl: result.postUrl });
   } catch (error) {
     // Mark as failed but keep in queue for retry
@@ -3235,7 +3249,7 @@ app.post('/api/posting-queue/:id/publish', async (req, res) => {
       item.lastAttempt = new Date().toISOString();
       savePostingQueue(queue);
     }
-    console.error('[Bluesky] Publish failed:', error.message);
+    console.error(`[${item?.platform || 'publish'}] Publish failed:`, error.message);
     res.status(500).json({ error: 'Failed to publish' });
   }
 });
@@ -3287,15 +3301,17 @@ app.get('/api/threads/status', (req, res) => {
 // Unified endpoint: all platform statuses in one call
 app.get('/api/platforms/status', async (req, res) => {
   const results = {};
+  const queue = getPostingQueue();
+  const postingModes = queue.settings?.postingModes || {};
 
   // Bluesky
   try {
     const agent = await getBskyAgent();
     const profile = await agent.getProfile({ actor: process.env.BLUESKY_HANDLE });
-    results.bluesky = { connected: true, handle: profile.data.handle };
+    results.bluesky = { connected: true, handle: profile.data.handle, mode: postingModes.bluesky || 'manual' };
   } catch (error) {
     bskyAgent = null;
-    results.bluesky = { connected: false, error: error.message };
+    results.bluesky = { connected: false, error: error.message, mode: postingModes.bluesky || 'manual' };
   }
 
   // Twitter
@@ -3304,18 +3320,63 @@ app.get('/api/platforms/status', async (req, res) => {
     const firstLine = raw.trim().split('\n')[0] || '';
     const handleMatch = firstLine.match(/@(\w+)/);
     const handle = handleMatch ? handleMatch[1] : 'thetensionlines';
-    results.twitter = { connected: true, handle };
+    results.twitter = { connected: true, handle, mode: postingModes.twitter || 'manual' };
   } catch (error) {
-    results.twitter = { connected: false, error: error.message };
+    results.twitter = { connected: false, error: error.message, mode: postingModes.twitter || 'manual' };
   }
 
-  // Instagram (manual)
-  results.instagram = { connected: false, mode: 'manual', message: 'Manual posting via Canva' };
+  // Instagram
+  results.instagram = { connected: false, mode: postingModes.instagram || 'manual', message: 'Manual posting via Canva' };
 
-  // Threads (manual)
-  results.threads = { connected: false, mode: 'manual', message: 'Manual posting' };
+  // Threads
+  results.threads = { connected: false, mode: postingModes.threads || 'manual', message: 'Manual posting' };
+
+  // Reddit
+  results.reddit = { connected: false, mode: postingModes.reddit || 'manual', message: 'Manual posting' };
+
+  // Medium
+  results.medium = { connected: false, mode: postingModes.medium || 'manual', message: 'Manual posting' };
 
   res.json(results);
+});
+
+// Get/set posting mode per platform (manual vs auto)
+app.get('/api/settings/posting-modes', (req, res) => {
+  const queue = getPostingQueue();
+  res.json(queue.settings?.postingModes || {
+    twitter: 'manual',
+    bluesky: 'manual',
+    threads: 'manual',
+    instagram: 'manual',
+    reddit: 'manual',
+    medium: 'manual'
+  });
+});
+
+app.patch('/api/settings/posting-modes', (req, res) => {
+  try {
+    const queue = getPostingQueue();
+    if (!queue.settings) queue.settings = {};
+    if (!queue.settings.postingModes) {
+      queue.settings.postingModes = {
+        twitter: 'manual', bluesky: 'manual', threads: 'manual',
+        instagram: 'manual', reddit: 'manual', medium: 'manual'
+      };
+    }
+    const validModes = ['manual', 'auto'];
+    const validPlatforms = ['twitter', 'bluesky', 'threads', 'instagram', 'reddit', 'medium'];
+    for (const [platform, mode] of Object.entries(req.body)) {
+      if (validPlatforms.includes(platform) && validModes.includes(mode)) {
+        queue.settings.postingModes[platform] = mode;
+      }
+    }
+    savePostingQueue(queue);
+    broadcastUpdate('posting-queue');
+    res.json(queue.settings.postingModes);
+  } catch (error) {
+    console.error('Error saving posting modes:', error);
+    res.status(500).json({ error: 'Failed to save' });
+  }
 });
 
 // ============================================================================
