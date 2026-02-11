@@ -1153,7 +1153,9 @@ app.get('/api/agents/:id/soul', (req, res) => {
       'hypatia': 'hypatia',
       'leonardo': 'leonardo',
       'tension': 'tension',
-      'human': 'human'
+      'human': 'human',
+      'athena': 'athena',
+      'anne': 'anne'
     };
 
     const philosopherDir = dirMap[id];
@@ -11406,7 +11408,9 @@ Respond ONLY with valid JSON, no markdown wrapping:
   "callbackLines": ["Any memorable/quotable lines worth referencing in future episodes"]
 }
 
-The script array should contain 120-200 exchanges for a 25-30 min episode, fewer for quick-hit format.`;
+The script array should contain 120-200 exchanges for a 25-30 min episode, fewer for quick-hit format.
+
+CRITICAL: The "speaker" field MUST be exactly "shawn" or "anne" (lowercase). Never use "friend", "wife", "host", or any other label. Always "shawn" or "anne".`;
 
   let contentContext = `
 ## THIS WEEK'S CONTENT (use as source material)

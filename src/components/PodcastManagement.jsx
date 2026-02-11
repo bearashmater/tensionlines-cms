@@ -105,12 +105,16 @@ function ScriptViewer({ script }) {
       </button>
       {expanded && (
         <div className="mt-2 max-h-96 overflow-y-auto bg-white rounded border border-neutral-200 p-3 text-sm space-y-1">
-          {script.map((line, i) => (
-            <div key={i} className={line.speaker?.toLowerCase() === 'shawn' ? 'text-purple-800' : 'text-teal-700'}>
-              <span className="font-semibold capitalize">{line.speaker}:</span>{' '}
-              <span>{line.text}</span>
-            </div>
-          ))}
+          {script.map((line, i) => {
+            const isShawn = line.speaker?.toLowerCase() === 'shawn'
+            const displayName = isShawn ? 'Shawn' : 'Anne'
+            return (
+              <div key={i} className={isShawn ? 'text-purple-800' : 'text-teal-700'}>
+                <span className="font-semibold">{displayName}:</span>{' '}
+                <span>{line.text}</span>
+              </div>
+            )
+          })}
         </div>
       )}
     </div>
