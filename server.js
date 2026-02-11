@@ -3395,7 +3395,7 @@ app.patch('/api/settings/posting-modes', (req, res) => {
       }
     }
     savePostingQueue(queue);
-    broadcastUpdate('posting-queue');
+    broadcast('posting-queue');
     res.json(queue.settings.postingModes);
   } catch (error) {
     console.error('Error saving posting modes:', error);
@@ -5866,7 +5866,7 @@ app.post('/api/ideas', (req, res) => {
     cache.ideasBank = null;
 
     // Broadcast update via WebSocket
-    broadcastUpdate('ideas');
+    broadcast('ideas');
 
     const newIdea = {
       id: nextId,
@@ -13954,7 +13954,7 @@ function initTelegramBot() {
 
       fs.appendFileSync(IDEAS_BANK, entry);
       cache.ideasBank = null;
-      broadcastUpdate('ideas');
+      broadcast('ideas');
 
       console.log(`[Telegram] Idea #${nextId} captured: "${ideaText.substring(0, 60)}..."`);
       bot.sendMessage(chatId, `Captured as idea #${nextId}\n"${ideaText.substring(0, 100)}${ideaText.length > 100 ? '...' : ''}"`);
