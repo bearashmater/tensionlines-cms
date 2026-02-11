@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
-import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell, Zap, Compass, Send, Reply, Sparkles, MessageSquarePlus, Layers, Heart } from 'lucide-react'
+import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell, Zap, Compass, Send, Reply, Sparkles, MessageSquarePlus, Layers, Heart, Mic } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useWebSocket } from './lib/useWebSocket'
 
@@ -34,6 +34,7 @@ import AgentMessages from './components/AgentMessages'
 import AudienceSegmentation from './components/AudienceSegmentation'
 import EngagementActions from './components/EngagementActions'
 import AutoPipeline from './components/AutoPipeline'
+import PodcastManagement from './components/PodcastManagement'
 import MissionControlDashboard from './components/MissionControlDashboard'
 
 // Navigation structure with grouping
@@ -77,6 +78,7 @@ const navGroups = [
       { to: '/ideas', icon: <Lightbulb size={20} />, label: 'Ideas Bank' },
       { to: '/repurpose', icon: <Sparkles size={20} />, label: 'Repurpose' },
       { to: '/auto-pipeline', icon: <Zap size={20} />, label: 'Auto-Pipeline' },
+      { to: '/podcast', icon: <Mic size={20} />, label: 'Podcast' },
       { to: '/book', icon: <Book size={20} />, label: 'Book Progress' }
     ]
   },
@@ -195,6 +197,7 @@ function AppContent({ sidebarOpen, setSidebarOpen, mobileMenuOpen, setMobileMenu
             <Route path="/posting-queue" element={<ManualPostingQueue />} />
             <Route path="/repurpose" element={<RepurposeEngine />} />
             <Route path="/auto-pipeline" element={<AutoPipeline />} />
+            <Route path="/podcast" element={<PodcastManagement />} />
             <Route path="/reply-queue" element={<ReplyQueue />} />
             <Route path="/comments" element={<CommentQueue />} />
             <Route path="/engagement" element={<EngagementActions />} />

@@ -673,8 +673,8 @@ function QueueItem({ item, canPost, postingMode, onUpdate }) {
           {scriptExpanded && (
             <div className="mt-2 max-h-96 overflow-y-auto bg-white rounded border border-neutral-200 p-3 text-sm space-y-1">
               {script.map((line, i) => (
-                <div key={i} className={`${line.speaker === 'Shawn' ? 'text-purple-800' : 'text-neutral-700'}`}>
-                  <span className="font-semibold">{line.speaker}:</span>{' '}
+                <div key={i} className={`${line.speaker?.toLowerCase() === 'shawn' ? 'text-purple-800' : 'text-teal-700'}`}>
+                  <span className="font-semibold capitalize">{line.speaker}:</span>{' '}
                   <span>{line.text}</span>
                   {line.direction && <span className="text-xs text-neutral-400 italic ml-1">[{line.direction}]</span>}
                 </div>

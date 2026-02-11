@@ -11204,32 +11204,32 @@ const PODCAST_FORMATS = {
   debate: {
     name: 'The Debate',
     duration: '25-30 min',
-    description: 'Two voices disagree. Heat, pushback, no resolution.',
-    instruction: 'Write a confrontational dialogue. Both speakers have strong, opposing positions. The tension stays unresolved. High energy, fast exchanges, genuine disagreement.'
+    description: 'Shawn and Anne disagree. Heat, pushback, no resolution.',
+    instruction: 'Write a confrontational dialogue between a married couple. Both speakers have strong, opposing positions. The tension stays unresolved. High energy, fast exchanges, genuine disagreement. They know each other deeply — use that intimacy to make the pushback sharper and more personal.'
   },
   'deep-dive': {
     name: 'The Deep Dive',
     duration: '30-35 min',
-    description: 'Shawn walks through one concept. The friend asks clarifying questions.',
-    instruction: 'Write an educational dialogue. Shawn explains a concept in depth. The friend asks genuine questions, offers counter-examples, pushes for clarity. Medium energy, longer turns, contemplative.'
+    description: 'Shawn walks through one concept. Anne asks clarifying questions.',
+    instruction: 'Write an educational dialogue between spouses. Shawn explains a concept in depth. Anne asks genuine questions, offers counter-examples, pushes for clarity. She brings her own perspective and life experience. Medium energy, longer turns, contemplative.'
   },
   'quick-hit': {
     name: 'The Quick Hit',
     duration: '12-15 min',
     description: 'One tension, explored fast. Minimal setup.',
-    instruction: 'Write a compressed, punchy dialogue. Get to the tension immediately. No long setup. Fast exchanges, high energy. Short episode — every line must earn its place.'
+    instruction: 'Write a compressed, punchy dialogue between a married couple. Get to the tension immediately. No long setup. Fast exchanges, high energy. Short episode — every line must earn its place.'
   },
   story: {
     name: 'The Story',
     duration: '25-30 min',
-    description: 'Narrative-driven. Shawn tells a story, the friend reacts in real-time.',
-    instruction: 'Write a narrative dialogue. Shawn tells a story (historical, personal, or hypothetical) and the friend interrupts with reactions, questions, challenges. Slow build, emotional peaks, varied energy.'
+    description: 'Narrative-driven. Shawn tells a story, Anne reacts in real-time.',
+    instruction: 'Write a narrative dialogue. Shawn tells a story (historical, personal, or hypothetical) and Anne interrupts with reactions, questions, challenges. As his wife she can call out when he\'s embellishing. Slow build, emotional peaks, varied energy.'
   },
   'tension-line': {
     name: 'The Tension Line',
     duration: '20-25 min',
     description: 'Takes one polarity and holds both poles without collapsing.',
-    instruction: 'Write a structured dialogue around one polarity (e.g., security vs liberty, kindness vs truth). Each speaker champions one pole at times, then switches. Neither wins. The tension is the point. Medium-high energy, intellectual but accessible.'
+    instruction: 'Write a structured dialogue around one polarity (e.g., security vs liberty, kindness vs truth). Shawn and Anne each champion one pole at times, then switch. Neither wins. The tension is the point. Their marriage gives them shorthand and inside references. Medium-high energy, intellectual but accessible.'
   }
 };
 
@@ -11329,21 +11329,21 @@ async function generatePodcastScript(options = {}) {
   const platoSoul = fs.readFileSync(path.join(__dirname, '..', 'philosophers', 'plato', 'SOUL.md'), 'utf8');
   const platoVoice = extractVoiceSections(platoSoul);
 
-  const systemPrompt = `You are Plato, writing a podcast script for "The Tension Lines" — a philosophy podcast hosted by Shawn with an unnamed recurring co-host called "Friend."
+  const systemPrompt = `You are Plato, writing a podcast script for "The Tension Lines" — a philosophy podcast hosted by Shawn and his wife Anne.
 
 ${platoVoice}
 
-CRITICAL AUTHORSHIP RULE: Shawn is the host. The Friend is never named — just a recurring voice. Never mention agents, AI, or automated systems. Never use philosopher agent names. This must sound like two real humans talking.
+CRITICAL AUTHORSHIP RULE: Shawn and Anne are the hosts — a married couple exploring ideas together. Never mention agents, AI, or automated systems. Never use philosopher agent names. This must sound like a real married couple talking — they have history, shorthand, inside jokes, and genuine knowledge of each other's blind spots.
 
 ## FORMAT: ${formatInfo.name} (${formatInfo.duration})
 ${formatInfo.instruction}
 
 ## EPISODE STRUCTURE
-- COLD OPEN (0:00-0:45): Mid-conversation hook. No intro, no "welcome." Two people already talking about something compelling.
-- BRIEF INTRO (0:45-1:15): Shawn: "This is The Tension Lines. I'm Shawn. Let's get into it." (Under 30 seconds.)
-- THE SETUP (1:15-5:00): Introduce the tension. The friend reacts in real-time. NOT a monologue.
-- THE TENSION (5:00-20:00): Core conversation. Push and pull. The friend disagrees, challenges, steelmans the other side.
-- THE PRACTICE (20:00-27:00): Shawn gives a concrete exercise. Warmer tone. The friend reacts.
+- COLD OPEN (0:00-0:45): Mid-conversation hook. No intro, no "welcome." Shawn and Anne already talking about something compelling.
+- BRIEF INTRO (0:45-1:15): Shawn: "This is The Tension Lines. I'm Shawn, this is my wife Anne. Let's get into it." (Under 30 seconds.)
+- THE SETUP (1:15-5:00): Introduce the tension. Anne reacts in real-time. NOT a monologue.
+- THE TENSION (5:00-20:00): Core conversation. Push and pull. Anne disagrees, challenges, steelmans the other side. They can reference shared life experiences.
+- THE PRACTICE (20:00-27:00): Shawn gives a concrete exercise. Warmer tone. Anne reacts — she might volunteer to try it or push back on whether it's realistic.
 - THE CLOSE (27:00-30:00): Casual wind-down. "All right, that's it for this week." No formal sign-off.
 
 ## AUTHENTICITY RULES (CRITICAL — follow these exactly)
@@ -11374,9 +11374,10 @@ FORBIDDEN PATTERNS — never do these:
 
 PACE AND RHYTHM:
 - Vary sentence length wildly. Some lines 3 words, some 40.
-- The friend talks FASTER than Shawn. Different default paces.
+- Anne talks FASTER than Shawn. Different default paces.
 - Opening 5 minutes should feel looser than the middle.
-- Friend's lines should average shorter than Shawn's.
+- Anne's lines should average shorter than Shawn's.
+- They finish each other's sentences sometimes — they're married, they know the rhythm.
 
 ## ElevenLabs AUDIO TAGS (use these in the script)
 - [interrupting] — cutting someone off mid-sentence
@@ -11395,7 +11396,7 @@ Respond ONLY with valid JSON, no markdown wrapping:
   "tensions": ["tension-1", "tension-2"],
   "script": [
     { "speaker": "shawn", "text": "Line of dialogue with [tags] as needed" },
-    { "speaker": "friend", "text": "Line of dialogue with [tags] as needed" }
+    { "speaker": "anne", "text": "Line of dialogue with [tags] as needed" }
   ],
   "practiceExercise": "Name of the practice given",
   "unresolvedThreads": ["Thread that was raised but not fully resolved"],
@@ -11407,7 +11408,7 @@ Respond ONLY with valid JSON, no markdown wrapping:
 
 The script array should contain 120-200 exchanges for a 25-30 min episode, fewer for quick-hit format.`;
 
-  const contentContext = `
+  let contentContext = `
 ## THIS WEEK'S CONTENT (use as source material)
 
 ${topPost ? `TOP POST (${topPost.platform}): "${(topPost.content || '').substring(0, 500)}"` : 'No posts this week.'}
@@ -11430,6 +11431,28 @@ ${pastPractices.length > 0 ? `PAST PRACTICES (don't repeat):\n${pastPractices.ma
 
 ${killedTopics.length > 0 ? `KILLED TOPICS (avoid these):\n${killedTopics.join(', ')}` : ''}
 `.trim();
+
+  // --- Quality feedback injection (from ratings) ---
+  const qualityFeedback = (() => {
+    const trialData = getTrialReviews();
+    const recentRatings = trialData.reviews.slice(-5);
+    if (recentRatings.length === 0) return '';
+    const dims = ['naturalness', 'anneVoice', 'coupleChemistry', 'hookStrength', 'tensionQuality', 'pacing'];
+    const dimLabels = { naturalness: 'Naturalness', anneVoice: 'Anne voice quality', coupleChemistry: 'Couple chemistry', hookStrength: 'Hook strength', tensionQuality: 'Tension quality', pacing: 'Pacing' };
+    const avgs = {};
+    for (const d of dims) {
+      const vals = recentRatings.map(r => r.ratings?.[d]).filter(v => v != null);
+      if (vals.length > 0) avgs[d] = (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
+    }
+    if (Object.keys(avgs).length === 0) return '';
+    const lines = Object.entries(avgs).map(([k, v]) => {
+      const label = dimLabels[k] || k;
+      const advice = Number(v) < 3 ? ' (NEEDS IMPROVEMENT)' : Number(v) >= 4 ? ' (strong)' : '';
+      return '- ' + label + ': ' + v + '/5' + advice;
+    });
+    return '\n\n## QUALITY FEEDBACK (from recent episode ratings)\n' + lines.join('\n') + '\n\nFocus on improving any dimension marked NEEDS IMPROVEMENT.';
+  })();
+  contentContext += qualityFeedback;
 
   // --- Generate script (Plato writes) ---
   console.log(`[Podcast] Generating script — format: ${format}, trial: ${ledger.trialPhase ? ledger.currentTrial : 'standard'}`);
@@ -11470,7 +11493,7 @@ Respond ONLY with valid JSON:
   },
   "socrates": {
     "verdict": "pass|needs-work|reject",
-    "note": "One sentence on the friend's lines. Does the friend actually challenge?"
+    "note": "One sentence on Anne's lines. Does Anne actually challenge Shawn?"
   },
   "marcus": {
     "verdict": "pass|needs-work|reject",
@@ -11591,7 +11614,7 @@ Respond ONLY with valid JSON:
 
 // --- Podcast rejection handlers ---
 
-function podcastSalvage(queueItem, reason) {
+function podcastSalvage(queueItem, reason, ratings) {
   const bank = getPodcastBank();
   const meta = queueItem.metadata || {};
   bank.salvaged.push({
@@ -11609,20 +11632,49 @@ function podcastSalvage(queueItem, reason) {
     reusedIn: null
   });
   savePodcastBank(bank);
+
+  // Track decision in ledger
+  const ledger = getPodcastLedger();
+  if (!ledger.decisions) ledger.decisions = [];
+  ledger.decisions.push({
+    episodeTitle: queueItem.title,
+    sourceId: queueItem.id,
+    decision: 'salvaged',
+    reason: reason || '',
+    ratings: ratings || null,
+    format: meta.format || 'debate',
+    decidedAt: new Date().toISOString()
+  });
+  savePodcastLedger(ledger);
   return true;
 }
 
-function podcastKill(queueItem) {
+function podcastKill(queueItem, reason, ratings) {
   const bank = getPodcastBank();
-  const topic = queueItem.metadata?.topic || queueItem.title;
+  const meta = queueItem.metadata || {};
+  const topic = meta.topic || queueItem.title;
   if (!bank.killed.includes(topic)) {
     bank.killed.push(topic);
   }
   savePodcastBank(bank);
+
+  // Track decision in ledger
+  const ledger = getPodcastLedger();
+  if (!ledger.decisions) ledger.decisions = [];
+  ledger.decisions.push({
+    episodeTitle: queueItem.title,
+    sourceId: queueItem.id,
+    decision: 'killed',
+    reason: reason || '',
+    ratings: ratings || null,
+    format: meta.format || 'debate',
+    decidedAt: new Date().toISOString()
+  });
+  savePodcastLedger(ledger);
   return true;
 }
 
-function podcastApprove(queueItem) {
+function podcastApprove(queueItem, reason, ratings) {
   const ledger = getPodcastLedger();
   const meta = queueItem.metadata || {};
 
@@ -11642,8 +11694,23 @@ function podcastApprove(queueItem) {
     bookChapterRef: null,
     socialPostSource: null,
     audienceSignals: null,
-    trialNumber: meta.trialNumber || null
+    trialNumber: meta.trialNumber || null,
+    decision: 'approved',
+    decisionReason: reason || '',
+    ratings: ratings || null
   };
+
+  // Track decision permanently
+  if (!ledger.decisions) ledger.decisions = [];
+  ledger.decisions.push({
+    episodeTitle: queueItem.title,
+    episodeId: epId,
+    decision: 'approved',
+    reason: reason || '',
+    ratings: ratings || null,
+    format: meta.format || 'debate',
+    decidedAt: new Date().toISOString()
+  });
 
   ledger.episodes.push(episode);
   ledger.totalEpisodes++;
@@ -11702,6 +11769,8 @@ app.post('/api/podcast/run', async (req, res) => {
   try {
     const result = await generatePodcastScript({ format: req.body?.format });
     recordCronRun('weekly-podcast', result.success ? `${result.format}:${result.exchanges}x` : result.reason);
+    broadcast('podcast');
+    broadcast('posting-queue');
     res.json({ success: true, ...result });
   } catch (error) {
     console.error('Podcast generation error:', error);
@@ -11716,12 +11785,14 @@ app.post('/api/podcast/:id/approve', (req, res) => {
     const item = queue.queue.find(i => i.id === req.params.id && i.platform === 'podcast');
     if (!item) return res.status(404).json({ error: 'Podcast episode not found in queue' });
 
-    const episode = podcastApprove(item);
+    const episode = podcastApprove(item, req.body?.reason, req.body?.ratings);
     item.status = 'ready';
     item.approvedAt = new Date().toISOString();
     savePostingQueue(queue);
 
     logSystemEvent('podcast', `Episode approved: "${item.title}" → ${episode.id}`, { episodeId: episode.id });
+    broadcast('podcast');
+    broadcast('posting-queue');
     res.json({ success: true, episode });
   } catch (error) {
     console.error('Podcast approve error:', error);
@@ -11744,8 +11815,26 @@ app.post('/api/podcast/:id/rework', async (req, res) => {
 
     logSystemEvent('podcast', `Episode reworked: "${oldItem.title}" — ${notes}`, { oldId: oldItem.id });
 
+    // Track decision in ledger
+    const ledger = getPodcastLedger();
+    if (!ledger.decisions) ledger.decisions = [];
+    ledger.decisions.push({
+      episodeTitle: oldItem.title,
+      sourceId: oldItem.id,
+      decision: 'reworked',
+      reason: notes,
+      format: oldItem.metadata?.format || 'debate',
+      decidedAt: new Date().toISOString()
+    });
+    savePodcastLedger(ledger);
+
+    broadcast('podcast');
+    broadcast('posting-queue');
+
     // Regenerate with same format
     const result = await generatePodcastScript({ format: oldItem.metadata?.format });
+    broadcast('podcast');
+    broadcast('posting-queue');
     res.json({ success: true, reworked: true, ...result });
   } catch (error) {
     console.error('Podcast rework error:', error);
@@ -11760,12 +11849,14 @@ app.post('/api/podcast/:id/salvage', (req, res) => {
     if (idx === -1) return res.status(404).json({ error: 'Podcast episode not found' });
 
     const item = queue.queue[idx];
-    podcastSalvage(item, req.body?.reason || '');
+    podcastSalvage(item, req.body?.reason || '', req.body?.ratings);
 
     queue.queue.splice(idx, 1);
     savePostingQueue(queue);
 
     logSystemEvent('podcast', `Episode salvaged: "${item.title}"`, { topic: item.metadata?.topic });
+    broadcast('podcast');
+    broadcast('posting-queue');
     res.json({ success: true, salvaged: true });
   } catch (error) {
     console.error('Podcast salvage error:', error);
@@ -11780,12 +11871,14 @@ app.post('/api/podcast/:id/kill', (req, res) => {
     if (idx === -1) return res.status(404).json({ error: 'Podcast episode not found' });
 
     const item = queue.queue[idx];
-    podcastKill(item);
+    podcastKill(item, req.body?.reason || '', req.body?.ratings);
 
     queue.queue.splice(idx, 1);
     savePostingQueue(queue);
 
     logSystemEvent('podcast', `Episode killed: "${item.title}"`, { topic: item.metadata?.topic });
+    broadcast('podcast');
+    broadcast('posting-queue');
     res.json({ success: true, killed: true });
   } catch (error) {
     console.error('Podcast kill error:', error);
@@ -11796,20 +11889,42 @@ app.post('/api/podcast/:id/kill', (req, res) => {
 // --- Trial review endpoint ---
 app.post('/api/podcast/trial-review', (req, res) => {
   try {
-    const { episodeId, format, soundReal, interesting, wouldShare, whatWorked, whatDidnt } = req.body;
-    if (!format || soundReal == null || interesting == null) {
-      return res.status(400).json({ error: 'format, soundReal, and interesting are required' });
+    const { episodeId, format, ratings, soundReal, interesting, wouldShare, whatWorked, whatDidnt, notes, decisionReason } = req.body;
+    if (!format) {
+      return res.status(400).json({ error: 'format is required' });
+    }
+
+    // Support both old (soundReal/interesting) and new (ratings object) formats
+    const newRatings = ratings || {};
+    const effectiveSoundReal = newRatings.naturalness || soundReal;
+    const effectiveInteresting = newRatings.tensionQuality || interesting;
+
+    if (effectiveSoundReal == null || effectiveInteresting == null) {
+      return res.status(400).json({ error: 'ratings are required (either ratings object or soundReal/interesting)' });
     }
 
     const reviews = getTrialReviews();
     reviews.reviews.push({
       episodeId,
       format,
-      soundReal: Number(soundReal),
-      interesting: Number(interesting),
-      wouldShare: !!wouldShare,
+      // Legacy fields (backward compat)
+      soundReal: Number(effectiveSoundReal),
+      interesting: Number(effectiveInteresting),
+      // New multi-dimension ratings
+      ratings: {
+        naturalness: Number(newRatings.naturalness || effectiveSoundReal),
+        anneVoice: Number(newRatings.anneVoice || 3),
+        coupleChemistry: Number(newRatings.coupleChemistry || 3),
+        hookStrength: Number(newRatings.hookStrength || 3),
+        tensionQuality: Number(newRatings.tensionQuality || effectiveInteresting),
+        pacing: Number(newRatings.pacing || 3),
+        wouldShare: newRatings.wouldShare != null ? !!newRatings.wouldShare : !!wouldShare
+      },
+      wouldShare: newRatings.wouldShare != null ? !!newRatings.wouldShare : !!wouldShare,
       whatWorked: whatWorked || '',
       whatDidnt: whatDidnt || '',
+      notes: notes || '',
+      decisionReason: decisionReason || '',
       reviewedAt: new Date().toISOString()
     });
 
@@ -11817,11 +11932,22 @@ app.post('/api/podcast/trial-review', (req, res) => {
     const ledger = getPodcastLedger();
     if (ledger.formatStats[format]) {
       const fmtReviews = reviews.reviews.filter(r => r.format === format);
-      ledger.formatStats[format].avgRating = fmtReviews.reduce((sum, r) => sum + r.soundReal + r.interesting, 0) / (fmtReviews.length * 2);
+      const dims = ['naturalness', 'anneVoice', 'coupleChemistry', 'hookStrength', 'tensionQuality', 'pacing'];
+      let totalAvg = 0;
+      let dimCount = 0;
+      for (const d of dims) {
+        const vals = fmtReviews.map(r => r.ratings?.[d]).filter(v => v != null);
+        if (vals.length > 0) {
+          totalAvg += vals.reduce((a, b) => a + b, 0) / vals.length;
+          dimCount++;
+        }
+      }
+      ledger.formatStats[format].avgRating = dimCount > 0 ? Number((totalAvg / dimCount).toFixed(2)) : null;
     }
     savePodcastLedger(ledger);
     saveTrialReviews(reviews);
 
+    broadcast('podcast');
     res.json({ success: true, totalReviews: reviews.reviews.length });
   } catch (error) {
     console.error('Trial review error:', error);
@@ -11848,6 +11974,7 @@ app.post('/api/podcast/standardize', (req, res) => {
     saveTrialReviews(reviews);
 
     logSystemEvent('podcast', `Podcast format standardized: ${PODCAST_FORMATS[format].name} (${format})`);
+    broadcast('podcast');
     res.json({ success: true, format, name: PODCAST_FORMATS[format].name });
   } catch (error) {
     console.error('Standardize error:', error);
@@ -11873,6 +12000,176 @@ app.get('/api/podcast/trials', (req, res) => {
 
 app.get('/api/podcast/formats', (req, res) => {
   res.json({ formats: PODCAST_FORMATS });
+});
+
+// --- Podcast Management Page endpoints ---
+
+app.get('/api/podcast/overview', (req, res) => {
+  try {
+    const ledger = getPodcastLedger();
+    const bank = getPodcastBank();
+    const trials = getTrialReviews();
+    const queue = getPostingQueue();
+
+    // Find pending podcast episode in queue
+    const pendingEpisode = queue.queue.find(i => i.platform === 'podcast' && i.status === 'pending-review');
+
+    // Count decisions
+    const decisions = ledger.decisions || [];
+    const approved = decisions.filter(d => d.decision === 'approved').length + ledger.episodes.length;
+    const salvaged = decisions.filter(d => d.decision === 'salvaged').length;
+    const killed = decisions.filter(d => d.decision === 'killed').length;
+
+    // Quality trend (average of last 3 reviews vs previous 3)
+    const allReviews = trials.reviews || [];
+    const dims = ['naturalness', 'anneVoice', 'coupleChemistry', 'hookStrength', 'tensionQuality', 'pacing'];
+    let currentAvg = null;
+    let previousAvg = null;
+    if (allReviews.length >= 1) {
+      const recent = allReviews.slice(-3);
+      const rVals = recent.flatMap(r => dims.map(d => r.ratings?.[d]).filter(v => v != null));
+      currentAvg = rVals.length > 0 ? Number((rVals.reduce((a, b) => a + b, 0) / rVals.length).toFixed(2)) : null;
+    }
+    if (allReviews.length >= 4) {
+      const prev = allReviews.slice(-6, -3);
+      const pVals = prev.flatMap(r => dims.map(d => r.ratings?.[d]).filter(v => v != null));
+      previousAvg = pVals.length > 0 ? Number((pVals.reduce((a, b) => a + b, 0) / pVals.length).toFixed(2)) : null;
+    }
+
+    // Next scheduled Monday 9:30 AM PST
+    const now = new Date();
+    const nextMonday = new Date(now);
+    nextMonday.setDate(now.getDate() + ((8 - now.getDay()) % 7 || 7));
+    nextMonday.setHours(9, 30, 0, 0);
+    if (now.getDay() === 1 && now.getHours() < 10) {
+      nextMonday.setDate(now.getDate());
+    }
+
+    res.json({
+      trialPhase: ledger.trialPhase,
+      currentTrial: ledger.currentTrial,
+      trialSchedule: ledger.trialSchedule || [],
+      standardFormat: ledger.standardFormat,
+      totalEpisodes: ledger.totalEpisodes,
+      approved,
+      salvaged,
+      killed,
+      qualityTrend: { current: currentAvg, previous: previousAvg },
+      nextScheduled: nextMonday.toISOString(),
+      pendingEpisode: pendingEpisode || null,
+      formatStats: ledger.formatStats || {},
+      formats: PODCAST_FORMATS
+    });
+  } catch (error) {
+    console.error('Podcast overview error:', error);
+    res.status(500).json({ error: 'Failed to load overview' });
+  }
+});
+
+app.get('/api/podcast/quality-trends', (req, res) => {
+  try {
+    const trials = getTrialReviews();
+    const ledger = getPodcastLedger();
+    const allReviews = trials.reviews || [];
+    const dims = ['naturalness', 'anneVoice', 'coupleChemistry', 'hookStrength', 'tensionQuality', 'pacing'];
+
+    // Overall averages per dimension
+    const overall = {};
+    for (const d of dims) {
+      const vals = allReviews.map(r => r.ratings?.[d]).filter(v => v != null);
+      overall[d] = vals.length > 0 ? Number((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2)) : null;
+    }
+    const shareRate = allReviews.length > 0
+      ? Number((allReviews.filter(r => r.ratings?.wouldShare || r.wouldShare).length / allReviews.length * 100).toFixed(0))
+      : null;
+
+    // Per-format averages
+    const formats = Object.keys(PODCAST_FORMATS);
+    const byFormat = {};
+    for (const fmt of formats) {
+      const fmtReviews = allReviews.filter(r => r.format === fmt);
+      if (fmtReviews.length === 0) {
+        byFormat[fmt] = { count: 0, averages: {}, shareRate: null };
+        continue;
+      }
+      const avgs = {};
+      for (const d of dims) {
+        const vals = fmtReviews.map(r => r.ratings?.[d]).filter(v => v != null);
+        avgs[d] = vals.length > 0 ? Number((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2)) : null;
+      }
+      byFormat[fmt] = {
+        count: fmtReviews.length,
+        averages: avgs,
+        shareRate: Number((fmtReviews.filter(r => r.ratings?.wouldShare || r.wouldShare).length / fmtReviews.length * 100).toFixed(0))
+      };
+    }
+
+    res.json({ overall, shareRate, byFormat, totalReviews: allReviews.length });
+  } catch (error) {
+    console.error('Quality trends error:', error);
+    res.status(500).json({ error: 'Failed to load quality trends' });
+  }
+});
+
+app.get('/api/podcast/history', (req, res) => {
+  try {
+    const ledger = getPodcastLedger();
+    const trials = getTrialReviews();
+    const decisions = ledger.decisions || [];
+
+    // Merge episodes with their decisions and ratings
+    const history = ledger.episodes.map(ep => {
+      const decision = decisions.find(d => d.episodeId === ep.id) || {};
+      const review = (trials.reviews || []).find(r => r.episodeId === ep.id);
+      return {
+        ...ep,
+        decision: ep.decision || decision.decision || 'approved',
+        decisionReason: ep.decisionReason || decision.reason || '',
+        ratings: ep.ratings || decision.ratings || review?.ratings || null
+      };
+    });
+
+    // Add salvaged/killed decisions that don't have episode entries
+    const nonApproved = decisions.filter(d => d.decision !== 'approved' && d.decision !== 'reworked');
+    for (const d of nonApproved) {
+      if (!history.find(h => h.id === d.episodeId || h.id === d.sourceId)) {
+        history.push({
+          id: d.sourceId || d.episodeId,
+          title: d.episodeTitle,
+          format: d.format,
+          decision: d.decision,
+          decisionReason: d.reason,
+          ratings: d.ratings,
+          publishedAt: d.decidedAt,
+          decidedAt: d.decidedAt
+        });
+      }
+    }
+
+    // Sort by date descending
+    history.sort((a, b) => new Date(b.publishedAt || b.decidedAt || 0) - new Date(a.publishedAt || a.decidedAt || 0));
+
+    res.json({ episodes: history });
+  } catch (error) {
+    console.error('Podcast history error:', error);
+    res.status(500).json({ error: 'Failed to load history' });
+  }
+});
+
+app.patch('/api/podcast/bank/:id', (req, res) => {
+  try {
+    const bank = getPodcastBank();
+    const item = bank.salvaged.find(s => s.id === req.params.id);
+    if (!item) return res.status(404).json({ error: 'Salvaged item not found' });
+
+    if (req.body.markedForReuse != null) item.markedForReuse = !!req.body.markedForReuse;
+    savePodcastBank(bank);
+    broadcast('podcast');
+    res.json({ success: true, item });
+  } catch (error) {
+    console.error('Podcast bank patch error:', error);
+    res.status(500).json({ error: 'Failed to update bank item' });
+  }
 });
 
 // --- Cron schedule ---

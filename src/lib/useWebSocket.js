@@ -13,6 +13,7 @@ const CHANNEL_KEYS = {
   messages: (key) => typeof key === 'string' && key.startsWith('/api/messages'),
   ideas: ['/ideas', '/api/ideas/stats', '/api/repost-candidates', '/api/future-needs'],
   system: ['/api/system/events', '/api/system/crons', '/api/system/approvals'],
+  podcast: ['/api/podcast/overview', '/api/podcast/history', '/api/podcast/quality-trends'],
 }
 
 /**
