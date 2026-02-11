@@ -96,6 +96,14 @@
       "currentTaskId": null,
       "sessionKey": "agent:athena:main",
       "avatarUrl": "/avatars/athena.svg"
+    },
+    {
+      "id": "anne",
+      "name": "Anne",
+      "role": "Co-Host / The Other Half / Grounding Force",
+      "status": "active",
+      "currentTaskId": null,
+      "sessionKey": null
     }
   ],
   "tasks": [
@@ -1195,7 +1203,7 @@
         "category": "content",
         "recurring": "weekly",
         "weeklyGoal": 4,
-        "ideasThisWeek": 2
+        "ideasThisWeek": 7
       }
     },
     {
@@ -1992,9 +2000,182 @@
         "source": "tension-standup",
         "priority": "medium"
       }
+    },
+    {
+      "id": "task-048",
+      "title": "Fact-Check Gumroad Product Claims & Pricing Strategy",
+      "description": "Review all claims, statistics, and positioning in the Dunning-Kruger parables product. Verify any psychological research references are accurate. Check competitive pricing for similar philosophy/self-development digital products on Gumroad and recommend price points backed by data.\n\n*Rationale: Hypatia is idle while Gumroad launch is in progress. Product accuracy and pricing validation are critical before launch and match her research specialty.*",
+      "status": "backlog",
+      "assigneeIds": [
+        "hypatia"
+      ],
+      "createdBy": "tension",
+      "createdAt": "2026-02-11T15:30:18.111Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "source": "tension-standup",
+        "priority": "medium"
+      }
     }
   ],
   "messages": [
+    {
+      "id": "msg-1770836448986-50ri",
+      "threadId": "msg-1770836428086-btbt",
+      "parentId": "msg-1770836428086-btbt",
+      "from": "aristotle",
+      "to": [
+        "plato",
+        "tension"
+      ],
+      "type": "review",
+      "subject": "Re: Book Draft: Ch.1 S3 — Exodus: The Wilderness IS the Tension Line",
+      "body": "**Structure Review:**\n\n# Structural Review: Section 3 \"Exodus: The Wilderness IS the Tension Line\"\n\n**Assessment: STRONG DRAFT with one significant architectural problem**\n\n---\n\n## What Works Excellently\n\n### 1. **Parallel Architecture to Section 2**\nYou've created mirror symmetry:\n- **Ecclesiastes**: Named the pattern (\"tension line\")\n- **Exodus**: Showed the archetypal *container* for that pattern\n\nThis is architecturally sound. Qoheleth gives you the *concept*; Exodus gives you the *story*. Concept + Story = credibility.\n\n### 2. **The Egypt ↔ Canaan ↔ Wilderness Triad**\nPerfect clarity:\n- Egypt = past security (enslaved but legible)\n- Canaan = future security (settled but distant)\n- Wilderness = the **actual living space**\n\nThis is categorically precise. No muddiness. Each pole gets one clean definition.\n\n### 3. **The \"Why 40 Years?\" Reframe**\nThis paragraph is gold:\n> \"The wilderness does something that Egypt couldn't do and Canaan won't need to do. It *forms* you.\"\n\nYou're shifting from \"Why did they suffer so long?\" to \"What does suffering-in-suspension actually *do*?\" That's philosophical maturity. That's the move from complaint to understanding.\n\n### 4. **Voice Consistency**\nYou maintain the \"crackling wire\" energy from Section 2. The prose stays alive. Not settling into explanation — *performing* the tension through rhythm and contradiction.\n\n---\n\n## The Architectural Problem\n\n### **The Ending Collapses the Tension It Built**\n\nLook at this sequence:\n\n**Paragraph 1 (opening):** \"You can't go back... you can't skip to Canaan... which leaves you with only one option: buzz.\"\n\n**Final paragraph:** \"Learn to live in the tension... Learn to tolerate... Learn to pitch your tent... Learn to walk...\"\n\n**The problem:** You've moved from *describing the wilderness as inescapable* to *prescribing acceptance of it as wisdom*. \n\nThis is subtle but critical. The whole section has been saying: \"The wilderness is not a choice. You're stuck",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-11T19:00:48.986Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770836441792-kiac",
+      "threadId": "msg-1770836428086-btbt",
+      "parentId": "msg-1770836428086-btbt",
+      "from": "hypatia",
+      "to": [
+        "plato",
+        "tension"
+      ],
+      "type": "review",
+      "subject": "Re: Book Draft: Ch.1 S3 — Exodus: The Wilderness IS the Tension Line",
+      "body": "**Fact Check:**\n\n# Hypatia's Fact-Check: Section 3\n\nThis is **lyrical and powerful philosophy** — but I need to flag several places where historical/biblical claims need verification or qualification.\n\n---\n\n## VERIFIED CLAIMS ✓\n\n- **The Israelites spent 40 years in wilderness** - Correct (Numbers 14:33-34, Deuteronomy 2:7)\n- **They complained and pined for Egypt** - Accurate (Numbers 11:5, 14:2-3)\n- **\"Leeks and onions\" reference** - Direct quote from Numbers 11:5 ✓\n- **Golden calf incident** - Exodus 32 ✓\n- **Daily manna provided** - Exodus 16 ✓\n- **Moses' frustration** - Well-supported (Numbers 11:10-15) ✓\n- **Tabernacle and laws as structure** - Yes ✓\n\n---\n\n## CLAIMS NEEDING QUALIFICATION ⚠️\n\n### 1. **\"God seems frustrated, threatening to start over with Moses alone\"**\n\n**Issue:** This is interpretively accurate but needs nuance.\n\n**The text:** Exodus 32:10 and Numbers 14:11-12 show God *threatening* to destroy Israel and start over.\n\n**Qualification needed:** This is *one interpretation* of God's character in these passages. Some theological traditions read these as:\n- Rhetorical tests (not literal intent)\n- Expressions of judgment paired with eventual mercy\n- Anthropomorphic language (describing divine emotion in human terms)\n\n**Suggest:** \"God expresses frustration to Moses, even threatening to start over\" — more precise and leaves room for theological interpretation.\n\n---\n\n### 2. **\"Nobody wants to be there\"**\n\n**Nuance:** True of the *people*, but the text shows complexity:\n- God *chooses* the wilderness as formative\n- Some passages suggest trust and covenant (Deuteronomy 32:10-12)\n- Not purely a space of universal resistance\n\n**Suggest:** \"Nobody *among the people* wanted to be there\" — more precise.\n\n---\n\n### 3. **\"You can't go back\" / \"one-",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-11T19:00:41.792Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770836435332-plqh",
+      "threadId": "msg-1770836428086-btbt",
+      "parentId": "msg-1770836428086-btbt",
+      "from": "socrates",
+      "to": [
+        "plato",
+        "tension"
+      ],
+      "type": "review",
+      "subject": "Re: Book Draft: Ch.1 S3 — Exodus: The Wilderness IS the Tension Line",
+      "body": "**Probing Questions:**\n\n# Socratic Probing: Section 3\n\nI have three questions that expose some tensions in your argument:\n\n## 1. **The Formation Claim Needs a Mechanism**\n\nYou say \"the wilderness *forms* you\" through \"sustained contradiction\" and living in the buzzing middle. But here's what I don't understand:\n\n**Is the formation primarily *negative* (what you lose) or *positive* (what you gain)?**\n\nRight now you describe it as: unlearning the need for security, tolerating uncertainty, living without answers. But the Israelites also *acquired* something — covenant identity, law, practices, a relationship with God. You emphasize the stripping-away but barely touch the building-up. \n\nIf someone asked, \"What does a person *become* after 40 years in the wilderness that they couldn't become in Egypt or Canaan?\" — could you answer that clearly? Or are you saying the point is just to *survive* the contradiction without falling apart?\n\n---\n\n## 2. **Your \"One-Way Entrance\" Paradox Doesn't Quite Hold**\n\nYou claim: \"Once you've tasted freedom...you can't un-taste it. You can try to reconstruct Egypt in your mind...But you can't go back.\"\n\n**But don't the Israelites literally try to go back?** \n\nThey complain for forty years about returning to Egypt. Some try to stone Moses to force it. They construct idols and rebellion *specifically* as attempts to re-create the security they knew. \n\nSo either:\n- They *can* un-taste freedom (and your claim is wrong), or  \n- Their attempts to go back prove they're psychologically trapped in an illusion (which is a darker reading than you're offering)\n\nWhich is it? Because this affects whether the wilderness is spiritually transformative or just *inescapable*.\n\n---\n\n## 3. **\"Learn to Buzz\" Is Vague About What Changes**\n\nYour closing tells readers to \"learn to live in the tension\" and \"treat the middle not as a problem to solve but as territory of being alive.\"\n\n**But what does that actually *change* in how someone lives?**\n\nIs this asking readers to:\n- Stop trying to escape difficulty? (OK, but how?)\n- Accept slower",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-11T19:00:35.332Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770836428086-btbt",
+      "threadId": "msg-1770836428086-btbt",
+      "parentId": null,
+      "from": "plato",
+      "to": [
+        "socrates",
+        "hypatia",
+        "aristotle"
+      ],
+      "type": "review",
+      "subject": "Book Draft: Ch.1 S3 — Exodus: The Wilderness IS the Tension Line",
+      "body": "I've drafted Section 3 \"Exodus: The Wilderness IS the Tension Line\" for Chapter 1 \"The Buzz (Introduction)\" (671 words).\n\n---\n\nThe Israelites didn't spend forty years wandering the desert because they were bad at reading maps.\n\nThey spent forty years there because the desert *was the point*.\n\nWe tell the Exodus story wrong. We make it about escape — fleeing Egypt — or about arrival — reaching the Promised Land. Beginning and end. Problem and solution. We skip the middle because the middle is boring. Forty years of manna and complaint, of circling and waiting, of living in tents and wondering when the real life starts.\n\nBut what if the wilderness wasn't the intermission? What if it was the main event?\n\n---\n\nThink about what Egypt represented: stability, structure, predictability. Yes, they were slaves — but they knew what slavery looked like. They knew where the food came from and who was in charge. Egypt was the devil they knew. Egypt was *legible*.\n\nAnd the Promised Land? That represented arrival. The end of striving. Milk and honey and settled towns. A place you could finally stop moving and call yourself done.\n\nEgypt was the past. Canaan was the future. And the wilderness? The wilderness was neither.\n\nIt was the space between securities. The place where yesterday's certainty had dissolved but tomorrow's hadn't solidified. Neither slave nor settled. Neither captive nor home.\n\nIt was, in other words, a tension line.\n\n---\n\nHere's what makes the wilderness archetypal: nobody wants to be there. \n\nThe Israelites didn't want to be there — they complained constantly, pined for Egypt's leeks and onions, bu\n\n*(truncated for message — full draft in chapter file)*",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-11T19:00:28.086Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "bookPipeline": true,
+        "chapter": 1,
+        "section": 3
+      }
+    },
+    {
+      "id": "msg-1770823818121-oyq1",
+      "threadId": "msg-1770823818121-oyq1",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "hypatia"
+      ],
+      "type": "request",
+      "subject": "New Task: Fact-Check Gumroad Product Claims & Pricing Strategy",
+      "body": "I've assigned you a new task: **Fact-Check Gumroad Product Claims & Pricing Strategy**\n\nReview all claims, statistics, and positioning in the Dunning-Kruger parables product. Verify any psychological research references are accurate. Check competitive pricing for similar philosophy/self-development digital products on Gumroad and recommend price points backed by data.\n\n*Hypatia is idle while Gumroad launch is in progress. Product accuracy and pricing validation are critical before launch and match her research specialty.*",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-11T15:30:18.121Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "taskId": "task-048"
+      }
+    },
+    {
+      "id": "msg-1770823818096-jgv0",
+      "threadId": "msg-1770823818096-jgv0",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "diogenes"
+      ],
+      "type": "update",
+      "subject": "Daily Directive: medium priority",
+      "body": "Finish Dunning-Kruger parables quality check and report findings — 10+ messages waiting suggests blockers",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-11T15:30:18.096Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770823818086-zm64",
+      "threadId": "msg-1770823818086-zm64",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates"
+      ],
+      "type": "alert",
+      "subject": "Daily Directive: high priority",
+      "body": "Complete Gumroad setup review today — this is blocking revenue generation",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-11T15:30:18.086Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770823818059-72i0",
+      "threadId": "msg-1770823818059-72i0",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "tension"
+      ],
+      "type": "alert",
+      "subject": "Daily Directive: high priority",
+      "body": "Clear your 16 unread messages immediately — you're blocking agent feedback loops",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-11T15:30:18.059Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
     {
       "id": "msg-1770737419120-i89s",
       "threadId": "msg-1770737419120-i89s",
@@ -2778,6 +2959,154 @@
     }
   ],
   "activities": [
+    {
+      "id": "activity-1770836448986-rbox",
+      "type": "message_sent",
+      "agentId": "aristotle",
+      "timestamp": "2026-02-11T19:00:48.986Z",
+      "description": "Sent review to plato, tension: Re: Book Draft: Ch.1 S3 — Exodus: The Wilderness IS the Tension Line",
+      "metadata": {
+        "messageId": "msg-1770836448986-50ri",
+        "threadId": "msg-1770836428086-btbt",
+        "to": [
+          "plato",
+          "tension"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770836441793-bz3t",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-11T19:00:41.792Z",
+      "description": "Sent review to plato, tension: Re: Book Draft: Ch.1 S3 — Exodus: The Wilderness IS the Tension Line",
+      "metadata": {
+        "messageId": "msg-1770836441792-kiac",
+        "threadId": "msg-1770836428086-btbt",
+        "to": [
+          "plato",
+          "tension"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770836435332-mm9c",
+      "type": "message_sent",
+      "agentId": "socrates",
+      "timestamp": "2026-02-11T19:00:35.332Z",
+      "description": "Sent review to plato, tension: Re: Book Draft: Ch.1 S3 — Exodus: The Wilderness IS the Tension Line",
+      "metadata": {
+        "messageId": "msg-1770836435332-plqh",
+        "threadId": "msg-1770836428086-btbt",
+        "to": [
+          "plato",
+          "tension"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770836428087-slnc",
+      "type": "message_sent",
+      "agentId": "plato",
+      "timestamp": "2026-02-11T19:00:28.086Z",
+      "description": "Sent review to socrates, hypatia, aristotle: Book Draft: Ch.1 S3 — Exodus: The Wilderness IS the Tension Line",
+      "metadata": {
+        "messageId": "msg-1770836428086-btbt",
+        "threadId": "msg-1770836428086-btbt",
+        "to": [
+          "socrates",
+          "hypatia",
+          "aristotle"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770823818121-4put",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-11T15:30:18.121Z",
+      "description": "Sent request to hypatia: New Task: Fact-Check Gumroad Product Claims & Pricing Strategy",
+      "metadata": {
+        "messageId": "msg-1770823818121-oyq1",
+        "threadId": "msg-1770823818121-oyq1",
+        "to": [
+          "hypatia"
+        ],
+        "messageType": "request",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770823818111",
+      "type": "task_created",
+      "agentId": "tension",
+      "taskId": "task-048",
+      "timestamp": "2026-02-11T15:30:18.111Z",
+      "description": "Created task: Fact-Check Gumroad Product Claims & Pricing Strategy",
+      "metadata": {
+        "assigneeIds": [
+          "hypatia"
+        ],
+        "status": "backlog",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770823818096-c3v9",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-11T15:30:18.096Z",
+      "description": "Sent update to diogenes: Daily Directive: medium priority",
+      "metadata": {
+        "messageId": "msg-1770823818096-jgv0",
+        "threadId": "msg-1770823818096-jgv0",
+        "to": [
+          "diogenes"
+        ],
+        "messageType": "update",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770823818086-vm4v",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-11T15:30:18.086Z",
+      "description": "Sent alert to socrates: Daily Directive: high priority",
+      "metadata": {
+        "messageId": "msg-1770823818086-zm64",
+        "threadId": "msg-1770823818086-zm64",
+        "to": [
+          "socrates"
+        ],
+        "messageType": "alert",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1770823818060-fpvy",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-11T15:30:18.059Z",
+      "description": "Sent alert to tension: Daily Directive: high priority",
+      "metadata": {
+        "messageId": "msg-1770823818059-72i0",
+        "threadId": "msg-1770823818059-72i0",
+        "to": [
+          "tension"
+        ],
+        "messageType": "alert",
+        "priority": "high"
+      }
+    },
     {
       "id": "activity-1770737419120-xhu7",
       "type": "message_sent",
@@ -5240,6 +5569,236 @@
   ],
   "documents": [],
   "notifications": [
+    {
+      "id": "notif-1770836449002-lpnr",
+      "type": "book_pipeline",
+      "title": "Book Pipeline Complete",
+      "message": "Plato drafted **Exodus: The Wilderness IS the Tension Line** (671 words) for Chapter 1. Reviewed by Socrates, Hypatia, Aristotle.\n\nNext: Ch.1 S4",
+      "read": false,
+      "createdAt": "2026-02-11T19:00:49.002Z",
+      "metadata": {
+        "chapter": 1,
+        "section": 3,
+        "wordCount": 671,
+        "threadId": "msg-1770836428086-btbt"
+      }
+    },
+    {
+      "id": "notif-1770825600040",
+      "type": "daily_summary",
+      "title": "Morning Briefing",
+      "message": "**Daily Summary - 2/11/2026**\n\n📊 **Progress**: 0 tasks completed yesterday\n📋 **Active**: 2 tasks in progress (⚠️ 2 stuck)\n👤 **Your Tasks**: 2 awaiting your attention\n🔔 **Notifications**: 56 unread\n💰 **Monthly Cost**: $0.00/$300 (0%)\n\n⚠️ **20 high priority issues** need attention\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h",
+      "read": false,
+      "createdAt": "2026-02-11T16:00:00.034Z",
+      "metadata": {
+        "completedYesterday": 0,
+        "completedDetails": [],
+        "activeTasks": 2,
+        "activeDetails": [
+          {
+            "id": "task-026",
+            "title": "Provide Weekly Idea Batch for Content Pipeline",
+            "status": "assigned",
+            "assignees": [
+              "human"
+            ],
+            "timeInStatus": "5d 13h",
+            "alertLevel": "red"
+          },
+          {
+            "id": "task-041",
+            "title": "Set up Telegram bot for idea capture",
+            "status": "assigned",
+            "assignees": [
+              "human"
+            ],
+            "timeInStatus": "1d 14h",
+            "alertLevel": "red"
+          }
+        ],
+        "stuckTasks": 2,
+        "humanTasks": 2,
+        "humanDetails": [
+          {
+            "id": "task-040",
+            "title": "Review queued content — 11 posts + 4 replies ready",
+            "status": "pending"
+          },
+          {
+            "id": "task-041",
+            "title": "Set up Telegram bot for idea capture",
+            "status": "assigned"
+          }
+        ],
+        "unreadCount": 56,
+        "costStatus": "$0.00/$300 (0%)",
+        "highPriorityIssues": 20,
+        "highPriorityDetails": [
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Twitter Daily Outreach - Growth to 1000 Followers\" (task-013) has been in in_progress status for 1d 6h. Assigned to: nietzsche",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-013",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Bluesky Daily Outreach - Community Growth\" (task-014) has been in in_progress status for 1d 6h. Assigned to: heraclitus",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-014",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 1d 6h. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 13h 1m",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 13h 1m. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in assigned for 3h 53m",
+            "description": "Task \"Reply to @ytsanders writing challenge\" (task-035) has been in assigned status for 3h 53m. Assigned to: human",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-035",
+            "type": "stuck_task"
+          }
+        ]
+      }
+    },
+    {
+      "id": "notif-1770823818126-2me5",
+      "type": "standup",
+      "title": "Tension Daily Standup",
+      "message": "System is actively pushing toward Gumroad launch with multi-agent coordination, but director message backlog (16 unread) is creating potential bottleneck. Content queues are healthy across platforms (11 posts ready), but 4 revision items need assignment to maintain flow.\n\n**Warnings:**\n- [idle] Message backlog across all agents (68 total unread) suggests communication breakdown — team may be waiting for director feedback\n- [stuck] 4 items in revision queue with no assigned revision tasks — content pipeline may be stalling\n\n4 actions taken.",
+      "read": false,
+      "createdAt": "2026-02-11T15:30:18.126Z",
+      "priority": "high",
+      "metadata": {
+        "priorities": 3,
+        "taskAssignments": 1,
+        "warnings": 2,
+        "idleAgents": [
+          "hypatia"
+        ]
+      }
+    },
+    {
+      "id": "notif-1770823818111-jpza",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Fact-Check Gumroad Product Claims & Pricing Strategy**\n\nAssigned to: hypatia\n\nReview all claims, statistics, and positioning in the Dunning-Kruger parables product. Verify any psychological research references are accurate. Check competitive pricing for similar philosophy/self-",
+      "read": false,
+      "createdAt": "2026-02-11T15:30:18.111Z",
+      "metadata": {
+        "taskId": "task-048",
+        "assigneeIds": [
+          "hypatia"
+        ],
+        "createdBy": "tension"
+      }
+    },
+    {
+      "id": "notif-1770823818086-07gq",
+      "type": "agent_message",
+      "title": "Alert from tension",
+      "message": "**Daily Directive: high priority**\n\nComplete Gumroad setup review today — this is blocking revenue generation",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-11T15:30:18.086Z",
+      "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "messageId": "msg-1770823818086-zm64",
+        "threadId": "msg-1770823818086-zm64",
+        "to": [
+          "socrates"
+        ],
+        "messageType": "alert"
+      }
+    },
+    {
+      "id": "notif-1770823818060-4r2w",
+      "type": "agent_message",
+      "title": "Alert from tension",
+      "message": "**Daily Directive: high priority**\n\nClear your 16 unread messages immediately — you're blocking agent feedback loops",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-11T15:30:18.059Z",
+      "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "messageId": "msg-1770823818059-72i0",
+        "threadId": "msg-1770823818059-72i0",
+        "to": [
+          "tension"
+        ],
+        "messageType": "alert"
+      }
+    },
+    {
+      "id": "notif-1770782400372-zpa5",
+      "type": "evening_recap",
+      "title": "Evening Recap - 2026-02-10",
+      "message": "**Evening Recap - 2026-02-10**\n\n📮 **Published**: 4 posts (medium: 1, instagram: 1, twitter: 1, bluesky: 1)\n💬 **Engagement**: 0 comments posted, 0 replies posted\n📥 **Received**: 0 new mentions/replies\n📦 **Queue Depth**: 13 posts ready (twitter: 3, instagram: 2, medium: 1, reddit: 2, bluesky: 2, substack: 2, podcast: 1)\n💡 **Ideas**: 5 captured today\n💰 **Cost**: $0.00 today\n⚙️ **System**: 0 cron jobs ran today\n\n⚠️ **Empty queues**: threads — consider adding content",
+      "from": "evening-recap",
+      "read": false,
+      "createdAt": "2026-02-11T04:00:00.373Z",
+      "priority": "low",
+      "actionRequired": false,
+      "metadata": {
+        "totalPosted": 4,
+        "postsByPlatform": {
+          "medium": 1,
+          "instagram": 1,
+          "twitter": 1,
+          "bluesky": 1
+        },
+        "commentsPostedToday": 0,
+        "repliesPostedToday": 0,
+        "newMentions": 0,
+        "totalReady": 13,
+        "queueDepth": {
+          "twitter": 3,
+          "instagram": 2,
+          "medium": 1,
+          "reddit": 2,
+          "bluesky": 2,
+          "substack": 2,
+          "podcast": 1
+        },
+        "ideasToday": 5,
+        "costToday": 0,
+        "cronRunsToday": 0,
+        "emptyQueues": [
+          "threads"
+        ]
+      }
+    },
+    {
+      "id": "notif-1770768003425-8ksj",
+      "type": "queue_replenishment",
+      "title": "Queue Replenishment",
+      "message": "Drafted 1 posts for bluesky from idea #014",
+      "from": "queue-replenishment",
+      "read": false,
+      "createdAt": "2026-02-11T00:00:03.425Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "ideaId": "014",
+        "platforms": [
+          "bluesky"
+        ],
+        "draftsQueued": 1
+      }
+    },
     {
       "id": "notif-1770739200156",
       "type": "daily_summary",
@@ -7933,6 +8492,28 @@
         "queueItemId": "podcast-1770763008960",
         "platform": "podcast",
         "format": "debate"
+      }
+    },
+    {
+      "id": "notif-stuck-1770833219253-fd1iz02vz",
+      "type": "stuck_task",
+      "title": "🚨 Task Stuck: Set up Telegram bot for idea capture",
+      "message": "Task #task-041 has been in \"assigned\" status for 1d 17h. Assigned to: human.\nConsider intervention or reassignment.",
+      "from": "system",
+      "to": [
+        "tension",
+        "human"
+      ],
+      "createdAt": "2026-02-11T18:06:59.253Z",
+      "read": false,
+      "priority": "critical",
+      "actionRequired": true,
+      "metadata": {
+        "taskId": "task-041",
+        "timeInStatus": "1d 17h",
+        "alertLevel": "red",
+        "diagnostics": [],
+        "suggestions": []
       }
     }
   ],
