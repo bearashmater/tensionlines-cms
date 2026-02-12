@@ -5888,6 +5888,58 @@ app.post('/api/ideas', (req, res) => {
 });
 
 /**
+ * Delete an idea from ideas-bank.md
+ */
+app.delete('/api/ideas/:id', (req, res) => {
+  try {
+    const targetId = req.params.id.replace(/^#/, '');
+    const content = fs.readFileSync(IDEAS_BANK, 'utf8');
+    const lines = content.split('\n');
+
+    // Find the idea's header line and the range to remove
+    let startLine = -1;
+    let endLine = lines.length;
+    const headerPattern = new RegExp(`^###?\\s+#?0*${parseInt(targetId, 10)}\\s+[-|]`);
+
+    for (let i = 0; i < lines.length; i++) {
+      if (headerPattern.test(lines[i])) {
+        startLine = i;
+        // Find the end: next idea header, next date header, or end of file
+        for (let j = i + 1; j < lines.length; j++) {
+          if (/^###?\s+#?\d+\s+[-|]/.test(lines[j]) || /^##\s+\d{4}-\d{2}-\d{2}/.test(lines[j])) {
+            endLine = j;
+            break;
+          }
+        }
+        break;
+      }
+    }
+
+    if (startLine === -1) {
+      return res.status(404).json({ error: 'Idea not found' });
+    }
+
+    // Remove the lines and any trailing blank lines / --- separators before the next section
+    while (endLine > startLine && (lines[endLine - 1].trim() === '' || lines[endLine - 1].trim() === '---')) {
+      endLine--;
+    }
+    // Include the separator line if present
+    if (endLine < lines.length && lines[endLine]?.trim() === '---') endLine++;
+
+    lines.splice(startLine, endLine - startLine);
+    fs.writeFileSync(IDEAS_BANK, lines.join('\n'));
+    cache.ideasBank = null;
+    broadcast('ideas');
+
+    console.log(`[Ideas] Deleted idea #${targetId}`);
+    res.json({ success: true, id: targetId });
+  } catch (error) {
+    console.error('Error deleting idea:', error);
+    res.status(500).json({ error: 'Failed to delete idea' });
+  }
+});
+
+/**
  * Get idea submission stats
  */
 app.get('/api/ideas/stats', (req, res) => {

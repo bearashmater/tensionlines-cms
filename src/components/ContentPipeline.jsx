@@ -3,7 +3,7 @@ import { useState, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getIdeas, getDrafts, getIdeaStats } from '../lib/api'
 import { formatDate, getStatusColor } from '../lib/formatters'
-import { Lightbulb, FileText, TrendingUp, Target, Flame, Calendar, CheckCircle, Clock, AlertTriangle, Search, Filter, Grid, List, ChevronDown, ChevronUp, Tag, X, Rocket, Loader, Send, Zap } from 'lucide-react'
+import { Lightbulb, FileText, TrendingUp, Target, Flame, Calendar, CheckCircle, Clock, AlertTriangle, Search, Filter, Grid, List, ChevronDown, ChevronUp, Tag, X, Rocket, Loader, Send, Zap, Trash2 } from 'lucide-react'
 
 export default function ContentPipeline() {
   const { data: ideas, mutate: mutateIdeas } = useSWR('/ideas', getIdeas, { refreshInterval: 120000 })
@@ -396,6 +396,20 @@ function IdeasBrowser({ ideas }) {
   const [selectedIdea, setSelectedIdea] = useState(null) // For detail modal
   const [page, setPage] = useState(1)
   const perPage = 20
+  const [deleting, setDeleting] = useState(null)
+
+  const handleDelete = async (id) => {
+    if (!confirm(`Delete idea #${id}? This cannot be undone.`)) return
+    setDeleting(id)
+    try {
+      await fetch(`/api/ideas/${id}`, { method: 'DELETE' })
+      globalMutate('/ideas')
+    } catch (err) {
+      console.error('Delete failed:', err)
+    } finally {
+      setDeleting(null)
+    }
+  }
 
   // Get all unique tags
   const allTags = useMemo(() => {
@@ -650,11 +664,13 @@ function IdeasBrowser({ ideas }) {
           onExpand={setExpandedId}
           onTagClick={(tag) => { setTagFilter(tag); setPage(1) }}
           onViewDetails={setSelectedIdea}
+          onDelete={handleDelete}
+          deleting={deleting}
         />
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {paginatedIdeas.map(idea => (
-            <IdeaCard key={idea.id} idea={idea} onTagClick={(tag) => { setTagFilter(tag); setPage(1) }} />
+            <IdeaCard key={idea.id} idea={idea} onTagClick={(tag) => { setTagFilter(tag); setPage(1) }} onDelete={handleDelete} deleting={deleting} />
           ))}
         </div>
       ) : (
@@ -699,7 +715,7 @@ function IdeasBrowser({ ideas }) {
   )
 }
 
-function IdeasTable({ ideas, sortBy, sortDir, onSort, expandedId, onExpand, onTagClick, onViewDetails }) {
+function IdeasTable({ ideas, sortBy, sortDir, onSort, expandedId, onExpand, onTagClick, onViewDetails, onDelete, deleting }) {
   const SortHeader = ({ field, children }) => (
     <th
       className="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
@@ -790,6 +806,16 @@ function IdeasTable({ ideas, sortBy, sortDir, onSort, expandedId, onExpand, onTa
                           </button>
                         )}
                         <FastTrackButton ideaId={idea.id} />
+                        {onDelete && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onDelete(idea.id) }}
+                            disabled={deleting === idea.id}
+                            className="px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors flex items-center gap-1 disabled:opacity-50"
+                          >
+                            <Trash2 size={14} />
+                            Delete
+                          </button>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -835,7 +861,7 @@ function IdeasCompact({ ideas, onTagClick }) {
 // EXISTING COMPONENTS
 // ============================================================================
 
-function IdeaCard({ idea, onTagClick }) {
+function IdeaCard({ idea, onTagClick, onDelete, deleting }) {
   const statusColor = getStatusColor(idea.status)
   const statusEmoji = { captured: '🔵', assigned: '🟡', drafted: '🟠', shipped: '🟢' }
 
@@ -848,9 +874,21 @@ function IdeaCard({ idea, onTagClick }) {
             <span className="text-xs text-neutral-400">{idea.date}</span>
           )}
         </div>
-        <span className={`badge ${statusColor}`}>
-          {statusEmoji[idea.status]} {idea.status}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`badge ${statusColor}`}>
+            {statusEmoji[idea.status]} {idea.status}
+          </span>
+          {onDelete && (
+            <button
+              onClick={() => onDelete(idea.id)}
+              disabled={deleting === idea.id}
+              className="text-neutral-400 hover:text-red-600 transition-colors p-0.5"
+              title="Delete idea"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+        </div>
       </div>
       <p className="text-sm text-black mb-2 line-clamp-3">{idea.text || idea.quote}</p>
       {idea.tags && idea.tags.length > 0 && (
