@@ -11349,6 +11349,27 @@ const PODCAST_LEDGER = path.join(PODCAST_DIR, 'episode-ledger.json');
 const PODCAST_BANK = path.join(PODCAST_DIR, 'podcast-bank.json');
 const PODCAST_TRIALS = path.join(PODCAST_DIR, 'trial-reviews.json');
 
+// --- Podcast Audio (ElevenLabs) ---
+const PODCAST_AUDIO_DIR = path.join(PODCAST_DIR, 'audio');
+const ELEVENLABS_API_BASE = 'https://api.elevenlabs.io/v1';
+const DIALOGUE_CHAR_LIMIT = 4500;
+
+// Create audio directory if missing
+if (!fs.existsSync(PODCAST_AUDIO_DIR)) {
+  fs.mkdirSync(PODCAST_AUDIO_DIR, { recursive: true });
+  console.log('[Podcast Audio] Created audio directory');
+}
+
+// Check ffmpeg availability at startup
+let ffmpegAvailable = false;
+try {
+  execSync('which ffmpeg', { encoding: 'utf-8', timeout: 3000 });
+  ffmpegAvailable = true;
+  console.log('[Podcast Audio] ffmpeg available');
+} catch {
+  console.warn('[Podcast Audio] ffmpeg not found — audio concatenation will not work. Install with: brew install ffmpeg');
+}
+
 function getPodcastLedger() {
   try {
     if (fs.existsSync(PODCAST_LEDGER)) return JSON.parse(fs.readFileSync(PODCAST_LEDGER, 'utf8'));
@@ -11948,6 +11969,230 @@ function podcastApprove(queueItem, reason, ratings) {
   return episode;
 }
 
+// --- Podcast Audio Generation (ElevenLabs Text to Dialogue) ---
+
+function chunkScriptForDialogue(script, maxChars = DIALOGUE_CHAR_LIMIT) {
+  const chunks = [];
+  let current = [];
+  let currentChars = 0;
+
+  for (let i = 0; i < script.length; i++) {
+    const exchange = script[i];
+    const charCount = exchange.text.length + 20; // overhead for speaker/formatting
+
+    if (currentChars + charCount > maxChars && current.length > 0) {
+      // Try to split at a [pause] tag within the last 8 exchanges
+      let splitIdx = -1;
+      const searchStart = Math.max(0, current.length - 8);
+      for (let j = current.length - 1; j >= searchStart; j--) {
+        if (current[j].text.includes('[pause]')) {
+          splitIdx = j + 1;
+          break;
+        }
+      }
+
+      if (splitIdx > 0 && splitIdx < current.length) {
+        // Split at [pause] — push up to splitIdx, keep the rest
+        chunks.push(current.slice(0, splitIdx));
+        const remainder = current.slice(splitIdx);
+        current = [...remainder, exchange];
+        currentChars = current.reduce((sum, e) => sum + e.text.length + 20, 0);
+      } else {
+        // No good [pause] split point — flush the whole batch
+        chunks.push(current);
+        current = [exchange];
+        currentChars = charCount;
+      }
+    } else {
+      current.push(exchange);
+      currentChars += charCount;
+    }
+  }
+
+  if (current.length > 0) chunks.push(current);
+  return chunks;
+}
+
+async function callElevenLabsDialogue(inputs, outputPath, retries = 2) {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) throw new Error('ELEVENLABS_API_KEY not set');
+
+  const body = {
+    model_id: 'eleven_v3',
+    inputs,
+    output_format: 'mp3_44100_128',
+    settings: { stability: 0.0 }
+  };
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const response = await fetch(`${ELEVENLABS_API_BASE}/text-to-dialogue`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (response.status === 429 && attempt < retries) {
+      const delay = attempt === 0 ? 5000 : 15000;
+      console.warn(`[Podcast Audio] Rate limited, retrying in ${delay / 1000}s...`);
+      await new Promise(r => setTimeout(r, delay));
+      continue;
+    }
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => 'unknown');
+      throw new Error(`ElevenLabs API error ${response.status}: ${errText}`);
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+    fs.writeFileSync(outputPath, buffer);
+    return outputPath;
+  }
+}
+
+function concatenateAudioChunks(chunkPaths, outputPath) {
+  if (chunkPaths.length === 0) throw new Error('No audio chunks to concatenate');
+
+  if (chunkPaths.length === 1) {
+    fs.copyFileSync(chunkPaths[0], outputPath);
+    return outputPath;
+  }
+
+  if (!ffmpegAvailable) throw new Error('ffmpeg not available for concatenation');
+
+  // Write ffmpeg concat file list
+  const listPath = outputPath + '.list.txt';
+  const listContent = chunkPaths.map(p => `file '${p}'`).join('\n');
+  fs.writeFileSync(listPath, listContent);
+
+  try {
+    execSync(`ffmpeg -y -f concat -safe 0 -i "${listPath}" -c copy "${outputPath}"`, {
+      timeout: 60000,
+      encoding: 'utf-8',
+      stdio: 'pipe'
+    });
+  } finally {
+    // Clean up list file
+    try { fs.unlinkSync(listPath); } catch {}
+  }
+
+  return outputPath;
+}
+
+async function generatePodcastAudio(queueItemId) {
+  const queue = getPostingQueue();
+  const item = queue.queue.find(i => i.id === queueItemId && i.platform === 'podcast');
+  if (!item) {
+    console.error(`[Podcast Audio] Queue item ${queueItemId} not found`);
+    return;
+  }
+
+  const script = item.metadata?.script;
+  if (!script || script.length === 0) {
+    console.error(`[Podcast Audio] No script found for ${queueItemId}`);
+    return;
+  }
+
+  if (!process.env.ELEVENLABS_API_KEY) {
+    console.error('[Podcast Audio] ELEVENLABS_API_KEY not set, skipping audio generation');
+    return;
+  }
+
+  if (!ffmpegAvailable && script.length > 50) {
+    // Likely needs multiple chunks — warn but try anyway (single chunk might work)
+    console.warn('[Podcast Audio] ffmpeg not available — multi-chunk concatenation may fail');
+  }
+
+  const voiceShawn = process.env.ELEVENLABS_VOICE_SHAWN;
+  const voiceAnne = process.env.ELEVENLABS_VOICE_ANNE;
+  if (!voiceShawn || !voiceAnne) {
+    console.error('[Podcast Audio] Voice IDs not set (ELEVENLABS_VOICE_SHAWN / ELEVENLABS_VOICE_ANNE)');
+    return;
+  }
+
+  // Prevent concurrent runs
+  if (item.metadata.audioGenerating) {
+    console.warn(`[Podcast Audio] Already generating for ${queueItemId}`);
+    return;
+  }
+
+  // Mark as generating
+  item.metadata.audioGenerating = true;
+  item.metadata.audioError = null;
+  savePostingQueue(queue);
+  broadcast('posting-queue');
+
+  const timestamp = Date.now();
+  const chunkPaths = [];
+
+  try {
+    // Chunk the script
+    const chunks = chunkScriptForDialogue(script);
+    const totalChars = script.reduce((sum, e) => sum + e.text.length, 0);
+    console.log(`[Podcast Audio] Starting generation for "${item.title}" — ${chunks.length} batch(es), ${totalChars} chars`);
+
+    // Generate each chunk
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const inputs = chunk.map(exchange => ({
+        text: exchange.text.replace(/\[pause\]/gi, '...'),
+        voice_id: exchange.speaker === 'anne' ? voiceAnne : voiceShawn
+      }));
+
+      const chunkPath = path.join(PODCAST_AUDIO_DIR, `${queueItemId}-chunk-${i}-${timestamp}.mp3`);
+      const chunkChars = chunk.reduce((sum, e) => sum + e.text.length, 0);
+
+      await callElevenLabsDialogue(inputs, chunkPath);
+      chunkPaths.push(chunkPath);
+      console.log(`[Podcast Audio] Batch ${i + 1}/${chunks.length} complete (${chunkChars} chars)`);
+    }
+
+    // Concatenate
+    const finalPath = path.join(PODCAST_AUDIO_DIR, `${queueItemId}.mp3`);
+    concatenateAudioChunks(chunkPaths, finalPath);
+
+    // Update metadata
+    const freshQueue = getPostingQueue();
+    const freshItem = freshQueue.queue.find(i => i.id === queueItemId);
+    if (freshItem) {
+      freshItem.metadata.audioFile = `${queueItemId}.mp3`;
+      freshItem.metadata.audioGenerated = true;
+      freshItem.metadata.audioGeneratedAt = new Date().toISOString();
+      freshItem.metadata.audioGenerating = false;
+      freshItem.metadata.audioError = null;
+      freshItem.metadata.audioChunks = chunks.length;
+      freshItem.metadata.audioCharacters = totalChars;
+      savePostingQueue(freshQueue);
+    }
+
+    console.log(`[Podcast Audio] Complete: ${finalPath} (${chunks.length} chunks, ${totalChars} chars)`);
+    broadcast('posting-queue');
+    broadcast('podcast');
+
+  } catch (error) {
+    console.error(`[Podcast Audio] Failed for ${queueItemId}:`, error.message);
+
+    // Update metadata with error
+    const freshQueue = getPostingQueue();
+    const freshItem = freshQueue.queue.find(i => i.id === queueItemId);
+    if (freshItem) {
+      freshItem.metadata.audioGenerating = false;
+      freshItem.metadata.audioError = error.message;
+      savePostingQueue(freshQueue);
+    }
+
+    broadcast('posting-queue');
+
+  } finally {
+    // Clean up chunk files (keep final MP3)
+    for (const p of chunkPaths) {
+      try { fs.unlinkSync(p); } catch {}
+    }
+  }
+}
+
 // --- Manual trigger ---
 app.post('/api/podcast/run', async (req, res) => {
   try {
@@ -11977,6 +12222,14 @@ app.post('/api/podcast/:id/approve', (req, res) => {
     logSystemEvent('podcast', `Episode approved: "${item.title}" → ${episode.id}`, { episodeId: episode.id });
     broadcast('podcast');
     broadcast('posting-queue');
+
+    // Fire-and-forget audio generation
+    if (process.env.ELEVENLABS_API_KEY) {
+      generatePodcastAudio(req.params.id).catch(err =>
+        console.error('[Podcast Audio] Auto-generate after approve failed:', err.message)
+      );
+    }
+
     res.json({ success: true, episode });
   } catch (error) {
     console.error('Podcast approve error:', error);
@@ -12355,6 +12608,56 @@ app.patch('/api/podcast/bank/:id', (req, res) => {
     res.status(500).json({ error: 'Failed to update bank item' });
   }
 });
+
+// --- Podcast Audio Endpoints ---
+
+app.post('/api/podcast/:id/generate-audio', (req, res) => {
+  try {
+    const queue = getPostingQueue();
+    const item = queue.queue.find(i => i.id === req.params.id && i.platform === 'podcast');
+    if (!item) return res.status(404).json({ error: 'Podcast episode not found' });
+    if (!item.metadata?.script?.length) return res.status(400).json({ error: 'No script found on this episode' });
+    if (item.metadata.audioGenerating) return res.status(409).json({ error: 'Audio generation already in progress' });
+    if (!process.env.ELEVENLABS_API_KEY) return res.status(500).json({ error: 'ELEVENLABS_API_KEY not configured' });
+    if (!process.env.ELEVENLABS_VOICE_SHAWN || !process.env.ELEVENLABS_VOICE_ANNE) {
+      return res.status(500).json({ error: 'Voice IDs not configured' });
+    }
+
+    // Fire-and-forget
+    generatePodcastAudio(req.params.id).catch(err =>
+      console.error('[Podcast Audio] Manual generate failed:', err.message)
+    );
+
+    res.json({ success: true, message: 'Audio generation started' });
+  } catch (error) {
+    console.error('Podcast generate-audio error:', error);
+    res.status(500).json({ error: 'Failed to start audio generation' });
+  }
+});
+
+app.get('/api/podcast/:id/audio-status', (req, res) => {
+  try {
+    const queue = getPostingQueue();
+    const item = queue.queue.find(i => i.id === req.params.id && i.platform === 'podcast');
+    if (!item) return res.status(404).json({ error: 'Podcast episode not found' });
+
+    res.json({
+      audioGenerated: item.metadata?.audioGenerated || false,
+      audioGenerating: item.metadata?.audioGenerating || false,
+      audioFile: item.metadata?.audioFile || null,
+      audioError: item.metadata?.audioError || null,
+      audioGeneratedAt: item.metadata?.audioGeneratedAt || null,
+      audioChunks: item.metadata?.audioChunks || null,
+      audioCharacters: item.metadata?.audioCharacters || null
+    });
+  } catch (error) {
+    console.error('Podcast audio-status error:', error);
+    res.status(500).json({ error: 'Failed to get audio status' });
+  }
+});
+
+// Serve generated audio files
+app.use('/api/podcast/audio', express.static(PODCAST_AUDIO_DIR));
 
 // --- Cron schedule ---
 cron.schedule('30 9 * * 1', async () => {
