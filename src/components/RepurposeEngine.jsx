@@ -36,7 +36,8 @@ const PLATFORMS = {
   bluesky: { label: 'Bluesky', icon: (s) => <BlueskyIcon size={s} className="text-blue-500" />, limit: 300, unit: 'chars' },
   instagram: { label: 'Instagram', icon: (s) => <Instagram size={s} className="text-pink-500" />, limit: 2200, unit: 'chars' },
   reddit: { label: 'Reddit', icon: (s) => <Hash size={s} className="text-orange-500" />, limit: 300, unit: 'words' },
-  medium: { label: 'Medium', icon: (s) => <BookOpen size={s} className="text-green-700" />, limit: 200, unit: 'words' }
+  medium: { label: 'Medium', icon: (s) => <BookOpen size={s} className="text-green-700" />, limit: 200, unit: 'words' },
+  threads: { label: 'Threads', icon: (s) => <MessageCircle size={s} className="text-gray-700" />, limit: 500, unit: 'chars' }
 }
 
 const PHILOSOPHERS = [

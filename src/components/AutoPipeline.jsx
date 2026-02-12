@@ -28,7 +28,7 @@ const PHILOSOPHERS = [
   { id: 'marcus', label: 'Marcus Aurelius' }
 ]
 
-const ALL_PLATFORMS = ['twitter', 'bluesky', 'instagram', 'reddit', 'medium', 'substack']
+const ALL_PLATFORMS = ['twitter', 'bluesky', 'instagram', 'reddit', 'medium', 'substack', 'threads']
 
 export default function AutoPipeline() {
   const { data: status, error, isLoading } = useSWR('/api/auto-pipeline/status', fetcher, { refreshInterval: 30000 })

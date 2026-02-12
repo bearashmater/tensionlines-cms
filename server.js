@@ -3423,7 +3423,8 @@ const PLATFORM_SPECS = {
   instagram: { label: 'Instagram', limit: 2200, format: 'Two parts: 1) "cardText" — a bold quote for a Canva image card, under 100 characters. 2) "caption" — a longer reflection with relevant hashtags, up to ~2200 characters.' },
   reddit: { label: 'Reddit', limit: 300, format: 'Discussion-starter. Return "title" (compelling question or statement) and "body" (thoughtful, ~300 words, no hashtags). Invites conversation.' },
   medium: { label: 'Medium', limit: 200, format: 'Essay paragraph. Rich, flowing prose. Could be a section opener. ~200 words.' },
-  substack: { label: 'Substack', limit: 500, format: 'Newsletter excerpt. Compelling opening hook (1-2 sentences), then a thoughtful exploration (~300-500 words). Should feel like the start of something the reader wants to finish. Include a provocative subject line as "title".' }
+  substack: { label: 'Substack', limit: 500, format: 'Newsletter excerpt. Compelling opening hook (1-2 sentences), then a thoughtful exploration (~300-500 words). Should feel like the start of something the reader wants to finish. Include a provocative subject line as "title".' },
+  threads: { label: 'Threads', limit: 500, format: 'Conversational, casual tone. Like talking to a smart friend. Can be a single post or a short thread (max 3 posts separated by ---). Each post must be ≤500 characters. No hashtags.' }
 };
 
 /**
@@ -3436,7 +3437,7 @@ app.post('/api/repurpose', async (req, res) => {
       return res.status(501).json({ error: 'Anthropic API key not configured. Add ANTHROPIC_API_KEY to cms/.env' });
     }
 
-    const { ideaId, rawText, platforms = ['twitter', 'bluesky', 'instagram', 'reddit', 'medium'], philosopher = 'nietzsche' } = req.body;
+    const { ideaId, rawText, platforms = ['twitter', 'bluesky', 'instagram', 'reddit', 'medium', 'threads'], philosopher = 'nietzsche' } = req.body;
 
     if (!isValidPhilosopher(philosopher)) {
       return res.status(400).json({ error: 'Invalid philosopher name' });
@@ -3545,7 +3546,7 @@ const AUTO_PIPELINE_CONFIG_DEFAULTS = {
   enabled: false,
   cronSchedule: '0 6 * * *', // 6 AM PST daily
   philosopher: 'nietzsche',
-  platforms: ['twitter', 'bluesky', 'instagram', 'reddit', 'medium'],
+  platforms: ['twitter', 'bluesky', 'instagram', 'reddit', 'medium', 'threads'],
   maxIdeasPerRun: 3
 };
 
@@ -3718,7 +3719,7 @@ async function runAutoPipeline() {
       const { drafts, validPlatforms } = await generatePlatformDrafts(
         sourceText,
         config.philosopher || 'nietzsche',
-        config.platforms || ['twitter', 'bluesky', 'instagram', 'reddit', 'medium']
+        config.platforms || ['twitter', 'bluesky', 'instagram', 'reddit', 'medium', 'threads']
       );
 
       // Queue each platform draft with pending-review status
