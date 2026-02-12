@@ -3424,7 +3424,7 @@ const PLATFORM_SPECS = {
   reddit: { label: 'Reddit', limit: 300, format: 'Discussion-starter. Return "title" (compelling question or statement) and "body" (thoughtful, ~300 words, no hashtags). Invites conversation.' },
   medium: { label: 'Medium', limit: 200, format: 'Essay paragraph. Rich, flowing prose. Could be a section opener. ~200 words.' },
   substack: { label: 'Substack', limit: 500, format: 'Newsletter excerpt. Compelling opening hook (1-2 sentences), then a thoughtful exploration (~300-500 words). Should feel like the start of something the reader wants to finish. Include a provocative subject line as "title".' },
-  threads: { label: 'Threads', limit: 500, format: 'Conversational, casual tone. Like talking to a smart friend. Can be a single post or a short thread (max 3 posts separated by ---). Each post must be ≤500 characters. No hashtags.' }
+  threads: { label: 'Threads', limit: 500, format: 'Conversational, casual tone. Like talking to a smart friend. VARY the format — some should be short punchy single posts (50-200 chars), others can be threads (2-3 posts separated by ---). Each post in a thread must be ≤500 characters. Do NOT always write threads — mix it up. No hashtags.' }
 };
 
 /**
