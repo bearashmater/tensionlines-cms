@@ -1,7 +1,7 @@
 {
   "currentTarget": {
     "chapter": 1,
-    "section": 3
+    "section": 4
   },
   "completedSections": [
     {
@@ -16,6 +16,14 @@
       "wordCount": 707,
       "completedAt": "2026-02-10T05:12:46.111Z",
       "threadId": "msg-1770700344963-pl6x"
+    },
+    {
+      "chapter": 1,
+      "section": 3,
+      "title": "Exodus: The Wilderness IS the Tension Line",
+      "wordCount": 671,
+      "completedAt": "2026-02-11T19:00:48.996Z",
+      "threadId": "msg-1770836428086-btbt"
     }
   ],
   "runs": [
@@ -26,6 +34,14 @@
       "title": "Ecclesiastes: 14 Polarities Without Resolution",
       "wordCount": 707,
       "threadId": "msg-1770700344963-pl6x"
+    },
+    {
+      "date": "2026-02-11T19:00:48.996Z",
+      "chapter": 1,
+      "section": 3,
+      "title": "Exodus: The Wilderness IS the Tension Line",
+      "wordCount": 671,
+      "threadId": "msg-1770836428086-btbt"
     }
   ],
   "config": {

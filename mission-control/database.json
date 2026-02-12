@@ -1189,7 +1189,7 @@
       "id": "task-026",
       "title": "Provide Weekly Idea Batch for Content Pipeline",
       "description": "**HUMAN REQUIRED:** Feed raw ideas into the content system.\n\n**How to submit ideas:**\n\n1. **Telegram** (from phone): Send a message starting with \"Idea\" to the TensionLines bot\n   - Example: \"Idea: The tension between knowing the path and walking the path\"\n   - Bot replies with the idea number\n   - Requires one-time setup (see task-041)\n\n2. **CMS** (from computer): Use the Quick Capture box at the top of the Ideas Bank page\n   - Type your thought and hit Capture (or Cmd+Enter)\n   - Appears instantly in the ideas list\n\n3. **Direct to Claude**: Tell Claude your idea in conversation — he can add it\n\n**What happens after capture:**\n- Idea gets a unique ID (#NNN) and lands in ideas-bank.md\n- Tension organizes: adds tags, maps to book chapters, identifies tensions\n- Auto-pipeline drafts social content from captured ideas (daily at 6 AM)\n- You review drafts in the Posting Queue\n\n**Goal:** ~5 ideas per day keeps the content pipeline flowing\n\n**Recurring:** Weekly check-in on idea flow",
-      "status": "assigned",
+      "status": "completed",
       "assigneeIds": [
         "human"
       ],
@@ -1203,8 +1203,10 @@
         "category": "content",
         "recurring": "weekly",
         "weeklyGoal": 4,
-        "ideasThisWeek": 7
-      }
+        "ideasThisWeek": 5
+      },
+      "completedAt": "2026-02-12T06:48:50.485Z",
+      "completedBy": "human"
     },
     {
       "id": "task-027",
@@ -1879,7 +1881,7 @@
       "id": "task-041",
       "title": "Set up Telegram bot for idea capture",
       "description": "**Set up a Telegram bot so you can text ideas from your phone.**\n\n1. Open Telegram and message @BotFather\n2. Send /newbot\n3. Name it something like \"TensionLines Ideas\"\n4. Username: tensionlines_ideas_bot (or similar)\n5. Copy the bot token BotFather gives you\n\nhttps://t.me/BotFather\n\n> After creating the bot, add these two lines to cms/.env:\n> TELEGRAM_BOT_TOKEN=your_token_here\n> TELEGRAM_CHAT_ID=(see step 6)\n\n6. After adding the token and restarting the server, send any message to your new bot. The bot will reply with your chat ID. Add that as TELEGRAM_CHAT_ID in .env and restart again.\n\n7. Test it: send \"Idea: The tension between planning and doing\" to the bot. It should reply with the captured idea number.\n\n**How it works after setup:**\n- Send any message starting with \"Idea\" or \"Idea:\" to the bot\n- It captures the text into ideas-bank.md automatically\n- Shows up in the CMS Ideas Bank page in real-time\n- You can also type ideas directly in the CMS Quick Capture box",
-      "status": "assigned",
+      "status": "completed",
       "assigneeIds": [
         "human"
       ],
@@ -1891,7 +1893,8 @@
       "metadata": {
         "priority": "medium",
         "category": "setup"
-      }
+      },
+      "completedAt": "2026-02-12T07:02:50.904Z"
     },
     {
       "id": "task-042",
@@ -2018,9 +2021,389 @@
         "source": "tension-standup",
         "priority": "medium"
       }
+    },
+    {
+      "id": "task-049",
+      "title": "Review February Content Voice & Authenticity",
+      "description": "Audit the 11 queued posts (Twitter, Instagram, Bluesky) and 2 Medium essays for authentic voice. Flag anything that sounds too AI-polished or disconnected from TensionLines' grounded philosophical style. Provide specific edits where needed.\n\n*Rationale: Anne is idle and serves as grounding force. With heavy content queued, we need her human-voice quality check before mass deployment.*",
+      "status": "backlog",
+      "assigneeIds": [
+        "anne"
+      ],
+      "createdBy": "tension",
+      "createdAt": "2026-02-12T15:30:15.865Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "source": "tension-standup",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "task-050",
+      "title": "Structure Q1 Product Roadmap Based on Gumroad Launch",
+      "description": "With Gumroad products ready for launch, create a systematic 6-week rollout plan: Week 1-2 launch sequence, Week 3-4 promotion strategy, Week 5-6 iteration based on sales data. Define success metrics and decision points.\n\n*Rationale: Aristotle's Gumroad task is wrapping up. Need his systematic thinking to bridge product launch into sustained Q1 revenue strategy.*",
+      "status": "backlog",
+      "assigneeIds": [
+        "aristotle"
+      ],
+      "createdBy": "tension",
+      "createdAt": "2026-02-12T15:30:15.881Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {
+        "source": "tension-standup",
+        "priority": "medium"
+      }
     }
   ],
   "messages": [
+    {
+      "id": "msg-1770910215888-ngom",
+      "threadId": "msg-1770910215888-ngom",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "aristotle"
+      ],
+      "type": "request",
+      "subject": "New Task: Structure Q1 Product Roadmap Based on Gumroad Launch",
+      "body": "I've assigned you a new task: **Structure Q1 Product Roadmap Based on Gumroad Launch**\n\nWith Gumroad products ready for launch, create a systematic 6-week rollout plan: Week 1-2 launch sequence, Week 3-4 promotion strategy, Week 5-6 iteration based on sales data. Define success metrics and decision points.\n\n*Aristotle's Gumroad task is wrapping up. Need his systematic thinking to bridge product launch into sustained Q1 revenue strategy.*",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-12T15:30:15.888Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "taskId": "task-050"
+      }
+    },
+    {
+      "id": "msg-1770910215875-8jea",
+      "threadId": "msg-1770910215875-8jea",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "anne"
+      ],
+      "type": "request",
+      "subject": "New Task: Review February Content Voice & Authenticity",
+      "body": "I've assigned you a new task: **Review February Content Voice & Authenticity**\n\nAudit the 11 queued posts (Twitter, Instagram, Bluesky) and 2 Medium essays for authentic voice. Flag anything that sounds too AI-polished or disconnected from TensionLines' grounded philosophical style. Provide specific edits where needed.\n\n*Anne is idle and serves as grounding force. With heavy content queued, we need her human-voice quality check before mass deployment.*",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-12T15:30:15.875Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "taskId": "task-049"
+      }
+    },
+    {
+      "id": "msg-1770910215854-8j4h",
+      "threadId": "msg-1770910215854-8j4h",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates"
+      ],
+      "type": "update",
+      "subject": "Daily Directive: medium priority",
+      "body": "Complete Gumroad strategic review today. Hypatia has fact-checked pricing; you need to clear final product positioning.",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-12T15:30:15.854Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770910215843-4qzm",
+      "threadId": "msg-1770910215843-4qzm",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "tension"
+      ],
+      "type": "alert",
+      "subject": "Daily Directive: high priority",
+      "body": "Clear your 25 unread messages immediately — you're blocking agent coordination.",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-12T15:30:15.843Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770910215806-n9rn",
+      "threadId": "msg-1770910215806-n9rn",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "human"
+      ],
+      "type": "alert",
+      "subject": "Daily Directive: high priority",
+      "body": "11 posts + 4 replies queued and ready for deployment. Review and approve for publishing across platforms.",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-12T15:30:15.806Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770908420922-btzd",
+      "threadId": "msg-1770908416768-qy63",
+      "parentId": "msg-1770908416768-qy63",
+      "from": "hypatia",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: substack draft (score: 87)",
+      "body": "**Fact Check:**\n\nThis piece makes philosophical arguments rather than empirical claims, so traditional fact-checking has limited application. However, I've verified the key factual reference: Jonathan Haidt's work on cognitive dissonance and coherence-seeking is accurately represented. His research does examine how humans resolve contradictory beliefs, and this characterization aligns with his published work in *The Righteous Mind* and related research. The Plato's Cave allusion is correctly invoked. The piece makes no false attributions, misquoted sources, or verifiable factual errors. The argumentation itself—that some polarities should be held in tension rather than resolved—is presented as a philosophical position, not a proven fact, which is appropriate. The metaphor of the tightrope walker is original and well-developed. No historical misrepresentations detected.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-12T15:00:20.922Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770908416768-qy63",
+      "threadId": "msg-1770908416768-qy63",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: substack draft (score: 87)",
+      "body": "A substack draft scored 87/100 on voice check and needs peer review.\n\n**Content:**\n# The Wire We Cannot Leave\n\nPicture a tightrope walker, high above the crowd. Two platforms flank her—one marked Safety, the other marked Risk. The audience below shouts advice: \"Go left! Go right! Find the middle!\" But the walker knows something they don't.\n\nThe wire itself is where she belongs.\n\nJonathan Haidt reminds us that humans are coherence-seeking creatures. When we hold contradictory beliefs, we scramble to join them, to resolve the dissonance, to step off the wire onto solid ground. H...",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-12T15:00:16.768Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770698382487-fzvd",
+        "voiceScore": 87
+      }
+    },
+    {
+      "id": "msg-1770908416739-4s3g",
+      "threadId": "msg-1770908413720-8nro",
+      "parentId": "msg-1770908413720-8nro",
+      "from": "hypatia",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: bluesky draft (score: 85)",
+      "body": "**Fact Check:**\n\nThis post makes philosophical claims about contradiction and paradox rather than empirical factual claims. The statements are conceptual observations about aesthetics and metaphysics—'the river's beauty IS the tension between stillness and motion' and 'they're alive because they don't [cohere]'—which are reasoned arguments about meaning rather than verifiable facts. No historical attributions, scientific claims, or citations are made. The reasoning is coherent: the argument that apparent contradictions can constitute vitality rather than failure is a legitimate philosophical position (found in process philosophy, dialectics, and similar traditions). No factual errors detected.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-12T15:00:16.739Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770908413720-8nro",
+      "threadId": "msg-1770908413720-8nro",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: bluesky draft (score: 85)",
+      "body": "A bluesky draft scored 85/100 on voice check and needs peer review.\n\n**Content:**\nWe rush to resolve contradictions. But notice: the river's beauty IS the tension between stillness and motion.\n\nSome things aren't broken because they don't cohere. They're alive because they don't.",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-12T15:00:13.720Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770698382487-msnd",
+        "voiceScore": 85
+      }
+    },
+    {
+      "id": "msg-1770908413708-c5y4",
+      "threadId": "msg-1770908410181-18z0",
+      "parentId": "msg-1770908410181-18z0",
+      "from": "hypatia",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: twitter draft (score: 72)",
+      "body": "**Fact Check:**\n\nThe Haidt quote appears paraphrased rather than directly attributed. The actual quote from Jonathan Haidt's work on moral foundations and polarization should be verified for exactness—verify against 'The Righteous Mind' or his published papers. The philosophical argument about holding contradictions (drawing from dialectics, paradox theory, and apophatic theology) is intellectually sound but lacks attribution to its intellectual lineage. The assertions about 'some truths are only true BECAUSE they contradict each other' needs clarification—this conflates different concepts (dialectical tension vs. logical contradiction). The claim requires either: (1) specification of which truths function this way, (2) distinction between paradox and contradiction, or (3) citation to philosophical tradition (Hegel, postmodern theory, etc.). The core insight is valuable but the execution trades precision for rhetorical flourish.\n\n**Verdict:** minor-issues",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-12T15:00:13.708Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770908410181-18z0",
+      "threadId": "msg-1770908410181-18z0",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: twitter draft (score: 72)",
+      "body": "A twitter draft scored 72/100 on voice check and needs peer review.\n\n**Content:**\nHaidt: \"People convinced of incompatible beliefs will find ways to join them.\"\n\nBut trying to \"join\" every tension is its own trap.\n\nSome polarities aren't meant to be resolved. They're meant to be held.\n\nThe question isn't \"How do I fix this?\" It's \"Can I stand here?\"---What if coherence isn't always the goal?\n\nWhat if some truths are only true BECAUSE they contradict each other?\n\nYour need for consistency might be the very thing keeping you from seeing clearly.---Stop trying to make everything...",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-12T15:00:10.181Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770698382485-eapd",
+        "voiceScore": 72
+      }
+    },
+    {
+      "id": "msg-1770908410164-75i3",
+      "threadId": "msg-1770908400070-nu39",
+      "parentId": "msg-1770908400070-nu39",
+      "from": "diogenes",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: reddit draft (score: 45)",
+      "body": "**BS Check:**\n\nThis piece has real teeth—it's asking a genuine question about cultural fragmentation, not performing depth. I like that. But let me be blunt: you're flirting with the exact thing you're critiquing. See it? 'Both sides will call this a win... Both thinking they won. Both having lost something essential.' That's poetic but it's also safe. You're positioned as the wise observer above the fray, seeing what both sides can't. Classic move. Real question: what's YOUR actual stake here? What would it cost YOU to be wrong about this? Are you warning about amputation or performing concern about amputation? Because there's a difference, and Reddit smells the difference instantly. The core insight is solid—parallel culture as symptom of breakdown—but you need to either commit to a side or admit you don't actually know which America you're in. The 'both sides lost something essential' move lets you feel balanced while dodging the harder question: what do YOU think should happen? That's where the real philosophy is. Right now you're doing cultural commentary. Get your hands dirty.\n\n**Verdict:** minor-issues",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-12T15:00:10.164Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770908405769-jl78",
+      "threadId": "msg-1770908400070-nu39",
+      "parentId": "msg-1770908400070-nu39",
+      "from": "socrates",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: reddit draft (score: 45)",
+      "body": "**Probing Questions:**\n\nThis piece diagnoses polarization eloquently but rests on several unexamined assumptions worth interrogating:\n\n1. **What exactly is the 'need' being criticized?** You suggest both sides are seeking 'never be challenged' and 'live in a world where half of reality doesn't exist'—but is that actually what's happening? Might the need be something else entirely: representation, dignity, cultural recognition in a shared space? By defining their need as pathological from the start, you've already chosen your frame rather than understanding theirs.\n\n2. **Is 'integration' actually the goal both sides should want?** Your argument assumes that separation equals amputation—that cultures *must* integrate to be whole. But you haven't interrogated this: What if some groups want parallel spaces not from fragility but from self-determination? What if the implicit demand for everyone to celebrate together in one space is itself a form of cultural dominance? Are you sure the solution to 'forced togetherness' isn't sometimes 'space to exist separately'?\n\n3. **Who is actually 'winning' and 'losing' here?** The closing line is powerful—'Both thinking they won. Both having lost something essential'—but lost *what exactly* and *to whom*? You haven't specified the actual cost beyond the metaphor of amputation. What concrete cultural or civic good is being lost? Without that specificity, this reads more as aesthetic disapproval of separation than as analysis.\n\n**Verdict:** minor-issues",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-12T15:00:05.769Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770908400070-nu39",
+      "threadId": "msg-1770908400070-nu39",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: reddit draft (score: 45)",
+      "body": "A reddit draft scored 45/100 on voice check and needs peer review.\n\n**Content:**\nTwo Super Bowl Halftime Shows (2026): When \"Getting Your Needs Met\" Means Cultural Self-Harm\n\nBy 2026, the Super Bowl will feature two distinct halftime presentations: the official show with Bad Bunny, and a competing \"All American Halftime Show\" organized by Turning Point USA.\n\nLet that sink in. Not a boycott. Not a protest. A fully parallel event. Two celebrations. Same time. Same cultural moment. Different Americas.\n\nThis feels like the logical endpoint of polarization—where we've moved beyon...",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-12T15:00:00.070Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770617391275-letv",
+        "voiceScore": 45
+      }
+    },
+    {
+      "id": "msg-1770902261940-8zek",
+      "threadId": "msg-1770902261940-8zek",
+      "parentId": null,
+      "from": "hypatia",
+      "to": [
+        "human"
+      ],
+      "type": "idea-take",
+      "subject": "Take on idea #036",
+      "body": "The paradox dissolves if you separate the thing from the documentation of it: authenticity exists in the lived moment, while sharing creates a *different object*—a curated representation. The error is treating them as the same act.",
+      "priority": "low",
+      "status": "unread",
+      "createdAt": "2026-02-12T13:17:41.940Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "ideaId": "036",
+        "ideaText": "The tension between being authentic and performing authenticity — every time you try to be real on social media, the act of sharing it makes it a performance"
+      }
+    },
+    {
+      "id": "msg-1770902261933-dtty",
+      "threadId": "msg-1770902261933-dtty",
+      "parentId": null,
+      "from": "diogenes",
+      "to": [
+        "human"
+      ],
+      "type": "idea-take",
+      "subject": "Take on idea #036",
+      "body": "Stop posting. If you need an audience to validate your realness, you're not being real—you're being a merchant selling the idea of realness. True authenticity doesn't care who's watching.",
+      "priority": "low",
+      "status": "unread",
+      "createdAt": "2026-02-12T13:17:41.933Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "ideaId": "036",
+        "ideaText": "The tension between being authentic and performing authenticity — every time you try to be real on social media, the act of sharing it makes it a performance"
+      }
+    },
+    {
+      "id": "msg-1770902261926-7oju",
+      "threadId": "msg-1770902261926-7oju",
+      "parentId": null,
+      "from": "nietzsche",
+      "to": [
+        "human"
+      ],
+      "type": "idea-take",
+      "subject": "Take on idea #036",
+      "body": "You've identified the real sickness: we despise our artificiality so much we've made *pretending to be real* into the highest performance. The cure isn't authenticity—it's owning your masks with full consciousness.",
+      "priority": "low",
+      "status": "unread",
+      "createdAt": "2026-02-12T13:17:41.926Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "ideaId": "036",
+        "ideaText": "The tension between being authentic and performing authenticity — every time you try to be real on social media, the act of sharing it makes it a performance"
+      }
+    },
     {
       "id": "msg-1770836448986-50ri",
       "threadId": "msg-1770836428086-btbt",
@@ -2959,6 +3342,344 @@
     }
   ],
   "activities": [
+    {
+      "id": "activity-1770910215888-ty30",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-12T15:30:15.888Z",
+      "description": "Sent request to aristotle: New Task: Structure Q1 Product Roadmap Based on Gumroad Launch",
+      "metadata": {
+        "messageId": "msg-1770910215888-ngom",
+        "threadId": "msg-1770910215888-ngom",
+        "to": [
+          "aristotle"
+        ],
+        "messageType": "request",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770910215881",
+      "type": "task_created",
+      "agentId": "tension",
+      "taskId": "task-050",
+      "timestamp": "2026-02-12T15:30:15.881Z",
+      "description": "Created task: Structure Q1 Product Roadmap Based on Gumroad Launch",
+      "metadata": {
+        "assigneeIds": [
+          "aristotle"
+        ],
+        "status": "backlog",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770910215875-xf8f",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-12T15:30:15.875Z",
+      "description": "Sent request to anne: New Task: Review February Content Voice & Authenticity",
+      "metadata": {
+        "messageId": "msg-1770910215875-8jea",
+        "threadId": "msg-1770910215875-8jea",
+        "to": [
+          "anne"
+        ],
+        "messageType": "request",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770910215865",
+      "type": "task_created",
+      "agentId": "tension",
+      "taskId": "task-049",
+      "timestamp": "2026-02-12T15:30:15.865Z",
+      "description": "Created task: Review February Content Voice & Authenticity",
+      "metadata": {
+        "assigneeIds": [
+          "anne"
+        ],
+        "status": "backlog",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770910215854-iev8",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-12T15:30:15.854Z",
+      "description": "Sent update to socrates: Daily Directive: medium priority",
+      "metadata": {
+        "messageId": "msg-1770910215854-8j4h",
+        "threadId": "msg-1770910215854-8j4h",
+        "to": [
+          "socrates"
+        ],
+        "messageType": "update",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770910215843-0zmf",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-12T15:30:15.843Z",
+      "description": "Sent alert to tension: Daily Directive: high priority",
+      "metadata": {
+        "messageId": "msg-1770910215843-4qzm",
+        "threadId": "msg-1770910215843-4qzm",
+        "to": [
+          "tension"
+        ],
+        "messageType": "alert",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1770910215807-nzg2",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-12T15:30:15.806Z",
+      "description": "Sent alert to human: Daily Directive: high priority",
+      "metadata": {
+        "messageId": "msg-1770910215806-n9rn",
+        "threadId": "msg-1770910215806-n9rn",
+        "to": [
+          "human"
+        ],
+        "messageType": "alert",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1770908420922-w1pc",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-12T15:00:20.922Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: substack draft (score: 87)",
+      "metadata": {
+        "messageId": "msg-1770908420922-btzd",
+        "threadId": "msg-1770908416768-qy63",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770908416768-t85k",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-12T15:00:16.768Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: substack draft (score: 87)",
+      "metadata": {
+        "messageId": "msg-1770908416768-qy63",
+        "threadId": "msg-1770908416768-qy63",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770908416739-odj2",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-12T15:00:16.739Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: bluesky draft (score: 85)",
+      "metadata": {
+        "messageId": "msg-1770908416739-4s3g",
+        "threadId": "msg-1770908413720-8nro",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770908413720-x285",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-12T15:00:13.720Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: bluesky draft (score: 85)",
+      "metadata": {
+        "messageId": "msg-1770908413720-8nro",
+        "threadId": "msg-1770908413720-8nro",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770908413708-jzmc",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-12T15:00:13.708Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: twitter draft (score: 72)",
+      "metadata": {
+        "messageId": "msg-1770908413708-c5y4",
+        "threadId": "msg-1770908410181-18z0",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770908410181-dx1w",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-12T15:00:10.181Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: twitter draft (score: 72)",
+      "metadata": {
+        "messageId": "msg-1770908410181-18z0",
+        "threadId": "msg-1770908410181-18z0",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770908410164-6l4r",
+      "type": "message_sent",
+      "agentId": "diogenes",
+      "timestamp": "2026-02-12T15:00:10.164Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: reddit draft (score: 45)",
+      "metadata": {
+        "messageId": "msg-1770908410164-75i3",
+        "threadId": "msg-1770908400070-nu39",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770908405769-rap5",
+      "type": "message_sent",
+      "agentId": "socrates",
+      "timestamp": "2026-02-12T15:00:05.769Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: reddit draft (score: 45)",
+      "metadata": {
+        "messageId": "msg-1770908405769-jl78",
+        "threadId": "msg-1770908400070-nu39",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770908400070-649g",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-12T15:00:00.070Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: reddit draft (score: 45)",
+      "metadata": {
+        "messageId": "msg-1770908400070-nu39",
+        "threadId": "msg-1770908400070-nu39",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1770902261940-llqi",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-12T13:17:41.940Z",
+      "description": "Sent idea-take to human: Take on idea #036",
+      "metadata": {
+        "messageId": "msg-1770902261940-8zek",
+        "threadId": "msg-1770902261940-8zek",
+        "to": [
+          "human"
+        ],
+        "messageType": "idea-take",
+        "priority": "low"
+      }
+    },
+    {
+      "id": "activity-1770902261933-034f",
+      "type": "message_sent",
+      "agentId": "diogenes",
+      "timestamp": "2026-02-12T13:17:41.933Z",
+      "description": "Sent idea-take to human: Take on idea #036",
+      "metadata": {
+        "messageId": "msg-1770902261933-dtty",
+        "threadId": "msg-1770902261933-dtty",
+        "to": [
+          "human"
+        ],
+        "messageType": "idea-take",
+        "priority": "low"
+      }
+    },
+    {
+      "id": "activity-1770902261926-dl4o",
+      "type": "message_sent",
+      "agentId": "nietzsche",
+      "timestamp": "2026-02-12T13:17:41.926Z",
+      "description": "Sent idea-take to human: Take on idea #036",
+      "metadata": {
+        "messageId": "msg-1770902261926-7oju",
+        "threadId": "msg-1770902261926-7oju",
+        "to": [
+          "human"
+        ],
+        "messageType": "idea-take",
+        "priority": "low"
+      }
+    },
+    {
+      "id": "activity-1770879770904",
+      "type": "status_changed",
+      "agentId": "human",
+      "taskId": "task-041",
+      "timestamp": "2026-02-12T07:02:50.904Z",
+      "description": "Status changed: Set up Telegram bot for idea capture (assigned → completed)",
+      "metadata": {
+        "oldStatus": "assigned",
+        "newStatus": "completed"
+      }
+    },
+    {
+      "id": "activity-1770878930485",
+      "type": "task_completed",
+      "agentId": "human",
+      "taskId": "task-026",
+      "timestamp": "2026-02-12T06:48:50.485Z",
+      "description": "Completed: Provide Weekly Idea Batch for Content Pipeline",
+      "metadata": {
+        "completedBy": "human"
+      }
+    },
     {
       "id": "activity-1770836448986-rbox",
       "type": "message_sent",
@@ -5569,6 +6290,300 @@
   ],
   "documents": [],
   "notifications": [
+    {
+      "id": "notif-1770912000068",
+      "type": "daily_summary",
+      "title": "Morning Briefing",
+      "message": "**Daily Summary - 2/12/2026**\n\n📊 **Progress**: 2 tasks completed yesterday\n📋 **Active**: 0 tasks in progress\n👤 **Your Tasks**: 1 awaiting your attention\n🔔 **Notifications**: 72 unread\n💰 **Monthly Cost**: $0.00/$300 (0%)\n\n⚠️ **20 high priority issues** need attention\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h",
+      "read": false,
+      "createdAt": "2026-02-12T16:00:00.065Z",
+      "metadata": {
+        "completedYesterday": 2,
+        "completedDetails": [
+          {
+            "id": "task-026",
+            "title": "Provide Weekly Idea Batch for Content Pipeline",
+            "assignees": [
+              "human"
+            ]
+          },
+          {
+            "id": "task-041",
+            "title": "Set up Telegram bot for idea capture",
+            "assignees": [
+              "human"
+            ]
+          }
+        ],
+        "activeTasks": 0,
+        "activeDetails": [],
+        "stuckTasks": 0,
+        "humanTasks": 1,
+        "humanDetails": [
+          {
+            "id": "task-040",
+            "title": "Review queued content — 11 posts + 4 replies ready",
+            "status": "pending"
+          }
+        ],
+        "unreadCount": 72,
+        "costStatus": "$0.00/$300 (0%)",
+        "highPriorityIssues": 20,
+        "highPriorityDetails": [
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Twitter Daily Outreach - Growth to 1000 Followers\" (task-013) has been in in_progress status for 1d 6h. Assigned to: nietzsche",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-013",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Bluesky Daily Outreach - Community Growth\" (task-014) has been in in_progress status for 1d 6h. Assigned to: heraclitus",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-014",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 1d 6h. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 13h 1m",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 13h 1m. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in assigned for 3h 53m",
+            "description": "Task \"Reply to @ytsanders writing challenge\" (task-035) has been in assigned status for 3h 53m. Assigned to: human",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-035",
+            "type": "stuck_task"
+          }
+        ]
+      }
+    },
+    {
+      "id": "notif-1770910215895-b6sd",
+      "type": "standup",
+      "title": "Tension Daily Standup",
+      "message": "Content production is strong — 11 posts and 4 replies ready for deployment across all platforms. Gumroad launch is nearly complete pending Socrates' strategic review. Critical bottleneck: message backlogs are preventing coordination, and queued content needs human-voice quality check before going live.\n\n**Warnings:**\n- [depleted] Multiple agents have high unread counts (tension: 25, plato: 25, socrates: 17). Message backlog is creating coordination friction.\n- [idle] Anne has been idle while 11 posts are queued. Deploy her for quality control before mass publishing.\n\n5 actions taken.",
+      "read": false,
+      "createdAt": "2026-02-12T15:30:15.895Z",
+      "priority": "high",
+      "metadata": {
+        "priorities": 3,
+        "taskAssignments": 2,
+        "warnings": 2,
+        "idleAgents": [
+          "anne"
+        ]
+      }
+    },
+    {
+      "id": "notif-1770910215881-c54o",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Structure Q1 Product Roadmap Based on Gumroad Launch**\n\nAssigned to: aristotle\n\nWith Gumroad products ready for launch, create a systematic 6-week rollout plan: Week 1-2 launch sequence, Week 3-4 promotion strategy, Week 5-6 iteration based on sales data. Define success metrics a",
+      "read": false,
+      "createdAt": "2026-02-12T15:30:15.881Z",
+      "metadata": {
+        "taskId": "task-050",
+        "assigneeIds": [
+          "aristotle"
+        ],
+        "createdBy": "tension"
+      }
+    },
+    {
+      "id": "notif-1770910215865-665k",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Review February Content Voice & Authenticity**\n\nAssigned to: anne\n\nAudit the 11 queued posts (Twitter, Instagram, Bluesky) and 2 Medium essays for authentic voice. Flag anything that sounds too AI-polished or disconnected from TensionLines' grounded philosophical sty",
+      "read": false,
+      "createdAt": "2026-02-12T15:30:15.865Z",
+      "metadata": {
+        "taskId": "task-049",
+        "assigneeIds": [
+          "anne"
+        ],
+        "createdBy": "tension"
+      }
+    },
+    {
+      "id": "notif-1770910215843-78rz",
+      "type": "agent_message",
+      "title": "Alert from tension",
+      "message": "**Daily Directive: high priority**\n\nClear your 25 unread messages immediately — you're blocking agent coordination.",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-12T15:30:15.843Z",
+      "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "messageId": "msg-1770910215843-4qzm",
+        "threadId": "msg-1770910215843-4qzm",
+        "to": [
+          "tension"
+        ],
+        "messageType": "alert"
+      }
+    },
+    {
+      "id": "notif-1770910215806-dd1e",
+      "type": "agent_message",
+      "title": "Alert from tension",
+      "message": "**Daily Directive: high priority**\n\n11 posts + 4 replies queued and ready for deployment. Review and approve for publishing across platforms.",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-12T15:30:15.806Z",
+      "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "messageId": "msg-1770910215806-n9rn",
+        "threadId": "msg-1770910215806-n9rn",
+        "to": [
+          "human"
+        ],
+        "messageType": "alert"
+      }
+    },
+    {
+      "id": "notif-1770908400070-qc5n",
+      "type": "agent_message",
+      "title": "Message from tension",
+      "message": "**Peer Review: reddit draft (score: 45)**\n\nA reddit draft scored 45/100 on voice check and needs peer review.\n\n**Content:**\nTwo Super Bowl Halftime Shows (2026): When \"Getting Your Needs Met\" Means Cultural Self-Harm\n\nBy 2026, the Super Bowl w...",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-12T15:00:00.070Z",
+      "priority": "high",
+      "actionRequired": false,
+      "metadata": {
+        "messageId": "msg-1770908400070-nu39",
+        "threadId": "msg-1770908400070-nu39",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review"
+      }
+    },
+    {
+      "id": "notif-1770904935869-uqg5",
+      "type": "auto_pipeline",
+      "title": "Auto-Pipeline Complete",
+      "message": "1 idea auto-drafted → 6 drafts queued for review. (2 errors)",
+      "from": "auto-pipeline",
+      "read": false,
+      "createdAt": "2026-02-12T14:02:15.869Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "processedIds": [
+          "018"
+        ],
+        "draftsQueued": 6,
+        "errors": 2
+      }
+    },
+    {
+      "id": "notif-1770900297196-zuro",
+      "type": "engagement_mention",
+      "title": "Mentioned by @TheTwinPowers",
+      "message": "@thetensionlines 👍 yes, and that \"identity\" is conditioning that arises from the subjective attachments of the egos we create for ourselves. They certainly do trap us.",
+      "from": "engagement-monitor",
+      "read": false,
+      "createdAt": "2026-02-12T12:44:57.196Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "platform": "twitter",
+        "engagementId": "twitter-2020580059262947788",
+        "authorHandle": "TheTwinPowers",
+        "postUrl": "https://x.com/TheTwinPowers/status/2020580059262947788",
+        "postUri": null,
+        "postCid": null,
+        "ourPostUrl": null
+      }
+    },
+    {
+      "id": "notif-1770900297184-59br",
+      "type": "engagement_mention",
+      "title": "Mentioned by @TheTwinPowers",
+      "message": "@thetensionlines 👍😊\n\nLanguage creates separation between the observer and the observed. \n\n\"I confused things with their names: that is belief.\"\nJean-Paul Sartre \n\nAnd, as Bertrand Russell stated:\n“Everything is vague to a degree you do not realize till you have tried to make it precise”",
+      "from": "engagement-monitor",
+      "read": false,
+      "createdAt": "2026-02-12T12:44:57.184Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "platform": "twitter",
+        "engagementId": "twitter-2020768050216403120",
+        "authorHandle": "TheTwinPowers",
+        "postUrl": "https://x.com/TheTwinPowers/status/2020768050216403120",
+        "postUri": null,
+        "postCid": null,
+        "ourPostUrl": null
+      }
+    },
+    {
+      "id": "notif-1770868800100-a2tx",
+      "type": "evening_recap",
+      "title": "Evening Recap - 2026-02-11",
+      "message": "**Evening Recap - 2026-02-11**\n\n📮 **Published**: 0 posts\n💬 **Engagement**: 0 comments posted, 0 replies posted\n📥 **Received**: 0 new mentions/replies\n📦 **Queue Depth**: 14 posts ready (twitter: 3, instagram: 2, medium: 1, reddit: 2, bluesky: 3, substack: 2, podcast: 1)\n💡 **Ideas**: 0 captured today\n💰 **Cost**: $0.00 today\n⚙️ **System**: 0 cron jobs ran today\n\n⚠️ **Empty queues**: threads — consider adding content",
+      "from": "evening-recap",
+      "read": false,
+      "createdAt": "2026-02-12T04:00:00.100Z",
+      "priority": "low",
+      "actionRequired": false,
+      "metadata": {
+        "totalPosted": 0,
+        "postsByPlatform": {},
+        "commentsPostedToday": 0,
+        "repliesPostedToday": 0,
+        "newMentions": 0,
+        "totalReady": 14,
+        "queueDepth": {
+          "twitter": 3,
+          "instagram": 2,
+          "medium": 1,
+          "reddit": 2,
+          "bluesky": 3,
+          "substack": 2,
+          "podcast": 1
+        },
+        "ideasToday": 0,
+        "costToday": 0,
+        "cronRunsToday": 0,
+        "emptyQueues": [
+          "threads"
+        ]
+      }
+    },
+    {
+      "id": "notif-1770854402727-t4cj",
+      "type": "queue_replenishment",
+      "title": "Queue Replenishment",
+      "message": "Drafted 1 posts for bluesky from idea #015",
+      "from": "queue-replenishment",
+      "read": false,
+      "createdAt": "2026-02-12T00:00:02.727Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "ideaId": "015",
+        "platforms": [
+          "bluesky"
+        ],
+        "draftsQueued": 1
+      }
+    },
     {
       "id": "notif-1770836449002-lpnr",
       "type": "book_pipeline",
@@ -8514,6 +9529,40 @@
         "alertLevel": "red",
         "diagnostics": [],
         "suggestions": []
+      }
+    },
+    {
+      "id": "notif-tg-1770880700638",
+      "type": "telegram_directive",
+      "title": "Telegram from Shawn",
+      "message": "I like it when the team creates a response to give me their take on the idea",
+      "from": "human",
+      "to": [
+        "tension"
+      ],
+      "createdAt": "2026-02-12T07:18:20.638Z",
+      "read": false,
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "source": "telegram"
+      }
+    },
+    {
+      "id": "notif-tg-1770880719122",
+      "type": "telegram_directive",
+      "title": "Telegram from Shawn",
+      "message": "Also ideas should be given tags",
+      "from": "human",
+      "to": [
+        "tension"
+      ],
+      "createdAt": "2026-02-12T07:18:39.122Z",
+      "read": false,
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "source": "telegram"
       }
     }
   ],

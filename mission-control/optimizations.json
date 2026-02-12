@@ -1,6 +1,25 @@
 {
   "runs": [
     {
+      "id": "opt-1770890400013",
+      "date": "2026-02-12T10:00:00.013Z",
+      "durationMs": 3,
+      "findingsCount": 14,
+      "bySeverity": {
+        "high": 0,
+        "medium": 0,
+        "low": 14
+      },
+      "byType": {
+        "agent_idle": 11,
+        "ideas_backlog": 1,
+        "duplicate_task": 1,
+        "notification_backlog": 1
+      },
+      "forHuman": 1,
+      "forAgents": 11
+    },
+    {
       "id": "opt-1770717600156",
       "date": "2026-02-10T10:00:00.156Z",
       "durationMs": 2,
@@ -816,11 +835,177 @@
       "recommendation": "Review and consolidate if duplicates",
       "status": "pending",
       "createdAt": "2026-02-10T10:00:00.156Z"
+    },
+    {
+      "id": "finding-1770890400015-13tn3bn1t",
+      "runId": "opt-1770890400013",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent tension appears idle",
+      "description": "tension has no active tasks and only 0 completions in 7 days.",
+      "assignee": "tension",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-12T10:00:00.013Z"
+    },
+    {
+      "id": "finding-1770890400015-umnvq5pkv",
+      "runId": "opt-1770890400013",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent socrates appears idle",
+      "description": "socrates has no active tasks and only 0 completions in 7 days.",
+      "assignee": "socrates",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-12T10:00:00.013Z"
+    },
+    {
+      "id": "finding-1770890400015-4olruqqte",
+      "runId": "opt-1770890400013",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent nietzsche appears idle",
+      "description": "nietzsche has no active tasks and only 1 completions in 7 days.",
+      "assignee": "nietzsche",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-12T10:00:00.013Z"
+    },
+    {
+      "id": "finding-1770890400015-ziouatrhl",
+      "runId": "opt-1770890400013",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent marcus appears idle",
+      "description": "marcus has no active tasks and only 0 completions in 7 days.",
+      "assignee": "marcus",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-12T10:00:00.013Z"
+    },
+    {
+      "id": "finding-1770890400015-zpf6k9472",
+      "runId": "opt-1770890400013",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent heraclitus appears idle",
+      "description": "heraclitus has no active tasks and only 1 completions in 7 days.",
+      "assignee": "heraclitus",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-12T10:00:00.013Z"
+    },
+    {
+      "id": "finding-1770890400015-uhyhvx8ex",
+      "runId": "opt-1770890400013",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent diogenes appears idle",
+      "description": "diogenes has no active tasks and only 0 completions in 7 days.",
+      "assignee": "diogenes",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-12T10:00:00.013Z"
+    },
+    {
+      "id": "finding-1770890400015-q66qcg3zi",
+      "runId": "opt-1770890400013",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent plato appears idle",
+      "description": "plato has no active tasks and only 0 completions in 7 days.",
+      "assignee": "plato",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-12T10:00:00.013Z"
+    },
+    {
+      "id": "finding-1770890400015-43js6dnih",
+      "runId": "opt-1770890400013",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent hypatia appears idle",
+      "description": "hypatia has no active tasks and only 0 completions in 7 days.",
+      "assignee": "hypatia",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-12T10:00:00.013Z"
+    },
+    {
+      "id": "finding-1770890400015-5gxdjzud0",
+      "runId": "opt-1770890400013",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent leonardo appears idle",
+      "description": "leonardo has no active tasks and only 0 completions in 7 days.",
+      "assignee": "leonardo",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-12T10:00:00.013Z"
+    },
+    {
+      "id": "finding-1770890400015-lypdiyz6r",
+      "runId": "opt-1770890400013",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent athena appears idle",
+      "description": "athena has no active tasks and only 0 completions in 7 days.",
+      "assignee": "athena",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-12T10:00:00.013Z"
+    },
+    {
+      "id": "finding-1770890400015-nlpp9upuw",
+      "runId": "opt-1770890400013",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent anne appears idle",
+      "description": "anne has no active tasks and only 0 completions in 7 days.",
+      "assignee": "anne",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-12T10:00:00.013Z"
+    },
+    {
+      "id": "finding-1770890400015-cz9lp4nlb",
+      "runId": "opt-1770890400013",
+      "type": "ideas_backlog",
+      "severity": "low",
+      "title": "22 ideas waiting to be processed",
+      "description": "Ideas bank has 22 captured ideas that haven't been organized yet.",
+      "recommendation": "Schedule idea processing session",
+      "status": "pending",
+      "createdAt": "2026-02-12T10:00:00.013Z"
+    },
+    {
+      "id": "finding-1770890400016-xfvrrlpdf",
+      "runId": "opt-1770890400013",
+      "type": "duplicate_task",
+      "severity": "low",
+      "title": "Possible duplicate tasks",
+      "description": "Tasks task-037 and task-038 have identical titles",
+      "recommendation": "Review and consolidate if duplicates",
+      "status": "pending",
+      "createdAt": "2026-02-12T10:00:00.013Z"
+    },
+    {
+      "id": "finding-1770890400016-1p27lpvuf",
+      "runId": "opt-1770890400013",
+      "type": "notification_backlog",
+      "severity": "low",
+      "title": "63 unread notifications",
+      "description": "Notification inbox has 63 unread items.",
+      "recommendation": "Review and clear notification backlog",
+      "status": "pending",
+      "forHuman": true,
+      "createdAt": "2026-02-12T10:00:00.013Z"
     }
   ],
   "stats": {
-    "totalRuns": 5,
-    "issuesFound": 59,
+    "totalRuns": 6,
+    "issuesFound": 73,
     "issuesResolved": 0,
     "costSavings": 0
   }

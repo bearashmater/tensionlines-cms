@@ -1,0 +1,140 @@
+{
+  "runs": [
+    {
+      "id": "opt-1770403813246",
+      "date": "2026-02-06T18:50:13.246Z",
+      "durationMs": 16,
+      "findingsCount": 9,
+      "bySeverity": {
+        "high": 3,
+        "medium": 0,
+        "low": 6
+      },
+      "byType": {
+        "stuck_task": 3,
+        "agent_idle": 6
+      },
+      "forHuman": 0,
+      "forAgents": 9
+    }
+  ],
+  "findings": [
+    {
+      "id": "finding-1770403813246-pr8sg7x5b",
+      "runId": "opt-1770403813246",
+      "type": "stuck_task",
+      "severity": "high",
+      "title": "Task stuck in in_progress for 1d 6h",
+      "description": "Task \"Twitter Daily Outreach - Growth to 1000 Followers\" (task-013) has been in in_progress status for 1d 6h. Assigned to: nietzsche",
+      "taskId": "task-013",
+      "assignee": "nietzsche",
+      "recommendation": "Consider reassigning or breaking into smaller tasks",
+      "status": "pending",
+      "createdAt": "2026-02-06T18:50:13.246Z"
+    },
+    {
+      "id": "finding-1770403813246-hewsrq6xx",
+      "runId": "opt-1770403813246",
+      "type": "stuck_task",
+      "severity": "high",
+      "title": "Task stuck in in_progress for 1d 6h",
+      "description": "Task \"Bluesky Daily Outreach - Community Growth\" (task-014) has been in in_progress status for 1d 6h. Assigned to: heraclitus",
+      "taskId": "task-014",
+      "assignee": "heraclitus",
+      "recommendation": "Consider reassigning or breaking into smaller tasks",
+      "status": "pending",
+      "createdAt": "2026-02-06T18:50:13.246Z"
+    },
+    {
+      "id": "finding-1770403813246-3ywz9mupg",
+      "runId": "opt-1770403813246",
+      "type": "stuck_task",
+      "severity": "high",
+      "title": "Task stuck in in_progress for 1d 6h",
+      "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 1d 6h. Assigned to: aristotle",
+      "taskId": "task-016",
+      "assignee": "aristotle",
+      "recommendation": "Consider reassigning or breaking into smaller tasks",
+      "status": "pending",
+      "createdAt": "2026-02-06T18:50:13.246Z"
+    },
+    {
+      "id": "finding-1770403813247-nmrac7zv8",
+      "runId": "opt-1770403813246",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent tension appears idle",
+      "description": "tension has no active tasks and only 0 completions in 7 days.",
+      "assignee": "tension",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-06T18:50:13.246Z"
+    },
+    {
+      "id": "finding-1770403813247-n9zrbyu8e",
+      "runId": "opt-1770403813246",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent socrates appears idle",
+      "description": "socrates has no active tasks and only 1 completions in 7 days.",
+      "assignee": "socrates",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-06T18:50:13.246Z"
+    },
+    {
+      "id": "finding-1770403813247-qkpqlghre",
+      "runId": "opt-1770403813246",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent marcus appears idle",
+      "description": "marcus has no active tasks and only 0 completions in 7 days.",
+      "assignee": "marcus",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-06T18:50:13.246Z"
+    },
+    {
+      "id": "finding-1770403813247-yqpmscos5",
+      "runId": "opt-1770403813246",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent diogenes appears idle",
+      "description": "diogenes has no active tasks and only 0 completions in 7 days.",
+      "assignee": "diogenes",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-06T18:50:13.246Z"
+    },
+    {
+      "id": "finding-1770403813247-vjoedwxv9",
+      "runId": "opt-1770403813246",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent plato appears idle",
+      "description": "plato has no active tasks and only 1 completions in 7 days.",
+      "assignee": "plato",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-06T18:50:13.246Z"
+    },
+    {
+      "id": "finding-1770403813247-3n9joogre",
+      "runId": "opt-1770403813246",
+      "type": "agent_idle",
+      "severity": "low",
+      "title": "Agent hypatia appears idle",
+      "description": "hypatia has no active tasks and only 0 completions in 7 days.",
+      "assignee": "hypatia",
+      "recommendation": "Assign new tasks or check if agent is blocked",
+      "status": "pending",
+      "createdAt": "2026-02-06T18:50:13.246Z"
+    }
+  ],
+  "stats": {
+    "totalRuns": 1,
+    "issuesFound": 9,
+    "issuesResolved": 0,
+    "costSavings": 0
+  }
+}

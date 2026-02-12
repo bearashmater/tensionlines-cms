@@ -1,6 +1,6 @@
 {
   "bluesky": {
-    "lastScannedAt": "2026-02-10T22:59:17.765Z",
+    "lastScannedAt": "2026-02-12T17:58:16.858Z",
     "items": [
       {
         "id": "bsky-at://did:plc:n7e56a7boikyr5n2erjsucy7/app.bsky.feed.post/3me35taxf2c2l",
@@ -37,8 +37,39 @@
     ]
   },
   "twitter": {
-    "lastScannedAt": "2026-02-07T17:12:20.384Z",
-    "items": []
+    "lastScannedAt": "2026-02-12T17:44:59.246Z",
+    "items": [
+      {
+        "id": "twitter-2020580059262947788",
+        "platform": "twitter",
+        "type": "mention",
+        "authorHandle": "TheTwinPowers",
+        "authorDisplayName": "Allan Beveridge",
+        "postText": "@thetensionlines 👍 yes, and that \"identity\" is conditioning that arises from the subjective attachments of the egos we create for ourselves. They certainly do trap us.",
+        "postUrl": "https://x.com/TheTwinPowers/status/2020580059262947788",
+        "postUri": null,
+        "postCid": null,
+        "ourPostUrl": null,
+        "indexedAt": "2026-02-12T12:44:57.190Z",
+        "scannedAt": "2026-02-12T12:44:57.190Z",
+        "status": "new"
+      },
+      {
+        "id": "twitter-2020768050216403120",
+        "platform": "twitter",
+        "type": "mention",
+        "authorHandle": "TheTwinPowers",
+        "authorDisplayName": "Allan Beveridge",
+        "postText": "@thetensionlines 👍😊\n\nLanguage creates separation between the observer and the observed. \n\n\"I confused things with their names: that is belief.\"\nJean-Paul Sartre \n\nAnd, as Bertrand Russell stated:\n“Everything is vague to a degree you do not realize till you have tried to make it precise”",
+        "postUrl": "https://x.com/TheTwinPowers/status/2020768050216403120",
+        "postUri": null,
+        "postCid": null,
+        "ourPostUrl": null,
+        "indexedAt": "2026-02-12T12:44:57.184Z",
+        "scannedAt": "2026-02-12T12:44:57.184Z",
+        "status": "new"
+      }
+    ]
   },
   "settings": {
     "bluesky": {
