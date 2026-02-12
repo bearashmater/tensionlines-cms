@@ -31,9 +31,10 @@ All content-creation jobs (morning/midday/evening social, newsletters, articles)
 
 ## Engagement Automation
 
-- **Twitter bot:** Every 30 minutes (1800000ms)
-- **Bluesky bot:** Every 45 minutes (2700000ms)
+- **Twitter bot:** Every 30 minutes (1800000ms) - calls CMS `/api/engagement/scan`
+- **Bluesky bot:** Every 45 minutes (2700000ms) - calls CMS `/api/engagement/scan`
 - Both scan for engagement opportunities, add to CMS queue
+- **Fixed 2026-02-12:** Pointed both jobs to CMS API endpoints instead of non-existent scripts
 
 ## Content Drafting Patterns (2026-02-11)
 
