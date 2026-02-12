@@ -14278,6 +14278,34 @@ function initTelegramBot() {
       // If no TELEGRAM_CHAT_ID set yet, help them configure it
       if (!allowedChatId) {
         bot.sendMessage(chatId, `Your chat ID is: ${chatId}\nAdd TELEGRAM_CHAT_ID=${chatId} to your .env file.`);
+        return;
+      }
+
+      // Non-idea messages become directives/notes in the CMS
+      try {
+        const mc = getMissionControl();
+        mc.notifications.push({
+          id: `notif-tg-${Date.now()}`,
+          type: 'telegram_directive',
+          title: 'Telegram from Shawn',
+          message: text,
+          from: 'human',
+          to: ['tension'],
+          createdAt: new Date().toISOString(),
+          read: false,
+          priority: 'medium',
+          actionRequired: true,
+          metadata: { source: 'telegram' }
+        });
+        fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+        cache.missionControl = null;
+        broadcast('notifications');
+        broadcast('tasks');
+        console.log(`[Telegram] Directive received: "${text.substring(0, 60)}..."`);
+        bot.sendMessage(chatId, `Got it. Added as a directive in the CMS.`);
+      } catch (err) {
+        console.error('[Telegram] Error saving directive:', err);
+        bot.sendMessage(chatId, 'Failed to save. Check server logs.');
       }
       return;
     }
