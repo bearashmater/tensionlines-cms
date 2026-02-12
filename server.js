@@ -1467,9 +1467,10 @@ function syncWeeklyIdeaTask(data) {
   const progress = thisWeekIdeas.length;
   let changed = false;
 
-  if (progress >= goal && task.status === 'in_progress') {
+  if (progress >= goal && task.status !== 'completed') {
     task.status = 'completed';
     task.completedAt = new Date().toISOString();
+    task.completedBy = 'system';
     task.metadata.ideasThisWeek = progress;
     changed = true;
   }
@@ -5880,6 +5881,17 @@ app.post('/api/ideas', (req, res) => {
     };
 
     console.log(`[Ideas] New idea #${nextId} captured via ${source || 'cms'}: "${text.trim().substring(0, 60)}..."`);
+
+    // Auto-complete the weekly idea task if goal is now met
+    try {
+      const mc = getMissionControl();
+      if (syncWeeklyIdeaTask(mc)) {
+        fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+        cache.missionControl = null;
+        broadcast('tasks');
+      }
+    } catch (e) { /* non-critical */ }
+
     res.status(201).json(newIdea);
   } catch (error) {
     console.error('Error adding idea:', error);
@@ -14312,6 +14324,16 @@ function initTelegramBot() {
       console.log(`[Telegram] Idea #${nextId} captured: "${ideaText.substring(0, 60)}..."`);
       bot.sendMessage(chatId, `Captured as idea #${nextId}\n"${ideaText.substring(0, 100)}${ideaText.length > 100 ? '...' : ''}"`);
       logSystemEvent('pipeline', `Idea #${nextId} captured via Telegram`, { ideaId: nextId });
+
+      // Auto-complete the weekly idea task if goal is now met
+      try {
+        const mc = getMissionControl();
+        if (syncWeeklyIdeaTask(mc)) {
+          fs.writeFileSync(MISSION_CONTROL_DB, JSON.stringify(mc, null, 2));
+          cache.missionControl = null;
+          broadcast('tasks');
+        }
+      } catch (e) { /* non-critical */ }
     } catch (err) {
       console.error('[Telegram] Error capturing idea:', err);
       bot.sendMessage(chatId, 'Failed to capture idea. Check server logs.');
