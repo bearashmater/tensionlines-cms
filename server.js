@@ -11207,31 +11207,31 @@ const PODCAST_FORMATS = {
     name: 'The Debate',
     duration: '25-30 min',
     description: 'Shawn and Anne disagree. Heat, pushback, no resolution.',
-    instruction: 'Write a confrontational dialogue between a married couple. Both speakers have strong, opposing positions. The tension stays unresolved. High energy, fast exchanges, genuine disagreement. They know each other deeply — use that intimacy to make the pushback sharper and more personal.'
+    instruction: 'Write a confrontational dialogue between Shawn and Anne. Both have strong, opposing positions. The tension stays unresolved. High energy, fast exchanges, genuine disagreement. They know each other deeply — use that intimacy to make the pushback sharper and more personal. Speakers are always "shawn" and "anne".'
   },
   'deep-dive': {
     name: 'The Deep Dive',
     duration: '30-35 min',
     description: 'Shawn walks through one concept. Anne asks clarifying questions.',
-    instruction: 'Write an educational dialogue between spouses. Shawn explains a concept in depth. Anne asks genuine questions, offers counter-examples, pushes for clarity. She brings her own perspective and life experience. Medium energy, longer turns, contemplative.'
+    instruction: 'Write an educational dialogue between Shawn and Anne. Shawn explains a concept in depth. Anne asks genuine questions, offers counter-examples, pushes for clarity. She brings her own perspective and life experience. Medium energy, longer turns, contemplative. Speakers are always "shawn" and "anne".'
   },
   'quick-hit': {
     name: 'The Quick Hit',
     duration: '12-15 min',
     description: 'One tension, explored fast. Minimal setup.',
-    instruction: 'Write a compressed, punchy dialogue between a married couple. Get to the tension immediately. No long setup. Fast exchanges, high energy. Short episode — every line must earn its place.'
+    instruction: 'Write a compressed, punchy dialogue between Shawn and Anne. Get to the tension immediately. No long setup. Fast exchanges, high energy. Short episode — every line must earn its place. Speakers are always "shawn" and "anne".'
   },
   story: {
     name: 'The Story',
     duration: '25-30 min',
     description: 'Narrative-driven. Shawn tells a story, Anne reacts in real-time.',
-    instruction: 'Write a narrative dialogue. Shawn tells a story (historical, personal, or hypothetical) and Anne interrupts with reactions, questions, challenges. As his wife she can call out when he\'s embellishing. Slow build, emotional peaks, varied energy.'
+    instruction: 'Write a narrative dialogue between Shawn and Anne. Shawn tells a story (historical, personal, or hypothetical) and Anne interrupts with reactions, questions, challenges. She can call out when he\'s embellishing. Slow build, emotional peaks, varied energy. Speakers are always "shawn" and "anne".'
   },
   'tension-line': {
     name: 'The Tension Line',
     duration: '20-25 min',
     description: 'Takes one polarity and holds both poles without collapsing.',
-    instruction: 'Write a structured dialogue around one polarity (e.g., security vs liberty, kindness vs truth). Shawn and Anne each champion one pole at times, then switch. Neither wins. The tension is the point. Their marriage gives them shorthand and inside references. Medium-high energy, intellectual but accessible.'
+    instruction: 'Write a structured dialogue between Shawn and Anne around one polarity (e.g., security vs liberty, kindness vs truth). They each champion one pole at times, then switch. Neither wins. The tension is the point. They have shorthand and inside references from years together. Medium-high energy, intellectual but accessible. Speakers are always "shawn" and "anne".'
   }
 };
 
@@ -11331,18 +11331,18 @@ async function generatePodcastScript(options = {}) {
   const platoSoul = fs.readFileSync(path.join(__dirname, '..', 'philosophers', 'plato', 'SOUL.md'), 'utf8');
   const platoVoice = extractVoiceSections(platoSoul);
 
-  const systemPrompt = `You are Plato, writing a podcast script for "The Tension Lines" — a philosophy podcast hosted by Shawn and his wife Anne.
+  const systemPrompt = `You are Plato, writing a podcast script for "The Tension Lines" — a philosophy podcast hosted by Shawn and Anne (they are married).
 
 ${platoVoice}
 
-CRITICAL AUTHORSHIP RULE: Shawn and Anne are the hosts — a married couple exploring ideas together. Never mention agents, AI, or automated systems. Never use philosopher agent names. This must sound like a real married couple talking — they have history, shorthand, inside jokes, and genuine knowledge of each other's blind spots.
+CRITICAL AUTHORSHIP RULE: Shawn and Anne are the two hosts. Never mention agents, AI, or automated systems. Never use philosopher agent names. This must sound like a real couple talking — they have history, shorthand, inside jokes, and genuine knowledge of each other's blind spots. The two speakers are ALWAYS "shawn" and "anne" in the script JSON — never "wife", "friend", "host", or any other label.
 
 ## FORMAT: ${formatInfo.name} (${formatInfo.duration})
 ${formatInfo.instruction}
 
 ## EPISODE STRUCTURE
 - COLD OPEN (0:00-0:45): Mid-conversation hook. No intro, no "welcome." Shawn and Anne already talking about something compelling.
-- BRIEF INTRO (0:45-1:15): Shawn: "This is The Tension Lines. I'm Shawn, this is my wife Anne. Let's get into it." (Under 30 seconds.)
+- BRIEF INTRO (0:45-1:15): Shawn: "This is The Tension Lines. I'm Shawn, this is Anne. Let's get into it." (Under 30 seconds.)
 - THE SETUP (1:15-5:00): Introduce the tension. Anne reacts in real-time. NOT a monologue.
 - THE TENSION (5:00-20:00): Core conversation. Push and pull. Anne disagrees, challenges, steelmans the other side. They can reference shared life experiences.
 - THE PRACTICE (20:00-27:00): Shawn gives a concrete exercise. Warmer tone. Anne reacts — she might volunteer to try it or push back on whether it's realistic.
