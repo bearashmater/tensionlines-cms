@@ -2298,6 +2298,177 @@
         "replies": 4,
         "reposts": 0
       }
+    },
+    {
+      "id": "comment-1770933601225-0",
+      "createdAt": "2026-02-12T22:00:01.225Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/joshsternberg.com/post/3meolkxpytc2k",
+      "targetAuthor": "joshsternberg.com",
+      "targetText": "\"But it's just an indisputable fact that Elon Musk is a genuinely terrible and stunningly ignorant human being who genuinely has no Earthly idea how often very basic things work.\"\n\n@karlbode.com on the press's \"Musk says\" coverage philosophy (also, CEO says; Trump says)\n\nkarlbode.com/the-press-is...",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:2eq3273yo4eq7xi7wxz2wqav/app.bsky.feed.post/3meolkxpytc2k",
+      "targetCid": "bafyreidlqi2dryz4d3zxezy2cibrjfilcqeggl36iqxh3mhbspy54f4jdq",
+      "engagement": {
+        "likes": 318,
+        "replies": 4,
+        "reposts": 76
+      }
+    },
+    {
+      "id": "comment-1770933601225-1",
+      "createdAt": "2026-02-12T22:00:01.225Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/samfr.bsky.social/post/3meoqqcpfoc2c",
+      "targetAuthor": "samfr.bsky.social",
+      "targetText": "In the article he says he's no fan of Rand's ethical philosophy before repeating her ethical philosophy.",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:qougpda3f2sgfyco7qllxoeu/app.bsky.feed.post/3meoqqcpfoc2c",
+      "targetCid": "bafyreigjbsm7rmoj44tp66jtruyq4ukajmqwrmrlcy7u7vxjxbgp46xtmy",
+      "engagement": {
+        "likes": 81,
+        "replies": 8,
+        "reposts": 6
+      }
+    },
+    {
+      "id": "comment-1770933601225-2",
+      "createdAt": "2026-02-12T22:00:01.225Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/multiplicityct.bsky.social/post/3meogonnmsk2q",
+      "targetAuthor": "multiplicityct.bsky.social",
+      "targetText": "Me, reading philosophy: I love this. It's such a blessing that I get to do this.\n\nMe, writing philosophy: I have made terrible life choices.",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:aaxaex5srhtqf7c6rndwjvoo/app.bsky.feed.post/3meogonnmsk2q",
+      "targetCid": "bafyreiaukwluktkgjlitusw5audp6k7u7mzfojk35nbvht5we5qtriklxi",
+      "engagement": {
+        "likes": 17,
+        "replies": 0,
+        "reposts": 3
+      }
+    },
+    {
+      "id": "comment-1770933601225-3",
+      "createdAt": "2026-02-12T22:00:01.225Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/canards.bsky.social/post/3memleplfck2o",
+      "targetAuthor": "canards.bsky.social",
+      "targetText": "#Philosophy",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:ftyl64fx3dsydzpkbmc5cvkq/app.bsky.feed.post/3memleplfck2o",
+      "targetCid": "bafyreiglxqzfhcgtg3hpsupdrxn2z2u2qwcr5pghisex63czlpxvslt2v4",
+      "engagement": {
+        "likes": 8,
+        "replies": 0,
+        "reposts": 1
+      }
+    },
+    {
+      "id": "comment-1770933601225-4",
+      "createdAt": "2026-02-12T22:00:01.225Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/kortneyyasenka.bsky.social/post/3menwpsog3226",
+      "targetAuthor": "kortneyyasenka.bsky.social",
+      "targetText": "Enjoy the process #mindset #running #selfreflection #stoicism #swedishlagom",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:4zp6wzz325hi53t5eftfw7pk/app.bsky.feed.post/3menwpsog3226",
+      "targetCid": "bafyreifxhwcd6j76ch2exkmj3evmnlxi3rz7v3y6dh5q36d3dvvqtp5hem",
+      "engagement": {
+        "likes": 9,
+        "replies": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "comment-1770933601225-5",
+      "createdAt": "2026-02-12T22:00:01.225Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/surazeus.bsky.social/post/3memvudonks2s",
+      "targetAuthor": "surazeus.bsky.social",
+      "targetText": "Attentive Scope Of Faith\n© Surazeus\n2026 02 11\n\n#Poetry #Poem #Pastoral #Necropastoral #MetaModernism #Transrealism #NewSublimity #NewRomanticism #AmericanDream #Cinemism #Existentialism #Surrealism #NegativeCapability #NewGnosticism #MetaRealism #NewTranscendentalism #Astarism",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:ymoj2t7xh6jrg5b3pcen4rle/app.bsky.feed.post/3memvudonks2s",
+      "targetCid": "bafyreihhqez5zj6rc5zvbdi43c4hjljco3mzgunyhdhcrzx4hufajzetri",
+      "engagement": {
+        "likes": 4,
+        "replies": 1,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "comment-1770933601225-6",
+      "createdAt": "2026-02-12T22:00:01.225Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/amuly.bsky.social/post/3memvekkrgc2i",
+      "targetAuthor": "amuly.bsky.social",
+      "targetText": "Every semester I teach ethics, I show this movie for existentialism (as an illustration of the difference between Schopenhauer and Nietzsche). Every semester I’m happy to introduce a new generation to its brilliance. And every semester the students observe Cort’s outfits are fly as hell",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:haaq7phs6kn67qhdlwk32ijt/app.bsky.feed.post/3memvekkrgc2i",
+      "targetCid": "bafyreiadwmbbqzkqibqw6cb5tqjpo5n52w3q5aq7v3fx73fuidurzzn7ni",
+      "engagement": {
+        "likes": 4,
+        "replies": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "comment-1770933601225-7",
+      "createdAt": "2026-02-12T22:00:01.225Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/stoicmindschannel.com/post/3meoma2yv7c2c",
+      "targetAuthor": "stoicmindschannel.com",
+      "targetText": "Stop fighting reality.\nRecalculate.\n\nThe Stoics called it acceptance. Christians refer to it as trusting in God’s plan. Either way, anxiety drops when you pivot instead of panic.\n\n#Stoicism #ChristianFaith #MentalHealth #AnxietyRelief #MarcusAurelius #Mindset",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:w4sfutsn6uk44e2tmhvcgthn/app.bsky.feed.post/3meoma2yv7c2c",
+      "targetCid": "bafyreihui6sn72kot4f4pe7invdahr3ef3fya5n3zqsio7tadjzwczuhaa",
+      "engagement": {
+        "likes": 1,
+        "replies": 1,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "comment-1770933601225-8",
+      "createdAt": "2026-02-12T22:00:01.225Z",
+      "status": "draft",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/iamromanstone.bsky.social/post/3meoefzpqf72n",
+      "targetAuthor": "iamromanstone.bsky.social",
+      "targetText": "The Stoics didn't just start the day with discipline.\n\nThey ended it with review.\n\nSeneca's evening practice:\n\"When the light has been removed... I examine my entire day.\"\n\nWhat went well? What could improve?\n\nDaily review builds wisdom.\n\n#Stoicism #Philosophy #MentalStrength #DailyWisdom",
+      "commentText": "",
+      "philosopher": "nietzsche",
+      "source": "scan",
+      "targetUri": "at://did:plc:qddwluqpp4gswjup3w33zamp/app.bsky.feed.post/3meoefzpqf72n",
+      "targetCid": "bafyreidcaqq4drvaecwoxkqhcfdqopwsmvmfco3hbvj4cj23u76p5bm2x4",
+      "engagement": {
+        "likes": 1,
+        "replies": 0,
+        "reposts": 0
+      }
     }
   ],
   "posted": [],

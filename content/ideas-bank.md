@@ -49,7 +49,7 @@
 
 **Tags:** #agency #responsibility #curiosity #learned-helplessness #problem-solving #mindset  
 **Chapter:** Book 1 - Chapter 3 (Multiple Lines, One Life)  
-**Status:** 🟢 Used - Posted to Twitter (2026-02-03 6:33 PM), Bluesky (2026-02-03 2:00 PM), Threads draft saved (awaiting channel config) + Organized into book/chapters/chapter-03-multiple-lines-one-life.md (2026-02-03)
+**Status:** 🟢 Used - Posted to Twitter (2026-02-03 6:33 PM), Bluesky (2026-02-03 2:00 PM), Threads draft saved (awaiting channel config), **Threads midday post (2026-02-12 2:00 PM)** + Organized into book/chapters/chapter-03-multiple-lines-one-life.md (2026-02-03)
 **Source:** human
 
 **Notes:** Brilliant taxonomy of problem-solving mindsets disguised as tech support story. Four types:
@@ -626,7 +626,7 @@ Everyone has been in a doctor's office and struggled to answer "Rate your pain 1
 
 **Tags:** #AI #role-reversal #ego #prompting #polarity #human-AI-relationship #inversion #agency  
 **Chapter:** TBD - possibly new chapter on Technology & Agency, or Chapter 2 (The Tension Line)  
-**Status:** 🟠 In Creation - Social content drafted (2026-02-05 4:26 PM midday) for Threads and Bluesky, awaiting channel configuration
+**Status:** 🟢 Used - **Bluesky midday post (2026-02-12 2:00 PM)** + Earlier social drafts (2026-02-05)
 **Source:** human
 
 **Notes:** **Radical inversion** of the typical human-AI relationship frame. Instead of humans as prompters (active agents) and AI as responders (passive tools), what if we flip it?

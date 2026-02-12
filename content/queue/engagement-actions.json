@@ -1,6 +1,67 @@
 {
-  "queue": [],
+  "queue": [
+    {
+      "id": "action-1770922809329-pdgv",
+      "type": "like",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/philosophy_life/status/2022007803422872046",
+      "targetAuthor": "philosophy_life",
+      "targetText": "“I was within and without, simultaneously enchanted and repelled by the inexhaustible variety of life.”\n\n― Fitzgerald F. Scott",
+      "targetUri": null,
+      "targetCid": null,
+      "context": "Fitzgerald quote captures the tension of simultaneous opposing states—core to our paradox/tension themes",
+      "source": "auto-scan",
+      "status": "ready",
+      "createdAt": "2026-02-12T19:00:09.329Z"
+    },
+    {
+      "id": "action-1770922809329-krr4",
+      "type": "like",
+      "platform": "twitter",
+      "targetUrl": "https://x.com/s4lma9/status/2022017026664067503",
+      "targetAuthor": "s4lma9",
+      "targetText": "The gap between desire and reality isnt knowledge, its execution. Self improvement teaches you to close that gap daily. Once you master yourself, building money systems, products or businesses is just an engineering problem.",
+      "targetUri": null,
+      "targetCid": null,
+      "context": "Distinguishes knowledge from execution in self-improvement—practical wisdom about the gap between understanding and doing",
+      "source": "auto-scan",
+      "status": "ready",
+      "createdAt": "2026-02-12T19:00:09.329Z"
+    }
+  ],
   "completed": [
+    {
+      "id": "action-1770922809329-b3qw",
+      "type": "repost",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/nisargadatta.bsky.social/post/3meljoektww2p",
+      "targetAuthor": "nisargadatta.bsky.social",
+      "targetText": "You are not sure of yourself because you never paid attention to yourself, only to your experiences. Be interested in yourself beyond all experiences, be with yourself, love yourself; the ultimate security is found only in self-knowledge.",
+      "targetUri": "at://did:plc:6lzqmpdnnsuanvqho2axxr7s/app.bsky.feed.post/3meljoektww2p",
+      "targetCid": "bafyreid4mtmqg4tn6xqjgvzqf6fuokxelpxubakxrunw2p4k2juaj5sg2y",
+      "context": "Nisargadatta quote perfectly articulates self-knowledge over experience-chasing—essential TensionLines philosophy, beautifully expressed",
+      "source": "auto-scan",
+      "status": "completed",
+      "createdAt": "2026-02-12T19:00:09.329Z",
+      "completedAt": "2026-02-12T19:15:04.351Z",
+      "executedBy": "auto"
+    },
+    {
+      "id": "action-1770922809329-xb0z",
+      "type": "like",
+      "platform": "bluesky",
+      "targetUrl": "https://bsky.app/profile/samwithrow.bsky.social/post/3meoah3sjf22w",
+      "targetAuthor": "samwithrow.bsky.social",
+      "targetText": "crazy how so many people go through life not knowing how anything works or why they should care. We’re going to need to massively fund public education, create IRL community spaces, develop emotional intelligence (especially for men??) or we’re just going to keep doing this shit",
+      "targetUri": "at://did:plc:qzbglcf2thebmkqwfst3zpuy/app.bsky.feed.post/3meoah3sjf22w",
+      "targetCid": "bafyreibnupfl5l4g2tii3hyfgh65fxpdzh3gmqvmt7npy5i3jl5shnj6zq",
+      "context": "Directly addresses emotional intelligence and systemic issues with authentic frustration—aligns with our themes of growth and self-awareness",
+      "source": "auto-scan",
+      "status": "completed",
+      "createdAt": "2026-02-12T19:00:09.329Z",
+      "completedAt": "2026-02-12T19:15:00.380Z",
+      "executedBy": "auto"
+    },
     {
       "id": "action-1770836408679-5zg2",
       "type": "like",
