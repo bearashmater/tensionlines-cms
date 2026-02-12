@@ -497,11 +497,18 @@ function parseIdeasBank() {
       continue;
     }
 
-    // Match tags
+    // Match tags (supports "#tag1 #tag2" or "tag1, tag2" formats)
     const tagsMatch = line.match(/\*\*Tags:\*\*\s+(.+)/);
     if (tagsMatch) {
       saveSection();
-      currentIdea.tags = tagsMatch[1].split(/\s+/).filter(t => t.startsWith('#')).map(t => t.substring(1));
+      const raw = tagsMatch[1].trim();
+      if (raw.includes('#')) {
+        currentIdea.tags = raw.split(/\s+/).filter(t => t.startsWith('#')).map(t => t.substring(1));
+      } else if (raw.includes(',')) {
+        currentIdea.tags = raw.split(',').map(t => t.trim()).filter(Boolean);
+      } else if (raw.length > 0) {
+        currentIdea.tags = raw.split(/\s+/).filter(Boolean);
+      }
       continue;
     }
 
@@ -5892,12 +5899,121 @@ app.post('/api/ideas', (req, res) => {
       }
     } catch (e) { /* non-critical */ }
 
+    // Fire-and-forget: auto-tag + agent takes
+    processNewIdea(nextId, text.trim()).catch(err =>
+      console.error('[Ideas] Background processing failed:', err.message)
+    );
+
     res.status(201).json(newIdea);
   } catch (error) {
     console.error('Error adding idea:', error);
     res.status(500).json({ error: 'Failed to add idea' });
   }
 });
+
+/**
+ * Process a new idea: auto-tag with Claude + get agent takes.
+ * Runs async in the background after capture.
+ */
+async function processNewIdea(ideaId, ideaText) {
+  const client = getAnthropicClient();
+  if (!client) {
+    console.log('[Ideas] Skipping auto-process: no ANTHROPIC_API_KEY');
+    return;
+  }
+
+  // Step 1: Auto-tag
+  try {
+    const tagResponse = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 256,
+      system: 'You tag philosophical ideas for a content system. Return ONLY a JSON array of 3-7 lowercase tag strings. Tags should capture core themes, tensions, and relevant philosophical concepts. No explanation, just the JSON array.',
+      messages: [{
+        role: 'user',
+        content: `Tag this idea:\n"${ideaText}"`
+      }]
+    });
+
+    const tagText = tagResponse.content[0]?.text || '';
+    const tagMatch = tagText.match(/\[[\s\S]*\]/);
+    if (tagMatch) {
+      const tags = JSON.parse(tagMatch[0]).filter(t => typeof t === 'string').map(t => t.toLowerCase().replace(/[^a-z0-9-]/g, ''));
+      if (tags.length > 0) {
+        // Update the markdown file: replace empty **Tags:** line with actual tags
+        const content = fs.readFileSync(IDEAS_BANK, 'utf8');
+        const paddedId = String(ideaId).padStart(3, '0');
+        // Find the Tags line for this idea (between its header and the next --- or header)
+        const ideaHeaderPattern = new RegExp(`(### #${paddedId}[\\s\\S]*?\\*\\*Tags:\\*\\*)\\s*\\n`);
+        const updated = content.replace(ideaHeaderPattern, `$1 ${tags.join(', ')}\n`);
+        if (updated !== content) {
+          fs.writeFileSync(IDEAS_BANK, updated);
+          cache.ideasBank = null;
+          broadcast('ideas');
+          console.log(`[Ideas] Auto-tagged #${paddedId}: ${tags.join(', ')}`);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[Ideas] Auto-tag failed:', err.message);
+  }
+
+  // Step 2: Agent takes — pick 3 agents for varied perspectives
+  const agents = [
+    { id: 'nietzsche', name: 'Nietzsche', voice: 'provocative, challenges assumptions, finds the hidden tension' },
+    { id: 'diogenes', name: 'Diogenes', voice: 'blunt, strips pretension, asks the uncomfortable question' },
+    { id: 'hypatia', name: 'Hypatia', voice: 'precise, finds the structural connection, bridges theory and practice' }
+  ];
+
+  try {
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 800,
+      system: `You are generating brief reactions from three philosophical voices to a new idea. Each voice gives their honest, distinct take in 1-2 sentences. Keep it punchy and useful — these are working notes, not essays.
+
+Return ONLY valid JSON in this format:
+[
+  {"agent": "nietzsche", "take": "..."},
+  {"agent": "diogenes", "take": "..."},
+  {"agent": "hypatia", "take": "..."}
+]
+
+Voice guide:
+- nietzsche: provocative, challenges assumptions, finds the hidden tension
+- diogenes: blunt, strips pretension, asks the uncomfortable real-world question
+- hypatia: precise, finds structural connections, bridges theory and practice`,
+      messages: [{
+        role: 'user',
+        content: `New idea captured:\n"${ideaText}"\n\nGive each agent's quick take.`
+      }]
+    });
+
+    const takesText = response.content[0]?.text || '';
+    const takesMatch = takesText.match(/\[[\s\S]*\]/);
+    if (takesMatch) {
+      const takes = JSON.parse(takesMatch[0]);
+      const paddedId = String(ideaId).padStart(3, '0');
+
+      // Send each take as an agent message
+      for (const take of takes) {
+        const agent = agents.find(a => a.id === take.agent);
+        if (!agent || !take.take) continue;
+
+        sendAgentMessage({
+          from: take.agent,
+          to: 'human',
+          subject: `Take on idea #${paddedId}`,
+          body: take.take,
+          type: 'idea-take',
+          priority: 'low',
+          metadata: { ideaId: paddedId, ideaText: ideaText.substring(0, 200) }
+        });
+      }
+      console.log(`[Ideas] Agent takes sent for #${paddedId}: ${takes.length} responses`);
+    }
+  } catch (err) {
+    console.error('[Ideas] Agent takes failed:', err.message);
+  }
+}
 
 /**
  * Delete an idea from ideas-bank.md
@@ -14352,6 +14468,11 @@ function initTelegramBot() {
       console.log(`[Telegram] Idea #${nextId} captured: "${ideaText.substring(0, 60)}..."`);
       bot.sendMessage(chatId, `Captured as idea #${nextId}\n"${ideaText.substring(0, 100)}${ideaText.length > 100 ? '...' : ''}"`);
       logSystemEvent('pipeline', `Idea #${nextId} captured via Telegram`, { ideaId: nextId });
+
+      // Fire-and-forget: auto-tag + agent takes
+      processNewIdea(nextId, ideaText).catch(err =>
+        console.error('[Ideas] Background processing failed:', err.message)
+      );
 
       // Auto-complete the weekly idea task if goal is now met
       try {
