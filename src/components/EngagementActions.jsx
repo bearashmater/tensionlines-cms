@@ -34,9 +34,9 @@ function BlueskyIcon({ size = 16, className = '' }) {
 }
 
 const TYPE_CONFIG = {
-  repost: { icon: Repeat2, label: 'Repost', color: 'green', bgClass: 'bg-green-100 text-green-700', btnClass: 'bg-green-600 hover:bg-green-700' },
-  like: { icon: Heart, label: 'Like', color: 'pink', bgClass: 'bg-pink-100 text-pink-700', btnClass: 'bg-pink-600 hover:bg-pink-700' },
-  follow: { icon: UserPlus, label: 'Follow', color: 'indigo', bgClass: 'bg-indigo-100 text-indigo-700', btnClass: 'bg-indigo-600 hover:bg-indigo-700' }
+  repost: { icon: Repeat2, label: 'Repost', color: 'green', bgClass: 'bg-green-100 text-green-700', btnClass: 'bg-green-600 hover:bg-green-700', tileBg: 'bg-green-50', tileBorder: 'border-green-200 hover:border-green-300', tileText: 'text-green-700', tileRing: 'ring-green-500' },
+  like: { icon: Heart, label: 'Like', color: 'pink', bgClass: 'bg-pink-100 text-pink-700', btnClass: 'bg-pink-600 hover:bg-pink-700', tileBg: 'bg-pink-50', tileBorder: 'border-pink-200 hover:border-pink-300', tileText: 'text-pink-700', tileRing: 'ring-pink-500' },
+  follow: { icon: UserPlus, label: 'Follow', color: 'indigo', bgClass: 'bg-indigo-100 text-indigo-700', btnClass: 'bg-indigo-600 hover:bg-indigo-700', tileBg: 'bg-indigo-50', tileBorder: 'border-indigo-200 hover:border-indigo-300', tileText: 'text-indigo-700', tileRing: 'ring-indigo-500' }
 }
 
 export default function EngagementActions() {
@@ -69,6 +69,29 @@ export default function EngagementActions() {
   const queueByType = { repost: [], like: [], follow: [] }
   for (const item of data.queue || []) {
     if (queueByType[item.type]) queueByType[item.type].push(item)
+  }
+
+  // Compute today's totals and last completed per type
+  const todayBsky = data.todayCounts?.bluesky || {}
+  const todayTw = data.todayCounts?.twitter || {}
+  const todayByType = {
+    repost: (todayBsky.repost || 0) + (todayTw.repost || 0),
+    like: (todayBsky.like || 0) + (todayTw.like || 0),
+    follow: (todayBsky.follow || 0) + (todayTw.follow || 0)
+  }
+  const maxPerDay = (data.settings?.platforms?.bluesky?.maxActionsPerDay || 25)
+  const lastByType = {}
+  for (const c of data.completed || []) {
+    if (!lastByType[c.type] && c.completedAt) lastByType[c.type] = c.completedAt
+  }
+  const timeAgo = (iso) => {
+    if (!iso) return null
+    const diff = Date.now() - new Date(iso).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 60) return `${mins}m ago`
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24) return `${hrs}h ago`
+    return `${Math.floor(hrs / 24)}d ago`
   }
 
   return (
@@ -117,31 +140,39 @@ export default function EngagementActions() {
       <div className="grid grid-cols-3 gap-4">
         {Object.entries(TYPE_CONFIG).map(([type, cfg]) => {
           const Icon = cfg.icon
-          const count = queueByType[type]?.length || 0
-          const todayCount = data.todayCounts?.twitter?.[type] || 0
+          const queued = queueByType[type]?.length || 0
+          const doneToday = todayByType[type] || 0
+          const remaining = queued
+          const lastDone = lastByType[type]
           const isActive = typeFilter === type
           return (
             <button
               key={type}
               onClick={() => setTypeFilter(isActive ? null : type)}
-              className={`text-left rounded-lg border p-4 transition-all ${
+              className={`text-left rounded-lg border p-4 transition-all flex flex-col ${
                 isActive
-                  ? 'border-2 border-current ring-2 ring-offset-1 ' + cfg.bgClass
-                  : 'bg-white border-neutral-200 hover:border-neutral-300'
+                  ? `border-2 ring-2 ring-offset-1 ${cfg.tileRing} ${cfg.tileBg} ${cfg.tileBorder}`
+                  : `${cfg.tileBg} ${cfg.tileBorder}`
               }`}
             >
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${cfg.bgClass}`}>
-                  <Icon size={20} />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{count}</p>
-                  <p className="text-xs text-neutral-500">{cfg.label}s queued</p>
+              <div>
+                <h3 className={`font-semibold ${cfg.tileText}`}>{cfg.label}s</h3>
+                <p className="text-sm text-neutral-600">
+                  {doneToday} / {maxPerDay} today
+                </p>
+              </div>
+              <p className="text-xs text-neutral-500 mt-2">
+                {lastDone ? `Last: ${timeAgo(lastDone)}` : 'None yet'}
+              </p>
+              <div className={`flex items-center gap-2 mt-auto pt-2 ${cfg.tileText}`}>
+                <span className="text-2xl font-bold">
+                  {remaining}
+                  <span className="text-sm font-normal ml-1">queued</span>
+                </span>
+                <div className={cfg.bgClass + ' p-1 rounded'}>
+                  <Icon size={18} />
                 </div>
               </div>
-              {todayCount > 0 && (
-                <p className="text-xs text-neutral-400 mt-2">{todayCount} completed today</p>
-              )}
             </button>
           )
         })}

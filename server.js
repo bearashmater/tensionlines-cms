@@ -458,6 +458,8 @@ function parseIdeasBank() {
         tags: [],
         status: 'captured',
         statusDetail: '',
+        source: '',
+        origin: 'human',
         chapter: '',
         notes: '',
         tension: '',
@@ -535,6 +537,16 @@ function parseIdeasBank() {
       } else {
         currentIdea.status = 'captured';
       }
+      continue;
+    }
+
+    // Match Source
+    const sourceMatch = line.match(/\*\*Source:\*\*\s+(.+)/);
+    if (sourceMatch) {
+      saveSection();
+      currentIdea.source = sourceMatch[1].trim();
+      const s = currentIdea.source.toLowerCase();
+      currentIdea.origin = ['standup', 'tension', 'peer-review', 'auto-pipeline', 'agent', 'athena', 'socrates', 'diogenes', 'hypatia', 'heraclitus', 'nietzsche', 'plato', 'aristotle', 'marcus'].includes(s) ? 'team' : 'human';
       continue;
     }
 
@@ -5377,8 +5389,8 @@ app.post('/api/engagement/scan', async (req, res) => {
 app.patch('/api/engagement/:id', (req, res) => {
   try {
     const { status } = req.body;
-    if (!['new', 'seen', 'replied', 'dismissed'].includes(status)) {
-      return res.status(400).json({ error: 'Invalid status. Must be: new, seen, replied, dismissed' });
+    if (!['new', 'seen', 'replied', 'dismissed', 'completed'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be: new, seen, replied, dismissed, completed' });
     }
 
     const inbox = getEngagementInbox();
@@ -5405,7 +5417,7 @@ app.patch('/api/engagement/:id', (req, res) => {
 /**
  * POST /api/engagement/:id/draft-reply - Create reply queue item from engagement
  */
-app.post('/api/engagement/:id/draft-reply', (req, res) => {
+app.post('/api/engagement/:id/draft-reply', async (req, res) => {
   try {
     const inbox = getEngagementInbox();
     const id = req.params.id;
@@ -5414,7 +5426,34 @@ app.post('/api/engagement/:id/draft-reply', (req, res) => {
     if (!item) item = inbox.twitter.items.find(i => i.id === id);
     if (!item) return res.status(404).json({ error: 'Engagement item not found' });
 
-    // Create reply queue entry
+    // Generate a draft reply using Claude
+    let draftText = '';
+    const client = getAnthropicClient();
+    if (client && item.postText) {
+      try {
+        const charLimit = item.platform === 'twitter' ? 280 : 300;
+        const response = await client.messages.create({
+          model: 'claude-sonnet-4-5-20250929',
+          max_tokens: 300,
+          messages: [{ role: 'user', content: `You are Shawn, who writes about philosophical tension lines — the spaces between contradictions where insight lives. Write a short, thoughtful reply to this ${item.platform} post by @${item.authorHandle}:
+
+"${item.postText}"
+
+Rules:
+- Reply as Shawn (first person, conversational, warm)
+- Must be under ${charLimit} characters
+- Be genuine — don't be sycophantic or salesy
+- Add to the conversation, don't just agree
+- No hashtags, no emojis, no "great point" openers
+- Never mention AI, agents, or automation` }]
+        });
+        draftText = response.content[0]?.text || '';
+      } catch (e) {
+        console.error('[Engagement] Claude draft failed:', e.message);
+      }
+    }
+
+    // Create reply queue entry with the drafted text
     const replyQueue = getReplyQueue();
     const replyItem = {
       id: `reply-${Date.now()}`,
@@ -5424,7 +5463,7 @@ app.post('/api/engagement/:id/draft-reply', (req, res) => {
       targetUrl: item.postUrl,
       targetAuthor: item.authorHandle,
       targetText: item.postText,
-      replyText: '',
+      replyText: draftText,
       taskId: null,
       targetUri: item.postUri || null,
       targetCid: item.postCid || null,
@@ -5434,15 +5473,45 @@ app.post('/api/engagement/:id/draft-reply', (req, res) => {
     replyQueue.queue.unshift(replyItem);
     saveReplyQueue(replyQueue);
 
-    // Mark engagement item as replied
-    item.status = 'replied';
-    item.updatedAt = new Date().toISOString();
+    // Remove from engagement inbox — it lives in the reply queue now
+    const bskyIdx = inbox.bluesky.items.findIndex(i => i.id === id);
+    if (bskyIdx !== -1) inbox.bluesky.items.splice(bskyIdx, 1);
+    const twIdx = inbox.twitter.items.findIndex(i => i.id === id);
+    if (twIdx !== -1) inbox.twitter.items.splice(twIdx, 1);
     saveEngagementInbox(inbox);
 
+    broadcast('reply-queue');
+    broadcast('engagement');
     res.json({ success: true, replyItem });
   } catch (err) {
     console.error('Error creating draft reply from engagement:', err);
     res.status(500).json({ error: 'Failed to create draft reply' });
+  }
+});
+
+app.delete('/api/engagement/:id', (req, res) => {
+  try {
+    const inbox = getEngagementInbox();
+    const id = req.params.id;
+
+    let idx = inbox.bluesky.items.findIndex(i => i.id === id);
+    if (idx !== -1) {
+      inbox.bluesky.items.splice(idx, 1);
+    } else {
+      idx = inbox.twitter.items.findIndex(i => i.id === id);
+      if (idx !== -1) {
+        inbox.twitter.items.splice(idx, 1);
+      } else {
+        return res.status(404).json({ error: 'Engagement item not found' });
+      }
+    }
+
+    saveEngagementInbox(inbox);
+    broadcast('engagement');
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error deleting engagement item:', err);
+    res.status(500).json({ error: 'Failed to delete engagement item' });
   }
 });
 
@@ -5865,9 +5934,7 @@ app.post('/api/ideas', (req, res) => {
     entry += `**Quote:** "${text.trim()}"\n`;
     entry += `**Tags:** \n`;
     entry += `**Status:** 🔵 New\n`;
-    if (source) {
-      entry += `**Source:** ${source}\n`;
-    }
+    entry += `**Source:** ${source || 'cms'}\n`;
     entry += '\n---\n';
 
     // Append to file
@@ -5879,13 +5946,16 @@ app.post('/api/ideas', (req, res) => {
     // Broadcast update via WebSocket
     broadcast('ideas');
 
+    const srcLabel = source || 'cms';
+    const origin = ['standup', 'tension', 'peer-review', 'auto-pipeline', 'agent', 'athena', 'socrates', 'diogenes', 'hypatia', 'heraclitus', 'nietzsche', 'plato', 'aristotle', 'marcus'].includes(srcLabel.toLowerCase()) ? 'team' : 'human';
     const newIdea = {
       id: nextId,
       date: dateStr,
       capturedAt: timeStr,
       text: text.trim(),
       status: 'captured',
-      source: source || 'cms'
+      source: srcLabel,
+      origin
     };
 
     console.log(`[Ideas] New idea #${nextId} captured via ${source || 'cms'}: "${text.trim().substring(0, 60)}..."`);

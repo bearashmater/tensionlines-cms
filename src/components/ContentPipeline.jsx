@@ -754,6 +754,9 @@ function IdeasTable({ ideas, sortBy, sortDir, onSort, expandedId, onExpand, onTa
                 <td className="px-4 py-3 text-sm text-neutral-600">{idea.date || '-'}</td>
                 <td className="px-4 py-3">
                   <span className="text-sm">{statusEmoji[idea.status] || '⚪'} {idea.status}</span>
+                  <span className={`ml-2 text-xs px-1.5 py-0.5 rounded ${idea.origin === 'team' ? 'bg-purple-100 text-purple-700' : 'bg-blue-50 text-blue-600'}`}>
+                    {idea.origin === 'team' ? 'Team' : 'Shawn'}
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-sm text-neutral-800 max-w-md">
                   <p className="truncate">{idea.text || idea.quote}</p>
@@ -875,6 +878,9 @@ function IdeaCard({ idea, onTagClick, onDelete, deleting }) {
           )}
         </div>
         <div className="flex items-center gap-2">
+          <span className={`text-xs px-1.5 py-0.5 rounded ${idea.origin === 'team' ? 'bg-purple-100 text-purple-700' : 'bg-blue-50 text-blue-600'}`}>
+            {idea.origin === 'team' ? 'Team' : 'Shawn'}
+          </span>
           <span className={`badge ${statusColor}`}>
             {statusEmoji[idea.status]} {idea.status}
           </span>

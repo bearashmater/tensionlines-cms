@@ -394,9 +394,32 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
       })
       if (res.ok) {
         onDraftReply()
+        onRefresh()
       }
     } catch (err) {
       console.error('Error creating draft reply:', err)
+    }
+  }
+
+  const handleDelete = async (itemId) => {
+    try {
+      await fetch(`/api/engagement/${itemId}`, { method: 'DELETE' })
+      onRefresh()
+    } catch (err) {
+      console.error('Error deleting engagement item:', err)
+    }
+  }
+
+  const handleComplete = async (itemId) => {
+    try {
+      await fetch(`/api/engagement/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' })
+      })
+      onRefresh()
+    } catch (err) {
+      console.error('Error completing engagement item:', err)
     }
   }
 
@@ -427,8 +450,8 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
   }
 
   const items = data?.items || []
-  const visibleItems = showDismissed ? items : items.filter(i => i.status !== 'dismissed')
-  const dismissedCount = items.filter(i => i.status === 'dismissed').length
+  const visibleItems = showDismissed ? items : items.filter(i => i.status !== 'dismissed' && i.status !== 'completed')
+  const dismissedCount = items.filter(i => i.status === 'dismissed' || i.status === 'completed').length
 
   return (
     <div className="space-y-4">
@@ -535,6 +558,8 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
                 onDraftReply={handleDraftReply}
                 onDismiss={handleDismiss}
                 onMarkSeen={handleMarkSeen}
+                onDelete={handleDelete}
+                onComplete={handleComplete}
               />
             ))
           )}
@@ -544,13 +569,29 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
   )
 }
 
-function EngagementItem({ item, onDraftReply, onDismiss, onMarkSeen }) {
+function EngagementItem({ item, onDraftReply, onDismiss, onMarkSeen, onDelete, onComplete }) {
   const isNew = item.status === 'new'
   const isDismissed = item.status === 'dismissed'
   const isReplied = item.status === 'replied'
+  const isCompleted = item.status === 'completed'
+  const [drafting, setDrafting] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleDraft = async (id) => {
+    setDrafting(true)
+    await onDraftReply(id)
+    setDrafting(false)
+  }
+
+  const handleCopyAndOpen = (text, url) => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+    if (url) window.open(url, '_blank')
+  }
 
   return (
-    <div className={`p-4 ${isNew ? 'bg-amber-50/50' : ''} ${isDismissed ? 'opacity-50' : ''}`}>
+    <div className={`p-4 ${isNew ? 'bg-amber-50/50' : ''} ${isDismissed || isCompleted ? 'opacity-50' : ''}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           {/* Platform + type badges */}
@@ -579,6 +620,11 @@ function EngagementItem({ item, onDraftReply, onDismiss, onMarkSeen }) {
                 Replied
               </span>
             )}
+            {isCompleted && (
+              <span className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">
+                Done
+              </span>
+            )}
             {isDismissed && (
               <span className="px-2 py-0.5 text-xs bg-neutral-100 text-neutral-500 rounded">
                 Dismissed
@@ -588,6 +634,21 @@ function EngagementItem({ item, onDraftReply, onDismiss, onMarkSeen }) {
 
           {/* Post text */}
           <p className="text-neutral-800 whitespace-pre-wrap text-sm">{item.postText}</p>
+
+          {/* Draft reply (shown after drafting) */}
+          {item.draftReply && (
+            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded">
+              <p className="text-xs font-medium text-green-700 mb-1">Draft reply:</p>
+              <p className="text-sm text-neutral-800 whitespace-pre-wrap">{item.draftReply}</p>
+              <button
+                onClick={() => handleCopyAndOpen(item.draftReply, item.postUrl)}
+                className="mt-2 flex items-center gap-1 px-3 py-1.5 text-sm bg-neutral-800 text-white rounded hover:bg-neutral-900"
+              >
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+                {copied ? 'Copied!' : 'Copy & Open'}
+              </button>
+            </div>
+          )}
 
           {/* Links */}
           <div className="flex items-center gap-3 mt-2">
@@ -620,13 +681,23 @@ function EngagementItem({ item, onDraftReply, onDismiss, onMarkSeen }) {
 
         {/* Actions */}
         <div className="flex flex-col gap-2">
-          {!isReplied && !isDismissed && (
+          {!isReplied && !isDismissed && !isCompleted && (
             <button
-              onClick={() => onDraftReply(item.id)}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gold text-white rounded hover:bg-amber-600"
+              onClick={() => handleDraft(item.id)}
+              disabled={drafting}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gold text-white rounded hover:bg-amber-600 disabled:opacity-50"
             >
-              <MessageSquareReply size={14} />
-              Draft Reply
+              {drafting ? <RefreshCw size={14} className="animate-spin" /> : <MessageSquareReply size={14} />}
+              {drafting ? 'Drafting...' : 'Draft Reply'}
+            </button>
+          )}
+          {isReplied && !isCompleted && (
+            <button
+              onClick={() => onComplete(item.id)}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              <CheckCircle size={14} />
+              Done
             </button>
           )}
           {isNew && (
@@ -638,7 +709,7 @@ function EngagementItem({ item, onDraftReply, onDismiss, onMarkSeen }) {
               Mark Seen
             </button>
           )}
-          {!isDismissed && !isReplied && (
+          {!isDismissed && !isReplied && !isCompleted && (
             <button
               onClick={() => onDismiss(item.id)}
               className="flex items-center gap-1 px-3 py-1.5 text-sm text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50 rounded"
@@ -647,6 +718,13 @@ function EngagementItem({ item, onDraftReply, onDismiss, onMarkSeen }) {
               Dismiss
             </button>
           )}
+          <button
+            onClick={() => onDelete(item.id)}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm text-red-400 hover:text-red-600 hover:bg-red-50 rounded"
+          >
+            <Trash2 size={14} />
+            Delete
+          </button>
         </div>
       </div>
     </div>
