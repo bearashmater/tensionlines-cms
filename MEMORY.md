@@ -13,17 +13,26 @@
 
 ## Cron Jobs - Content Posting
 
-**9 jobs need fixing (as of 2026-02-11):**
-All content-creation jobs (morning/midday/evening social, newsletters, articles) are posting directly instead of adding to queue. Need to:
-1. Review CMS posting queue schema in `mission-control/database.json`
-2. Update each job to add drafts to queue instead of posting
-3. Test workflow end-to-end
+**Status (2026-02-12): All content jobs working correctly** ✓
+Content creation jobs (morning/midday/evening social, newsletters, articles) are correctly adding drafts to CMS posting queue for Shawn's review, NOT posting directly.
 
-**Correct cron jobs:** Philosopher heartbeats, engagement bots (monitoring), moderation checks, CMS review, compound review, book work.
+**Verified working jobs:**
+- Morning/midday/evening social posts → CMS queue
+- Weekly Medium articles → CMS queue
+- Engagement bots → CMS `/api/engagement/scan` endpoint
+- Philosopher heartbeats, moderation checks, CMS review, compound review, book work
+
+**Note:** Some job instructions still reference direct posting - ignore and follow MEMORY.md workflow instead.
 
 ## Technical Stack
 
 - **CMS:** Node.js + Express backend, React + Vite frontend at `localhost:3001`
+  - **Tested 2026-02-12:** All core features working (dashboard, navigation, book progress, queues)
+  - **Key API Endpoints:**
+    - `/api/engagement/scan` - Scan for engagement opportunities (platform param: twitter|bluesky)
+    - `/api/engagement-actions/scan` - Scan for engagement targets
+    - `/api/engagement-actions/execute` - Execute queued actions
+    - `/api/dashboard` - Live metrics (agents, tasks, ideas, queue counts)
 - **Database:** File-based JSON at `mission-control/database.json`
 - **Twitter:** Bird CLI (`/opt/homebrew/bin/bird`) - READ ONLY (write blocked by Twitter)
 - **Bluesky:** AT Protocol via server.js - read + write works
@@ -36,12 +45,40 @@ All content-creation jobs (morning/midday/evening social, newsletters, articles)
 - Both scan for engagement opportunities, add to CMS queue
 - **Fixed 2026-02-12:** Pointed both jobs to CMS API endpoints instead of non-existent scripts
 
-## Content Drafting Patterns (2026-02-11)
+## Content Drafting Patterns
 
-**Threads posts:** Conversational, relatable hooks. "Scale of 1-10" format worked well.
-**Bluesky posts:** Intellectual but accessible. Clear distinctions and definitions.
+**Threads posts (Heraclitus voice):**
+- Conversational, relatable hooks ("You know how..." works well)
+- Personal anecdotes that reveal larger truths
+- Practical wisdom grounded in real situations
+- Examples: "Scale of 1-10" format, "You know how some people..." tech support story
 
-Both kept under platform limits, used line breaks for readability.
+**Bluesky posts (Socrates voice):**
+- Intellectual but accessible
+- Challenge dominant narratives ("Most of us approach X from...")
+- Clear distinctions and definitions
+- Socratic framing: questions over answers
+
+**Medium articles (Plato voice):**
+- Essayistic, reflective, well-structured
+- Hook → Exploration → Examples → Application → Reflection
+- 800-1500 words, links multiple ideas into coherent essay
+- Examples: "The Description Is Not the Dance" (practice vs. theory)
+
+All kept under platform limits, used line breaks for readability.
+
+## Debugging Patterns
+
+**Cron job troubleshooting (learned 2026-02-12):**
+1. Check if referenced files/scripts actually exist
+2. Look for equivalent functionality in existing systems (CMS APIs vs standalone scripts)
+3. Test endpoints manually before updating cron jobs
+4. Prefer calling existing APIs over creating new scripts
+
+**Before creating new tools:**
+- Check CMS server.js for existing API endpoints
+- Review `mission-control/database.json` schema
+- Test with curl/Postman before automating
 
 ## Mistakes to Avoid
 
@@ -53,7 +90,15 @@ Both kept under platform limits, used line breaks for readability.
 
 ## Project Status
 
-- **TensionLines CMS:** Functional, needs workflow fix for cron jobs
+- **TensionLines CMS:** Production-ready ✓
+  - All core features tested and working (dashboard, navigation, book progress, queues)
+  - 18+ items in posting queue actively managed
+  - Book progress tracking with phases/chapters/word counts functional
+  - Engagement queue and automation operational
 - **10 Philosopher Agents:** SOULs defined in `philosophers/*/SOUL.md`
-- **Ideas Bank:** Active at `content/ideas-bank.md` (100+ ideas)
-- **5 Books:** In development (details TBD)
+  - Voice assignments: Heraclitus (Threads), Socrates (Bluesky), Plato (Medium)
+- **Ideas Bank:** Active at `content/ideas-bank.md` (100+ ideas, 3+ used as of 2026-02-12)
+- **5 Books:** In development with phase/chapter tracking in CMS
+  - Books: TensionLines, Practical Wisdom, Leadership, Therapeutic Applications, Philosophy of AI
+  - Chapter word count tracking active (e.g., Chapter 1: 2,901 words)
+- **Reddit:** r/TensionLines does not exist yet (moderation on hold until created)
