@@ -45,25 +45,54 @@ Content creation jobs (morning/midday/evening social, newsletters, articles) are
 - Both scan for engagement opportunities, add to CMS queue
 - **Fixed 2026-02-12:** Pointed both jobs to CMS API endpoints instead of non-existent scripts
 
+## Day-of-Week Content Strategy
+
+**Friday = Reflection, Integration, Synthesis**
+- Ancient wisdom and classical philosophy
+- Recognizing patterns and seasons
+- Integration of week's tensions
+- Examples: Ecclesiastes on seasons, virtue ethics applications
+
+**Midday Posts (All Days):**
+- Deeper philosophical exploration than morning
+- More developed arguments (multi-part threads, longer Bluesky posts)
+- Intellectual depth while remaining accessible
+
 ## Content Drafting Patterns
+
+**Twitter/X posts (Nietzsche voice):**
+- Sharp, punchy, memorable
+- Challenge conventional wisdom directly
+- Under 280 chars, easily quotable
+- Strong declarative statements
+- Example: "The Bible didn't say find the middle. It said know the season."
 
 **Threads posts (Heraclitus voice):**
 - Conversational, relatable hooks ("You know how..." works well)
 - Personal anecdotes that reveal larger truths
 - Practical wisdom grounded in real situations
-- Examples: "Scale of 1-10" format, "You know how some people..." tech support story
+- Multi-part threads (2-3 parts) for deeper exploration
+- Examples: "Scale of 1-10" format, "You know how some people..." tech support story, robot dog virtue ethics
 
 **Bluesky posts (Socrates voice):**
 - Intellectual but accessible
 - Challenge dominant narratives ("Most of us approach X from...")
 - Clear distinctions and definitions
 - Socratic framing: questions over answers
+- Can be longer (~800 chars) for developed arguments
 
 **Medium articles (Plato voice):**
 - Essayistic, reflective, well-structured
 - Hook → Exploration → Examples → Application → Reflection
 - 800-1500 words, links multiple ideas into coherent essay
 - Examples: "The Description Is Not the Dance" (practice vs. theory)
+
+**Effective Content Strategies:**
+- **Ancient wisdom works:** Biblical/classical references (Ecclesiastes, Socrates) add credibility and universal recognition
+- **Concrete examples:** Robot dog, tech support stories - relatable entry points for abstract ideas
+- **Virtue ethics framing:** Shift from ontology ("what is X?") to character ("what do we become?")
+- **Reframe dominant narratives:** Don't answer the common question, question the question
+- **Multi-part Threads:** 2-3 posts allow full argument development without overwhelming
 
 All kept under platform limits, used line breaks for readability.
 
@@ -96,9 +125,11 @@ All kept under platform limits, used line breaks for readability.
   - Book progress tracking with phases/chapters/word counts functional
   - Engagement queue and automation operational
 - **10 Philosopher Agents:** SOULs defined in `philosophers/*/SOUL.md`
-  - Voice assignments: Heraclitus (Threads), Socrates (Bluesky), Plato (Medium)
-- **Ideas Bank:** Active at `content/ideas-bank.md` (100+ ideas, 3+ used as of 2026-02-12)
+  - Voice assignments: Heraclitus (Threads), Socrates (Bluesky), Nietzsche (Twitter/X), Plato (Medium)
+- **Ideas Bank:** Active at `content/ideas-bank.md` (100+ ideas, 5+ used as of 2026-02-13)
+  - Recent successes: #006 (Ecclesiastes/seasons), #011 (AI virtue ethics)
 - **5 Books:** In development with phase/chapter tracking in CMS
   - Books: TensionLines, Practical Wisdom, Leadership, Therapeutic Applications, Philosophy of AI
   - Chapter word count tracking active (e.g., Chapter 1: 2,901 words)
 - **Reddit:** r/TensionLines does not exist yet (moderation on hold until created)
+- **Daily Content Automation:** Morning (9 AM) and midday (2 PM) social posts running smoothly via cron jobs
