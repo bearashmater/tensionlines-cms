@@ -1,0 +1,50 @@
+{
+  "lastReviewedAt": "2026-02-13T11:50:17.183Z",
+  "processedIds": [
+    "post-1770609800901-0bbl",
+    "post-1770904935863-sfkz"
+  ],
+  "learnings": [
+    {
+      "date": "2026-02-13",
+      "lesson": "Remove lightning bolt imagery from text overlays—it undermines the intellectual, refined tone viewers expect from philosophy-focused content",
+      "fromIds": [
+        "post-1770609800901-0bbl",
+        "post-1770904935863-sfkz"
+      ]
+    },
+    {
+      "date": "2026-02-13",
+      "lesson": "Increase text font size significantly; current sizing feels cramped and reduces readability on mobile vertical scroll format",
+      "fromIds": [
+        "post-1770609800901-0bbl",
+        "post-1770904935863-sfkz"
+      ]
+    },
+    {
+      "date": "2026-02-13",
+      "lesson": "Refine text language to be more polished and sophisticated—avoid casual phrasing; use more elegant word choices and complex sentence structures that match the contemplative visual aesthetic",
+      "fromIds": [
+        "post-1770609800901-0bbl",
+        "post-1770904935863-sfkz"
+      ]
+    },
+    {
+      "date": "2026-02-13",
+      "lesson": "Text animation timing is working well—maintain current pacing but pair with larger font sizes for better impact",
+      "fromIds": [
+        "post-1770609800901-0bbl",
+        "post-1770904935863-sfkz"
+      ]
+    },
+    {
+      "date": "2026-02-13",
+      "lesson": "Image quality across both reels rated 4/5, so visual direction (atmospheric, desolate, intellectually visceral) is resonating—continue this aesthetic",
+      "fromIds": [
+        "post-1770609800901-0bbl",
+        "post-1770904935863-sfkz"
+      ]
+    }
+  ],
+  "summary": "Philosophy reels perform best with atmospheric, desolate imagery featuring fractured reflections and isolation paradoxes; avoid visual clichés like lightning bolts in text overlays. Prioritize larger, more refined typography with polished language that elevates intellectual tone—current text reads too casual for the contemplative mood. Maintain current text animation pacing while scaling up font sizes for mobile vertical viewing."
+}

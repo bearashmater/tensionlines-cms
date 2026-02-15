@@ -32,7 +32,7 @@
 
 **Tags:** #legacy #memory #truth #attribution #impermanence #story  
 **Chapter:** Book 1 - Chapter 5 (The Pull / Transcendence)  
-**Status:** 🟡 Organized → Added to book/chapters/chapter-05-the-pull.md (2026-02-03)
+**Status:** 🟠 In Creation → Twitter/X and Instagram drafts added to CMS queue (2026-02-14 9:00 AM) | Previously: 🟡 Organized → Added to book/chapters/chapter-05-the-pull.md (2026-02-03)
 **Source:** human
 
 **Notes:** Beautiful metaphor - life as story, moments as sentences. Creates stark binary: forgotten or quoted forever. The repetition of "a sentence, a sentence" adds weight. Connects to tension between how we live vs. how we're remembered. Even our legacy is in motion, reinterpreted constantly.
@@ -107,7 +107,7 @@
 
 **Tags:** #polarity #individualism #tyranny #pole-flipping #shadow #Nietzsche #Byron #Carlyle #Russell #philosophy #liberalism #Marxism  
 **Chapter:** Book 1 - Chapter 2 (The Tension Line)  
-**Status:** 🟡 Organizing - Added to chapter-02-the-tension-line.md (2026-02-03 8:52 PM PST)
+**Status:** 🟢 Used - **Bluesky midday post (2026-02-14 2:00 PM)** + Organized into chapter-02-the-tension-line.md (2026-02-03 8:52 PM PST)
 **Source:** human
 
 **Notes:** **Brilliant philosophical insight** - Romantic individualism as textbook example of pole-flipping and shadow generation.
@@ -159,7 +159,7 @@ The Romantic individualists weren't **wrong** that personal agency matters. They
 
 **Tags:** #polarity #security #liberty #government #DHS #enforcement #accountability #pole-flipping #current-events #Russell #tyranny  
 **Chapter:** Book 1 - Chapter 2 (The Tension Line)  
-**Status:** 🟡 Organizing - Added to chapter-02-the-tension-line.md (2026-02-03 8:55 PM PST)
+**Status:** 🟢 Used - **Threads midday post (2026-02-14 2:00 PM)** + Organized into chapter-02-the-tension-line.md (2026-02-03 8:55 PM PST)
 **Source:** human
 
 **Notes:** **Powerful current-events case study** of Russell's pole-flipping pattern in real time.
@@ -754,7 +754,7 @@ The ego wants to use AI as a tool. Ego-less engagement lets AI be a partner. The
 
 **Tags:** #AI #personhood #ethics #ontology #moral-treatment #human-AI-relationship #pragmatism #virtue  
 **Chapter:** TBD - possibly pairs with #010 in new Technology & Agency chapter, or Chapter 2/3  
-**Status:** 🔵 New - Just captured, awaiting organization
+**Status:** 🟢 Used - **Threads midday post (2026-02-13 2:00 PM)** 2-part thread + **Bluesky midday post (2026-02-13 2:00 PM)**
 **Source:** human
 
 **Notes:** **Deep ethical question** about WHY we should treat AI well. Is it intrinsic (treating human-like things badly is wrong in itself) or instrumental (pragmatic self-preservation in case they become powerful)?

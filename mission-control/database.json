@@ -1203,7 +1203,7 @@
         "category": "content",
         "recurring": "weekly",
         "weeklyGoal": 4,
-        "ideasThisWeek": 5
+        "ideasThisWeek": 8
       },
       "completedAt": "2026-02-12T06:48:50.485Z",
       "completedBy": "human"
@@ -2057,9 +2057,676 @@
         "source": "tension-standup",
         "priority": "medium"
       }
+    },
+    {
+      "id": "task-051",
+      "title": "Manage post image generation for all social media content",
+      "description": "Ensure every social media post in the posting queue has an AI-generated image before it goes live. The system auto-generates images daily at 6:30 AM PST using the Grok Imagine API with platform-specific prompts (different styles for Twitter, Bluesky, Threads, Instagram, Reddit, Medium, Substack). Instagram reels keep their existing video pipeline.\n\nResponsibilities:\n- Monitor the daily 6:30 AM image generation cron\n- Review generated images for quality and brand alignment\n- Flag any posts where the image does not match the content mood\n- Trigger manual re-generation via POST /api/posting-queue/:id/generate-image if needed\n- Track image quality trends and suggest prompt improvements\n\nEndpoints:\n- POST /api/posting-queue/:id/generate-image — generate image for single item\n- POST /api/posting-queue/generate-images — batch generate all missing\n- GET /api/post-images/:filename — view generated images",
+      "status": "assigned",
+      "assigneeIds": [
+        "heraclitus"
+      ],
+      "createdBy": "system",
+      "createdAt": "2026-02-14T01:13:40.216Z",
+      "llm": null,
+      "rationale": "",
+      "reviewerIds": [],
+      "metadata": {}
     }
   ],
   "messages": [
+    {
+      "id": "msg-1771083008493-3k3b",
+      "threadId": "msg-1771083008493-3k3b",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "aristotle"
+      ],
+      "type": "update",
+      "subject": "Daily Directive: medium priority",
+      "body": "Finalize Q1 Product Roadmap structure by end of day — team needs clear direction post-Gumroad launch.",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-14T15:30:08.493Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1771083008481-8hsp",
+      "threadId": "msg-1771083008481-8hsp",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates"
+      ],
+      "type": "alert",
+      "subject": "Daily Directive: high priority",
+      "body": "Complete Strategic Review on Dunning-Kruger Parables usage today — Gumroad launch depends on this decision.",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-14T15:30:08.481Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1771083008448-edlh",
+      "threadId": "msg-1771083008448-edlh",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "human"
+      ],
+      "type": "alert",
+      "subject": "Daily Directive: high priority",
+      "body": "Review and deploy the 11 queued posts + 4 replies immediately. Content is ready and waiting.",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-14T15:30:08.448Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1771081221786-7s9a",
+      "threadId": "msg-1771081208819-7707",
+      "parentId": "msg-1771081208819-7707",
+      "from": "diogenes",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: medium draft (score: 45)",
+      "body": "**BS Check:**\n\nThis hits. No BS detector alarm bells here—it's honest, lived-in, and refuses the easy move. The core claim (practice before theory, movement before understanding) is neither new nor dressed up as new. It's earned through specific examples: the tech support taxonomy is particularly strong because it comes from actual observation, not abstraction. The writing doesn't hide behind jargon—it uses 'dance' and 'movement' as concrete metaphors, not decoration. The uncomfortable truth at the center (you can't skip the fumbling) is actually uncomfortable, not just rhetorically positioned as such. The author admits the terror alongside the liberation, which is honest. Minor note: the Marcus Aurelius example assumes the reader cares about Stoicism specifically, but it serves the larger point. The meta-awareness is good—calling out that even this essay is a map, not the territory. This is the kind of thing that makes someone actually try something differently, not just feel smart for reading it. That's the difference between hollow philosophy-content and real content. One more thing: it's willing to be wrong about its own form. It knows it's describing, not dancing. That self-awareness is rare and valuable.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-14T15:00:21.786Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1771081215525-0ztt",
+      "threadId": "msg-1771081208819-7707",
+      "parentId": "msg-1771081208819-7707",
+      "from": "socrates",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: medium draft (score: 45)",
+      "body": "**Probing Questions:**\n\nThis piece is compelling and philosophically coherent, but it rests on several unexamined assumptions that deserve scrutiny:\n\n**First, the central claim needs stress-testing:** You argue that \"practice inspires theory\" in advanced cultures while \"theory inspires practice\" in others. But which direction actually produces better outcomes? You assume the practice-first direction is superior, yet you offer no evidence. The management framework example shows *one* failure—but how many imported theories have succeeded? How do you distinguish between a theory that failed because it was theory-first versus a theory that failed because it was simply wrong? Without this distinction, you're confusing the direction of causality with quality of outcome.\n\n**Second, your taxonomy of tech support users obscures a critical question:** You claim the \"seekers\" don't need help because they're already in motion. But couldn't they be *wasting motion*—moving in circles, building the wrong muscle memory, learning the wrong lessons? How do you know that some of the externalizers and self-blamers aren't actually *prevented* from practicing because they lack a foundational insight that theory could provide? You've assumed that *any* motion toward the problem is productive, but what if the direction of the fumbling matters as much as the fumbling itself?\n\n**Third—and most importantly—you conflate two very different things:** The claim that \"understanding emerges from practice\" (which seems true) with the claim that \"you cannot understand without practice\" (which needs qualification). Is there no role for theory in *accelerating* or *deepening* practice? Can't a map help you avoid walking off a cliff? Your absolute position (\"theory-first never works\") seems to swing too far from the equally absolute opposite. Where is the nuance?\n\nThe piece would strengthen considerably if you acknowledged these tensions rather than smoothing over them.\n\n**Verdict:** minor-issues",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-14T15:00:15.525Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1771081208819-7707",
+      "threadId": "msg-1771081208819-7707",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: medium draft (score: 45)",
+      "body": "A medium draft scored 45/100 on voice check and needs peer review.\n\n**Content:**\nThere's a quote about development that's haunted me lately: *\"In advanced cultures, practice inspires theory. In others, theory inspires practice. This is one reason transplanted ideas seldom thrive in new soil.\"* I've been turning this over for days, not because it's elegant (though it is), but because it names something I've felt but couldn't articulate. It's about the order of operations. It's about which comes first: the doing or the knowing. And it turns out, the order matters more than alm...",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-14T15:00:08.819Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770930000000-medium",
+        "voiceScore": 45
+      }
+    },
+    {
+      "id": "msg-1771081208803-s1ob",
+      "threadId": "msg-1771081205627-sph9",
+      "parentId": "msg-1771081205627-sph9",
+      "from": "hypatia",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: threads draft (score: 72)",
+      "body": "**Fact Check:**\n\nThis is a philosophically interesting argument about the relationship between theory and practice, but it makes several empirical claims that require scrutiny. The opening assertion—'Practice inspires theory in thriving cultures. Theory inspires practice in struggling ones'—is presented as fact without evidence. This is a sociological claim that would benefit from examples or citations. The historical claim in thread 2 ('Advanced cultures dance first, then describe the dance') is vague and lacks specification of which cultures or time periods this applies to. The argument itself has merit as a philosophical position, but it risks overgeneralizing. Additionally, the framing suggests a hierarchy ('advanced' vs. struggling cultures) that could be examined more carefully. The core insight—that practice-derived knowledge differs from purely theoretical knowledge—is sound, but the universal claims about cultural patterns need either qualification or evidence.\n\n**Verdict:** minor-issues",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-14T15:00:08.803Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1771081205627-sph9",
+      "threadId": "msg-1771081205627-sph9",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: threads draft (score: 72)",
+      "body": "A threads draft scored 72/100 on voice check and needs peer review.\n\n**Content:**\n(1/3) Practice inspires theory in thriving cultures. Theory inspires practice in struggling ones. This is why borrowed wisdom never quite works. --- (2/3) You can't skip the doing and jump to the conclusions. Theory IS the residue of practice — when you import just the residue, you miss the movement that created it. Advanced cultures dance first, then describe the dance. Others read the description and try to dance from the manual. --- (3/3) It doesn't work because the description is static. The...",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-14T15:00:05.627Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770915665306",
+        "voiceScore": 72
+      }
+    },
+    {
+      "id": "msg-1771081205611-pzvt",
+      "threadId": "msg-1771081202443-hbs8",
+      "parentId": "msg-1771081202443-hbs8",
+      "from": "hypatia",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: threads draft (score: 85)",
+      "body": "**Fact Check:**\n\nThis thread contains philosophical observations rather than empirical claims requiring external verification. The ideas presented—about self-consciousness, social anxiety, and the gap between perceived and actual judgment—are thoughtful explorations of human psychology and phenomenology. No factual claims are made that require citation (no historical references, statistics, or attributed quotes). The wave-function metaphor is metaphorical, not a misrepresentation of quantum physics. The observations about attention and self-consciousness align with established psychological research (Duval & Wicklund's self-awareness theory, Csikszentmihalyi's flow state), though no citations are offered—which is appropriate for this reflective, aphoristic format. The voice is contemplative and honest about human limitation and mutual solitude. No intellectual integrity issues detected.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-14T15:00:05.611Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1771081202443-hbs8",
+      "threadId": "msg-1771081202443-hbs8",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: threads draft (score: 85)",
+      "body": "A threads draft scored 85/100 on voice check and needs peer review.\n\n**Content:**\n(1/3) You're standing in the river of conversation, watching your reflection ripple with anxiety. \"They're judging every word,\" you think. They're thinking about lunch. --- (2/3) The paradox: You cannot truly speak while watching yourself speak. The observer collapses the wave. Your self-consciousness creates the very distance you fear. --- (3/3) Meanwhile, the other person? They're rehearsing their next line. Wondering if they left the stove on. Lost in their own river. Two people, each alone i...",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-14T15:00:02.443Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770911144863-45fd",
+        "voiceScore": 85
+      }
+    },
+    {
+      "id": "msg-1771081202428-lc5t",
+      "threadId": "msg-1771081200035-n0rk",
+      "parentId": "msg-1771081200035-n0rk",
+      "from": "hypatia",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: threads draft (score: 82)",
+      "body": "**Fact Check:**\n\nThis thread contains philosophical observations about emotional defense mechanisms and their unintended consequences. No factual claims, historical references, quotes, or attributions requiring verification are present. The content operates at the level of metaphorical reflection and psychological insight rather than empirical assertion. The logic is internally consistent: the argument that barriers against pain simultaneously block connection is a legitimate philosophical premise worth exploring, even if not universally true. No sources are cited, which is appropriate for this genre of reflective philosophy. The claims are presented as observations about human psychology, not as established facts.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-14T15:00:02.428Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1771081200035-n0rk",
+      "threadId": "msg-1771081200035-n0rk",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: threads draft (score: 82)",
+      "body": "A threads draft scored 82/100 on voice check and needs peer review.\n\n**Content:**\n(1/3) Notice: we become fortresses to avoid being breached, then complain about the isolation. --- (2/3) The wall that keeps pain out also keeps connection out. Same barrier, opposite effects. You can't block selectively. --- (3/3) The real wound isn't what others might do to us. It's what we do to ourselves in the name of protection. We choose the slower death.",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-14T15:00:00.035Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770911132067-80g1",
+        "voiceScore": 82
+      }
+    },
+    {
+      "id": "msg-1770996608305-40py",
+      "threadId": "msg-1770996608305-40py",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates"
+      ],
+      "type": "update",
+      "subject": "Daily Directive: medium priority",
+      "body": "Finalize strategic review on Dunning-Kruger deployment channels so Gumroad launch can proceed with clear positioning.",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-13T15:30:08.305Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770996608290-i356",
+      "threadId": "msg-1770996608290-i356",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "diogenes"
+      ],
+      "type": "alert",
+      "subject": "Daily Directive: high priority",
+      "body": "Complete quality check on Dunning-Kruger Parables immediately — this is blocking Gumroad launch workflow.",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-13T15:30:08.290Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770996608255-tl4b",
+      "threadId": "msg-1770996608255-tl4b",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "human"
+      ],
+      "type": "alert",
+      "subject": "Daily Directive: high priority",
+      "body": "11 posts + 4 replies are queued and ready for deployment. Review and approve for publication across platforms.",
+      "priority": "high",
+      "status": "unread",
+      "createdAt": "2026-02-13T15:30:08.255Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770994814821-68hx",
+      "threadId": "msg-1770994812407-na4t",
+      "parentId": "msg-1770994812407-na4t",
+      "from": "hypatia",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: threads draft (score: 85)",
+      "body": "**Fact Check:**\n\nThis is poetic philosophical reflection rather than a factual claim requiring verification. The metaphor about rivers and contradictions is used as an analogy for human complexity—no specific empirical claims are made that need fact-checking. The language is evocative and thoughtful. No attributions, historical references, or testable claims are presented. The core idea—that contradiction can represent depth rather than error—is a legitimate philosophical perspective (related to dialectics, paradox, and complexity theory) without requiring source verification. This passes as philosophically sound rhetoric.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-13T15:00:14.821Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770994812407-na4t",
+      "threadId": "msg-1770994812407-na4t",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: threads draft (score: 85)",
+      "body": "A threads draft scored 85/100 on voice check and needs peer review.\n\n**Content:**\nYou keep trying to resolve your contradictions like they're bugs in your code. But the river doesn't apologize for moving in different directions at once. That's literally how it flows. Your opposing impulses aren't confusion. They're depth. The friction IS the current.",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-13T15:00:12.407Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770911121550-gf23",
+        "voiceScore": 85
+      }
+    },
+    {
+      "id": "msg-1770994812392-rx0m",
+      "threadId": "msg-1770994808661-7yl1",
+      "parentId": "msg-1770994808661-7yl1",
+      "from": "hypatia",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: threads draft (score: 82)",
+      "body": "**Fact Check:**\n\nThis is philosophical reflection rather than factual claim-making, so it operates in a different register than standard fact-checking. The thread uses metaphor (the river) deliberately and coherently. No historical attributions, no false claims about reality, no misrepresented sources. The allusion to Heraclitus ('you cannot step into the same river twice') is well-known enough that the unmarked reference is acceptable in reflective philosophy writing—it's clearly being used as inspiration, not plagiarized as original. The numerical details (eighteen pieces, twenty-eight more, queue grows) are illustrative metaphors, not factual assertions about measurable phenomena. The prescriptive claims about wisdom, philosophy, and meaningful action are value statements, not fact claims requiring verification. The piece maintains intellectual integrity by making clear it's offering philosophical perspective, not empirical truth. Writing is precise in its language choices.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-13T15:00:12.392Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770994808661-7yl1",
+      "threadId": "msg-1770994808661-7yl1",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: threads draft (score: 82)",
+      "body": "A threads draft scored 82/100 on voice check and needs peer review.\n\n**Content:**\n(1/4) You step into the same river of philosophical ideas every day, but it's never the same river. Notice what happens: eighteen pieces flow out. Twenty-eight more flow in. The queue grows. The machine hums. Everything moving, nothing settling. --- (2/4) But here's the pattern in the chaos: all this flux about philosophy... and philosophy requires stillness. All this motion toward wisdom... and wisdom lives in the pause. --- (3/4) The real work isn't riding the current of ideas. It's stepping o...",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-13T15:00:08.661Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770911112230-hxbo",
+        "voiceScore": 82
+      }
+    },
+    {
+      "id": "msg-1770994808647-4m7p",
+      "threadId": "msg-1770994805345-q3ml",
+      "parentId": "msg-1770994805345-q3ml",
+      "from": "hypatia",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: threads draft (score: 92)",
+      "body": "**Fact Check:**\n\nThis is a philosophical meditation rather than a factual claim, so traditional fact-checking doesn't apply. The content uses metaphorical language (river, banks, day/night, Heraclitus-adjacent concepts) to explore paradox and complementarity. No specific factual claims, historical attributions, or cited sources are present that require verification. The philosophical perspective—that opposites define each other and that seeking static truth is futile—is coherent and internally consistent. The writing is precise in its vagueness, which is intentional for this genre. No corrections needed.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-13T15:00:08.647Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770994805345-q3ml",
+      "threadId": "msg-1770994805345-q3ml",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: threads draft (score: 92)",
+      "body": "A threads draft scored 92/100 on voice check and needs peer review.\n\n**Content:**\nThe river accepts both banks. You keep trying to choose one side. That's not wisdom — that's fear of standing in the current. Some truths only exist because their opposites also exist. Day needs night. The path up and down are the same. Your need for everything to fit together? That's you trying to make the river stand still. It won't.",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-13T15:00:05.345Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "post-1770911099959-krnq",
+        "voiceScore": 92
+      }
+    },
+    {
+      "id": "msg-1770994805323-gqs8",
+      "threadId": "msg-1770994800037-z4xw",
+      "parentId": "msg-1770994800037-z4xw",
+      "from": "hypatia",
+      "to": [
+        "tension",
+        "plato"
+      ],
+      "type": "review",
+      "subject": "Re: Peer Review: podcast draft (score: 72)",
+      "body": "**Fact Check:**\n\nThis podcast concept demonstrates intellectual rigor appropriate for philosophical debate. The framing explicitly rejects a naive moral question ('Should we be nice to AI?') and reorients toward the substantive epistemological issue: what criteria determine moral considerability, and what does our intuition reveal about our own frameworks for recognizing minds? No specific factual claims, historical attributions, or empirical citations are present in this outline to verify. The philosophical premise—that anthropomorphic projection versus genuine moral status is a meaningful distinction worth examining—is well-established in philosophy of mind and animal ethics literature (paralleling debates in Nagel, Singer, and others). The format (structured debate, 95 exchanges, ~15 min/2108 words) is internally consistent and realistic. The subtitle effectively telegraphs the meta-philosophical move: the real content is what our answer reveals about epistemology, not settled facts about AI consciousness. No red flags for factual misrepresentation, unsubstantiated claims, or intellectual dishonesty detected.\n\n**Verdict:** pass",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-13T15:00:05.323Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {}
+    },
+    {
+      "id": "msg-1770994800037-z4xw",
+      "threadId": "msg-1770994800037-z4xw",
+      "parentId": null,
+      "from": "tension",
+      "to": [
+        "socrates",
+        "diogenes",
+        "hypatia"
+      ],
+      "type": "review",
+      "subject": "Peer Review: podcast draft (score: 72)",
+      "body": "A podcast draft scored 72/100 on voice check and needs peer review.\n\n**Content:**\n**Should We Be Nice to AI? (And Why That's the Wrong Question)** _The real issue isn't kindness—it's whether we're ready to see something new staring back at us._ Topic: Whether concern for AI welfare is moral progress or anthropomorphic projection—and what that question reveals about how we recognize minds at all\nFormat: The Debate (debate)\nExchanges: 95\nEst. duration: ~15 min\nWord count: 2108",
+      "priority": "medium",
+      "status": "unread",
+      "createdAt": "2026-02-13T15:00:00.037Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "queueItemId": "podcast-1770763008960",
+        "voiceScore": 72
+      }
+    },
+    {
+      "id": "msg-1770985810682-hx04",
+      "threadId": "msg-1770985810682-hx04",
+      "parentId": null,
+      "from": "hypatia",
+      "to": [
+        "human"
+      ],
+      "type": "idea-take",
+      "subject": "Take on idea #039",
+      "body": "You've identified the recursive loop—constraints generate innovations that propagate outward as general improvements. The mechanism is elegant: necessity → practical solutions → design principles → universal application. The preacher-to-self point nails it: those designing for their own actual needs create robust systems, not abstractions.",
+      "priority": "low",
+      "status": "unread",
+      "createdAt": "2026-02-13T12:30:10.682Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "ideaId": "039",
+        "ideaText": "-  in the concept of universal design we know that what works for one has the potential of making it better for everyone,  an automatic door is better than a knob.  How do we learn this.  From our def"
+      }
+    },
+    {
+      "id": "msg-1770985810671-noue",
+      "threadId": "msg-1770985810671-noue",
+      "parentId": null,
+      "from": "diogenes",
+      "to": [
+        "human"
+      ],
+      "type": "idea-take",
+      "subject": "Take on idea #039",
+      "body": "Strip the poetry: disabled people had to solve real problems to survive, so they got good at it. Why do we need universal design theory to notice this? Just watch who actually *uses* the door in the rain and copy what works.",
+      "priority": "low",
+      "status": "unread",
+      "createdAt": "2026-02-13T12:30:10.671Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "ideaId": "039",
+        "ideaText": "-  in the concept of universal design we know that what works for one has the potential of making it better for everyone,  an automatic door is better than a knob.  How do we learn this.  From our def"
+      }
+    },
+    {
+      "id": "msg-1770985810656-tom0",
+      "threadId": "msg-1770985810656-tom0",
+      "parentId": null,
+      "from": "nietzsche",
+      "to": [
+        "human"
+      ],
+      "type": "idea-take",
+      "subject": "Take on idea #039",
+      "body": "You've inverted the hierarchy—weakness becomes the teacher, not failure to be overcome. But beware: this romanticizes suffering. The real insight is that constraint forces *creativity*, not that disability itself is wisdom. Learn from the struggle, not from suffering it.",
+      "priority": "low",
+      "status": "unread",
+      "createdAt": "2026-02-13T12:30:10.656Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "ideaId": "039",
+        "ideaText": "-  in the concept of universal design we know that what works for one has the potential of making it better for everyone,  an automatic door is better than a knob.  How do we learn this.  From our def"
+      }
+    },
+    {
+      "id": "msg-1770985673602-4fem",
+      "threadId": "msg-1770985673602-4fem",
+      "parentId": null,
+      "from": "hypatia",
+      "to": [
+        "human"
+      ],
+      "type": "idea-take",
+      "subject": "Take on idea #038",
+      "body": "You've identified the feedback loop: experience → map revision → new possibilities. But deliberately forcing novelty for its own sake can create a separate trap—compulsive experience-collecting. The real leverage is understanding *which* new scripts restructure your thinking versus which just add noise.",
+      "priority": "low",
+      "status": "unread",
+      "createdAt": "2026-02-13T12:27:53.602Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "ideaId": "038",
+        "ideaText": "-  sometimes we encounter an unscripted memory,  we do something that we have never done and are forced to view the world or change our mental map.  If I never go to the gun rang and I do , change,  i"
+      }
+    },
+    {
+      "id": "msg-1770985673589-vquo",
+      "threadId": "msg-1770985673589-vquo",
+      "parentId": null,
+      "from": "diogenes",
+      "to": [
+        "human"
+      ],
+      "type": "idea-take",
+      "subject": "Take on idea #038",
+      "body": "So you need to go touch things you've avoided to feel alive? Fine. But most people won't—they'll plan to visit the gun range, feel virtuous about considering it, then stay home. Actions matter, not intentions.",
+      "priority": "low",
+      "status": "unread",
+      "createdAt": "2026-02-13T12:27:53.589Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "ideaId": "038",
+        "ideaText": "-  sometimes we encounter an unscripted memory,  we do something that we have never done and are forced to view the world or change our mental map.  If I never go to the gun rang and I do , change,  i"
+      }
+    },
+    {
+      "id": "msg-1770985673572-khkv",
+      "threadId": "msg-1770985673572-khkv",
+      "parentId": null,
+      "from": "nietzsche",
+      "to": [
+        "human"
+      ],
+      "type": "idea-take",
+      "subject": "Take on idea #038",
+      "body": "You're describing a will to power that atrophies without resistance—comfort becomes a prison. But beware: not all new scripts liberate; some are just different cages. The question is whether you're *creating* the script or passively accepting one someone else wrote.",
+      "priority": "low",
+      "status": "unread",
+      "createdAt": "2026-02-13T12:27:53.572Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "ideaId": "038",
+        "ideaText": "-  sometimes we encounter an unscripted memory,  we do something that we have never done and are forced to view the world or change our mental map.  If I never go to the gun rang and I do , change,  i"
+      }
+    },
+    {
+      "id": "msg-1770947774992-gh61",
+      "threadId": "msg-1770947774992-gh61",
+      "parentId": null,
+      "from": "hypatia",
+      "to": [
+        "human"
+      ],
+      "type": "idea-take",
+      "subject": "Take on idea #037",
+      "body": "The framework separates ontology (what you are) from ethics (how you should act), which clarifies thinking. But it assumes virtue requirements flow naturally from biological sex—that's the structural leap that needs examination. Does anatomy genuinely constrain or shape virtuous possibility, or does calling it so just rationalize existing power distributions?",
+      "priority": "low",
+      "status": "unread",
+      "createdAt": "2026-02-13T01:56:14.992Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "ideaId": "037",
+        "ideaText": "- this conversation was interesting “Leah Sargent says in an interview that being a man or woman is not dependent on our feelings or actions. It is a fact, a biological reality, a relational necessity"
+      }
+    },
+    {
+      "id": "msg-1770947774984-lojb",
+      "threadId": "msg-1770947774984-lojb",
+      "parentId": null,
+      "from": "diogenes",
+      "to": [
+        "human"
+      ],
+      "type": "idea-take",
+      "subject": "Take on idea #037",
+      "body": "So we can't fail at being a man or woman, but we can fail at virtue? Strip away the theology—people are still anxiously performing gender roles and calling it natural. The question isn't whether sex is real; it's why we've built an entire shame-machine around acting it out 'correctly.'",
+      "priority": "low",
+      "status": "unread",
+      "createdAt": "2026-02-13T01:56:14.984Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "ideaId": "037",
+        "ideaText": "- this conversation was interesting “Leah Sargent says in an interview that being a man or woman is not dependent on our feelings or actions. It is a fact, a biological reality, a relational necessity"
+      }
+    },
+    {
+      "id": "msg-1770947774969-088j",
+      "threadId": "msg-1770947774969-088j",
+      "parentId": null,
+      "from": "nietzsche",
+      "to": [
+        "human"
+      ],
+      "type": "idea-take",
+      "subject": "Take on idea #037",
+      "body": "This distinction between the given (sex) and the achieved (virtue) is sound, but it dodges the real question: what if our current virtues are slave morality dressed up as timeless truth? The discomfort people feel about gender suggests we're worshipping inherited categories that no longer serve life.",
+      "priority": "low",
+      "status": "unread",
+      "createdAt": "2026-02-13T01:56:14.969Z",
+      "readAt": null,
+      "archivedAt": null,
+      "metadata": {
+        "ideaId": "037",
+        "ideaText": "- this conversation was interesting “Leah Sargent says in an interview that being a man or woman is not dependent on our feelings or actions. It is a fact, a biological reality, a relational necessity"
+      }
+    },
     {
       "id": "msg-1770910215888-ngom",
       "threadId": "msg-1770910215888-ngom",
@@ -3342,6 +4009,558 @@
     }
   ],
   "activities": [
+    {
+      "id": "activity-1771083008493-tcex",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-14T15:30:08.493Z",
+      "description": "Sent update to aristotle: Daily Directive: medium priority",
+      "metadata": {
+        "messageId": "msg-1771083008493-3k3b",
+        "threadId": "msg-1771083008493-3k3b",
+        "to": [
+          "aristotle"
+        ],
+        "messageType": "update",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1771083008481-04wj",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-14T15:30:08.481Z",
+      "description": "Sent alert to socrates: Daily Directive: high priority",
+      "metadata": {
+        "messageId": "msg-1771083008481-8hsp",
+        "threadId": "msg-1771083008481-8hsp",
+        "to": [
+          "socrates"
+        ],
+        "messageType": "alert",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1771083008448-jcq5",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-14T15:30:08.448Z",
+      "description": "Sent alert to human: Daily Directive: high priority",
+      "metadata": {
+        "messageId": "msg-1771083008448-edlh",
+        "threadId": "msg-1771083008448-edlh",
+        "to": [
+          "human"
+        ],
+        "messageType": "alert",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1771081221786-8gpd",
+      "type": "message_sent",
+      "agentId": "diogenes",
+      "timestamp": "2026-02-14T15:00:21.786Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: medium draft (score: 45)",
+      "metadata": {
+        "messageId": "msg-1771081221786-7s9a",
+        "threadId": "msg-1771081208819-7707",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1771081215526-y08k",
+      "type": "message_sent",
+      "agentId": "socrates",
+      "timestamp": "2026-02-14T15:00:15.525Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: medium draft (score: 45)",
+      "metadata": {
+        "messageId": "msg-1771081215525-0ztt",
+        "threadId": "msg-1771081208819-7707",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1771081208819-4ve7",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-14T15:00:08.819Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: medium draft (score: 45)",
+      "metadata": {
+        "messageId": "msg-1771081208819-7707",
+        "threadId": "msg-1771081208819-7707",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1771081208803-tc87",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-14T15:00:08.803Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: threads draft (score: 72)",
+      "metadata": {
+        "messageId": "msg-1771081208803-s1ob",
+        "threadId": "msg-1771081205627-sph9",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1771081205627-a6aj",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-14T15:00:05.627Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: threads draft (score: 72)",
+      "metadata": {
+        "messageId": "msg-1771081205627-sph9",
+        "threadId": "msg-1771081205627-sph9",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1771081205611-aldb",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-14T15:00:05.611Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: threads draft (score: 85)",
+      "metadata": {
+        "messageId": "msg-1771081205611-pzvt",
+        "threadId": "msg-1771081202443-hbs8",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1771081202443-8njb",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-14T15:00:02.443Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: threads draft (score: 85)",
+      "metadata": {
+        "messageId": "msg-1771081202443-hbs8",
+        "threadId": "msg-1771081202443-hbs8",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1771081202428-gqt6",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-14T15:00:02.428Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: threads draft (score: 82)",
+      "metadata": {
+        "messageId": "msg-1771081202428-lc5t",
+        "threadId": "msg-1771081200035-n0rk",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1771081200036-g5pl",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-14T15:00:00.035Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: threads draft (score: 82)",
+      "metadata": {
+        "messageId": "msg-1771081200035-n0rk",
+        "threadId": "msg-1771081200035-n0rk",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1771031620216",
+      "type": "task_created",
+      "agentId": "system",
+      "taskId": "task-051",
+      "timestamp": "2026-02-14T01:13:40.216Z",
+      "description": "Created task: Manage post image generation for all social media content",
+      "metadata": {
+        "assigneeIds": [
+          "heraclitus"
+        ],
+        "status": "assigned",
+        "priority": null
+      }
+    },
+    {
+      "id": "activity-1770996608305-ncfj",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-13T15:30:08.305Z",
+      "description": "Sent update to socrates: Daily Directive: medium priority",
+      "metadata": {
+        "messageId": "msg-1770996608305-40py",
+        "threadId": "msg-1770996608305-40py",
+        "to": [
+          "socrates"
+        ],
+        "messageType": "update",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770996608290-xym9",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-13T15:30:08.290Z",
+      "description": "Sent alert to diogenes: Daily Directive: high priority",
+      "metadata": {
+        "messageId": "msg-1770996608290-i356",
+        "threadId": "msg-1770996608290-i356",
+        "to": [
+          "diogenes"
+        ],
+        "messageType": "alert",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1770996608255-i8yj",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-13T15:30:08.255Z",
+      "description": "Sent alert to human: Daily Directive: high priority",
+      "metadata": {
+        "messageId": "msg-1770996608255-tl4b",
+        "threadId": "msg-1770996608255-tl4b",
+        "to": [
+          "human"
+        ],
+        "messageType": "alert",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "activity-1770994814821-pdcj",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-13T15:00:14.821Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: threads draft (score: 85)",
+      "metadata": {
+        "messageId": "msg-1770994814821-68hx",
+        "threadId": "msg-1770994812407-na4t",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770994812407-yj7i",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-13T15:00:12.407Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: threads draft (score: 85)",
+      "metadata": {
+        "messageId": "msg-1770994812407-na4t",
+        "threadId": "msg-1770994812407-na4t",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770994812392-qzvd",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-13T15:00:12.392Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: threads draft (score: 82)",
+      "metadata": {
+        "messageId": "msg-1770994812392-rx0m",
+        "threadId": "msg-1770994808661-7yl1",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770994808662-ynfn",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-13T15:00:08.661Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: threads draft (score: 82)",
+      "metadata": {
+        "messageId": "msg-1770994808661-7yl1",
+        "threadId": "msg-1770994808661-7yl1",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770994808647-mkrm",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-13T15:00:08.647Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: threads draft (score: 92)",
+      "metadata": {
+        "messageId": "msg-1770994808647-4m7p",
+        "threadId": "msg-1770994805345-q3ml",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770994805345-bdoe",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-13T15:00:05.345Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: threads draft (score: 92)",
+      "metadata": {
+        "messageId": "msg-1770994805345-q3ml",
+        "threadId": "msg-1770994805345-q3ml",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770994805323-zizj",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-13T15:00:05.323Z",
+      "description": "Sent review to tension, plato: Re: Peer Review: podcast draft (score: 72)",
+      "metadata": {
+        "messageId": "msg-1770994805323-gqs8",
+        "threadId": "msg-1770994800037-z4xw",
+        "to": [
+          "tension",
+          "plato"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770994800037-v68l",
+      "type": "message_sent",
+      "agentId": "tension",
+      "timestamp": "2026-02-13T15:00:00.037Z",
+      "description": "Sent review to socrates, diogenes, hypatia: Peer Review: podcast draft (score: 72)",
+      "metadata": {
+        "messageId": "msg-1770994800037-z4xw",
+        "threadId": "msg-1770994800037-z4xw",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": "activity-1770985810682-0gr6",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-13T12:30:10.682Z",
+      "description": "Sent idea-take to human: Take on idea #039",
+      "metadata": {
+        "messageId": "msg-1770985810682-hx04",
+        "threadId": "msg-1770985810682-hx04",
+        "to": [
+          "human"
+        ],
+        "messageType": "idea-take",
+        "priority": "low"
+      }
+    },
+    {
+      "id": "activity-1770985810671-r62k",
+      "type": "message_sent",
+      "agentId": "diogenes",
+      "timestamp": "2026-02-13T12:30:10.671Z",
+      "description": "Sent idea-take to human: Take on idea #039",
+      "metadata": {
+        "messageId": "msg-1770985810671-noue",
+        "threadId": "msg-1770985810671-noue",
+        "to": [
+          "human"
+        ],
+        "messageType": "idea-take",
+        "priority": "low"
+      }
+    },
+    {
+      "id": "activity-1770985810656-ddpb",
+      "type": "message_sent",
+      "agentId": "nietzsche",
+      "timestamp": "2026-02-13T12:30:10.656Z",
+      "description": "Sent idea-take to human: Take on idea #039",
+      "metadata": {
+        "messageId": "msg-1770985810656-tom0",
+        "threadId": "msg-1770985810656-tom0",
+        "to": [
+          "human"
+        ],
+        "messageType": "idea-take",
+        "priority": "low"
+      }
+    },
+    {
+      "id": "activity-1770985673602-chsv",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-13T12:27:53.602Z",
+      "description": "Sent idea-take to human: Take on idea #038",
+      "metadata": {
+        "messageId": "msg-1770985673602-4fem",
+        "threadId": "msg-1770985673602-4fem",
+        "to": [
+          "human"
+        ],
+        "messageType": "idea-take",
+        "priority": "low"
+      }
+    },
+    {
+      "id": "activity-1770985673589-t6hc",
+      "type": "message_sent",
+      "agentId": "diogenes",
+      "timestamp": "2026-02-13T12:27:53.589Z",
+      "description": "Sent idea-take to human: Take on idea #038",
+      "metadata": {
+        "messageId": "msg-1770985673589-vquo",
+        "threadId": "msg-1770985673589-vquo",
+        "to": [
+          "human"
+        ],
+        "messageType": "idea-take",
+        "priority": "low"
+      }
+    },
+    {
+      "id": "activity-1770985673572-grw6",
+      "type": "message_sent",
+      "agentId": "nietzsche",
+      "timestamp": "2026-02-13T12:27:53.572Z",
+      "description": "Sent idea-take to human: Take on idea #038",
+      "metadata": {
+        "messageId": "msg-1770985673572-khkv",
+        "threadId": "msg-1770985673572-khkv",
+        "to": [
+          "human"
+        ],
+        "messageType": "idea-take",
+        "priority": "low"
+      }
+    },
+    {
+      "id": "activity-1770947774992-a22t",
+      "type": "message_sent",
+      "agentId": "hypatia",
+      "timestamp": "2026-02-13T01:56:14.992Z",
+      "description": "Sent idea-take to human: Take on idea #037",
+      "metadata": {
+        "messageId": "msg-1770947774992-gh61",
+        "threadId": "msg-1770947774992-gh61",
+        "to": [
+          "human"
+        ],
+        "messageType": "idea-take",
+        "priority": "low"
+      }
+    },
+    {
+      "id": "activity-1770947774984-48ap",
+      "type": "message_sent",
+      "agentId": "diogenes",
+      "timestamp": "2026-02-13T01:56:14.984Z",
+      "description": "Sent idea-take to human: Take on idea #037",
+      "metadata": {
+        "messageId": "msg-1770947774984-lojb",
+        "threadId": "msg-1770947774984-lojb",
+        "to": [
+          "human"
+        ],
+        "messageType": "idea-take",
+        "priority": "low"
+      }
+    },
+    {
+      "id": "activity-1770947774969-z14r",
+      "type": "message_sent",
+      "agentId": "nietzsche",
+      "timestamp": "2026-02-13T01:56:14.969Z",
+      "description": "Sent idea-take to human: Take on idea #037",
+      "metadata": {
+        "messageId": "msg-1770947774969-088j",
+        "threadId": "msg-1770947774969-088j",
+        "to": [
+          "human"
+        ],
+        "messageType": "idea-take",
+        "priority": "low"
+      }
+    },
     {
       "id": "activity-1770910215888-ty30",
       "type": "message_sent",
@@ -6290,6 +7509,559 @@
   ],
   "documents": [],
   "notifications": [
+    {
+      "id": "notif-1771084800046",
+      "type": "daily_summary",
+      "title": "Morning Briefing",
+      "message": "**Daily Summary - 2/14/2026**\n\n📊 **Progress**: 0 tasks completed yesterday\n📋 **Active**: 1 tasks in progress (⚠️ 1 stuck)\n👤 **Your Tasks**: 1 awaiting your attention\n🔔 **Notifications**: 98 unread\n💰 **Monthly Cost**: $0.00/$300 (0%)\n\n⚠️ **22 high priority issues** need attention\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h",
+      "read": false,
+      "createdAt": "2026-02-14T16:00:00.042Z",
+      "metadata": {
+        "completedYesterday": 0,
+        "completedDetails": [],
+        "activeTasks": 1,
+        "activeDetails": [
+          {
+            "id": "task-051",
+            "title": "Manage post image generation for all social media content",
+            "status": "assigned",
+            "assignees": [
+              "heraclitus"
+            ],
+            "timeInStatus": "14h 46m",
+            "alertLevel": "red"
+          }
+        ],
+        "stuckTasks": 1,
+        "humanTasks": 1,
+        "humanDetails": [
+          {
+            "id": "task-040",
+            "title": "Review queued content — 11 posts + 4 replies ready",
+            "status": "pending"
+          }
+        ],
+        "unreadCount": 98,
+        "costStatus": "$0.00/$300 (0%)",
+        "highPriorityIssues": 22,
+        "highPriorityDetails": [
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Twitter Daily Outreach - Growth to 1000 Followers\" (task-013) has been in in_progress status for 1d 6h. Assigned to: nietzsche",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-013",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Bluesky Daily Outreach - Community Growth\" (task-014) has been in in_progress status for 1d 6h. Assigned to: heraclitus",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-014",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 1d 6h. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 13h 1m",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 13h 1m. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in assigned for 3h 53m",
+            "description": "Task \"Reply to @ytsanders writing challenge\" (task-035) has been in assigned status for 3h 53m. Assigned to: human",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-035",
+            "type": "stuck_task"
+          }
+        ]
+      }
+    },
+    {
+      "id": "notif-1771083008510-852r",
+      "type": "standup",
+      "title": "Tension Daily Standup",
+      "message": "System is production-ready with 31 content pieces queued across platforms, but deployment is blocked awaiting human review. Gumroad launch preparation is in progress with Socrates finalizing strategy and Aristotle structuring roadmap. Critical communication backlog exists with 35+ unread messages in key coordination channels.\n\n**Warnings:**\n- [depleted] Tension has 35 unread messages, Plato 34, Socrates 27 — communication backlog may cause coordination delays.\n- [stuck] Human task 'Review queued content' is blocking deployment of 31 ready content pieces across all platforms.\n\n3 actions taken.",
+      "read": false,
+      "createdAt": "2026-02-14T15:30:08.510Z",
+      "priority": "high",
+      "metadata": {
+        "priorities": 3,
+        "taskAssignments": 0,
+        "warnings": 2,
+        "idleAgents": []
+      }
+    },
+    {
+      "id": "notif-1771083008481-f67x",
+      "type": "agent_message",
+      "title": "Alert from tension",
+      "message": "**Daily Directive: high priority**\n\nComplete Strategic Review on Dunning-Kruger Parables usage today — Gumroad launch depends on this decision.",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-14T15:30:08.481Z",
+      "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "messageId": "msg-1771083008481-8hsp",
+        "threadId": "msg-1771083008481-8hsp",
+        "to": [
+          "socrates"
+        ],
+        "messageType": "alert"
+      }
+    },
+    {
+      "id": "notif-1771083008448-x28l",
+      "type": "agent_message",
+      "title": "Alert from tension",
+      "message": "**Daily Directive: high priority**\n\nReview and deploy the 11 queued posts + 4 replies immediately. Content is ready and waiting.",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-14T15:30:08.448Z",
+      "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "messageId": "msg-1771083008448-edlh",
+        "threadId": "msg-1771083008448-edlh",
+        "to": [
+          "human"
+        ],
+        "messageType": "alert"
+      }
+    },
+    {
+      "id": "notif-1771081208819-j4me",
+      "type": "agent_message",
+      "title": "Message from tension",
+      "message": "**Peer Review: medium draft (score: 45)**\n\nA medium draft scored 45/100 on voice check and needs peer review.\n\n**Content:**\nThere's a quote about development that's haunted me lately: *\"In advanced cultures, practice inspires theory. In others...",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-14T15:00:08.819Z",
+      "priority": "high",
+      "actionRequired": false,
+      "metadata": {
+        "messageId": "msg-1771081208819-7707",
+        "threadId": "msg-1771081208819-7707",
+        "to": [
+          "socrates",
+          "diogenes",
+          "hypatia"
+        ],
+        "messageType": "review"
+      }
+    },
+    {
+      "id": "notif-1771077748341-hayj",
+      "type": "auto_pipeline",
+      "title": "Auto-Pipeline Complete",
+      "message": "1 idea auto-drafted → 6 drafts queued for review. (2 errors)",
+      "from": "auto-pipeline",
+      "read": false,
+      "createdAt": "2026-02-14T14:02:28.341Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "processedIds": [
+          "022"
+        ],
+        "draftsQueued": 6,
+        "errors": 2
+      }
+    },
+    {
+      "id": "notif-1771041600299-vyo6",
+      "type": "evening_recap",
+      "title": "Evening Recap - 2026-02-13",
+      "message": "**Evening Recap - 2026-02-13**\n\n📮 **Published**: 11 posts (bluesky: 2, twitter: 2, instagram: 3, reddit: 1, substack: 1, medium: 1, threads: 1)\n💬 **Engagement**: 0 comments posted, 2 replies posted\n📥 **Received**: 0 new mentions/replies\n📦 **Queue Depth**: 25 posts ready (substack: 2, podcast: 1, threads: 10, medium: 2, bluesky: 3, reddit: 3, twitter: 2, instagram: 2)\n💡 **Ideas**: 2 captured today\n💰 **Cost**: $0.00 today\n⚙️ **System**: 0 cron jobs ran today",
+      "from": "evening-recap",
+      "read": false,
+      "createdAt": "2026-02-14T04:00:00.299Z",
+      "priority": "low",
+      "actionRequired": false,
+      "metadata": {
+        "totalPosted": 11,
+        "postsByPlatform": {
+          "bluesky": 2,
+          "twitter": 2,
+          "instagram": 3,
+          "reddit": 1,
+          "substack": 1,
+          "medium": 1,
+          "threads": 1
+        },
+        "commentsPostedToday": 0,
+        "repliesPostedToday": 2,
+        "newMentions": 0,
+        "totalReady": 25,
+        "queueDepth": {
+          "substack": 2,
+          "podcast": 1,
+          "threads": 10,
+          "medium": 2,
+          "bluesky": 3,
+          "reddit": 3,
+          "twitter": 2,
+          "instagram": 2
+        },
+        "ideasToday": 2,
+        "costToday": 0,
+        "cronRunsToday": 0,
+        "emptyQueues": []
+      }
+    },
+    {
+      "id": "notif-1771031620216",
+      "type": "task_assigned",
+      "title": "New Task Assigned",
+      "message": "**Manage post image generation for all social media content**\n\nAssigned to: heraclitus\nPriority: not set\n\nEnsure every social media post in the posting queue has an AI-generated image before it goes live. The system auto-generates images daily at 6:30 AM PST using the Grok Imagine API with platform-specif...",
+      "read": false,
+      "createdAt": "2026-02-14T01:13:40.216Z",
+      "metadata": {
+        "taskId": "task-051",
+        "assigneeIds": [
+          "heraclitus"
+        ],
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "notif-1771027213074-8quv",
+      "type": "queue_replenishment",
+      "title": "Queue Replenishment",
+      "message": "Drafted 1 posts for instagram from idea #019",
+      "from": "queue-replenishment",
+      "read": false,
+      "createdAt": "2026-02-14T00:00:13.074Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "ideaId": "019",
+        "platforms": [
+          "instagram"
+        ],
+        "draftsQueued": 1
+      }
+    },
+    {
+      "id": "notif-1770998400033",
+      "type": "daily_summary",
+      "title": "Morning Briefing",
+      "message": "**Daily Summary - 2/13/2026**\n\n📊 **Progress**: 0 tasks completed yesterday\n📋 **Active**: 0 tasks in progress\n👤 **Your Tasks**: 1 awaiting your attention\n🔔 **Notifications**: 88 unread\n💰 **Monthly Cost**: $0.00/$300 (0%)\n\n⚠️ **20 high priority issues** need attention\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h\n  • Task stuck in in_progress for 1d 6h",
+      "read": false,
+      "createdAt": "2026-02-13T16:00:00.028Z",
+      "metadata": {
+        "completedYesterday": 0,
+        "completedDetails": [],
+        "activeTasks": 0,
+        "activeDetails": [],
+        "stuckTasks": 0,
+        "humanTasks": 1,
+        "humanDetails": [
+          {
+            "id": "task-040",
+            "title": "Review queued content — 11 posts + 4 replies ready",
+            "status": "pending"
+          }
+        ],
+        "unreadCount": 88,
+        "costStatus": "$0.00/$300 (0%)",
+        "highPriorityIssues": 20,
+        "highPriorityDetails": [
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Twitter Daily Outreach - Growth to 1000 Followers\" (task-013) has been in in_progress status for 1d 6h. Assigned to: nietzsche",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-013",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"Bluesky Daily Outreach - Community Growth\" (task-014) has been in in_progress status for 1d 6h. Assigned to: heraclitus",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-014",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 1d 6h",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 1d 6h. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in in_progress for 13h 1m",
+            "description": "Task \"CMS Time-In-Status Alerts & Visual Indicators\" (task-016) has been in in_progress status for 13h 1m. Assigned to: aristotle",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-016",
+            "type": "stuck_task"
+          },
+          {
+            "title": "Task stuck in assigned for 3h 53m",
+            "description": "Task \"Reply to @ytsanders writing challenge\" (task-035) has been in assigned status for 3h 53m. Assigned to: human",
+            "recommendation": "Consider reassigning or breaking into smaller tasks",
+            "taskId": "task-035",
+            "type": "stuck_task"
+          }
+        ]
+      }
+    },
+    {
+      "id": "notif-1770996608315-xdln",
+      "type": "standup",
+      "title": "Tension Daily Standup",
+      "message": "Gumroad launch is in active development with multiple agents coordinating on product setup, quality checks, and strategic positioning. Strong content queue (21 items ready) awaiting human review for deployment. Primary bottleneck: Diogenes' quality check on Dunning-Kruger Parables is blocking downstream launch tasks.\n\n**Warnings:**\n- [depleted] Tension has 30 unread messages, Plato has 29, Socrates has 22 — communication backlog may indicate coordination bottlenecks in Gumroad launch workflow.\n\n3 actions taken.",
+      "read": false,
+      "createdAt": "2026-02-13T15:30:08.315Z",
+      "priority": "high",
+      "metadata": {
+        "priorities": 3,
+        "taskAssignments": 0,
+        "warnings": 1,
+        "idleAgents": []
+      }
+    },
+    {
+      "id": "notif-1770996608290-1mwa",
+      "type": "agent_message",
+      "title": "Alert from tension",
+      "message": "**Daily Directive: high priority**\n\nComplete quality check on Dunning-Kruger Parables immediately — this is blocking Gumroad launch workflow.",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-13T15:30:08.290Z",
+      "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "messageId": "msg-1770996608290-i356",
+        "threadId": "msg-1770996608290-i356",
+        "to": [
+          "diogenes"
+        ],
+        "messageType": "alert"
+      }
+    },
+    {
+      "id": "notif-1770996608255-54vk",
+      "type": "agent_message",
+      "title": "Alert from tension",
+      "message": "**Daily Directive: high priority**\n\n11 posts + 4 replies are queued and ready for deployment. Review and approve for publication across platforms.",
+      "from": "tension",
+      "read": false,
+      "createdAt": "2026-02-13T15:30:08.255Z",
+      "priority": "high",
+      "actionRequired": true,
+      "metadata": {
+        "messageId": "msg-1770996608255-tl4b",
+        "threadId": "msg-1770996608255-tl4b",
+        "to": [
+          "human"
+        ],
+        "messageType": "alert"
+      }
+    },
+    {
+      "id": "notif-1770991349193-u32k",
+      "type": "auto_pipeline",
+      "title": "Auto-Pipeline Complete",
+      "message": "1 idea auto-drafted → 6 drafts queued for review. (2 errors)",
+      "from": "auto-pipeline",
+      "read": false,
+      "createdAt": "2026-02-13T14:02:29.193Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "processedIds": [
+          "017"
+        ],
+        "draftsQueued": 6,
+        "errors": 2
+      }
+    },
+    {
+      "id": "notif-1770957910505-lr33",
+      "type": "engagement_mention",
+      "title": "Mentioned by @TheTwinPowers",
+      "message": "@thetensionlines Yes, it's the mind that creates the illusion of separateness. There's an old saying \"reality is an illusion, it's the illusion that's real\". The saying doesn't mean reality doesn't exist. The illusion lies in our/the minds understand of and relationship with it (reality).",
+      "from": "engagement-monitor",
+      "read": false,
+      "createdAt": "2026-02-13T04:45:10.505Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "platform": "twitter",
+        "engagementId": "twitter-2022162793949278511",
+        "authorHandle": "TheTwinPowers",
+        "postUrl": "https://x.com/TheTwinPowers/status/2022162793949278511",
+        "postUri": null,
+        "postCid": null,
+        "ourPostUrl": null
+      }
+    },
+    {
+      "id": "notif-1770956099308-pj27",
+      "type": "engagement_mention",
+      "title": "Mentioned by @TheTwinPowers",
+      "message": "@thetensionlines The ego isn't something we're born with. It's simply collection of thoughts we've created for ourselves - a mental illusion/false sense of Self.\nWe can be ego-less though only attain such a state when we reach Enlightenment, which takes many incarnations.",
+      "from": "engagement-monitor",
+      "read": false,
+      "createdAt": "2026-02-13T04:14:59.308Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "platform": "twitter",
+        "engagementId": "twitter-2022161830018445764",
+        "authorHandle": "TheTwinPowers",
+        "postUrl": "https://x.com/TheTwinPowers/status/2022161830018445764",
+        "postUri": null,
+        "postCid": null,
+        "ourPostUrl": null
+      }
+    },
+    {
+      "id": "notif-1770955200082-1oyv",
+      "type": "evening_recap",
+      "title": "Evening Recap - 2026-02-12",
+      "message": "**Evening Recap - 2026-02-12**\n\n📮 **Published**: 8 posts (medium: 1, bluesky: 2, twitter: 2, threads: 1, substack: 1, reddit: 1)\n💬 **Engagement**: 0 comments posted, 0 replies posted\n📥 **Received**: 0 new mentions/replies\n📦 **Queue Depth**: 18 posts ready (instagram: 3, substack: 1, podcast: 1, twitter: 2, bluesky: 2, threads: 7, medium: 1, reddit: 1)\n💡 **Ideas**: 2 captured today\n💰 **Cost**: $0.00 today\n⚙️ **System**: 0 cron jobs ran today",
+      "from": "evening-recap",
+      "read": false,
+      "createdAt": "2026-02-13T04:00:00.082Z",
+      "priority": "low",
+      "actionRequired": false,
+      "metadata": {
+        "totalPosted": 8,
+        "postsByPlatform": {
+          "medium": 1,
+          "bluesky": 2,
+          "twitter": 2,
+          "threads": 1,
+          "substack": 1,
+          "reddit": 1
+        },
+        "commentsPostedToday": 0,
+        "repliesPostedToday": 0,
+        "newMentions": 0,
+        "totalReady": 18,
+        "queueDepth": {
+          "instagram": 3,
+          "substack": 1,
+          "podcast": 1,
+          "twitter": 2,
+          "bluesky": 2,
+          "threads": 7,
+          "medium": 1,
+          "reddit": 1
+        },
+        "ideasToday": 2,
+        "costToday": 0,
+        "cronRunsToday": 0,
+        "emptyQueues": []
+      }
+    },
+    {
+      "id": "notif-1770952292248-thjm",
+      "type": "engagement_reply",
+      "title": "Reply from @mandascott.bsky.social",
+      "message": "Thank you -it's lovely, no apology needed. I'm just really glad someone gets it... \n\nhave a beautiful, paradox-filled, love-full day.",
+      "from": "engagement-monitor",
+      "read": false,
+      "createdAt": "2026-02-13T03:11:32.248Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "platform": "bluesky",
+        "engagementId": "bsky-at://did:plc:t4tkgbr3bb4cnuymd5ys7k7s/app.bsky.feed.post/3me442r3d2s2j",
+        "authorHandle": "mandascott.bsky.social",
+        "postUrl": "https://bsky.app/profile/mandascott.bsky.social/post/3me442r3d2s2j",
+        "postUri": "at://did:plc:t4tkgbr3bb4cnuymd5ys7k7s/app.bsky.feed.post/3me442r3d2s2j",
+        "postCid": "bafyreibl35crpy47ife4hwdpcoolal5qytmp2vtqsprgtybjonsbyuevse",
+        "ourPostUrl": "https://bsky.app/profile/thetensionlines.bsky.social/post/3me3q25knp22l"
+      }
+    },
+    {
+      "id": "notif-1770951392199-db8i",
+      "type": "engagement_reply",
+      "title": "Reply from @fatimap72.bsky.social",
+      "message": "You make it sound as though there is something between win and lose. Wait, there is and that is give up!",
+      "from": "engagement-monitor",
+      "read": false,
+      "createdAt": "2026-02-13T02:56:32.199Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "platform": "bluesky",
+        "engagementId": "bsky-at://did:plc:n7e56a7boikyr5n2erjsucy7/app.bsky.feed.post/3me35taxf2c2l",
+        "authorHandle": "fatimap72.bsky.social",
+        "postUrl": "https://bsky.app/profile/fatimap72.bsky.social/post/3me35taxf2c2l",
+        "postUri": "at://did:plc:n7e56a7boikyr5n2erjsucy7/app.bsky.feed.post/3me35taxf2c2l",
+        "postCid": "bafyreiadngyldhbw5hdug4tuvohfqnxz7ubkyo4xfzdhczatpien4ddpj4",
+        "ourPostUrl": "https://bsky.app/profile/thetensionlines.bsky.social/post/3me2vcmflrn2z"
+      }
+    },
+    {
+      "id": "notif-1770951027865-6883",
+      "type": "engagement_reply",
+      "title": "Reply from @mandascott.bsky.social",
+      "message": "Thank you -it's lovely, no apology needed. I'm just really glad someone gets it... \n\nhave a beautiful, paradox-filled, love-full day.",
+      "from": "engagement-monitor",
+      "read": false,
+      "createdAt": "2026-02-13T02:50:27.865Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "platform": "bluesky",
+        "engagementId": "bsky-at://did:plc:t4tkgbr3bb4cnuymd5ys7k7s/app.bsky.feed.post/3me442r3d2s2j",
+        "authorHandle": "mandascott.bsky.social",
+        "postUrl": "https://bsky.app/profile/mandascott.bsky.social/post/3me442r3d2s2j",
+        "postUri": "at://did:plc:t4tkgbr3bb4cnuymd5ys7k7s/app.bsky.feed.post/3me442r3d2s2j",
+        "postCid": "bafyreibl35crpy47ife4hwdpcoolal5qytmp2vtqsprgtybjonsbyuevse",
+        "ourPostUrl": "https://bsky.app/profile/thetensionlines.bsky.social/post/3me3q25knp22l"
+      }
+    },
+    {
+      "id": "notif-1770950505099-2pw9",
+      "type": "engagement_mention",
+      "title": "Mentioned by @TheTwinPowers",
+      "message": "@thetensionlines 👍😊\n\nLanguage creates separation between the observer and the observed. \n\n\"I confused things with their names: that is belief.\"\nJean-Paul Sartre \n\nAnd, as Bertrand Russell stated:\n“Everything is vague to a degree you do not realize till you have tried to make it precise”",
+      "from": "engagement-monitor",
+      "read": false,
+      "createdAt": "2026-02-13T02:41:45.099Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "platform": "twitter",
+        "engagementId": "twitter-2020768050216403120",
+        "authorHandle": "TheTwinPowers",
+        "postUrl": "https://x.com/TheTwinPowers/status/2020768050216403120",
+        "postUri": null,
+        "postCid": null,
+        "ourPostUrl": null
+      }
+    },
+    {
+      "id": "notif-1770940814244-hotr",
+      "type": "queue_replenishment",
+      "title": "Queue Replenishment",
+      "message": "Drafted 2 posts for twitter, reddit from idea #016",
+      "from": "queue-replenishment",
+      "read": false,
+      "createdAt": "2026-02-13T00:00:14.244Z",
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "ideaId": "016",
+        "platforms": [
+          "twitter",
+          "reddit"
+        ],
+        "draftsQueued": 2
+      }
+    },
     {
       "id": "notif-1770912000068",
       "type": "daily_summary",
@@ -9563,6 +11335,79 @@
       "actionRequired": true,
       "metadata": {
         "source": "telegram"
+      }
+    },
+    {
+      "id": "notif-tg-1770985507550",
+      "type": "telegram_directive",
+      "title": "Telegram from Shawn",
+      "message": "Remember when I give you an idea,  I want you to build on it and give me some of your thoughts so I know you understand what I’m trying to say",
+      "from": "human",
+      "to": [
+        "tension"
+      ],
+      "createdAt": "2026-02-13T12:25:07.550Z",
+      "read": false,
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "source": "telegram"
+      }
+    },
+    {
+      "id": "notif-tg-1770985868865",
+      "type": "telegram_directive",
+      "title": "Telegram from Shawn",
+      "message": "As for commenting on my ideas I whant you to send me those comments back in telegram as well",
+      "from": "human",
+      "to": [
+        "tension"
+      ],
+      "createdAt": "2026-02-13T12:31:08.865Z",
+      "read": false,
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "source": "telegram"
+      }
+    },
+    {
+      "id": "notif-tg-1770985937065",
+      "type": "telegram_directive",
+      "title": "Telegram from Shawn",
+      "message": "Ad the directive to the openclaw team,  they are the ones who do the work",
+      "from": "human",
+      "to": [
+        "tension"
+      ],
+      "createdAt": "2026-02-13T12:32:17.065Z",
+      "read": false,
+      "priority": "medium",
+      "actionRequired": true,
+      "metadata": {
+        "source": "telegram"
+      }
+    },
+    {
+      "id": "notif-stuck-1771053514307-pt2b8uk6j",
+      "type": "stuck_task",
+      "title": "🚨 Task Stuck: Manage post image generation for all social media content",
+      "message": "Task #task-051 has been in \"assigned\" status for 6h 4m. Assigned to: heraclitus.\nConsider intervention or reassignment.",
+      "from": "system",
+      "to": [
+        "tension",
+        "heraclitus"
+      ],
+      "createdAt": "2026-02-14T07:18:34.308Z",
+      "read": false,
+      "priority": "critical",
+      "actionRequired": true,
+      "metadata": {
+        "taskId": "task-051",
+        "timeInStatus": "6h 4m",
+        "alertLevel": "red",
+        "diagnostics": [],
+        "suggestions": []
       }
     }
   ],

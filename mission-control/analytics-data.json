@@ -13,8 +13,8 @@
     "twitter": {
       "current": {
         "followers": 3,
-        "following": 12,
-        "tweets": 16,
+        "following": 14,
+        "tweets": 20,
         "impressions": 0,
         "engagement": 0
       },
@@ -56,6 +56,22 @@
           "followers": 3,
           "following": 12,
           "tweets": 16,
+          "impressions": 0,
+          "engagement": 0
+        },
+        {
+          "date": "2026-02-13",
+          "followers": 4,
+          "following": 14,
+          "tweets": 20,
+          "impressions": 0,
+          "engagement": 0
+        },
+        {
+          "date": "2026-02-14",
+          "followers": 3,
+          "following": 14,
+          "tweets": 20,
           "impressions": 0,
           "engagement": 0
         }
@@ -156,5 +172,5 @@
       "createdAt": "2026-02-07T00:00:00.000Z"
     }
   ],
-  "lastUpdated": "2026-02-12T14:15:05.370Z"
+  "lastUpdated": "2026-02-14T14:15:05.400Z"
 }

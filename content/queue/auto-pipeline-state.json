@@ -20,9 +20,51 @@
     "013",
     "014",
     "015",
-    "018"
+    "018",
+    "016",
+    "017",
+    "019",
+    "022"
   ],
   "runs": [
+    {
+      "timestamp": "2026-02-14T14:02:28.366Z",
+      "ideasProcessed": 1,
+      "ideaIds": [
+        "022"
+      ],
+      "draftsQueued": 6,
+      "errors": [
+        {
+          "ideaId": "020",
+          "error": "Unterminated string in JSON at position 8288 (line 23 column 2340)"
+        },
+        {
+          "ideaId": "021",
+          "error": "Unterminated string in JSON at position 8400 (line 23 column 2272)"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "timestamp": "2026-02-13T14:02:29.204Z",
+      "ideasProcessed": 1,
+      "ideaIds": [
+        "017"
+      ],
+      "draftsQueued": 6,
+      "errors": [
+        {
+          "ideaId": "019",
+          "error": "Unterminated string in JSON at position 8578 (line 23 column 2237)"
+        },
+        {
+          "ideaId": "020",
+          "error": "Unterminated string in JSON at position 8225 (line 23 column 2338)"
+        }
+      ],
+      "status": "partial"
+    },
     {
       "timestamp": "2026-02-12T14:02:15.876Z",
       "ideasProcessed": 1,
