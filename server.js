@@ -13411,7 +13411,7 @@ app.post('/api/posting-queue/generate-images', async (req, res) => {
 // =====================================================
 
 const REELS_DIR = path.join(BASE_DIR, 'content', 'reels');
-const REELS_TEXT_DELAY = 0.5; // seconds — text starts scrolling almost immediately after voice
+const REELS_TEXT_DELAY = 0; // seconds — text starts scrolling immediately with voice
 const REELS_FONT = '/System/Library/Fonts/Helvetica.ttc';
 
 // Create reels directory if missing
@@ -13679,15 +13679,18 @@ async function buildReelVideo(imagePath, audioPath, text, outputPath) {
     });
     fs.writeFileSync(overlayPath, overlayBuf);
 
-    // Voice plays first, text starts scrolling after REELS_TEXT_DELAY seconds
-    // Scroll from bottom of frame to above frame over (duration - delay)
-    const delay = Math.min(REELS_TEXT_DELAY, duration * 0.15);
+    // Text starts visible at bottom of frame and scrolls up immediately
+    // Start position: bottom of frame minus a portion of overlay so first lines show
+    const startY = H - Math.round(overlayHeight * 0.15); // first ~15% of text visible immediately
+    const delay = REELS_TEXT_DELAY;
     const scrollDuration = duration - delay;
-    const totalTravel = H + overlayHeight;
+    const totalTravel = startY + overlayHeight; // scroll from startY to fully off top
     const scrollSpeed = (totalTravel / scrollDuration).toFixed(2);
 
-    // y = H when t < delay, then scrolls up: y = H - speed * (t - delay)
-    const yExpr = `if(lt(t\\,${delay.toFixed(2)})\\,${H}\\,${H}-${scrollSpeed}*(t-${delay.toFixed(2)}))`;
+    // y starts at startY (text partially visible), scrolls up immediately
+    const yExpr = delay > 0
+      ? `if(lt(t\\,${delay.toFixed(2)})\\,${startY}\\,${startY}-${scrollSpeed}*(t-${delay.toFixed(2)}))`
+      : `${startY}-${scrollSpeed}*t`;
 
     const cmd = `ffmpeg -y -loop 1 -i "${imagePath}" -i "${finalAudioPath}" -loop 1 -i "${overlayPath}" -filter_complex "[0:v]scale=${W}:${H},setsar=1[bg];[bg][2:v]overlay=x=0:y='${yExpr}'[out]" -map "[out]" -map 1:a -c:v libx264 -tune stillimage -c:a aac -shortest -pix_fmt yuv420p "${outputPath}"`;
 
