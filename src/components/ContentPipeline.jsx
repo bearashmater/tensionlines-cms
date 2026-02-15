@@ -783,6 +783,12 @@ function IdeasTable({ ideas, sortBy, sortDir, onSort, expandedId, onExpand, onTa
                   <td colSpan={5} className="px-4 py-4 bg-blue-50 border-l-4 border-l-blue-500">
                     <div className="space-y-3">
                       <p className="text-sm text-neutral-800 whitespace-pre-wrap">{idea.text || idea.quote}</p>
+                      {idea.enhanced && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-2">
+                          <p className="text-xs font-semibold text-amber-700 mb-1">Enhanced Understanding</p>
+                          <p className="text-sm text-neutral-800">{idea.enhanced}</p>
+                        </div>
+                      )}
                       {idea.tags?.length > 0 && (
                         <div className="flex flex-wrap gap-1 pt-2">
                           {idea.tags.map(tag => (
@@ -1049,6 +1055,13 @@ function IdeaDetailModal({ idea, onClose, onTagClick }) {
                 </button>
               ))}
             </div>
+          )}
+
+          {/* Enhanced Understanding */}
+          {idea.enhanced && (
+            <Section title="Enhanced Understanding" icon={<Lightbulb size={18} />} color="amber">
+              <p className="text-neutral-800 whitespace-pre-wrap">{idea.enhanced}</p>
+            </Section>
           )}
 
           {/* Notes */}

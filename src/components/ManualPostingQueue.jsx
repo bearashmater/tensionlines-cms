@@ -976,6 +976,11 @@ function QueueItem({ item, canPost, postingMode, onUpdate }) {
             </div>
           ) : (
             <div>
+              {item.title && (
+                <p className="font-semibold text-neutral-900 mb-1">
+                  {item.title}
+                </p>
+              )}
               <p className={`text-neutral-800 whitespace-pre-wrap ${expanded ? '' : 'line-clamp-3'}`}>{item.content}</p>
               {item.content?.length > 150 && (
                 <button
@@ -986,12 +991,6 @@ function QueueItem({ item, canPost, postingMode, onUpdate }) {
                 </button>
               )}
             </div>
-          )}
-
-          {item.title && (
-            <p className="text-sm font-semibold text-neutral-700 mt-1">
-              Title: {item.title}
-            </p>
           )}
 
           {item.topics?.length > 0 && (
@@ -1263,7 +1262,7 @@ function QueueItem({ item, canPost, postingMode, onUpdate }) {
                 item.platform === 'instagram' ? `Instagram Post:\n\n${item.content}${item.caption ? '\n\n' + item.caption : ''}` :
                 item.platform === 'medium' ? `${item.title ? item.title + '\n\n' : ''}${item.content}${item.topics?.length ? '\n\nTopics: ' + item.topics.join(', ') : ''}` :
                 item.platform === 'substack' ? `${item.title ? item.title + '\n\n' : ''}${item.content}` :
-                item.platform === 'reddit' ? `${item.content}${item.tags?.length ? '\n\nTags: ' + item.tags.join(', ') : ''}` :
+                item.platform === 'reddit' ? `${item.title ? item.title + '\n\n' : ''}${item.content}${item.tags?.length ? '\n\nTags: ' + item.tags.join(', ') : ''}` :
                 item.content
               )}
               className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded ${

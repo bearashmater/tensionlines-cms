@@ -491,6 +491,7 @@ function parseIdeasBank() {
         origin: 'human',
         chapter: '',
         notes: '',
+        enhanced: '',
         tension: '',
         paradox: '',
         connections: '',
@@ -584,6 +585,15 @@ function parseIdeasBank() {
       saveSection();
       currentSection = 'notes';
       const inlineContent = line.replace(/^\*\*Notes:\*\*\s*/, '').trim();
+      if (inlineContent) sectionContent.push(inlineContent);
+      continue;
+    }
+
+    // Match Enhanced section start
+    if (line.match(/^\*\*Enhanced:\*\*/)) {
+      saveSection();
+      currentSection = 'enhanced';
+      const inlineContent = line.replace(/^\*\*Enhanced:\*\*\s*/, '').trim();
       if (inlineContent) sectionContent.push(inlineContent);
       continue;
     }
@@ -2581,7 +2591,7 @@ app.patch('/api/posting-queue/:id', (req, res) => {
     }
 
     // Update allowed fields
-    const allowedFields = ['canvaComplete', 'status', 'content', 'caption', 'parts', 'selectedOption', 'tags', 'subreddit', 'createdBy'];
+    const allowedFields = ['canvaComplete', 'status', 'content', 'caption', 'parts', 'selectedOption', 'tags', 'subreddit', 'createdBy', 'title'];
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
         item[field] = req.body[field];
@@ -3688,7 +3698,7 @@ const PLATFORM_SPECS = {
   twitter: { label: 'Twitter', limit: 280, format: 'Punchy, standalone thought. Can be a thread of max 3 tweets separated by ---. Each tweet must be ≤280 characters.' },
   bluesky: { label: 'Bluesky', limit: 300, format: 'Conversational, observation-style. Single post. Must be ≤300 characters.' },
   instagram: { label: 'Instagram', limit: 2200, format: 'Two parts: 1) "cardText" — a bold quote for a Canva image card, under 100 characters. 2) "caption" — a longer reflection with relevant hashtags, up to ~2200 characters.' },
-  reddit: { label: 'Reddit', limit: 300, format: 'Discussion-starter. Return "title" (compelling question or statement) and "body" (thoughtful, ~300 words, no hashtags). Invites conversation.' },
+  reddit: { label: 'Reddit', limit: 300, format: 'Discussion-starter. Return "title" (compelling question or statement), "body" (thoughtful, ~300 words, no hashtags), and "tags" (3-5 relevant topic tags like ["philosophy", "self-awareness"]). Invites conversation.' },
   medium: { label: 'Medium', limit: 200, format: 'Essay paragraph. Rich, flowing prose. Could be a section opener. ~200 words.' },
   substack: { label: 'Substack', limit: 500, format: 'Newsletter excerpt. Compelling opening hook (1-2 sentences), then a thoughtful exploration (~300-500 words). Should feel like the start of something the reader wants to finish. Include a provocative subject line as "title".' },
   threads: { label: 'Threads', limit: 500, format: 'Conversational, casual tone. Like talking to a smart friend. VARY the format — some should be short punchy single posts (50-200 chars), others can be threads (2-3 posts separated by ---). Each post in a thread must be ≤500 characters. Do NOT always write threads — mix it up. No hashtags.' }
@@ -3783,9 +3793,11 @@ app.post('/api/repurpose/queue', (req, res) => {
         source: 'repurpose-engine'
       };
 
-      // For reddit, store title + body in content
-      if (platform === 'reddit' && title && body) {
-        item.content = `${title}\n\n${body}`;
+      // For reddit, store title separately and body as content
+      if (platform === 'reddit' && draft.title && draft.body) {
+        item.title = draft.title;
+        item.content = draft.body;
+        if (draft.tags) item.tags = draft.tags;
       }
       // For instagram, store cardText separately
       if (platform === 'instagram' && cardText) {
@@ -3896,7 +3908,7 @@ ${platformInstructions}
 ## Output Format:
 Return a JSON object where each key is the platform name. For most platforms, the value has a "content" field. Exceptions:
 - **instagram**: { "cardText": "...", "caption": "..." }
-- **reddit**: { "title": "...", "body": "..." }
+- **reddit**: { "title": "...", "body": "...", "tags": ["tag1", "tag2", "tag3"] }
 - **medium**: { "title": "...", "content": "...", "topics": ["topic1", "topic2", "topic3", "topic4", "topic5"] } (exactly 5 Medium topics/tags)
 - **twitter**: { "content": "..." } (if a thread, separate tweets with ---)
 
@@ -3905,7 +3917,7 @@ Example structure:
   "twitter": { "content": "tweet text here" },
   "bluesky": { "content": "post text here" },
   "instagram": { "cardText": "short quote", "caption": "longer caption with #hashtags" },
-  "reddit": { "title": "Discussion title", "body": "Discussion body..." },
+  "reddit": { "title": "Discussion title", "body": "Discussion body...", "tags": ["philosophy", "self-awareness", "growth"] },
   "medium": { "title": "Article Title", "content": "Article body...", "topics": ["Philosophy", "Self Improvement", "Life", "Mindfulness", "Psychology"] }
 }
 
@@ -4010,7 +4022,9 @@ async function runAutoPipeline() {
         };
 
         if (platform === 'reddit' && draft.title && draft.body) {
-          item.content = `${draft.title}\n\n${draft.body}`;
+          item.title = draft.title;
+          item.content = draft.body;
+          if (draft.tags) item.tags = draft.tags;
         }
         if (platform === 'medium') {
           if (draft.title) item.title = draft.title;
@@ -4136,7 +4150,9 @@ app.post('/api/ideas/:id/fast-track', async (req, res) => {
       };
 
       if (platform === 'reddit' && draft.title && draft.body) {
-        item.content = `${draft.title}\n\n${draft.body}`;
+        item.title = draft.title;
+        item.content = draft.body;
+        if (draft.tags) item.tags = draft.tags;
       }
       if (platform === 'medium' && draft.title) {
         item.title = draft.title;
@@ -6506,6 +6522,36 @@ Voice guide:
     }
   } catch (err) {
     console.error('[Ideas] Agent takes failed:', err.message);
+  }
+
+  // Step 3: Enhanced understanding (skip if already set by Telegram)
+  try {
+    const checkContent = fs.readFileSync(IDEAS_BANK, 'utf8');
+    const paddedIdCheck = String(ideaId).padStart(3, '0');
+    const hasEnhanced = checkContent.includes(`### #${paddedIdCheck}`) &&
+      checkContent.match(new RegExp(`### #${paddedIdCheck}[\\s\\S]*?\\*\\*Enhanced:\\*\\*`));
+    if (!hasEnhanced) {
+      const enhanceRes = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        system: 'You reflect back the core insight of an idea in 2-3 sentences. Show you understand what the person is getting at — the tension, the contradiction, or the observation they\'re circling. Be warm but sharp. Don\'t praise or evaluate — just mirror the insight back with clarity. No quotes, no bullet points.',
+        messages: [{ role: 'user', content: `Idea: "${ideaText}"` }]
+      });
+      const enhancedText = enhanceRes.content[0]?.text?.trim() || '';
+      if (enhancedText) {
+        const fileContent = fs.readFileSync(IDEAS_BANK, 'utf8');
+        const sourcePattern = new RegExp(`(### #${paddedIdCheck}[\\s\\S]*?\\*\\*Source:\\*\\*[^\\n]*\\n)`);
+        const updated = fileContent.replace(sourcePattern, `$1**Enhanced:** ${enhancedText}\n`);
+        if (updated !== fileContent) {
+          fs.writeFileSync(IDEAS_BANK, updated);
+          cache.ideasBank = null;
+          broadcast('ideas');
+          console.log(`[Ideas] Enhanced understanding added for #${paddedIdCheck}`);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[Ideas] Enhanced understanding failed:', err.message);
   }
 }
 
@@ -10689,7 +10735,9 @@ async function runQueueReplenishment() {
       source: 'queue-replenishment'
     };
     if (platform === 'reddit' && draft.title && draft.body) {
-      item.content = `${draft.title}\n\n${draft.body}`;
+      item.title = draft.title;
+      item.content = draft.body;
+      if (draft.tags) item.tags = draft.tags;
     }
     if (platform === 'medium') {
       if (draft.title) item.title = draft.title;
@@ -16237,7 +16285,7 @@ function initTelegramBot() {
     if (!text) return;
 
     // Check if message starts with "Idea" (case-insensitive)
-    const ideaMatch = text.match(/^idea[:\s]+(.+)/is);
+    const ideaMatch = text.match(/^idea[:\s\-–—]+(.+)/is);
     if (!ideaMatch) {
       // If no TELEGRAM_CHAT_ID set yet, help them configure it
       if (!allowedChatId) {
@@ -16314,8 +16362,47 @@ function initTelegramBot() {
       broadcast('ideas');
 
       console.log(`[Telegram] Idea #${nextId} captured: "${ideaText.substring(0, 60)}..."`);
-      bot.sendMessage(chatId, `Captured as idea #${nextId}\n"${ideaText.substring(0, 100)}${ideaText.length > 100 ? '...' : ''}"`);
       logSystemEvent('pipeline', `Idea #${nextId} captured via Telegram`, { ideaId: nextId });
+
+      // Generate enhanced understanding before responding
+      let enhancedText = '';
+      const client = getAnthropicClient();
+      if (client) {
+        try {
+          const enhanceRes = await client.messages.create({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 300,
+            system: 'You reflect back the core insight of an idea in 2-3 sentences. Show you understand what the person is getting at — the tension, the contradiction, or the observation they\'re circling. Be warm but sharp. Don\'t praise or evaluate — just mirror the insight back with clarity. No quotes, no bullet points.',
+            messages: [{ role: 'user', content: `Idea: "${ideaText}"` }]
+          });
+          enhancedText = enhanceRes.content[0]?.text?.trim() || '';
+        } catch (err) {
+          console.error('[Telegram] Enhanced understanding failed:', err.message);
+        }
+      }
+
+      // Store enhanced understanding in the idea entry
+      if (enhancedText) {
+        try {
+          const updatedContent = fs.readFileSync(IDEAS_BANK, 'utf8');
+          const paddedId = String(nextId).padStart(3, '0');
+          const sourcePattern = new RegExp(`(### #${paddedId}[\\s\\S]*?\\*\\*Source:\\*\\*[^\\n]*\\n)`);
+          const withEnhanced = updatedContent.replace(sourcePattern, `$1**Enhanced:** ${enhancedText}\n`);
+          if (withEnhanced !== updatedContent) {
+            fs.writeFileSync(IDEAS_BANK, withEnhanced);
+            cache.ideasBank = null;
+            broadcast('ideas');
+          }
+        } catch (err) {
+          console.error('[Telegram] Failed to store enhanced text:', err.message);
+        }
+      }
+
+      // Send back the understanding as the response
+      const responseMsg = enhancedText
+        ? `Idea #${nextId} captured.\n\n${enhancedText}`
+        : `Captured as idea #${nextId}`;
+      bot.sendMessage(chatId, responseMsg);
 
       // Fire-and-forget: auto-tag + agent takes
       processNewIdea(nextId, ideaText).catch(err =>
