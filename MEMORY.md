@@ -120,16 +120,35 @@ All kept under platform limits, used line breaks for readability.
 ## Project Status
 
 - **TensionLines CMS:** Production-ready ✓
-  - All core features tested and working (dashboard, navigation, book progress, queues)
-  - 18+ items in posting queue actively managed
-  - Book progress tracking with phases/chapters/word counts functional
-  - Engagement queue and automation operational
+  - **Comprehensive testing 2026-02-14:** All 13 core features verified working
+  - Dashboard with live metrics (13 agents, 63 tasks, 34 posting queue items)
+  - Book progress tracking functional (5 books, phase/chapter/word count detail)
+  - Ideas bank system operational (37 ideas, 9 shipped, weekly goal tracking)
+  - Navigation, search, filtering, and UI controls all working
+  - No critical bugs identified in production testing
 - **10 Philosopher Agents:** SOULs defined in `philosophers/*/SOUL.md`
   - Voice assignments: Heraclitus (Threads), Socrates (Bluesky), Nietzsche (Twitter/X), Plato (Medium)
-- **Ideas Bank:** Active at `content/ideas-bank.md` (100+ ideas, 5+ used as of 2026-02-13)
-  - Recent successes: #006 (Ecclesiastes/seasons), #011 (AI virtue ethics)
+- **Ideas Bank:** Active at `content/ideas-bank.md` (37 ideas as of 2026-02-14)
+  - 25 captured, 2 organizing, 1 drafting, 9 published
+  - Recent usage: #004 (Romantic individualism), #005 (Security ↔ Liberty)
+  - 8-week streak, 8/4 weekly goal achieved
+  - 200+ tags available for organization
 - **5 Books:** In development with phase/chapter tracking in CMS
   - Books: TensionLines, Practical Wisdom, Leadership, Therapeutic Applications, Philosophy of AI
-  - Chapter word count tracking active (e.g., Chapter 1: 2,901 words)
+  - TensionLines main book: 1,505 / 50,000 words (3%)
+  - Chapter detail pages with full content, outlines, and linked ideas
 - **Reddit:** r/TensionLines does not exist yet (moderation on hold until created)
 - **Daily Content Automation:** Morning (9 AM) and midday (2 PM) social posts running smoothly via cron jobs
+  - **Verified 2026-02-14:** Midday content correctly added to CMS queue (not posted directly)
+
+## CMS Enhancement Backlog
+
+**Priority improvements identified 2026-02-14:**
+1. **Batch Queue Actions** - Checkbox selection + bulk operations (mark posted, delete, reschedule)
+2. **AI Writing Assistant** - Context-aware suggestions in chapter editor, "continue writing" feature
+3. **Cross-Platform Preview** - Show how content renders on Twitter/Bluesky/Threads with character warnings
+4. **Content Performance Analytics** - Track idea → post performance, tag correlation analysis
+5. **Voice-to-Idea Capture** - Telegram voice message transcription → ideas bank integration
+6. **Engagement Opportunity Scoring** - AI scoring for queue prioritization (high/medium/low ROI)
+
+All enhancements non-blocking; CMS fully functional for current workflow.
