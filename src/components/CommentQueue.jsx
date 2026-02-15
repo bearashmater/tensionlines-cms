@@ -866,7 +866,7 @@ function CommentItem({ item, canComment, onUpdate }) {
               {isFailed ? 'Retry' : 'Publish'}
             </button>
           )}
-          {item.platform !== 'bluesky' && (
+          {(item.platform !== 'bluesky' || isFailed) && (
             <>
               <button
                 onClick={handleCopyAndOpen}
@@ -882,7 +882,7 @@ function CommentItem({ item, canComment, onUpdate }) {
                 className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
               >
                 <Check size={14} />
-                Mark Posted
+                Posted
               </button>
             </>
           )}
