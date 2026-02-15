@@ -866,26 +866,22 @@ function CommentItem({ item, canComment, onUpdate }) {
               {isFailed ? 'Retry' : 'Publish'}
             </button>
           )}
-          {(item.platform !== 'bluesky' || isFailed) && (
-            <>
-              <button
-                onClick={handleCopyAndOpen}
-                disabled={!item.commentText}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm bg-neutral-800 text-white rounded hover:bg-neutral-900 disabled:opacity-50"
-              >
-                {copyFeedback ? <Check size={14} /> : <Copy size={14} />}
-                {copyFeedback ? 'Copied!' : 'Copy & Open'}
-              </button>
-              <button
-                onClick={handleMarkPosted}
-                disabled={isUpdating}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-              >
-                <Check size={14} />
-                Posted
-              </button>
-            </>
-          )}
+          <button
+            onClick={handleCopyAndOpen}
+            disabled={!item.commentText}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm bg-neutral-800 text-white rounded hover:bg-neutral-900 disabled:opacity-50"
+          >
+            {copyFeedback ? <Check size={14} /> : <Copy size={14} />}
+            {copyFeedback ? 'Copied!' : 'Copy & Open'}
+          </button>
+          <button
+            onClick={handleMarkPosted}
+            disabled={isUpdating}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+          >
+            <Check size={14} />
+            Posted
+          </button>
           {!canComment && (
             <span className="text-xs text-red-600">Daily limit reached</span>
           )}
