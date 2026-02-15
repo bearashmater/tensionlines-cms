@@ -13411,7 +13411,7 @@ app.post('/api/posting-queue/generate-images', async (req, res) => {
 // =====================================================
 
 const REELS_DIR = path.join(BASE_DIR, 'content', 'reels');
-const REELS_TEXT_DELAY = 4; // seconds of voice-only before text starts scrolling
+const REELS_TEXT_DELAY = 0.5; // seconds — text starts scrolling almost immediately after voice
 const REELS_FONT = '/System/Library/Fonts/Helvetica.ttc';
 
 // Create reels directory if missing
