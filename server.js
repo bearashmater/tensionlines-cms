@@ -5754,6 +5754,38 @@ app.patch('/api/engagement/:id', (req, res) => {
 });
 
 /**
+ * POST /api/engagement/bulk-dismiss - Bulk dismiss engagement inbox items
+ */
+app.post('/api/engagement/bulk-dismiss', (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids array required' });
+    }
+    const inbox = getEngagementInbox();
+    const idSet = new Set(ids);
+    let dismissed = 0;
+    const platforms = ['bluesky', 'twitter', 'threads', 'instagram', 'reddit', 'medium', 'substack'];
+    for (const p of platforms) {
+      if (inbox[p]?.items) {
+        for (const item of inbox[p].items) {
+          if (idSet.has(item.id) && item.status !== 'dismissed') {
+            item.status = 'dismissed';
+            item.updatedAt = new Date().toISOString();
+            dismissed++;
+          }
+        }
+      }
+    }
+    saveEngagementInbox(inbox);
+    res.json({ success: true, dismissed });
+  } catch (err) {
+    console.error('Error bulk dismissing engagement items:', err);
+    res.status(500).json({ error: 'Failed to bulk dismiss' });
+  }
+});
+
+/**
  * POST /api/engagement/:id/draft-reply - Create reply queue item from engagement
  */
 app.post('/api/engagement/:id/draft-reply', async (req, res) => {

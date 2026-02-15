@@ -384,6 +384,8 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
   const [scanningAll, setScanningAll] = useState(false)
   const [scanResult, setScanResult] = useState(null)
   const [showDismissed, setShowDismissed] = useState(false)
+  const [selected, setSelected] = useState(new Set())
+  const [bulkDismissing, setBulkDismissing] = useState(false)
 
   const handleScanAll = async () => {
     setScanningAll(true)
@@ -410,6 +412,8 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
         headers: { 'Content-Type': 'application/json' }
       })
       if (res.ok) {
+        selected.delete(itemId)
+        setSelected(new Set(selected))
         onDraftReply()
         onRefresh()
       }
@@ -421,6 +425,8 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
   const handleDelete = async (itemId) => {
     try {
       await fetch(`/api/engagement/${encodeURIComponent(itemId)}`, { method: 'DELETE' })
+      selected.delete(itemId)
+      setSelected(new Set(selected))
       onRefresh()
     } catch (err) {
       console.error('Error deleting engagement item:', err)
@@ -434,6 +440,8 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'completed' })
       })
+      selected.delete(itemId)
+      setSelected(new Set(selected))
       onRefresh()
     } catch (err) {
       console.error('Error completing engagement item:', err)
@@ -447,10 +455,31 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'dismissed' })
       })
+      selected.delete(itemId)
+      setSelected(new Set(selected))
       onRefresh()
     } catch (err) {
       console.error('Error dismissing item:', err)
     }
+  }
+
+  const handleBulkDismiss = async () => {
+    if (selected.size === 0) return
+    setBulkDismissing(true)
+    try {
+      const res = await fetch('/api/engagement/bulk-dismiss', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [...selected] })
+      })
+      if (res.ok) {
+        setSelected(new Set())
+        onRefresh()
+      }
+    } catch (err) {
+      console.error('Error bulk dismissing:', err)
+    }
+    setBulkDismissing(false)
   }
 
   const handleMarkSeen = async (itemId) => {
@@ -469,6 +498,23 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
   const items = data?.items || []
   const visibleItems = showDismissed ? items : items.filter(i => i.status !== 'dismissed' && i.status !== 'completed')
   const dismissedCount = items.filter(i => i.status === 'dismissed' || i.status === 'completed').length
+  // Only allow selecting dismissable items (not already dismissed/completed/replied)
+  const selectableItems = visibleItems.filter(i => i.status !== 'dismissed' && i.status !== 'completed' && i.status !== 'replied')
+
+  const toggleSelect = (id) => {
+    const next = new Set(selected)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setSelected(next)
+  }
+
+  const toggleSelectAll = () => {
+    if (selected.size === selectableItems.length && selectableItems.length > 0) {
+      setSelected(new Set())
+    } else {
+      setSelected(new Set(selectableItems.map(i => i.id)))
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -533,21 +579,51 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
         </div>
       )}
 
+      {/* Bulk Actions Bar */}
+      {selected.size > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center justify-between sticky top-0 z-10">
+          <span className="text-sm font-medium text-red-800">
+            {selected.size} selected
+          </span>
+          <button
+            onClick={handleBulkDismiss}
+            disabled={bulkDismissing}
+            className="flex items-center gap-1.5 px-4 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
+          >
+            <Trash2 size={14} />
+            {bulkDismissing ? 'Dismissing...' : `Dismiss ${selected.size}`}
+          </button>
+        </div>
+      )}
+
       {/* Item List */}
       <div className="bg-white rounded-lg border border-neutral-200">
         <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
           <h2 className="font-semibold text-neutral-900">
             Incoming ({visibleItems.length})
           </h2>
-          {dismissedCount > 0 && (
-            <button
-              onClick={() => setShowDismissed(!showDismissed)}
-              className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700"
-            >
-              {showDismissed ? <EyeOff size={12} /> : <Eye size={12} />}
-              {showDismissed ? 'Hide' : 'Show'} {dismissedCount} dismissed
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {selectableItems.length > 0 && (
+              <label className="flex items-center gap-2 text-sm text-neutral-500 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={selected.size === selectableItems.length && selectableItems.length > 0}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 rounded border-neutral-300 text-gold focus:ring-gold"
+                />
+                Select all
+              </label>
+            )}
+            {dismissedCount > 0 && (
+              <button
+                onClick={() => setShowDismissed(!showDismissed)}
+                className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700"
+              >
+                {showDismissed ? <EyeOff size={12} /> : <Eye size={12} />}
+                {showDismissed ? 'Hide' : 'Show'} {dismissedCount} dismissed
+              </button>
+            )}
+          </div>
         </div>
         <div className="divide-y divide-neutral-100">
           {visibleItems.length === 0 ? (
@@ -557,17 +633,23 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
               <p className="text-sm mt-1">Scan Bluesky or Twitter to check for replies and mentions</p>
             </div>
           ) : (
-            visibleItems.map(item => (
-              <EngagementItem
-                key={item.id}
-                item={item}
-                onDraftReply={handleDraftReply}
-                onDismiss={handleDismiss}
-                onMarkSeen={handleMarkSeen}
-                onDelete={handleDelete}
-                onComplete={handleComplete}
-              />
-            ))
+            visibleItems.map(item => {
+              const isSelectable = item.status !== 'dismissed' && item.status !== 'completed' && item.status !== 'replied'
+              return (
+                <EngagementItem
+                  key={item.id}
+                  item={item}
+                  selected={selected.has(item.id)}
+                  selectable={isSelectable}
+                  onToggleSelect={() => toggleSelect(item.id)}
+                  onDraftReply={handleDraftReply}
+                  onDismiss={handleDismiss}
+                  onMarkSeen={handleMarkSeen}
+                  onDelete={handleDelete}
+                  onComplete={handleComplete}
+                />
+              )
+            })
           )}
         </div>
       </div>
@@ -575,7 +657,7 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
   )
 }
 
-function EngagementItem({ item, onDraftReply, onDismiss, onMarkSeen, onDelete, onComplete }) {
+function EngagementItem({ item, selected, selectable, onToggleSelect, onDraftReply, onDismiss, onMarkSeen, onDelete, onComplete }) {
   const isNew = item.status === 'new'
   const isDismissed = item.status === 'dismissed'
   const isReplied = item.status === 'replied'
@@ -597,9 +679,18 @@ function EngagementItem({ item, onDraftReply, onDismiss, onMarkSeen, onDelete, o
   }
 
   return (
-    <div className={`p-4 ${isNew ? 'bg-amber-50/50' : ''} ${isDismissed || isCompleted ? 'opacity-50' : ''}`}>
+    <div className={`p-4 ${isNew ? 'bg-amber-50/50' : ''} ${isDismissed || isCompleted ? 'opacity-50' : ''} ${selected ? 'bg-red-50/50' : ''}`}>
       <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          {selectable && (
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={onToggleSelect}
+              className="w-4 h-4 mt-1 rounded border-neutral-300 text-gold focus:ring-gold flex-shrink-0 cursor-pointer"
+            />
+          )}
+          <div className="flex-1 min-w-0">
           {/* Platform + type badges */}
           <div className="flex items-center gap-2 mb-2">
             {getPlatformIcon(item.platform)}
@@ -683,6 +774,7 @@ function EngagementItem({ item, onDraftReply, onDismiss, onMarkSeen, onDelete, o
           <p className="text-xs text-neutral-400 mt-2">
             {new Date(item.indexedAt).toLocaleString()}
           </p>
+          </div>
         </div>
 
         {/* Actions */}
