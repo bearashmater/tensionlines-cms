@@ -85,7 +85,7 @@ export default function ReplyQueue() {
   )
 
   const unreadCount = engagementData?.stats
-    ? (engagementData.stats.bluesky?.new || 0) + (engagementData.stats.twitter?.new || 0)
+    ? Object.values(engagementData.stats).reduce((sum, s) => sum + (s?.new || 0), 0)
     : 0
 
   if (error) {
@@ -259,26 +259,45 @@ export default function ReplyQueue() {
         <>
           {/* Rate Limit Cards (clickable filters) */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            {[
-              { key: 'bluesky', icon: <BlueskyIcon size={20} className="text-current" /> },
-              { key: 'twitter', icon: <TwitterIcon size={20} className="text-current" /> },
-              { key: 'threads', icon: <MessageCircle size={20} className="text-current" /> },
-              { key: 'instagram', icon: <Instagram size={20} className="text-current" /> },
-              { key: 'reddit', icon: <Hash size={20} className="text-current" /> },
-              { key: 'medium', icon: <BookOpen size={20} className="text-current" /> },
-              { key: 'substack', icon: <Newspaper size={20} className="text-current" /> },
-            ].map(({ key, icon }) => (
-              <RateLimitCard
-                key={key}
-                platform={key}
-                icon={icon}
-                repliesToday={data.repliesToday?.[key] || 0}
-                maxReplies={data.settings?.platforms?.[key]?.maxRepliesPerDay || 5}
-                canReply={(data.repliesToday?.[key] || 0) < (data.settings?.platforms?.[key]?.maxRepliesPerDay || 5)}
-                isActive={platformFilter === key}
-                onClick={() => setPlatformFilter(platformFilter === key ? null : key)}
-              />
-            ))}
+            {(() => {
+              // Compute last replied per platform
+              const lastRepliedByPlatform = {}
+              for (const p of data.posted || []) {
+                if (p.postedAt && !lastRepliedByPlatform[p.platform]) {
+                  lastRepliedByPlatform[p.platform] = p.postedAt
+                }
+              }
+              const timeAgo = (iso) => {
+                if (!iso) return null
+                const diff = Date.now() - new Date(iso).getTime()
+                const mins = Math.floor(diff / 60000)
+                if (mins < 60) return `${mins}m ago`
+                const hrs = Math.floor(mins / 60)
+                if (hrs < 24) return `${hrs}h ago`
+                return `${Math.floor(hrs / 24)}d ago`
+              }
+              return [
+                { key: 'bluesky', icon: <BlueskyIcon size={20} className="text-current" /> },
+                { key: 'twitter', icon: <TwitterIcon size={20} className="text-current" /> },
+                { key: 'threads', icon: <MessageCircle size={20} className="text-current" /> },
+                { key: 'instagram', icon: <Instagram size={20} className="text-current" /> },
+                { key: 'reddit', icon: <Hash size={20} className="text-current" /> },
+                { key: 'medium', icon: <BookOpen size={20} className="text-current" /> },
+                { key: 'substack', icon: <Newspaper size={20} className="text-current" /> },
+              ].map(({ key, icon }) => (
+                <RateLimitCard
+                  key={key}
+                  platform={key}
+                  icon={icon}
+                  repliesToday={data.repliesToday?.[key] || 0}
+                  maxReplies={data.settings?.platforms?.[key]?.maxRepliesPerDay || 5}
+                  canReply={(data.repliesToday?.[key] || 0) < (data.settings?.platforms?.[key]?.maxRepliesPerDay || 5)}
+                  lastReplied={timeAgo(lastRepliedByPlatform[key])}
+                  isActive={platformFilter === key}
+                  onClick={() => setPlatformFilter(platformFilter === key ? null : key)}
+                />
+              ))
+            })()}
           </div>
 
           {/* Queue */}
@@ -362,20 +381,18 @@ export default function ReplyQueue() {
 // ---- Engagement Inbox Tab ----
 
 function EngagementInbox({ data, onRefresh, onDraftReply }) {
-  const [scanningBsky, setScanningBsky] = useState(false)
-  const [scanningTwitter, setScanningTwitter] = useState(false)
+  const [scanningAll, setScanningAll] = useState(false)
   const [scanResult, setScanResult] = useState(null)
   const [showDismissed, setShowDismissed] = useState(false)
 
-  const handleScan = async (platform) => {
-    const setter = platform === 'bluesky' ? setScanningBsky : setScanningTwitter
-    setter(true)
+  const handleScanAll = async () => {
+    setScanningAll(true)
     setScanResult(null)
     try {
       const res = await fetch('/api/engagement/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ platform })
+        body: JSON.stringify({})
       })
       const result = await res.json()
       setScanResult(result)
@@ -383,12 +400,12 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
     } catch (err) {
       setScanResult({ success: false, error: err.message })
     }
-    setter(false)
+    setScanningAll(false)
   }
 
   const handleDraftReply = async (itemId) => {
     try {
-      const res = await fetch(`/api/engagement/${itemId}/draft-reply`, {
+      const res = await fetch(`/api/engagement/${encodeURIComponent(itemId)}/draft-reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       })
@@ -403,7 +420,7 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
 
   const handleDelete = async (itemId) => {
     try {
-      await fetch(`/api/engagement/${itemId}`, { method: 'DELETE' })
+      await fetch(`/api/engagement/${encodeURIComponent(itemId)}`, { method: 'DELETE' })
       onRefresh()
     } catch (err) {
       console.error('Error deleting engagement item:', err)
@@ -412,7 +429,7 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
 
   const handleComplete = async (itemId) => {
     try {
-      await fetch(`/api/engagement/${itemId}`, {
+      await fetch(`/api/engagement/${encodeURIComponent(itemId)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'completed' })
@@ -425,7 +442,7 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
 
   const handleDismiss = async (itemId) => {
     try {
-      await fetch(`/api/engagement/${itemId}`, {
+      await fetch(`/api/engagement/${encodeURIComponent(itemId)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'dismissed' })
@@ -438,7 +455,7 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
 
   const handleMarkSeen = async (itemId) => {
     try {
-      await fetch(`/api/engagement/${itemId}`, {
+      await fetch(`/api/engagement/${encodeURIComponent(itemId)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'seen' })
@@ -456,50 +473,39 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
   return (
     <div className="space-y-4">
       {/* Scan Controls */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BlueskyIcon size={20} className="text-blue-600" />
-            <div>
-              <p className="text-sm font-medium text-blue-800">Bluesky</p>
-              <p className="text-xs text-blue-600">
-                {data?.stats?.bluesky?.lastScannedAt
-                  ? `Last scan: ${new Date(data.stats.bluesky.lastScannedAt).toLocaleString()}`
-                  : 'Never scanned'}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => handleScan('bluesky')}
-            disabled={scanningBsky}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-          >
-            <RefreshCw size={14} className={scanningBsky ? 'animate-spin' : ''} />
-            {scanningBsky ? 'Scanning...' : 'Scan Bluesky'}
-          </button>
+      <div className="bg-white border border-neutral-200 rounded-lg p-3 flex items-center justify-between">
+        <div className="flex items-center gap-3 flex-wrap">
+          {[
+            { key: 'bluesky', icon: <BlueskyIcon size={14} className="text-blue-500" /> },
+            { key: 'twitter', icon: <TwitterIcon size={14} className="text-neutral-700" /> },
+            { key: 'threads', icon: <MessageCircle size={14} className="text-neutral-600" /> },
+            { key: 'instagram', icon: <Instagram size={14} className="text-pink-500" /> },
+            { key: 'reddit', icon: <Hash size={14} className="text-orange-500" /> },
+            { key: 'medium', icon: <BookOpen size={14} className="text-green-700" /> },
+            { key: 'substack', icon: <Newspaper size={14} className="text-orange-600" /> },
+          ].map(({ key, icon }) => {
+            const lastScan = data?.stats?.[key]?.lastScannedAt
+            const hasItems = (data?.stats?.[key]?.total || 0) > 0
+            return (
+              <div key={key} className="flex items-center gap-1" title={`${PLATFORM_LABELS[key]}: ${lastScan ? new Date(lastScan).toLocaleString() : 'Never scanned'}`}>
+                {icon}
+                <span className={`text-xs ${hasItems ? 'text-neutral-700 font-medium' : 'text-neutral-400'}`}>
+                  {data?.stats?.[key]?.new > 0 && (
+                    <span className="text-red-500 font-bold mr-0.5">{data.stats[key].new}</span>
+                  )}
+                </span>
+              </div>
+            )
+          })}
         </div>
-
-        <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TwitterIcon size={20} className="text-neutral-700" />
-            <div>
-              <p className="text-sm font-medium text-neutral-800">Twitter / X</p>
-              <p className="text-xs text-neutral-500">
-                {data?.stats?.twitter?.lastScannedAt
-                  ? `Last scan: ${new Date(data.stats.twitter.lastScannedAt).toLocaleString()}`
-                  : 'Never scanned'}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => handleScan('twitter')}
-            disabled={scanningTwitter}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-neutral-800 text-white rounded hover:bg-neutral-900 disabled:opacity-50"
-          >
-            <RefreshCw size={14} className={scanningTwitter ? 'animate-spin' : ''} />
-            {scanningTwitter ? 'Scanning...' : 'Scan Twitter'}
-          </button>
-        </div>
+        <button
+          onClick={handleScanAll}
+          disabled={scanningAll}
+          className="flex items-center gap-1.5 px-4 py-2 text-sm bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50 flex-shrink-0"
+        >
+          <RefreshCw size={14} className={scanningAll ? 'animate-spin' : ''} />
+          {scanningAll ? 'Scanning...' : 'Scan All'}
+        </button>
       </div>
 
       {/* Scan Result Feedback */}
@@ -508,14 +514,14 @@ function EngagementInbox({ data, onRefresh, onDraftReply }) {
           scanResult.success !== false ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
         }`}>
           {scanResult.success !== false ? (
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-2 flex-wrap">
               <CheckCircle size={14} />
               Scan complete.
-              {scanResult.results?.bluesky && ` Bluesky: ${scanResult.results.bluesky.newCount ?? 0} new.`}
-              {scanResult.results?.twitter && (
-                scanResult.results.twitter.success
-                  ? ` Twitter: ${scanResult.results.twitter.newCount ?? 0} new.`
-                  : ` Twitter: ${scanResult.results.twitter.error}`
+              {scanResult.results && Object.entries(scanResult.results).map(([p, r]) => (
+                r.newCount > 0 ? <span key={p} className="font-medium"> {p}: {r.newCount} new</span> : null
+              ))}
+              {scanResult.results && Object.values(scanResult.results).every(r => (r.newCount || 0) === 0) && (
+                <span> No new items found.</span>
               )}
             </span>
           ) : (
@@ -632,13 +638,13 @@ function EngagementItem({ item, onDraftReply, onDismiss, onMarkSeen, onDelete, o
             )}
           </div>
 
-          {/* Post text */}
+          {/* Their post */}
           <p className="text-neutral-800 whitespace-pre-wrap text-sm">{item.postText}</p>
 
           {/* Draft reply (shown after drafting) */}
           {item.draftReply && (
-            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded">
-              <p className="text-xs font-medium text-green-700 mb-1">Draft reply:</p>
+            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
+              <p className="text-xs font-medium text-green-700 mb-1">Your reply:</p>
               <p className="text-sm text-neutral-800 whitespace-pre-wrap">{item.draftReply}</p>
               <button
                 onClick={() => handleCopyAndOpen(item.draftReply, item.postUrl)}
@@ -743,30 +749,34 @@ const PLATFORM_STYLE = {
   substack: { bg: 'bg-orange-50', border: 'border-orange-200', hover: 'hover:border-orange-300', text: 'text-orange-600', ring: 'ring-orange-500', activeBg: 'bg-orange-100' },
 }
 
-function RateLimitCard({ platform, icon, repliesToday, maxReplies, canReply, isActive, onClick }) {
+function RateLimitCard({ platform, icon, repliesToday, maxReplies, canReply, lastReplied, isActive, onClick }) {
   const remaining = maxReplies - repliesToday
   const ps = PLATFORM_STYLE[platform] || PLATFORM_STYLE.twitter
 
   return (
     <button
       onClick={onClick}
-      className={`p-3 rounded-lg border text-left w-full transition-all ${
+      className={`p-4 rounded-lg border text-left w-full transition-all flex flex-col ${
         isActive
           ? `ring-2 ring-offset-1 ${ps.ring} ${ps.border} ${ps.activeBg}`
           : `${ps.bg} ${ps.border} ${ps.hover}`
       }`}
     >
-      <div className="flex items-center gap-2 mb-1">
-        <div className={ps.text}>{icon}</div>
-        <h3 className="font-semibold text-sm truncate">{PLATFORM_LABELS[platform] || platform}</h3>
-      </div>
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-neutral-500">
-          {repliesToday}/{maxReplies}
+      <div>
+        <h3 className="font-semibold capitalize">{PLATFORM_LABELS[platform] || platform}</h3>
+        <p className="text-sm text-neutral-600">
+          {repliesToday} / {maxReplies} replies today
         </p>
-        <div className={`text-lg font-bold ${canReply ? 'text-green-600' : 'text-red-600'}`}>
+      </div>
+      <p className="text-xs text-neutral-500 mt-2">
+        {lastReplied ? `Last reply: ${lastReplied}` : 'No replies yet'}
+      </p>
+      <div className={`flex items-center gap-2 mt-auto pt-2 ${canReply ? 'text-green-600' : 'text-red-600'}`}>
+        <span className="text-2xl font-bold">
           {remaining > 0 ? remaining : 0}
-        </div>
+          <span className="text-sm font-normal ml-1">left</span>
+        </span>
+        <div className={ps.text}>{icon}</div>
       </div>
     </button>
   )
@@ -844,12 +854,31 @@ function ReplyItem({ item, canReply, onUpdate }) {
     <div className={`p-4 ${isFailed ? 'bg-red-50' : ''}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          {/* Platform + status badges */}
-          <div className="flex items-center gap-2 mb-2">
+          {/* Platform + author + badges */}
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             {getPlatformIcon(item.platform)}
-            <span className="text-sm font-medium">
-              {PLATFORM_LABELS[item.platform] || item.platform}
-            </span>
+            {item.targetAuthor && (
+              <span className="text-sm font-medium">
+                @{item.targetAuthor}
+              </span>
+            )}
+            {item.targetAuthorDisplayName && item.targetAuthorDisplayName !== item.targetAuthor && (
+              <span className="text-xs text-neutral-500">({item.targetAuthorDisplayName})</span>
+            )}
+            {!item.targetAuthor && (
+              <span className="text-sm font-medium">
+                {PLATFORM_LABELS[item.platform] || item.platform}
+              </span>
+            )}
+            {item.engagementType && (
+              <span className={`px-2 py-0.5 text-xs rounded ${
+                item.engagementType === 'reply'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-purple-100 text-purple-700'
+              }`}>
+                {item.engagementType === 'reply' ? 'Reply' : 'Mention'}
+              </span>
+            )}
             {isFailed && (
               <span className="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded" title={item.lastError}>
                 Failed
@@ -878,31 +907,40 @@ function ReplyItem({ item, canReply, onUpdate }) {
             )}
           </div>
 
-          {/* Target context */}
-          {(item.targetAuthor || item.targetText) && (
-            <div className="mb-2 pl-3 border-l-2 border-neutral-200">
-              {item.targetAuthor && (
-                <p className="text-xs text-neutral-500 mb-0.5">@{item.targetAuthor}</p>
-              )}
-              {item.targetText && (
-                <p className="text-sm text-neutral-500 line-clamp-2">{item.targetText}</p>
-              )}
-            </div>
+          {/* Their original post */}
+          {item.targetText && (
+            <p className="text-neutral-600 whitespace-pre-wrap text-sm mb-2">{item.targetText}</p>
           )}
 
-          {/* Reply text */}
-          <p className="text-neutral-800 whitespace-pre-wrap">{item.replyText}</p>
+          {/* Our reply */}
+          <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
+            <p className="text-xs font-medium text-green-700 mb-1">Your reply:</p>
+            <p className="text-neutral-800 whitespace-pre-wrap text-sm">{item.replyText}</p>
+          </div>
 
-          {/* Target URL */}
-          <a
-            href={item.targetUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-blue-600 hover:underline mt-1 inline-flex items-center gap-1"
-          >
-            <ExternalLink size={10} />
-            {item.targetUrl.length > 60 ? item.targetUrl.substring(0, 60) + '...' : item.targetUrl}
-          </a>
+          {/* Links */}
+          <div className="flex items-center gap-3 mt-2">
+            <a
+              href={item.targetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1"
+            >
+              <ExternalLink size={10} />
+              View post
+            </a>
+            {item.ourPostUrl && (
+              <a
+                href={item.ourPostUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-neutral-500 hover:underline inline-flex items-center gap-1"
+              >
+                <ExternalLink size={10} />
+                Our post
+              </a>
+            )}
+          </div>
 
           {isFailed && item.lastError && (
             <p className="text-xs text-red-600 mt-2">Error: {item.lastError}</p>

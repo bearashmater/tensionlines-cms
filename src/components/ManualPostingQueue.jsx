@@ -31,7 +31,9 @@ import {
   Archive,
   ThumbsUp,
   XCircle,
-  Star
+  Star,
+  Film,
+  Video
 } from 'lucide-react'
 import PlatformStatusBadges from './PlatformStatusBadges'
 
@@ -329,6 +331,46 @@ function QueueItem({ item, canPost, postingMode, onUpdate }) {
   const [podcastAction, setPodcastAction] = useState(null) // 'rework' | 'salvage' | null
   const [podcastNotes, setPodcastNotes] = useState('')
   const [trialRating, setTrialRating] = useState({ soundReal: 0, interesting: 0, notes: '' })
+  const [reelGenerating, setReelGenerating] = useState(false)
+  const [reelRating, setReelRating] = useState({ overall: 0, image: 0, voice: 0, notes: '' })
+  const [reelRatingSubmitted, setReelRatingSubmitted] = useState(false)
+
+  const handleGenerateReel = async () => {
+    setReelGenerating(true)
+    try {
+      await fetch(`/api/reels/${item.id}/generate`, { method: 'POST' })
+      // Poll for completion
+      const poll = setInterval(async () => {
+        const res = await fetch(`/api/reels/${item.id}/status`)
+        const data = await res.json()
+        if (!data.reelGenerating) {
+          clearInterval(poll)
+          setReelGenerating(false)
+          onUpdate()
+        }
+      }, 5000)
+    } catch (err) {
+      console.error('Reel generation error:', err)
+      setReelGenerating(false)
+    }
+  }
+
+  const handleRateReel = async () => {
+    if (!reelRating.overall) return
+    try {
+      const res = await fetch(`/api/reels/${item.id}/rate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reelRating)
+      })
+      if (res.ok) {
+        setReelRatingSubmitted(true)
+        onUpdate()
+      }
+    } catch (err) {
+      console.error('Reel rating error:', err)
+    }
+  }
 
   const runVoiceCheck = async () => {
     const philosopher = item.createdBy || PHILOSOPHER_BY_PLATFORM[item.platform]
@@ -971,6 +1013,145 @@ function QueueItem({ item, canPost, postingMode, onUpdate }) {
               Caption: {item.caption}
             </p>
           )}
+          {/* Instagram Reel Preview & Rating */}
+          {item.platform === 'instagram' && (
+            <div className="mt-3 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Film size={14} className="text-pink-600" />
+                <span className="text-xs font-semibold text-neutral-700">Instagram Reel</span>
+                {item.reelGenerated && (
+                  <span className="px-1.5 py-0.5 text-[10px] bg-green-100 text-green-700 rounded font-medium">Ready</span>
+                )}
+                {item.reelGenerating && (
+                  <span className="px-1.5 py-0.5 text-[10px] bg-blue-100 text-blue-600 rounded font-medium flex items-center gap-1">
+                    <Loader2 size={10} className="animate-spin" /> Generating...
+                  </span>
+                )}
+              </div>
+
+              {item.reelGenerated && item.reelFile ? (
+                <div>
+                  <video
+                    controls
+                    className="w-full max-w-xs rounded-lg border border-neutral-300"
+                    style={{ maxHeight: '400px' }}
+                  >
+                    <source src={`/api/reels/${item.reelFile}`} type="video/mp4" />
+                  </video>
+                  <p className="text-[10px] text-neutral-400 mt-1">
+                    Generated {new Date(item.reelGeneratedAt).toLocaleString()}
+                  </p>
+
+                  {/* Rating */}
+                  {item.reelRating && !reelRatingSubmitted ? (
+                    <div className="mt-2 flex items-center gap-2 text-xs text-neutral-500">
+                      <Star size={12} className="text-amber-500 fill-amber-500" />
+                      Rated {item.reelRating.overall}/5
+                      {item.reelRating.notes && <span className="text-neutral-400">— {item.reelRating.notes}</span>}
+                    </div>
+                  ) : !reelRatingSubmitted ? (
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-neutral-600 w-14">Overall</span>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map(n => (
+                            <button
+                              key={n}
+                              onClick={() => setReelRating(r => ({ ...r, overall: n }))}
+                              className={`w-7 h-7 rounded text-xs font-medium transition-all ${
+                                reelRating.overall >= n
+                                  ? 'bg-amber-400 text-white'
+                                  : 'bg-neutral-200 text-neutral-500 hover:bg-neutral-300'
+                              }`}
+                            >{n}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-neutral-600 w-14">Image</span>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map(n => (
+                            <button
+                              key={n}
+                              onClick={() => setReelRating(r => ({ ...r, image: n }))}
+                              className={`w-7 h-7 rounded text-xs font-medium transition-all ${
+                                reelRating.image >= n
+                                  ? 'bg-pink-400 text-white'
+                                  : 'bg-neutral-200 text-neutral-500 hover:bg-neutral-300'
+                              }`}
+                            >{n}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-neutral-600 w-14">Voice</span>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map(n => (
+                            <button
+                              key={n}
+                              onClick={() => setReelRating(r => ({ ...r, voice: n }))}
+                              className={`w-7 h-7 rounded text-xs font-medium transition-all ${
+                                reelRating.voice >= n
+                                  ? 'bg-blue-400 text-white'
+                                  : 'bg-neutral-200 text-neutral-500 hover:bg-neutral-300'
+                              }`}
+                            >{n}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Notes (optional)..."
+                        value={reelRating.notes}
+                        onChange={e => setReelRating(r => ({ ...r, notes: e.target.value }))}
+                        className="w-full text-xs px-2 py-1.5 border border-neutral-200 rounded"
+                      />
+                      <button
+                        onClick={handleRateReel}
+                        disabled={!reelRating.overall}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-amber-500 text-white rounded hover:bg-amber-600 disabled:opacity-40"
+                      >
+                        <Star size={12} /> Rate Reel
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="mt-2 flex items-center gap-2 text-xs text-green-600">
+                      <Check size={12} /> Rating saved
+                    </div>
+                  )}
+
+                  {/* Regenerate button */}
+                  <button
+                    onClick={handleGenerateReel}
+                    disabled={reelGenerating}
+                    className="flex items-center gap-1 mt-2 px-3 py-1.5 text-xs font-medium bg-neutral-200 text-neutral-700 rounded hover:bg-neutral-300 disabled:opacity-50"
+                  >
+                    <RotateCcw size={12} /> Regenerate
+                  </button>
+                </div>
+              ) : item.reelError ? (
+                <div>
+                  <p className="text-xs text-red-600">Error: {item.reelError.substring(0, 120)}</p>
+                  <button
+                    onClick={handleGenerateReel}
+                    disabled={reelGenerating}
+                    className="flex items-center gap-1 mt-2 px-3 py-1.5 text-xs font-medium bg-pink-100 text-pink-700 rounded hover:bg-pink-200 disabled:opacity-50"
+                  >
+                    {reelGenerating ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />}
+                    Retry
+                  </button>
+                </div>
+              ) : !reelGenerating ? (
+                <button
+                  onClick={handleGenerateReel}
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-pink-600 text-white rounded hover:bg-pink-700"
+                >
+                  <Video size={12} /> Generate Reel
+                </button>
+              ) : null}
+            </div>
+          )}
+
           {isFailed && item.lastError && (
             <p className="text-xs text-red-600 mt-2">Error: {item.lastError}</p>
           )}

@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
-import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell, Zap, Compass, Send, Reply, Sparkles, MessageSquarePlus, Layers, Heart, Mic } from 'lucide-react'
+import { Home, Users, ListTodo, Activity, FileText, Lightbulb, BarChart3, Search, Menu, Book, Calendar, Repeat, X, DollarSign, AlertTriangle, Rocket, Target, Bell, Zap, Compass, Send, Reply, Sparkles, MessageSquarePlus, Layers, Heart, Mic, LogOut } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useWebSocket } from './lib/useWebSocket'
+import { getAuthStatus, logout } from './lib/api'
+import LoginPage from './components/LoginPage'
 
 // Import navigation components
 import { NavGroup, Breadcrumbs } from './components/Navigation'
@@ -98,11 +100,54 @@ const navGroups = [
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [authState, setAuthState] = useState('loading') // loading | login | setup | authenticated
+
+  useEffect(() => {
+    getAuthStatus().then(status => {
+      if (!status.authEnabled) {
+        // No password hash configured — auth disabled, go straight to app
+        setAuthState('authenticated')
+        return
+      }
+      // Auth is enabled — check for existing token
+      const token = localStorage.getItem('cms_token')
+      if (token) {
+        fetch('/api/health', { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => {
+            if (r.ok) setAuthState('authenticated')
+            else { localStorage.removeItem('cms_token'); setAuthState('login') }
+          })
+          .catch(() => setAuthState('login'))
+      } else {
+        setAuthState('login')
+      }
+    }).catch(() => {
+      // Can't reach server — show app anyway (might be loading)
+      setAuthState('authenticated')
+    })
+
+    // Listen for 401s from api.js
+    const handleUnauth = () => setAuthState('login')
+    window.addEventListener('cms-unauthorized', handleUnauth)
+    return () => window.removeEventListener('cms-unauthorized', handleUnauth)
+  }, [])
+
+  if (authState === 'loading') {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <p className="text-neutral-500">Loading...</p>
+      </div>
+    )
+  }
+
+  if (authState === 'login') {
+    return <LoginPage onSuccess={() => setAuthState('authenticated')} />
+  }
 
   return (
     <Router>
-      <AppContent 
-        sidebarOpen={sidebarOpen} 
+      <AppContent
+        sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
@@ -228,11 +273,13 @@ function Sidebar({ location, onClose, showCloseButton = false }) {
   useEffect(() => {
     const fetchCounts = async () => {
       try {
+        const token = localStorage.getItem('cms_token')
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
         const [posting, replies, comments, engagement] = await Promise.all([
-          fetch('/api/posting-queue').then(r => r.json()).catch(() => null),
-          fetch('/api/reply-queue').then(r => r.json()).catch(() => null),
-          fetch('/api/comment-queue').then(r => r.json()).catch(() => null),
-          fetch('/api/engagement-actions').then(r => r.json()).catch(() => null)
+          fetch('/api/posting-queue', { headers }).then(r => r.json()).catch(() => null),
+          fetch('/api/reply-queue', { headers }).then(r => r.json()).catch(() => null),
+          fetch('/api/comment-queue', { headers }).then(r => r.json()).catch(() => null),
+          fetch('/api/engagement-actions', { headers }).then(r => r.json()).catch(() => null)
         ])
         setQueueCounts({
           '/posting-queue': posting?.queue?.filter(i => i.status === 'ready' || i.status === 'scheduled' || i.status === 'pending-review')?.length || 0,
@@ -289,6 +336,15 @@ function Sidebar({ location, onClose, showCloseButton = false }) {
 
       {/* Footer */}
       <div className="pt-4 border-t border-neutral-200 mt-auto">
+        {localStorage.getItem('cms_token') && (
+          <button
+            onClick={logout}
+            className="flex items-center space-x-2 px-3 py-2 text-xs text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-md w-full mb-2"
+          >
+            <LogOut size={14} />
+            <span>Sign Out</span>
+          </button>
+        )}
         <p className="text-xs text-neutral-500 px-3">
           Built by the philosopher squad
         </p>

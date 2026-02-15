@@ -27,6 +27,9 @@ import { WebSocketServer } from 'ws';
 import TelegramBot from 'node-telegram-bot-api';
 import { BskyAgent, RichText } from '@atproto/api';
 import Anthropic from '@anthropic-ai/sdk';
+import sharp from 'sharp';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -40,6 +43,16 @@ if (fs.existsSync(envPath)) {
     if (match) process.env[match[1].trim()] = match[2].trim();
   }
 }
+
+// Auto-generate JWT_SECRET if not set
+if (!process.env.JWT_SECRET) {
+  const generated = crypto.randomBytes(32).toString('hex');
+  fs.appendFileSync(envPath, `\nJWT_SECRET=${generated}\n`);
+  process.env.JWT_SECRET = generated;
+  console.log('Generated JWT_SECRET and appended to .env');
+}
+
+const AUTH_ENABLED = !!process.env.CMS_PASSWORD_HASH;
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -105,7 +118,23 @@ app.use((req, res, next) => {
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws' });
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req) => {
+  // WebSocket auth: verify token from query param when auth is enabled
+  if (AUTH_ENABLED) {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const token = url.searchParams.get('token');
+    if (!token) {
+      ws.close(4001, 'Authentication required');
+      return;
+    }
+    try {
+      jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+      ws.close(4001, 'Invalid or expired token');
+      return;
+    }
+  }
+
   ws.isAlive = true;
   ws.on('pong', () => { ws.isAlive = true; });
   ws.send(JSON.stringify({ type: 'connected' }));
@@ -1038,6 +1067,92 @@ function getChapterDetails(bookId, chapterNum) {
   
   return chapter;
 }
+
+// ============================================================================
+// AUTHENTICATION
+// ============================================================================
+
+/**
+ * Login endpoint — returns JWT token on valid password
+ */
+app.post('/api/auth/login', (req, res) => {
+  if (!AUTH_ENABLED) {
+    return res.json({ token: 'auth-disabled', message: 'Auth is not enabled' });
+  }
+
+  const { password } = req.body;
+  if (!password) {
+    return res.status(400).json({ error: 'Password is required' });
+  }
+
+  const hash = crypto.createHash('sha256').update(password).digest('hex');
+  if (hash !== process.env.CMS_PASSWORD_HASH) {
+    return res.status(401).json({ error: 'Invalid password' });
+  }
+
+  const token = jwt.sign({ sub: 'admin', iat: Math.floor(Date.now() / 1000) }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  res.json({ token });
+});
+
+/**
+ * Setup endpoint — one-time password setup (only works when no password hash exists)
+ */
+app.post('/api/auth/setup', (req, res) => {
+  if (process.env.CMS_PASSWORD_HASH) {
+    return res.status(400).json({ error: 'Password already configured. To reset, remove CMS_PASSWORD_HASH from .env and restart.' });
+  }
+
+  const { password } = req.body;
+  if (!password || password.length < 4) {
+    return res.status(400).json({ error: 'Password must be at least 4 characters' });
+  }
+
+  const hash = crypto.createHash('sha256').update(password).digest('hex');
+  fs.appendFileSync(envPath, `CMS_PASSWORD_HASH=${hash}\n`);
+  process.env.CMS_PASSWORD_HASH = hash;
+
+  res.json({ success: true, message: 'Password set. Restart the server to enable auth.' });
+});
+
+/**
+ * Check auth status
+ */
+app.get('/api/auth/status', (req, res) => {
+  res.json({
+    authEnabled: AUTH_ENABLED,
+    hasPassword: !!process.env.CMS_PASSWORD_HASH
+  });
+});
+
+/**
+ * Auth middleware — protects all /api/* routes (except auth endpoints and health)
+ * Graceful degradation: if AUTH_ENABLED is false, skip auth entirely.
+ */
+function requireAuth(req, res, next) {
+  // Skip auth if not enabled
+  if (!AUTH_ENABLED) return next();
+
+  // Skip: auth endpoints, health check
+  if (req.path.startsWith('/api/auth/')) return next();
+  if (req.path === '/api/health') return next();
+
+  // Only protect /api/* routes — let Vite handle everything else
+  if (!req.path.startsWith('/api/')) return next();
+
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
+
+app.use(requireAuth);
 
 // ============================================================================
 // API ROUTES
@@ -2215,6 +2330,119 @@ function savePostingQueue(data) {
 }
 
 /**
+ * Strip emoji from text — removes all Unicode emoji characters.
+ * Keeps standard punctuation, letters, numbers, and common symbols.
+ */
+function stripEmoji(text) {
+  if (!text) return text;
+  return text
+    .replace(/[\u{1F600}-\u{1F64F}]/gu, '')  // emoticons
+    .replace(/[\u{1F300}-\u{1F5FF}]/gu, '')  // misc symbols & pictographs
+    .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')  // transport & map
+    .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '')  // flags
+    .replace(/[\u{2600}-\u{26FF}]/gu, '')     // misc symbols (☀️⚡♻️ etc)
+    .replace(/[\u{2700}-\u{27BF}]/gu, '')     // dingbats
+    .replace(/[\u{FE00}-\u{FE0F}]/gu, '')     // variation selectors
+    .replace(/[\u{1F900}-\u{1F9FF}]/gu, '')   // supplemental symbols
+    .replace(/[\u{1FA00}-\u{1FA6F}]/gu, '')   // chess symbols
+    .replace(/[\u{1FA70}-\u{1FAFF}]/gu, '')   // symbols extended-A
+    .replace(/[\u{200D}]/gu, '')              // zero-width joiner
+    .replace(/[\u{20E3}]/gu, '')              // combining enclosing keycap
+    .replace(/\s{2,}/g, ' ')                   // collapse double spaces left by removed emoji
+    .trim();
+}
+
+/**
+ * Strip emoji from a queue item's content fields (content, caption, parts).
+ * Mutates the item in place.
+ */
+function stripEmojiFromItem(item) {
+  if (item.content) item.content = stripEmoji(item.content);
+  if (item.caption) item.caption = stripEmoji(item.caption);
+  if (item.title) item.title = stripEmoji(item.title);
+  if (Array.isArray(item.parts)) {
+    for (const part of item.parts) {
+      if (part.content) part.content = stripEmoji(part.content);
+    }
+  }
+}
+
+/**
+ * Generate content tags for a queue item using Claude.
+ * Returns an array of 3-5 lowercase tags.
+ */
+async function generateContentTags(text) {
+  const client = getAnthropicClient();
+  if (!client) return [];
+
+  const response = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 100,
+    system: 'Generate 3-5 content tags for the given text. Return ONLY a JSON array of lowercase strings. Tags should describe the themes, topics, and philosophical concepts. Example: ["stoicism","resilience","identity","paradox"]',
+    messages: [{ role: 'user', content: text.substring(0, 500) }]
+  });
+
+  try {
+    const raw = response.content[0].text.trim();
+    const match = raw.match(/\[[\s\S]*\]/);
+    const tags = JSON.parse(match ? match[0] : raw);
+    trackCost('Claude Haiku (Tags)', 0.0005, 'content tag generation');
+    return Array.isArray(tags) ? tags.map(t => String(t).toLowerCase().trim()).slice(0, 5) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Clean and tag all queue items:
+ * - Strip emoji from content/caption/parts
+ * - Generate tags for items missing them
+ */
+async function cleanAndTagQueueItems() {
+  const queue = getPostingQueue();
+  let emojiCleaned = 0;
+  let tagged = 0;
+
+  // Process queue items
+  const allItems = [...(queue.queue || [])];
+  for (const item of allItems) {
+    // Strip emoji
+    const before = JSON.stringify([item.content, item.caption, item.parts]);
+    stripEmojiFromItem(item);
+    const after = JSON.stringify([item.content, item.caption, item.parts]);
+    if (before !== after) emojiCleaned++;
+
+    // Auto-tag if missing
+    if (!item.tags || item.tags.length === 0) {
+      const text = item.caption || item.content || '';
+      if (text.length > 20) {
+        item.tags = await generateContentTags(text);
+        if (item.tags.length > 0) tagged++;
+      }
+    }
+  }
+
+  // Also strip emoji from posted items (no need to tag those)
+  for (const item of (queue.posted || [])) {
+    const before = JSON.stringify([item.content, item.caption, item.parts]);
+    stripEmojiFromItem(item);
+    const after = JSON.stringify([item.content, item.caption, item.parts]);
+    if (before !== after) emojiCleaned++;
+  }
+
+  if (emojiCleaned > 0 || tagged > 0) {
+    savePostingQueue(queue);
+    broadcast('posting-queue');
+    console.log(`[QueueClean] Cleaned emoji from ${emojiCleaned} items, tagged ${tagged} items`);
+    logSystemEvent('queue-clean', `Stripped emoji from ${emojiCleaned} items, auto-tagged ${tagged} items`);
+  } else {
+    console.log('[QueueClean] All items already clean and tagged');
+  }
+
+  return { emojiCleaned, tagged, totalQueue: allItems.length };
+}
+
+/**
  * Get posting queue with rate limit status
  */
 app.get('/api/posting-queue', (req, res) => {
@@ -2306,6 +2534,7 @@ app.post('/api/posting-queue', (req, res) => {
       item.scheduledFor = new Date(scheduledFor).toISOString();
     }
 
+    stripEmojiFromItem(item);
     queue.queue.push(item);
     savePostingQueue(queue);
 
@@ -2353,6 +2582,9 @@ app.patch('/api/posting-queue/:id', (req, res) => {
         item.status = 'scheduled';
       }
     }
+
+    // Strip emoji from content fields
+    stripEmojiFromItem(item);
 
     savePostingQueue(queue);
     res.json({ success: true, item });
@@ -3538,6 +3770,7 @@ app.post('/api/repurpose/queue', (req, res) => {
         item.caption = caption || '';
       }
 
+      stripEmojiFromItem(item);
       queue.queue.push(item);
       added.push(item);
     }
@@ -3765,6 +3998,7 @@ async function runAutoPipeline() {
           item.caption = draft.caption || '';
         }
 
+        stripEmojiFromItem(item);
         queue.queue.push(item);
         totalDraftsQueued++;
       }
@@ -3889,6 +4123,7 @@ app.post('/api/ideas/:id/fast-track', async (req, res) => {
         item.caption = draft.caption || '';
       }
 
+      stripEmojiFromItem(item);
       queue.queue.push(item);
       draftCount++;
     }
@@ -5116,14 +5351,20 @@ function getEngagementInbox() {
   } catch (err) {
     console.error('Error reading engagement inbox:', err);
   }
-  return {
+  const defaultInbox = {
     bluesky: { lastScannedAt: null, items: [] },
     twitter: { lastScannedAt: null, items: [] },
+    threads: { lastScannedAt: null, items: [] },
+    instagram: { lastScannedAt: null, items: [] },
+    reddit: { lastScannedAt: null, items: [] },
+    medium: { lastScannedAt: null, items: [] },
+    substack: { lastScannedAt: null, items: [] },
     settings: {
       bluesky: { scanIntervalMinutes: 15, autoScan: true },
       twitter: { autoScan: false }
     }
   };
+  return defaultInbox;
 }
 
 function saveEngagementInbox(data) {
@@ -5181,6 +5422,14 @@ async function scanBlueskyEngagement() {
 
     const inbox = getEngagementInbox();
     const existingIds = new Set(inbox.bluesky.items.map(i => i.id));
+
+    // Also check reply queue to avoid re-surfacing posts we've already replied to
+    const replyData = getReplyQueue();
+    const repliedUrls = new Set([
+      ...replyData.queue.map(i => i.targetUrl),
+      ...replyData.posted.map(i => i.targetUrl)
+    ].filter(Boolean));
+
     let newCount = 0;
 
     for (const notif of relevant) {
@@ -5192,6 +5441,9 @@ async function scanBlueskyEngagement() {
       const postText = notif.record?.text || '';
       const rkey = notif.uri.split('/').pop();
       const postUrl = `https://bsky.app/profile/${authorHandle}/post/${rkey}`;
+
+      // Skip if we've already replied to this URL
+      if (repliedUrls.has(postUrl)) continue;
 
       // Build our post URL if this is a reply
       let ourPostUrl = null;
@@ -5257,6 +5509,14 @@ function scanTwitterEngagement() {
 
     const inbox = getEngagementInbox();
     const existingIds = new Set(inbox.twitter.items.map(i => i.id));
+
+    // Also check reply queue to avoid re-surfacing posts we've already replied to
+    const replyData = getReplyQueue();
+    const repliedUrls = new Set([
+      ...replyData.queue.map(i => i.targetUrl),
+      ...replyData.posted.map(i => i.targetUrl)
+    ].filter(Boolean));
+
     let newCount = 0;
 
     for (const tweet of mentions) {
@@ -5269,6 +5529,9 @@ function scanTwitterEngagement() {
       const authorDisplayName = tweet.user?.name || tweet.author?.name || authorHandle;
       const postText = tweet.text || tweet.full_text || '';
       const postUrl = `https://x.com/${authorHandle}/status/${tweetId}`;
+
+      // Skip if we've already replied to this URL
+      if (repliedUrls.has(postUrl)) continue;
 
       // Check if this is a reply to us or a mention
       const isReply = tweet.in_reply_to_screen_name?.toLowerCase() === 'thetensionlines' ||
@@ -5316,6 +5579,17 @@ function scanTwitterEngagement() {
   }
 }
 
+function scanPlatformStub(platform) {
+  // Stub for platforms without API access yet
+  // Updates lastScannedAt so the UI shows when it was checked
+  const inbox = getEngagementInbox();
+  if (!inbox[platform]) inbox[platform] = { lastScannedAt: null, items: [] };
+  inbox[platform].lastScannedAt = new Date().toISOString();
+  saveEngagementInbox(inbox);
+  console.log(`[Engagement] ${platform} scan: no API configured — timestamp updated`);
+  return { success: true, newCount: 0, total: inbox[platform].items.length, noApi: true };
+}
+
 // --- Engagement API Routes ---
 
 /**
@@ -5326,10 +5600,14 @@ app.get('/api/engagement', (req, res) => {
     const inbox = getEngagementInbox();
     const { platform, status } = req.query;
 
-    let items = [
-      ...inbox.bluesky.items.map(i => ({ ...i })),
-      ...inbox.twitter.items.map(i => ({ ...i }))
-    ];
+    const ALL_ENGAGEMENT_PLATFORMS = ['bluesky', 'twitter', 'threads', 'instagram', 'reddit', 'medium', 'substack'];
+
+    let items = [];
+    for (const p of ALL_ENGAGEMENT_PLATFORMS) {
+      if (inbox[p]?.items) {
+        items.push(...inbox[p].items.map(i => ({ ...i })));
+      }
+    }
 
     if (platform) {
       items = items.filter(i => i.platform === platform);
@@ -5341,18 +5619,15 @@ app.get('/api/engagement', (req, res) => {
     // Sort by indexedAt descending
     items.sort((a, b) => new Date(b.indexedAt) - new Date(a.indexedAt));
 
-    const stats = {
-      bluesky: {
-        total: inbox.bluesky.items.length,
-        new: inbox.bluesky.items.filter(i => i.status === 'new').length,
-        lastScannedAt: inbox.bluesky.lastScannedAt
-      },
-      twitter: {
-        total: inbox.twitter.items.length,
-        new: inbox.twitter.items.filter(i => i.status === 'new').length,
-        lastScannedAt: inbox.twitter.lastScannedAt
-      }
-    };
+    const stats = {};
+    for (const p of ALL_ENGAGEMENT_PLATFORMS) {
+      const platItems = inbox[p]?.items || [];
+      stats[p] = {
+        total: platItems.length,
+        new: platItems.filter(i => i.status === 'new').length,
+        lastScannedAt: inbox[p]?.lastScannedAt || null
+      };
+    }
 
     res.json({ items, stats, settings: inbox.settings });
   } catch (err) {
@@ -5369,11 +5644,27 @@ app.post('/api/engagement/scan', async (req, res) => {
     const { platform } = req.body;
     const results = {};
 
-    if (!platform || platform === 'bluesky') {
-      results.bluesky = await scanBlueskyEngagement();
-    }
-    if (!platform || platform === 'twitter') {
-      results.twitter = scanTwitterEngagement();
+    const scanners = {
+      bluesky: () => scanBlueskyEngagement(),
+      twitter: () => Promise.resolve(scanTwitterEngagement()),
+      threads: () => Promise.resolve(scanPlatformStub('threads')),
+      instagram: () => Promise.resolve(scanPlatformStub('instagram')),
+      reddit: () => Promise.resolve(scanPlatformStub('reddit')),
+      medium: () => Promise.resolve(scanPlatformStub('medium')),
+      substack: () => Promise.resolve(scanPlatformStub('substack'))
+    };
+
+    if (platform && scanners[platform]) {
+      results[platform] = await scanners[platform]();
+    } else {
+      // Scan all platforms in parallel
+      const platforms = Object.keys(scanners);
+      const scanResults = await Promise.allSettled(platforms.map(p => scanners[p]()));
+      platforms.forEach((p, i) => {
+        results[p] = scanResults[i].status === 'fulfilled'
+          ? scanResults[i].value
+          : { success: false, error: scanResults[i].reason?.message || 'Scan failed' };
+      });
     }
 
     res.json({ success: true, results });
@@ -5396,15 +5687,18 @@ app.patch('/api/engagement/:id', (req, res) => {
     const inbox = getEngagementInbox();
     const id = req.params.id;
 
-    // Find in bluesky or twitter items
-    let item = inbox.bluesky.items.find(i => i.id === id);
-    if (!item) item = inbox.twitter.items.find(i => i.id === id);
+    // Find item across all platforms
+    let item = null;
+    for (const p of ['bluesky', 'twitter', 'threads', 'instagram', 'reddit', 'medium', 'substack']) {
+      if (inbox[p]?.items) {
+        item = inbox[p].items.find(i => i.id === id);
+        if (item) break;
+      }
+    }
     if (!item) return res.status(404).json({ error: 'Engagement item not found' });
 
     item.status = status;
-    if (status === 'seen' || status === 'replied' || status === 'dismissed') {
-      item.updatedAt = new Date().toISOString();
-    }
+    item.updatedAt = new Date().toISOString();
     saveEngagementInbox(inbox);
 
     res.json({ success: true, item });
@@ -5422,8 +5716,14 @@ app.post('/api/engagement/:id/draft-reply', async (req, res) => {
     const inbox = getEngagementInbox();
     const id = req.params.id;
 
-    let item = inbox.bluesky.items.find(i => i.id === id);
-    if (!item) item = inbox.twitter.items.find(i => i.id === id);
+    let item = null;
+    let itemPlatformKey = null;
+    for (const p of ['bluesky', 'twitter', 'threads', 'instagram', 'reddit', 'medium', 'substack']) {
+      if (inbox[p]?.items) {
+        const found = inbox[p].items.find(i => i.id === id);
+        if (found) { item = found; itemPlatformKey = p; break; }
+      }
+    }
     if (!item) return res.status(404).json({ error: 'Engagement item not found' });
 
     // Generate a draft reply using Claude
@@ -5462,22 +5762,24 @@ Rules:
       platform: item.platform,
       targetUrl: item.postUrl,
       targetAuthor: item.authorHandle,
+      targetAuthorDisplayName: item.authorDisplayName || null,
       targetText: item.postText,
       replyText: draftText,
       taskId: null,
       targetUri: item.postUri || null,
       targetCid: item.postCid || null,
-      engagementId: item.id
+      engagementId: item.id,
+      engagementType: item.type || null,
+      ourPostUrl: item.ourPostUrl || null
     };
 
     replyQueue.queue.unshift(replyItem);
     saveReplyQueue(replyQueue);
 
-    // Remove from engagement inbox — it lives in the reply queue now
-    const bskyIdx = inbox.bluesky.items.findIndex(i => i.id === id);
-    if (bskyIdx !== -1) inbox.bluesky.items.splice(bskyIdx, 1);
-    const twIdx = inbox.twitter.items.findIndex(i => i.id === id);
-    if (twIdx !== -1) inbox.twitter.items.splice(twIdx, 1);
+    // Mark as replied in engagement inbox (keep for dedup, don't remove)
+    item.status = 'replied';
+    item.updatedAt = new Date().toISOString();
+    item.replyQueueId = replyItem.id;
     saveEngagementInbox(inbox);
 
     broadcast('reply-queue');
@@ -5489,21 +5791,65 @@ Rules:
   }
 });
 
+/**
+ * POST /api/engagement - Manually add an engagement item (for platforms without API scanning)
+ */
+app.post('/api/engagement', (req, res) => {
+  try {
+    const { platform, type, authorHandle, authorDisplayName, postText, postUrl, ourPostUrl } = req.body;
+    if (!platform || !postUrl) {
+      return res.status(400).json({ error: 'platform and postUrl are required' });
+    }
+
+    const inbox = getEngagementInbox();
+    if (!inbox[platform]) inbox[platform] = { lastScannedAt: null, items: [] };
+
+    const item = {
+      id: `${platform}-manual-${Date.now()}`,
+      platform,
+      type: type || 'reply',
+      authorHandle: authorHandle || 'unknown',
+      authorDisplayName: authorDisplayName || authorHandle || 'unknown',
+      postText: postText || '',
+      postUrl,
+      postUri: null,
+      postCid: null,
+      ourPostUrl: ourPostUrl || null,
+      indexedAt: new Date().toISOString(),
+      scannedAt: new Date().toISOString(),
+      status: 'new'
+    };
+
+    inbox[platform].items.unshift(item);
+    saveEngagementInbox(inbox);
+    createEngagementNotification(item);
+    broadcast('engagement');
+
+    res.json({ success: true, item });
+  } catch (err) {
+    console.error('Error adding engagement item:', err);
+    res.status(500).json({ error: 'Failed to add engagement item' });
+  }
+});
+
 app.delete('/api/engagement/:id', (req, res) => {
   try {
     const inbox = getEngagementInbox();
     const id = req.params.id;
 
-    let idx = inbox.bluesky.items.findIndex(i => i.id === id);
-    if (idx !== -1) {
-      inbox.bluesky.items.splice(idx, 1);
-    } else {
-      idx = inbox.twitter.items.findIndex(i => i.id === id);
-      if (idx !== -1) {
-        inbox.twitter.items.splice(idx, 1);
-      } else {
-        return res.status(404).json({ error: 'Engagement item not found' });
+    let found = false;
+    for (const p of ['bluesky', 'twitter', 'threads', 'instagram', 'reddit', 'medium', 'substack']) {
+      if (inbox[p]?.items) {
+        const idx = inbox[p].items.findIndex(i => i.id === id);
+        if (idx !== -1) {
+          inbox[p].items.splice(idx, 1);
+          found = true;
+          break;
+        }
       }
+    }
+    if (!found) {
+      return res.status(404).json({ error: 'Engagement item not found' });
     }
 
     saveEngagementInbox(inbox);
@@ -10276,6 +10622,7 @@ async function runQueueReplenishment() {
       item.content = draft.cardText;
       item.caption = draft.caption || '';
     }
+    stripEmojiFromItem(item);
     freshQueue.queue.push(item);
     totalDraftsQueued++;
   }
@@ -11324,7 +11671,7 @@ The newsletter should have these sections (use ## headings):
 
   // --- Queue in posting queue as substack item ---
   const itemId = `post-${Date.now()}`;
-  queue.queue.push({
+  const newsletterItem = {
     id: itemId,
     createdAt: now.toISOString(),
     status: 'pending-review',
@@ -11345,7 +11692,9 @@ The newsletter should have these sections (use ## headings):
       reviewsConducted: recentReviews.length,
       bookUpdate: bookUpdate || null
     }
-  });
+  };
+  stripEmojiFromItem(newsletterItem);
+  queue.queue.push(newsletterItem);
   savePostingQueue(queue);
 
   // --- Create notification for Shawn ---
@@ -11815,7 +12164,7 @@ Respond ONLY with valid JSON:
   const wordCount = episode.script.reduce((sum, l) => sum + l.text.split(/\s+/).length, 0);
   const estDuration = Math.round(wordCount / 140); // ~140 wpm for conversational speech
 
-  queue.queue.push({
+  const podcastItem = {
     id: itemId,
     createdAt: now.toISOString(),
     status: 'pending-review',
@@ -11847,7 +12196,9 @@ Respond ONLY with valid JSON:
       audioFile: null,
       audioGenerated: false
     }
-  });
+  };
+  stripEmojiFromItem(podcastItem);
+  queue.queue.push(podcastItem);
   savePostingQueue(queue);
 
   // --- Notification ---
@@ -12729,6 +13080,1049 @@ app.get('/api/podcast/:id/audio-status', (req, res) => {
 
 // Serve generated audio files
 app.use('/api/podcast/audio', express.static(PODCAST_AUDIO_DIR));
+
+// =====================================================
+// Cost Tracking Helper
+// =====================================================
+
+const COST_FILE = path.join(BASE_DIR, 'cost-tracking/daily-costs.json');
+
+function trackCost(service, amount, details = '') {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
+
+    // Ensure directory exists
+    fs.mkdirSync(path.dirname(COST_FILE), { recursive: true });
+
+    // Read or create
+    let costs;
+    if (fs.existsSync(COST_FILE)) {
+      costs = JSON.parse(fs.readFileSync(COST_FILE, 'utf8'));
+    } else {
+      costs = {
+        daily: { date: today, total: 0, budget: 2, requests: 0 },
+        models: [],
+        elevations: [],
+        weekly: [
+          { date: 'Mon', label: 'M', cost: 0 },
+          { date: 'Tue', label: 'T', cost: 0 },
+          { date: 'Wed', label: 'W', cost: 0 },
+          { date: 'Thu', label: 'T', cost: 0 },
+          { date: 'Fri', label: 'F', cost: 0 },
+          { date: 'Sat', label: 'S', cost: 0 },
+          { date: 'Sun', label: 'S', cost: 0 }
+        ]
+      };
+    }
+
+    // Reset daily if new day
+    if (costs.daily.date !== today) {
+      costs.daily = { date: today, total: 0, budget: costs.daily.budget || 2, requests: 0 };
+      // Reset weekly costs for the new week cycle
+    }
+
+    // Update daily total
+    costs.daily.total = Math.round((costs.daily.total + amount) * 10000) / 10000;
+    costs.daily.requests = (costs.daily.requests || 0) + 1;
+
+    // Update model/service entry
+    let model = costs.models.find(m => m.name === service);
+    if (!model) {
+      model = { name: service, cost: 0, requests: 0, tokens: 0, total: 0 };
+      costs.models.push(model);
+    }
+    model.cost = Math.round((model.cost + amount) * 10000) / 10000;
+    model.total = model.cost;
+    model.requests = (model.requests || 0) + 1;
+
+    // Update weekly
+    const weekDay = costs.weekly.find(w => w.date === dayOfWeek);
+    if (weekDay) {
+      weekDay.cost = Math.round((weekDay.cost + amount) * 10000) / 10000;
+    }
+
+    // Invalidate cache
+    costsCache = null;
+
+    fs.writeFileSync(COST_FILE, JSON.stringify(costs, null, 2));
+    console.log(`[Cost] ${service}: $${amount.toFixed(4)}${details ? ' — ' + details : ''}`);
+  } catch (err) {
+    console.error('[Cost] Error tracking cost:', err.message);
+  }
+}
+
+// =====================================================
+// Shared: X AI (Grok) API base
+// =====================================================
+const XAI_API_BASE = 'https://api.x.ai/v1';
+
+// =====================================================
+// Post Image Generation — AI images for social media posts
+// =====================================================
+
+const POST_IMAGES_DIR = path.join(BASE_DIR, 'content', 'images');
+if (!fs.existsSync(POST_IMAGES_DIR)) {
+  fs.mkdirSync(POST_IMAGES_DIR, { recursive: true });
+}
+
+// Platform-specific image prompt guidance
+const PLATFORM_IMAGE_STYLE = {
+  twitter: {
+    aspect: 'landscape 16:9',
+    style: 'Bold, punchy, scroll-stopping. High contrast. Think editorial photography meets philosophy. Dark moody tones with a single striking focal point.'
+  },
+  bluesky: {
+    aspect: 'landscape 16:9',
+    style: 'Atmospheric, contemplative, warm. Think golden hour landscapes, abstract textures, liminal spaces. Philosophical mood without being pretentious.'
+  },
+  threads: {
+    aspect: 'square 1:1',
+    style: 'Clean, modern, visually arresting. Instagram-adjacent aesthetic. Minimal composition, strong geometry, muted earth tones with one accent color.'
+  },
+  instagram: {
+    aspect: 'square 1:1',
+    style: 'Design-forward, minimal, gallery-quality. Think museum-worthy photography. Rich textures, dramatic lighting, contemplative atmosphere.'
+  },
+  reddit: {
+    aspect: 'landscape 16:9',
+    style: 'Thoughtful, slightly raw, authentic. Less polished than Instagram. Think documentary photography, candid moments, real textures.'
+  },
+  medium: {
+    aspect: 'landscape 16:9',
+    style: 'Editorial, sophisticated, magazine-quality. Clean composition, literary mood. Think New Yorker or Aeon magazine cover art.'
+  },
+  substack: {
+    aspect: 'landscape 16:9',
+    style: 'Warm, inviting, intellectual. Think well-lit study, ancient textures, handwritten elements. Personal and intimate.'
+  }
+};
+
+/**
+ * Generate a platform-specific image prompt from post text using Claude
+ */
+async function generatePostImagePrompt(postText, platform) {
+  const client = getAnthropicClient();
+  if (!client) throw new Error('ANTHROPIC_API_KEY not set');
+
+  const platformStyle = PLATFORM_IMAGE_STYLE[platform] || PLATFORM_IMAGE_STYLE.twitter;
+
+  const response = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 300,
+    system: `You generate image prompts for AI image generation for ${platform} posts. Create atmospheric, philosophical mood images.
+
+Rules:
+- NO text, words, letters, or numbers in the image
+- Composition: ${platformStyle.aspect}
+- Style direction: ${platformStyle.style}
+- Cinematic lighting, evocative, emotionally resonant
+- Respond with ONLY the image prompt, nothing else`,
+    messages: [{
+      role: 'user',
+      content: `Generate an image prompt (~80 words) for this ${platform} post:\n\n${postText.substring(0, 500)}`
+    }]
+  });
+
+  const prompt = response.content[0].text.trim();
+  trackCost('Claude Haiku (PostImage)', 0.001, `image prompt for ${platform}`);
+  return prompt;
+}
+
+/**
+ * Generate an image via Grok Imagine API and save to disk
+ */
+async function generatePostImage(queueItemId) {
+  const apiKey = process.env.XAI_API_KEY;
+  if (!apiKey) throw new Error('XAI_API_KEY not set');
+
+  const queue = getPostingQueue();
+  const item = queue.queue.find(i => i.id === queueItemId) || (queue.posted || []).find(i => i.id === queueItemId);
+  if (!item) throw new Error(`Queue item ${queueItemId} not found`);
+  const isPosted = !(queue.queue.find(i => i.id === queueItemId));
+
+  // Skip Instagram reels (they have their own pipeline) and podcast
+  if (item.platform === 'podcast') {
+    return { skipped: true, reason: 'podcast' };
+  }
+
+  // Skip if already has an image
+  if (item.postImage) {
+    return { skipped: true, reason: 'already has image' };
+  }
+
+  const postText = item.caption || item.content || '';
+  if (postText.length < 10) {
+    return { skipped: true, reason: 'not enough text' };
+  }
+
+  console.log(`[PostImage] Generating image for ${queueItemId} (${item.platform})...`);
+
+  // Step 1: Generate platform-specific image prompt via Claude
+  const imagePrompt = await generatePostImagePrompt(postText, item.platform);
+  console.log(`[PostImage] Prompt: ${imagePrompt.substring(0, 80)}...`);
+
+  // Step 2: Generate image via Grok
+  const response = await fetch(`${XAI_API_BASE}/images/generations`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'grok-2-image',
+      prompt: imagePrompt,
+      n: 1,
+      response_format: 'url'
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text().catch(() => 'unknown');
+    throw new Error(`Grok API error ${response.status}: ${errText}`);
+  }
+
+  const result = await response.json();
+  const imageUrl = result.data?.[0]?.url;
+  if (!imageUrl) throw new Error('No image URL in Grok response');
+
+  // Step 3: Download and save
+  const imgResponse = await fetch(imageUrl);
+  if (!imgResponse.ok) throw new Error(`Failed to download image: ${imgResponse.status}`);
+  const buffer = Buffer.from(await imgResponse.arrayBuffer());
+
+  const filename = `${queueItemId}.jpg`;
+  const filepath = path.join(POST_IMAGES_DIR, filename);
+  fs.writeFileSync(filepath, buffer);
+
+  // Step 4: Update queue item (check both queue and posted arrays)
+  const freshQueue = getPostingQueue();
+  const freshItem = freshQueue.queue.find(i => i.id === queueItemId)
+    || (freshQueue.posted || []).find(i => i.id === queueItemId);
+  if (freshItem) {
+    freshItem.postImage = filename;
+    freshItem.postImagePrompt = imagePrompt;
+    freshItem.postImageGeneratedAt = new Date().toISOString();
+    savePostingQueue(freshQueue);
+  }
+
+  trackCost('Grok Imagine (PostImage)', 0.07, `${item.platform} post image`);
+  console.log(`[PostImage] Done: ${filename}`);
+  broadcast('posting-queue');
+
+  return { success: true, filename, platform: item.platform };
+}
+
+/**
+ * Batch generate images for all queue AND posted items missing them.
+ * Processes sequentially with delays to avoid rate limits.
+ */
+async function batchGeneratePostImages({ includePosted = false } = {}) {
+  const queue = getPostingQueue();
+  const imageFilter = i =>
+    !i.postImage &&
+    i.platform !== 'podcast' &&
+    (i.caption || i.content || '').length >= 10;
+
+  const needImages = queue.queue.filter(imageFilter);
+  if (includePosted) {
+    needImages.push(...(queue.posted || []).filter(imageFilter));
+  }
+
+  if (needImages.length === 0) {
+    console.log('[PostImage] All items already have images');
+    return { processed: 0, generated: 0, errors: 0 };
+  }
+
+  console.log(`[PostImage] Batch generating images for ${needImages.length} items (includePosted=${includePosted})...`);
+  let generated = 0;
+  let errors = 0;
+
+  for (const item of needImages) {
+    try {
+      const result = await generatePostImage(item.id);
+      if (result.success) generated++;
+      // Delay 2-3 seconds between API calls
+      await new Promise(r => setTimeout(r, 2000 + Math.random() * 1000));
+    } catch (err) {
+      console.error(`[PostImage] Failed for ${item.id} (${item.platform}):`, err.message);
+      errors++;
+      // Longer delay after error (might be rate limited)
+      await new Promise(r => setTimeout(r, 5000));
+    }
+  }
+
+  console.log(`[PostImage] Batch complete: ${generated} generated, ${errors} errors`);
+  logSystemEvent('post-images', `Batch generated ${generated} post images (${errors} errors)`);
+  return { processed: needImages.length, generated, errors };
+}
+
+// Serve post images
+app.use('/api/post-images', express.static(POST_IMAGES_DIR));
+
+// Manual trigger: generate image for a single item (works for queue + posted)
+app.post('/api/posting-queue/:id/generate-image', async (req, res) => {
+  try {
+    const result = await generatePostImage(req.params.id);
+    res.json(result);
+  } catch (error) {
+    console.error('[PostImage] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Manual trigger: batch generate all missing images
+app.post('/api/posting-queue/generate-images', async (req, res) => {
+  try {
+    const includePosted = req.body?.includePosted === true;
+    // Fire and forget — respond immediately, process in background
+    res.json({ started: true, message: 'Batch image generation started', includePosted });
+    await batchGeneratePostImages({ includePosted });
+  } catch (error) {
+    console.error('[PostImage] Batch error:', error);
+  }
+});
+
+// =====================================================
+// Instagram Reels Pipeline — Image + Voice + Scrolling Text
+// =====================================================
+
+const REELS_DIR = path.join(BASE_DIR, 'content', 'reels');
+const REELS_TEXT_DELAY = 4; // seconds of voice-only before text starts scrolling
+const REELS_FONT = '/System/Library/Fonts/Helvetica.ttc';
+
+// Create reels directory if missing
+if (!fs.existsSync(REELS_DIR)) {
+  fs.mkdirSync(REELS_DIR, { recursive: true });
+  console.log('[Reels] Created reels directory');
+}
+
+/**
+ * Generate a cinematic image prompt from post text using Claude
+ */
+async function generateImagePrompt(postText) {
+  const client = getAnthropicClient();
+  if (!client) throw new Error('ANTHROPIC_API_KEY not set');
+
+  // Inject learnings from rated reels
+  const learnings = getReelLearnings();
+  const learningsContext = learnings.summary
+    ? `\n\nLearnings from past reel ratings: ${learnings.summary}`
+    : '';
+
+  const response = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 300,
+    system: `You generate cinematic image prompts for AI image generation. Create atmospheric, philosophical mood images. Rules: NO text in the image, vertical 9:16 composition, cinematic lighting, moody and evocative. Respond with ONLY the image prompt, nothing else.${learningsContext}`,
+    messages: [{
+      role: 'user',
+      content: `Generate a cinematic image prompt (~100 words) for this philosophical post:\n\n${postText}`
+    }]
+  });
+
+  const prompt = response.content[0].text.trim();
+  console.log(`[Reels] Generated image prompt: ${prompt.substring(0, 80)}...`);
+  // Haiku: ~$0.25/M input, ~$1.25/M output — prompt gen is tiny
+  trackCost('Claude Haiku (Reels)', 0.001, 'image prompt generation');
+  return prompt;
+}
+
+/**
+ * Generate a 9:16 image via Grok Imagine API
+ */
+async function generateReelImage(prompt, outputPath) {
+  const apiKey = process.env.XAI_API_KEY;
+  if (!apiKey) throw new Error('XAI_API_KEY not set');
+
+  console.log('[Reels] Calling Grok Imagine API...');
+  const response = await fetch(`${XAI_API_BASE}/images/generations`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'grok-2-image',
+      prompt,
+      n: 1,
+      response_format: 'url'
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text().catch(() => 'unknown');
+    throw new Error(`Grok Imagine API error ${response.status}: ${errText}`);
+  }
+
+  const result = await response.json();
+  const imageUrl = result.data?.[0]?.url;
+  if (!imageUrl) throw new Error('No image URL in Grok response');
+
+  // Download image
+  const imgResponse = await fetch(imageUrl);
+  if (!imgResponse.ok) throw new Error(`Failed to download image: ${imgResponse.status}`);
+  const buffer = Buffer.from(await imgResponse.arrayBuffer());
+  fs.writeFileSync(outputPath, buffer);
+
+  console.log(`[Reels] Image saved: ${outputPath}`);
+  trackCost('Grok Imagine (Reels)', 0.07, 'image generation');
+  return outputPath;
+}
+
+/**
+ * Generate voiceover MP3 via ElevenLabs TTS (single voice)
+ */
+async function generateVoiceover(text, outputPath, retries = 2) {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) throw new Error('ELEVENLABS_API_KEY not set');
+
+  const voiceId = process.env.ELEVENLABS_VOICE_SHAWN;
+  if (!voiceId) throw new Error('ELEVENLABS_VOICE_SHAWN not set');
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const response = await fetch(`${ELEVENLABS_API_BASE}/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_multilingual_v2'
+      })
+    });
+
+    if (response.status === 429 && attempt < retries) {
+      const delay = attempt === 0 ? 5000 : 15000;
+      console.warn(`[Reels] Rate limited, retrying in ${delay / 1000}s...`);
+      await new Promise(r => setTimeout(r, delay));
+      continue;
+    }
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => 'unknown');
+      throw new Error(`ElevenLabs TTS error ${response.status}: ${errText}`);
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+    fs.writeFileSync(outputPath, buffer);
+    console.log(`[Reels] Voiceover saved: ${outputPath}`);
+    // ElevenLabs: ~$0.30/1000 chars for multilingual v2
+    const charCount = text.length;
+    const ttsCost = Math.round((charCount / 1000) * 0.30 * 10000) / 10000;
+    trackCost('ElevenLabs TTS (Reels)', ttsCost, `${charCount} chars`);
+    return outputPath;
+  }
+}
+
+/**
+ * Get audio duration in seconds using ffprobe
+ */
+function getAudioDuration(audioPath) {
+  const result = execSync(
+    `ffprobe -v quiet -show_entries format=duration -of csv=p=0 "${audioPath}"`,
+    { encoding: 'utf-8', timeout: 10000 }
+  ).trim();
+  return parseFloat(result);
+}
+
+/**
+ * Escape text for SVG (XML entities)
+ */
+function escapeSvg(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+/**
+ * Word-wrap text to fit within a given width (approximate character count)
+ */
+function wordWrap(text, maxCharsPerLine = 30) {
+  const words = text.split(/\s+/);
+  const lines = [];
+  let current = '';
+  for (const word of words) {
+    if (current && (current.length + 1 + word.length) > maxCharsPerLine) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = current ? current + ' ' + word : word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+/**
+ * Render text as a transparent PNG overlay using sharp + SVG
+ */
+async function renderTextOverlay(text, width, height, options = {}) {
+  const {
+    fontSize = 48,
+    fontColor = 'white',
+    bgColor = 'rgba(0,0,0,0.6)',
+    bgPadding = 30,
+    yPosition = 0.65, // fraction of height for text center
+    maxCharsPerLine = 28,
+    fontWeight = 'bold'
+  } = options;
+
+  const lines = wordWrap(text, maxCharsPerLine);
+  const lineHeight = fontSize * 1.4;
+  const textBlockHeight = lines.length * lineHeight;
+  const textY = Math.round(height * yPosition);
+
+  // Build SVG with semi-transparent background band and text
+  const bgY = textY - bgPadding;
+  const bgH = textBlockHeight + bgPadding * 2;
+
+  const svgLines = lines.map((line, i) => {
+    const y = textY + i * lineHeight + fontSize;
+    return `<text x="${width / 2}" y="${y}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="${fontSize}" font-weight="${fontWeight}" fill="${fontColor}" stroke="black" stroke-width="2" paint-order="stroke">${escapeSvg(line)}</text>`;
+  }).join('\n');
+
+  const svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="${bgY}" width="${width}" height="${bgH}" fill="${bgColor}" rx="0"/>
+    ${svgLines}
+  </svg>`;
+
+  return sharp(Buffer.from(svg)).png().toBuffer();
+}
+
+/**
+ * Build reel video: image + audio + animated text → MP4
+ * Uses sharp for text rendering (PNG overlays) + ffmpeg for compositing
+ */
+/**
+ * Generate a subtle ambient drone MP3 for background music.
+ * Low C drone (65Hz) + fifth (98Hz) + octave (196Hz) + pink noise texture.
+ * Fades in/out for smooth transitions.
+ */
+function generateAmbientDrone(duration, outputPath) {
+  const fadeIn = Math.min(3, duration * 0.1);
+  const fadeOutStart = Math.max(0, duration - Math.min(3, duration * 0.1));
+  const fadeOutDur = duration - fadeOutStart;
+
+  const cmd = `ffmpeg -y -f lavfi -i "sine=f=65:d=${duration}" -f lavfi -i "sine=f=98:d=${duration}" -f lavfi -i "sine=f=196:d=${duration}" -f lavfi -i "anoisesrc=d=${duration}:c=pink:a=0.02" -filter_complex "[0:a]volume=0.3[b1];[1:a]volume=0.15[b2];[2:a]volume=0.05[b3];[3:a]volume=1.0[n];[b1][b2][b3][n]amix=inputs=4:duration=first[mixed];[mixed]afade=t=in:d=${fadeIn},afade=t=out:st=${fadeOutStart}:d=${fadeOutDur}[out]" -map "[out]" "${outputPath}"`;
+
+  execSync(cmd, { timeout: 30000, stdio: 'pipe' });
+  console.log(`[Reels] Ambient drone generated: ${duration.toFixed(1)}s`);
+  return outputPath;
+}
+
+/**
+ * Mix voiceover with ambient drone into a single audio file.
+ * Drone sits at ~12% volume behind the voice.
+ */
+function mixAudioWithDrone(voicePath, dronePath, outputPath) {
+  const cmd = `ffmpeg -y -i "${voicePath}" -i "${dronePath}" -filter_complex "[0:a]volume=1.0[voice];[1:a]volume=0.30[drone];[voice][drone]amix=inputs=2:duration=first[out]" -map "[out]" "${outputPath}"`;
+  execSync(cmd, { timeout: 30000, stdio: 'pipe' });
+  console.log(`[Reels] Audio mixed with ambient drone`);
+  return outputPath;
+}
+
+async function buildReelVideo(imagePath, audioPath, text, outputPath) {
+  if (!ffmpegAvailable) throw new Error('ffmpeg not available');
+
+  const duration = getAudioDuration(audioPath);
+  console.log(`[Reels] Audio duration: ${duration.toFixed(1)}s`);
+
+  const W = 1080, H = 1920;
+  const tempDir = path.join(REELS_DIR, `temp-${Date.now()}`);
+  fs.mkdirSync(tempDir, { recursive: true });
+
+  // Generate ambient drone and mix with voiceover
+  const dronePath = path.join(tempDir, 'drone.mp3');
+  const mixedAudioPath = path.join(tempDir, 'mixed-audio.mp3');
+  generateAmbientDrone(duration, dronePath);
+  mixAudioWithDrone(audioPath, dronePath, mixedAudioPath);
+  const finalAudioPath = mixedAudioPath;
+
+  try {
+    // Render text as a tall PNG overlay
+    const overlayPath = path.join(tempDir, 'text-overlay.png');
+    const lines = wordWrap(text, 28);
+    const fontSize = 48;
+    const lineHeight = fontSize * 1.4;
+    const textBlockHeight = lines.length * lineHeight;
+    const padding = 60;
+    const overlayHeight = Math.round(textBlockHeight + padding * 2);
+    const overlayBuf = await renderTextOverlay(text, W, overlayHeight, {
+      fontSize, yPosition: padding / overlayHeight, bgColor: 'rgba(0,0,0,0.5)'
+    });
+    fs.writeFileSync(overlayPath, overlayBuf);
+
+    // Voice plays first, text starts scrolling after REELS_TEXT_DELAY seconds
+    // Scroll from bottom of frame to above frame over (duration - delay)
+    const delay = Math.min(REELS_TEXT_DELAY, duration * 0.15);
+    const scrollDuration = duration - delay;
+    const totalTravel = H + overlayHeight;
+    const scrollSpeed = (totalTravel / scrollDuration).toFixed(2);
+
+    // y = H when t < delay, then scrolls up: y = H - speed * (t - delay)
+    const yExpr = `if(lt(t\\,${delay.toFixed(2)})\\,${H}\\,${H}-${scrollSpeed}*(t-${delay.toFixed(2)}))`;
+
+    const cmd = `ffmpeg -y -loop 1 -i "${imagePath}" -i "${finalAudioPath}" -loop 1 -i "${overlayPath}" -filter_complex "[0:v]scale=${W}:${H},setsar=1[bg];[bg][2:v]overlay=x=0:y='${yExpr}'[out]" -map "[out]" -map 1:a -c:v libx264 -tune stillimage -c:a aac -shortest -pix_fmt yuv420p "${outputPath}"`;
+
+    execSync(cmd, { timeout: 300000, stdio: 'pipe' });
+
+    console.log(`[Reels] Video saved: ${outputPath}`);
+    return outputPath;
+
+  } finally {
+    try { fs.rmSync(tempDir, { recursive: true, force: true }); } catch {}
+  }
+}
+
+/**
+ * Main orchestrator: generate an Instagram Reel from a queue item
+ */
+async function generateInstagramReel(queueItemId) {
+  const queue = getPostingQueue();
+  const item = queue.queue.find(i => i.id === queueItemId);
+
+  if (!item) {
+    console.error(`[Reels] Queue item ${queueItemId} not found`);
+    return;
+  }
+
+  if (item.platform !== 'instagram') {
+    console.error(`[Reels] Item ${queueItemId} is not an Instagram post (platform: ${item.platform})`);
+    return;
+  }
+
+  // For Instagram: caption has the full essay, content is just the card headline
+  // Use caption for voiceover/image prompt, strip hashtags
+  const rawText = item.caption || item.content || '';
+  const postText = rawText.replace(/#\w+/g, '').replace(/\s{2,}/g, ' ').trim();
+  if (!postText) {
+    console.error(`[Reels] No text content for ${queueItemId}`);
+    return;
+  }
+
+  if (!process.env.XAI_API_KEY) {
+    console.error('[Reels] XAI_API_KEY not set');
+    return;
+  }
+  if (!process.env.ELEVENLABS_API_KEY || !process.env.ELEVENLABS_VOICE_SHAWN) {
+    console.error('[Reels] ElevenLabs API key or voice ID not set');
+    return;
+  }
+  if (!ffmpegAvailable) {
+    console.error('[Reels] ffmpeg not available');
+    return;
+  }
+
+  // Prevent concurrent runs
+  if (item.reelGenerating) {
+    console.warn(`[Reels] Already generating for ${queueItemId}`);
+    return;
+  }
+
+  // Mark as generating
+  item.reelGenerating = true;
+  item.reelError = null;
+  savePostingQueue(queue);
+  broadcast('posting-queue');
+
+  const timestamp = Date.now();
+  const imagePath = path.join(REELS_DIR, `${queueItemId}-img-${timestamp}.jpg`);
+  const audioPath = path.join(REELS_DIR, `${queueItemId}-audio-${timestamp}.mp3`);
+  const videoFilename = `${queueItemId}.mp4`;
+  const videoPath = path.join(REELS_DIR, videoFilename);
+
+  try {
+    // Step 1: Generate image prompt via Claude
+    console.log(`[Reels] Step 1/4: Generating image prompt for "${queueItemId}"...`);
+    const imagePrompt = await generateImagePrompt(postText);
+
+    // Step 2: Generate background image via Grok Imagine
+    console.log(`[Reels] Step 2/4: Generating image via Grok Imagine...`);
+    await generateReelImage(imagePrompt, imagePath);
+
+    // Step 3: Generate voiceover via ElevenLabs
+    console.log(`[Reels] Step 3/4: Generating voiceover...`);
+    await generateVoiceover(postText, audioPath);
+
+    // Step 4: Build video via FFmpeg (voice first, then text scrolls up after delay)
+    console.log(`[Reels] Step 4/4: Compositing video...`);
+    await buildReelVideo(imagePath, audioPath, postText, videoPath);
+
+    // Update queue item with success
+    const freshQueue = getPostingQueue();
+    const freshItem = freshQueue.queue.find(i => i.id === queueItemId);
+    if (freshItem) {
+      freshItem.reelFile = videoFilename;
+      freshItem.reelGenerated = true;
+      freshItem.reelGeneratedAt = new Date().toISOString();
+      freshItem.reelGenerating = false;
+      freshItem.reelError = null;
+      freshItem.reelTextStyle = 'scroll';
+      freshItem.reelImagePrompt = imagePrompt;
+      savePostingQueue(freshQueue);
+    }
+
+    console.log(`[Reels] Complete: ${videoPath}`);
+    broadcast('posting-queue');
+
+  } catch (error) {
+    console.error(`[Reels] Failed for ${queueItemId}:`, error.message);
+
+    // Update with error
+    const freshQueue = getPostingQueue();
+    const freshItem = freshQueue.queue.find(i => i.id === queueItemId);
+    if (freshItem) {
+      freshItem.reelGenerating = false;
+      freshItem.reelError = error.message;
+      savePostingQueue(freshQueue);
+    }
+
+    broadcast('posting-queue');
+
+  } finally {
+    // Clean up intermediate image and audio files
+    try { fs.unlinkSync(imagePath); } catch {}
+    try { fs.unlinkSync(audioPath); } catch {}
+  }
+}
+
+// --- Reels Endpoints ---
+
+// Manual trigger to generate a reel
+app.post('/api/reels/:id/generate', (req, res) => {
+  try {
+    const { id } = req.params;
+    const queue = getPostingQueue();
+    const item = queue.queue.find(i => i.id === id);
+
+    if (!item) return res.status(404).json({ error: 'Queue item not found' });
+    if (item.platform !== 'instagram') return res.status(400).json({ error: 'Not an Instagram queue item' });
+    if (item.reelGenerating) return res.status(409).json({ error: 'Reel already generating' });
+    if (!process.env.XAI_API_KEY) return res.status(501).json({ error: 'XAI_API_KEY not configured' });
+    if (!process.env.ELEVENLABS_API_KEY) return res.status(501).json({ error: 'ELEVENLABS_API_KEY not configured' });
+    if (!process.env.ELEVENLABS_VOICE_SHAWN) return res.status(501).json({ error: 'ELEVENLABS_VOICE_SHAWN not configured' });
+    if (!ffmpegAvailable) return res.status(501).json({ error: 'ffmpeg not available' });
+
+    // Fire-and-forget
+    generateInstagramReel(id);
+    res.json({ success: true, message: 'Reel generation started' });
+  } catch (error) {
+    console.error('Reels generate error:', error);
+    res.status(500).json({ error: 'Failed to start reel generation' });
+  }
+});
+
+// Check reel generation status
+app.get('/api/reels/:id/status', (req, res) => {
+  try {
+    const { id } = req.params;
+    const queue = getPostingQueue();
+    const item = queue.queue.find(i => i.id === id);
+
+    if (!item) return res.status(404).json({ error: 'Queue item not found' });
+
+    res.json({
+      reelGenerated: item.reelGenerated || false,
+      reelGenerating: item.reelGenerating || false,
+      reelFile: item.reelFile || null,
+      reelError: item.reelError || null,
+      reelTextStyle: item.reelTextStyle || null,
+      reelImagePrompt: item.reelImagePrompt || null,
+      reelGeneratedAt: item.reelGeneratedAt || null,
+      reelRating: item.reelRating || null
+    });
+  } catch (error) {
+    console.error('Reels status error:', error);
+    res.status(500).json({ error: 'Failed to get reel status' });
+  }
+});
+
+// Rate a reel — stores feedback for improving future generations
+app.post('/api/reels/:id/rate', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { overall, image, textStyle, voice, notes } = req.body;
+
+    // Validate ratings (1-5 scale)
+    for (const [key, val] of Object.entries({ overall, image, textStyle, voice })) {
+      if (val !== undefined && (typeof val !== 'number' || val < 1 || val > 5)) {
+        return res.status(400).json({ error: `${key} must be a number 1-5` });
+      }
+    }
+    if (!overall) return res.status(400).json({ error: 'overall rating (1-5) is required' });
+
+    const queue = getPostingQueue();
+    const item = queue.queue.find(i => i.id === id);
+    if (!item) return res.status(404).json({ error: 'Queue item not found' });
+    if (!item.reelGenerated) return res.status(400).json({ error: 'No reel to rate — generate one first' });
+
+    // Store rating on the item
+    item.reelRating = {
+      overall,
+      image: image || null,
+      textStyle: textStyle || null,
+      voice: voice || null,
+      notes: notes || null,
+      ratedAt: new Date().toISOString(),
+      // Snapshot what was generated so ratings are tied to specific outputs
+      ratedVersion: {
+        style: item.reelTextStyle,
+        imagePrompt: item.reelImagePrompt,
+        generatedAt: item.reelGeneratedAt
+      }
+    };
+
+    savePostingQueue(queue);
+    broadcast('posting-queue');
+
+    console.log(`[Reels] Rated ${id}: overall=${overall}, image=${image || '-'}, textStyle=${textStyle || '-'}, voice=${voice || '-'}`);
+    res.json({ success: true, rating: item.reelRating });
+  } catch (error) {
+    console.error('Reels rate error:', error);
+    res.status(500).json({ error: 'Failed to save rating' });
+  }
+});
+
+// Get all reel ratings — summary for learning what works
+app.get('/api/reels/ratings', (req, res) => {
+  try {
+    const queue = getPostingQueue();
+    // Check both queue and posted arrays for rated reels
+    const allItems = [...(queue.queue || []), ...(queue.posted || [])];
+    const rated = allItems
+      .filter(i => i.platform === 'instagram' && i.reelRating)
+      .map(i => ({
+        id: i.id,
+        content: (i.content || '').substring(0, 80),
+        rating: i.reelRating,
+        textStyle: i.reelTextStyle,
+        imagePrompt: i.reelImagePrompt,
+        reelFile: i.reelFile
+      }));
+
+    // Compute averages by text style
+    const byStyle = {};
+    for (const item of rated) {
+      const style = item.textStyle || 'unknown';
+      if (!byStyle[style]) byStyle[style] = { count: 0, totalOverall: 0, totalImage: 0, totalTextStyle: 0, totalVoice: 0, imageCount: 0, textStyleCount: 0, voiceCount: 0 };
+      byStyle[style].count++;
+      byStyle[style].totalOverall += item.rating.overall;
+      if (item.rating.image) { byStyle[style].totalImage += item.rating.image; byStyle[style].imageCount++; }
+      if (item.rating.textStyle) { byStyle[style].totalTextStyle += item.rating.textStyle; byStyle[style].textStyleCount++; }
+      if (item.rating.voice) { byStyle[style].totalVoice += item.rating.voice; byStyle[style].voiceCount++; }
+    }
+
+    const styleAverages = {};
+    for (const [style, data] of Object.entries(byStyle)) {
+      styleAverages[style] = {
+        count: data.count,
+        avgOverall: +(data.totalOverall / data.count).toFixed(1),
+        avgImage: data.imageCount ? +(data.totalImage / data.imageCount).toFixed(1) : null,
+        avgTextStyle: data.textStyleCount ? +(data.totalTextStyle / data.textStyleCount).toFixed(1) : null,
+        avgVoice: data.voiceCount ? +(data.totalVoice / data.voiceCount).toFixed(1) : null
+      };
+    }
+
+    res.json({
+      totalRated: rated.length,
+      styleAverages,
+      ratings: rated
+    });
+  } catch (error) {
+    console.error('Reels ratings error:', error);
+    res.status(500).json({ error: 'Failed to get ratings' });
+  }
+});
+
+// Serve generated reel videos
+app.use('/api/reels', express.static(REELS_DIR));
+
+// ============================================================================
+// REEL RATING REVIEW — Learning from rated Instagram videos
+// ============================================================================
+
+const REEL_LEARNINGS_PATH = path.join(BASE_DIR, 'content', 'queue', 'reel-learnings.json');
+
+function getReelLearnings() {
+  try {
+    if (fs.existsSync(REEL_LEARNINGS_PATH)) {
+      return JSON.parse(fs.readFileSync(REEL_LEARNINGS_PATH, 'utf8'));
+    }
+  } catch {}
+  return { lastReviewedAt: null, processedIds: [], learnings: [], summary: '' };
+}
+
+function saveReelLearnings(data) {
+  fs.writeFileSync(REEL_LEARNINGS_PATH, JSON.stringify(data, null, 2));
+}
+
+/**
+ * Review all rated reels and generate learnings for future content.
+ * Runs as a cron or can be triggered manually.
+ */
+async function reviewReelRatings() {
+  const client = getAnthropicClient();
+  if (!client) {
+    console.log('[ReelReview] Skipped — no ANTHROPIC_API_KEY');
+    return { skipped: true, reason: 'no API key' };
+  }
+
+  const queue = getPostingQueue();
+  const learnings = getReelLearnings();
+
+  // Collect all rated reels from both queue and posted arrays
+  const allItems = [...(queue.queue || []), ...(queue.posted || [])];
+  const ratedReels = allItems.filter(i => i.platform === 'instagram' && i.reelRating);
+
+  // Find newly rated reels (not yet processed)
+  const newRated = ratedReels.filter(i => !learnings.processedIds.includes(i.id));
+
+  if (newRated.length === 0) {
+    console.log('[ReelReview] No new ratings to review');
+    return { skipped: true, reason: 'no new ratings' };
+  }
+
+  console.log(`[ReelReview] Reviewing ${newRated.length} new reel rating(s)...`);
+
+  // Build context: all ratings (for pattern recognition) + focus on new ones
+  const allRatingsContext = ratedReels.map(i => ({
+    id: i.id,
+    content: (i.caption || i.content || '').substring(0, 200),
+    overall: i.reelRating.overall,
+    image: i.reelRating.image,
+    voice: i.reelRating.voice,
+    textStyle: i.reelRating.textStyle,
+    notes: i.reelRating.notes,
+    imagePrompt: i.reelImagePrompt,
+    style: i.reelTextStyle,
+    isNew: !learnings.processedIds.includes(i.id)
+  }));
+
+  const existingLearnings = learnings.learnings.length > 0
+    ? `\nExisting learnings from previous reviews:\n${learnings.learnings.map(l => `- [${l.date}] ${l.lesson}`).join('\n')}`
+    : '';
+
+  const response = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 1000,
+    system: `You analyze Instagram Reel ratings and feedback to generate actionable learnings for improving future reels. Focus on concrete, specific guidance about:
+- Image generation prompts (what visual styles work, what to avoid)
+- Text overlay style and presentation
+- Voiceover quality and pacing
+- Overall creative direction
+
+Return JSON with two fields:
+1. "newLessons": array of strings — specific actionable lessons from the NEW ratings (marked isNew:true)
+2. "summary": string — an updated 2-3 sentence summary of ALL learnings so far, to be injected into future generation prompts
+
+Be specific. "Avoid lightning bolt imagery in text overlays" is good. "Make better content" is bad.`,
+    messages: [{
+      role: 'user',
+      content: `Here are all reel ratings (items marked isNew are the ones to analyze):\n\n${JSON.stringify(allRatingsContext, null, 2)}${existingLearnings}`
+    }]
+  });
+
+  const text = response.content[0].text.trim();
+  let parsed;
+  try {
+    // Extract JSON from response (handle markdown code blocks)
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    parsed = JSON.parse(jsonMatch ? jsonMatch[0] : text);
+  } catch {
+    console.error('[ReelReview] Failed to parse Claude response:', text);
+    return { error: 'parse failure' };
+  }
+
+  // Append new lessons
+  const now = new Date().toISOString().split('T')[0];
+  for (const lesson of (parsed.newLessons || [])) {
+    learnings.learnings.push({ date: now, lesson, fromIds: newRated.map(i => i.id) });
+  }
+
+  // Update summary and tracking
+  learnings.summary = parsed.summary || learnings.summary;
+  learnings.lastReviewedAt = new Date().toISOString();
+  learnings.processedIds.push(...newRated.map(i => i.id));
+  saveReelLearnings(learnings);
+
+  trackCost('Claude Haiku (ReelReview)', 0.002, 'reel rating review');
+  console.log(`[ReelReview] Added ${parsed.newLessons?.length || 0} lesson(s). Summary: ${learnings.summary.substring(0, 80)}...`);
+  logSystemEvent('reel-review', `Reviewed ${newRated.length} reel rating(s), generated ${parsed.newLessons?.length || 0} lessons`);
+  broadcast('posting-queue');
+
+  return { reviewed: newRated.length, newLessons: parsed.newLessons?.length || 0 };
+}
+
+// Manual trigger
+app.post('/api/reels/review-ratings', async (req, res) => {
+  try {
+    const result = await reviewReelRatings();
+    res.json(result);
+  } catch (error) {
+    console.error('[ReelReview] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get current learnings
+app.get('/api/reels/learnings', (req, res) => {
+  res.json(getReelLearnings());
+});
+
+// Cron: Review reel ratings daily at 10 AM PST
+cron.schedule('0 10 * * *', async () => {
+  try {
+    const result = await reviewReelRatings();
+    recordCronRun('reel-rating-review', result.skipped ? result.reason : `${result.reviewed} reviewed, ${result.newLessons} lessons`);
+  } catch (err) {
+    console.error('[Cron] Reel rating review error:', err);
+    recordCronRun('reel-rating-review', null, err.message);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[Cron] Reel rating review scheduled for 10:00 AM PST daily');
+
+// ============================================================================
+// QUEUE CLEANUP — Strip emoji + auto-tag
+// ============================================================================
+
+// Manual trigger
+app.post('/api/posting-queue/clean-and-tag', async (req, res) => {
+  try {
+    const result = await cleanAndTagQueueItems();
+    res.json(result);
+  } catch (error) {
+    console.error('[QueueClean] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Cron: Clean and tag queue items daily at 6:15 AM PST (right after auto-pipeline at 6 AM)
+cron.schedule('15 6 * * *', async () => {
+  try {
+    const result = await cleanAndTagQueueItems();
+    recordCronRun('queue-clean-tag', `emoji:${result.emojiCleaned}, tags:${result.tagged}`);
+  } catch (err) {
+    console.error('[Cron] Queue clean/tag error:', err);
+    recordCronRun('queue-clean-tag', null, err.message);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[Cron] Queue clean & tag scheduled for 6:15 AM PST daily');
+
+// Cron: Generate images for new queue items at 6:30 AM PST (after clean/tag at 6:15)
+cron.schedule('30 6 * * *', async () => {
+  try {
+    const result = await batchGeneratePostImages();
+    recordCronRun('post-image-gen', `${result.generated} generated, ${result.errors} errors`);
+  } catch (err) {
+    console.error('[Cron] Post image generation error:', err);
+    recordCronRun('post-image-gen', null, err.message);
+  }
+}, { timezone: 'America/Los_Angeles' });
+console.log('[Cron] Post image generation scheduled for 6:30 AM PST daily');
 
 // --- Cron schedule ---
 cron.schedule('30 9 * * 1', async () => {
@@ -14378,11 +15772,11 @@ async function scanForEngagementTargets() {
       system: `You are the engagement strategist for TensionLines, a philosophy-meets-real-life brand. Your job is to pick posts worth engaging with.
 
 Criteria:
-- REPOST: High-quality, original thought that aligns with our themes (tension, paradox, self-knowledge, emotional intelligence, growth). Must be something our audience would value. Pick 1-2 max.
+- REPOST: High-quality, original thought that aligns with our themes (tension, paradox, self-knowledge, emotional intelligence, growth). Must be something our audience would value. Pick 2-4.
 - LIKE: Good content, relevant to our space, shows the author we notice them. Pick 3-5.
-- FOLLOW: Author creates consistently interesting content in our niche. Only recommend if they seem like a genuine voice (not a bot, not a mega-influencer). Pick 1-2 max.
+- FOLLOW: Author creates consistently interesting content in our niche. Only recommend if they seem like a genuine voice (not a bot, not a mega-influencer). Pick 2-3.
 
-Skip anything low-effort, spammy, overly promotional, or off-brand. Quality over quantity.`,
+We want a healthy mix of reposts and follows alongside likes — not just likes. Be generous with reposts when the content genuinely resonates with philosophy, growth, or self-knowledge themes. Skip anything low-effort, spammy, overly promotional, or off-brand.`,
       messages: [{
         role: 'user',
         content: `Here are today's candidate posts. For each one you recommend, respond with a JSON array of objects:

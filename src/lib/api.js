@@ -1,42 +1,113 @@
 /**
  * API Client for TensionLines CMS
- * 
+ *
  * Provides fetch wrappers for all backend endpoints
  */
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
 /**
+ * Get auth headers from stored token
+ */
+function getAuthHeaders() {
+  const token = localStorage.getItem('cms_token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+/**
+ * Handle 401 responses — clear token and trigger re-auth
+ */
+function handleUnauthorized() {
+  localStorage.removeItem('cms_token')
+  window.dispatchEvent(new Event('cms-unauthorized'))
+}
+
+/**
  * SWR-compatible fetcher function
  */
-export const fetcher = (url) => fetch(url).then(res => res.json())
+export const fetcher = (url) =>
+  fetch(url, { headers: getAuthHeaders() }).then(res => {
+    if (res.status === 401) { handleUnauthorized(); throw new Error('Unauthorized') }
+    return res.json()
+  })
 
 /**
  * Generic fetch wrapper with error handling
  */
 async function apiFetch(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`
-  
+
   const config = {
+    ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthHeaders(),
       ...options.headers
-    },
-    ...options
+    }
   }
-  
+
   try {
     const response = await fetch(url, config)
-    
+
+    if (response.status === 401) {
+      handleUnauthorized()
+      throw new Error('Unauthorized')
+    }
+
     if (!response.ok) {
       throw new Error(`API Error: ${response.status} ${response.statusText}`)
     }
-    
+
     return await response.json()
   } catch (error) {
     console.error('API Fetch Error:', error)
     throw error
   }
+}
+
+/**
+ * Login with password — stores token on success
+ */
+export async function login(password) {
+  const res = await fetch(`${API_BASE}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password })
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Login failed')
+  localStorage.setItem('cms_token', data.token)
+  return data
+}
+
+/**
+ * Setup password (first-time only)
+ */
+export async function setupPassword(password) {
+  const res = await fetch(`${API_BASE}/auth/setup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password })
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Setup failed')
+  return data
+}
+
+/**
+ * Check auth status
+ */
+export async function getAuthStatus() {
+  const res = await fetch(`${API_BASE}/auth/status`)
+  return res.json()
+}
+
+/**
+ * Logout — clear stored token
+ */
+export function logout() {
+  localStorage.removeItem('cms_token')
+  window.location.reload()
 }
 
 // ============================================================================

@@ -142,7 +142,7 @@ export default function EngagementActions() {
           const Icon = cfg.icon
           const queued = queueByType[type]?.length || 0
           const doneToday = todayByType[type] || 0
-          const remaining = queued
+          const canDo = queued > 0 || doneToday < maxPerDay
           const lastDone = lastByType[type]
           const isActive = typeFilter === type
           return (
@@ -156,18 +156,18 @@ export default function EngagementActions() {
               }`}
             >
               <div>
-                <h3 className={`font-semibold ${cfg.tileText}`}>{cfg.label}s</h3>
+                <h3 className="font-semibold capitalize">{cfg.label}s</h3>
                 <p className="text-sm text-neutral-600">
-                  {doneToday} / {maxPerDay} today
+                  {doneToday} / {maxPerDay} actions today
                 </p>
               </div>
               <p className="text-xs text-neutral-500 mt-2">
-                {lastDone ? `Last: ${timeAgo(lastDone)}` : 'None yet'}
+                {lastDone ? `Last action: ${timeAgo(lastDone)}` : 'No actions yet'}
               </p>
-              <div className={`flex items-center gap-2 mt-auto pt-2 ${cfg.tileText}`}>
+              <div className={`flex items-center gap-2 mt-auto pt-2 ${canDo ? cfg.tileText : 'text-red-600'}`}>
                 <span className="text-2xl font-bold">
-                  {remaining}
-                  <span className="text-sm font-normal ml-1">queued</span>
+                  {queued}
+                  <span className="text-sm font-normal ml-1">left</span>
                 </span>
                 <div className={cfg.bgClass + ' p-1 rounded'}>
                   <Icon size={18} />
