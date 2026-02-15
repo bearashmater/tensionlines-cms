@@ -2298,15 +2298,37 @@ async function getBskyAgent() {
   return bskyAgent;
 }
 
-async function postToBluesky(text) {
+async function postToBluesky(text, imagePath) {
   const agent = await getBskyAgent();
   const rt = new RichText({ text });
   await rt.detectFacets(agent);
-  const result = await agent.post({
+
+  const postData = {
     text: rt.text,
     facets: rt.facets,
     createdAt: new Date().toISOString()
-  });
+  };
+
+  // Attach image if provided
+  if (imagePath && fs.existsSync(imagePath)) {
+    try {
+      const imageBuffer = fs.readFileSync(imagePath);
+      const mimeType = imagePath.endsWith('.png') ? 'image/png' : 'image/jpeg';
+      const uploadResult = await agent.uploadBlob(imageBuffer, { encoding: mimeType });
+      postData.embed = {
+        $type: 'app.bsky.embed.images',
+        images: [{
+          alt: text.substring(0, 200),
+          image: uploadResult.data.blob
+        }]
+      };
+      console.log('[Bluesky] Image attached to post');
+    } catch (imgErr) {
+      console.error('[Bluesky] Failed to upload image, posting without:', imgErr.message);
+    }
+  }
+
+  const result = await agent.post(postData);
   const rkey = result.uri.split('/').pop();
   const postUrl = `https://bsky.app/profile/${process.env.BLUESKY_HANDLE}/post/${rkey}`;
   return { uri: result.uri, cid: result.cid, postUrl };
@@ -3491,10 +3513,11 @@ app.post('/api/posting-queue/:id/publish', async (req, res) => {
     }
 
     // Platform-specific publishing
+    const imagePath = item.postImage ? path.join(BASE_DIR, 'content', 'images', item.postImage) : null;
     let result;
     switch (platform) {
       case 'bluesky':
-        result = await postToBluesky(item.content);
+        result = await postToBluesky(item.content, imagePath);
         break;
       default:
         return res.status(400).json({ error: `Auto-posting for ${platform} is not yet connected. Use manual Copy & Open for now, or connect the ${platform} API.` });

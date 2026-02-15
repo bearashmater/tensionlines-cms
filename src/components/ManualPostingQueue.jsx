@@ -33,7 +33,9 @@ import {
   XCircle,
   Star,
   Film,
-  Video
+  Video,
+  Image,
+  Download
 } from 'lucide-react'
 import PlatformStatusBadges from './PlatformStatusBadges'
 
@@ -1013,6 +1015,32 @@ function QueueItem({ item, canPost, postingMode, onUpdate }) {
               Caption: {item.caption}
             </p>
           )}
+
+          {/* Post Image Preview */}
+          {item.postImage && (
+            <div className="mt-3 p-2 bg-neutral-50 rounded-lg border border-neutral-200 inline-block">
+              <div className="flex items-center gap-2 mb-2">
+                <Image size={14} className="text-neutral-500" />
+                <span className="text-xs font-medium text-neutral-600">Post Image</span>
+                <a
+                  href={`/api/post-images/${item.postImage}`}
+                  download={item.postImage}
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 ml-auto"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <Download size={12} />
+                  Save
+                </a>
+              </div>
+              <img
+                src={`/api/post-images/${item.postImage}`}
+                alt="Post image"
+                className="rounded border border-neutral-200 max-w-xs max-h-48 object-cover cursor-pointer"
+                onClick={() => window.open(`/api/post-images/${item.postImage}`, '_blank')}
+              />
+            </div>
+          )}
+
           {/* Instagram Reel Preview & Rating */}
           {item.platform === 'instagram' && (
             <div className="mt-3 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
@@ -1301,6 +1329,13 @@ function PostedItem({ item }) {
       <div className="flex items-center gap-3">
         <CheckCircle size={16} className="text-green-500" />
         {getPlatformIcon(item.platform, 14)}
+        {item.postImage && (
+          <img
+            src={`/api/post-images/${item.postImage}`}
+            alt=""
+            className="w-8 h-8 rounded object-cover border border-neutral-200"
+          />
+        )}
         <span className="text-sm text-neutral-700 truncate max-w-md">
           {contentText.substring(0, 60)}{contentText.length > 60 ? '...' : ''}
         </span>
