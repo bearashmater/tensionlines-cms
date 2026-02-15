@@ -5063,6 +5063,28 @@ app.delete('/api/comment-queue/:id', (req, res) => {
 });
 
 /**
+ * Bulk dismiss discovered posts
+ */
+app.post('/api/comment-queue/bulk-dismiss', (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids array required' });
+    }
+    const data = getCommentQueue();
+    const idSet = new Set(ids);
+    const before = data.queue.length;
+    data.queue = data.queue.filter(i => !idSet.has(i.id));
+    const removed = before - data.queue.length;
+    saveCommentQueue(data);
+    res.json({ success: true, dismissed: removed });
+  } catch (error) {
+    console.error('Error bulk dismissing:', error);
+    res.status(500).json({ error: 'Failed to bulk dismiss' });
+  }
+});
+
+/**
  * Mark comment as manually posted (Twitter)
  */
 app.post('/api/comment-queue/:id/posted', (req, res) => {

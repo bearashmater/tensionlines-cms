@@ -276,6 +276,8 @@ export default function CommentQueue() {
 function DiscoveredPosts({ items, onUpdate, settings }) {
   const [scanning, setScanning] = useState(false)
   const [scanResult, setScanResult] = useState(null)
+  const [selected, setSelected] = useState(new Set())
+  const [dismissing, setDismissing] = useState(false)
 
   const handleScan = async () => {
     setScanning(true)
@@ -297,10 +299,31 @@ function DiscoveredPosts({ items, onUpdate, settings }) {
   const handleDismiss = async (id) => {
     try {
       await fetch(`/api/comment-queue/${id}`, { method: 'DELETE' })
+      selected.delete(id)
+      setSelected(new Set(selected))
       onUpdate()
     } catch (err) {
       console.error('Error dismissing:', err)
     }
+  }
+
+  const handleBulkDismiss = async () => {
+    if (selected.size === 0) return
+    setDismissing(true)
+    try {
+      const res = await fetch('/api/comment-queue/bulk-dismiss', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [...selected] })
+      })
+      if (res.ok) {
+        setSelected(new Set())
+        onUpdate()
+      }
+    } catch (err) {
+      console.error('Error bulk dismissing:', err)
+    }
+    setDismissing(false)
   }
 
   const handleGenerate = async (id) => {
@@ -310,6 +333,8 @@ function DiscoveredPosts({ items, onUpdate, settings }) {
         headers: { 'Content-Type': 'application/json' }
       })
       if (res.ok) {
+        selected.delete(id)
+        setSelected(new Set(selected))
         onUpdate()
       } else {
         const result = await res.json()
@@ -317,6 +342,21 @@ function DiscoveredPosts({ items, onUpdate, settings }) {
       }
     } catch (err) {
       console.error('Error generating:', err)
+    }
+  }
+
+  const toggleSelect = (id) => {
+    const next = new Set(selected)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setSelected(next)
+  }
+
+  const toggleSelectAll = () => {
+    if (selected.size === items.length) {
+      setSelected(new Set())
+    } else {
+      setSelected(new Set(items.map(i => i.id)))
     }
   }
 
@@ -365,12 +405,40 @@ function DiscoveredPosts({ items, onUpdate, settings }) {
         </div>
       )}
 
+      {/* Bulk Actions Bar */}
+      {selected.size > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center justify-between sticky top-0 z-10">
+          <span className="text-sm font-medium text-red-800">
+            {selected.size} selected
+          </span>
+          <button
+            onClick={handleBulkDismiss}
+            disabled={dismissing}
+            className="flex items-center gap-1.5 px-4 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
+          >
+            <Trash2 size={14} />
+            {dismissing ? 'Dismissing...' : `Dismiss ${selected.size}`}
+          </button>
+        </div>
+      )}
+
       {/* Discovered Items */}
       <div className="bg-white rounded-lg border border-neutral-200">
-        <div className="px-4 py-3 border-b border-neutral-200">
+        <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
           <h2 className="font-semibold text-neutral-900">
             Discovered Posts ({items.length})
           </h2>
+          {items.length > 0 && (
+            <label className="flex items-center gap-2 text-sm text-neutral-500 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={selected.size === items.length && items.length > 0}
+                onChange={toggleSelectAll}
+                className="w-4 h-4 rounded border-neutral-300 text-gold focus:ring-gold"
+              />
+              Select all
+            </label>
+          )}
         </div>
         <div className="divide-y divide-neutral-100">
           {items.length === 0 ? (
@@ -384,6 +452,8 @@ function DiscoveredPosts({ items, onUpdate, settings }) {
               <DiscoveredItem
                 key={item.id}
                 item={item}
+                selected={selected.has(item.id)}
+                onToggleSelect={() => toggleSelect(item.id)}
                 onGenerate={() => handleGenerate(item.id)}
                 onDismiss={() => handleDismiss(item.id)}
               />
@@ -395,7 +465,7 @@ function DiscoveredPosts({ items, onUpdate, settings }) {
   )
 }
 
-function DiscoveredItem({ item, onGenerate, onDismiss }) {
+function DiscoveredItem({ item, selected, onToggleSelect, onGenerate, onDismiss }) {
   const [generating, setGenerating] = useState(false)
 
   const handleGenerate = async () => {
@@ -405,9 +475,16 @@ function DiscoveredItem({ item, onGenerate, onDismiss }) {
   }
 
   return (
-    <div className="p-4">
+    <div className={`p-4 ${selected ? 'bg-red-50/50' : ''}`}>
       <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={onToggleSelect}
+            className="w-4 h-4 mt-1 rounded border-neutral-300 text-gold focus:ring-gold flex-shrink-0 cursor-pointer"
+          />
+          <div className="flex-1 min-w-0">
           {/* Platform + author */}
           <div className="flex items-center gap-2 mb-2">
             {getPlatformIcon(item.platform)}
@@ -448,6 +525,7 @@ function DiscoveredItem({ item, onGenerate, onDismiss }) {
           <p className="text-xs text-neutral-400 mt-2">
             Found {new Date(item.createdAt).toLocaleString()}
           </p>
+          </div>
         </div>
 
         {/* Actions */}
