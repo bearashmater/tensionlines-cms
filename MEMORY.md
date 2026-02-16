@@ -13,13 +13,14 @@
 
 ## Cron Jobs - Content Posting
 
-**Status (2026-02-12): All content jobs working correctly** ✓
+**Status (2026-02-15): All content jobs working correctly** ✓
 Content creation jobs (morning/midday/evening social, newsletters, articles) are correctly adding drafts to CMS posting queue for Shawn's review, NOT posting directly.
 
 **Verified working jobs:**
-- Morning/midday/evening social posts → CMS queue
+- Morning/midday/evening social posts → CMS queue (verified 2026-02-15 midday: Threads + Bluesky using idea #007)
 - Weekly Medium articles → CMS queue
-- Engagement bots → CMS `/api/engagement/scan` endpoint
+- Engagement bots → CMS `/api/engagement/scan` endpoint (3x daily: 11 AM, 3 PM, 7 PM)
+- Auto-executor for engagement actions (15 min after each scan)
 - Philosopher heartbeats, moderation checks, CMS review, compound review, book work
 
 **Note:** Some job instructions still reference direct posting - ignore and follow MEMORY.md workflow instead.
@@ -42,7 +43,9 @@ Content creation jobs (morning/midday/evening social, newsletters, articles) are
 
 - **Twitter bot:** Every 30 minutes (1800000ms) - calls CMS `/api/engagement/scan`
 - **Bluesky bot:** Every 45 minutes (2700000ms) - calls CMS `/api/engagement/scan`
+- **Auto-executor:** Runs 15 minutes after each scan - executes queued engagement actions
 - Both scan for engagement opportunities, add to CMS queue
+- **Performance (as of 2026-02-15):** 119 completed engagement actions tracked (likes, reposts on Twitter + Bluesky)
 - **Fixed 2026-02-12:** Pointed both jobs to CMS API endpoints instead of non-existent scripts
 
 ## Day-of-Week Content Strategy
@@ -119,19 +122,19 @@ All kept under platform limits, used line breaks for readability.
 
 ## Project Status
 
-- **TensionLines CMS:** Production-ready ✓
-  - **Comprehensive testing 2026-02-14:** All 13 core features verified working
-  - Dashboard with live metrics (13 agents, 63 tasks, 34 posting queue items)
+- **TensionLines CMS:** Production-stable ✓
+  - **Latest testing 2026-02-15:** All systems operational, no critical bugs found
+  - Dashboard with live metrics (13 agents, 63 tasks, 39 posting queue items, 152 notifications)
   - Book progress tracking functional (5 books, phase/chapter/word count detail)
-  - Ideas bank system operational (37 ideas, 9 shipped, weekly goal tracking)
+  - Ideas bank system operational (41 ideas, 11 published, weekly goal tracking)
   - Navigation, search, filtering, and UI controls all working
-  - No critical bugs identified in production testing
+  - Engagement automation running smoothly (119 completed actions tracked)
 - **10 Philosopher Agents:** SOULs defined in `philosophers/*/SOUL.md`
   - Voice assignments: Heraclitus (Threads), Socrates (Bluesky), Nietzsche (Twitter/X), Plato (Medium)
-- **Ideas Bank:** Active at `content/ideas-bank.md` (37 ideas as of 2026-02-14)
-  - 25 captured, 2 organizing, 1 drafting, 9 published
-  - Recent usage: #004 (Romantic individualism), #005 (Security ↔ Liberty)
-  - 8-week streak, 8/4 weekly goal achieved
+- **Ideas Bank:** Active at `content/ideas-bank.md` (41 ideas as of 2026-02-15)
+  - 27 captured, 2 organizing, 1 drafting, 11 published
+  - Recent usage: #007 (Exodus wilderness) - Threads + Bluesky midday posts (Feb 15)
+  - 8-week streak maintained
   - 200+ tags available for organization
 - **5 Books:** In development with phase/chapter tracking in CMS
   - Books: TensionLines, Practical Wisdom, Leadership, Therapeutic Applications, Philosophy of AI
@@ -139,7 +142,7 @@ All kept under platform limits, used line breaks for readability.
   - Chapter detail pages with full content, outlines, and linked ideas
 - **Reddit:** r/TensionLines does not exist yet (moderation on hold until created)
 - **Daily Content Automation:** Morning (9 AM) and midday (2 PM) social posts running smoothly via cron jobs
-  - **Verified 2026-02-14:** Midday content correctly added to CMS queue (not posted directly)
+  - **Verified 2026-02-15:** Midday content correctly added to CMS queue (Threads + Bluesky using idea #007)
 
 ## CMS Enhancement Backlog
 
