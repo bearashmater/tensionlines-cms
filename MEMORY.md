@@ -28,16 +28,31 @@ Content creation jobs (morning/midday/evening social, newsletters, articles) are
 ## Technical Stack
 
 - **CMS:** Node.js + Express backend, React + Vite frontend at `localhost:3001`
-  - **Tested 2026-02-12:** All core features working (dashboard, navigation, book progress, queues)
+  - **Tested 2026-02-17:** Core features working, 2 bugs identified (see Known Issues below)
   - **Key API Endpoints:**
     - `/api/engagement/scan` - Scan for engagement opportunities (platform param: twitter|bluesky)
     - `/api/engagement-actions/scan` - Scan for engagement targets
     - `/api/engagement-actions/execute` - Execute queued actions
     - `/api/dashboard` - Live metrics (agents, tasks, ideas, queue counts)
+    - `/api/search` - ⚠️ **BROKEN:** Returns HTML instead of JSON
 - **Database:** File-based JSON at `mission-control/database.json`
 - **Twitter:** Bird CLI (`/opt/homebrew/bin/bird`) - READ ONLY (write blocked by Twitter)
 - **Bluesky:** AT Protocol via server.js - read + write works
 - **Git:** Always use `tensionlines-cms` repo, never `tension-lines-website`
+
+## Known Issues
+
+**Search API Broken (discovered 2026-02-17):**
+- `/api/search?q=<query>` returns HTML frontend instead of JSON
+- Impact: Search functionality non-functional via API
+- Priority: High - core feature
+- Likely cause: Missing API route or incorrect middleware order in server.js
+
+**Chapter Word Count Inconsistency (discovered 2026-02-17):**
+- Books API shows different word counts than chapter detail API
+- Example: Chapter 1 shows 1505 words in books list, null in chapter detail
+- Impact: Book progress tracking unreliable
+- Priority: Medium
 
 ## Engagement Automation
 
@@ -45,7 +60,7 @@ Content creation jobs (morning/midday/evening social, newsletters, articles) are
 - **Bluesky bot:** Every 45 minutes (2700000ms) - calls CMS `/api/engagement/scan`
 - **Auto-executor:** Runs 15 minutes after each scan - executes queued engagement actions
 - Both scan for engagement opportunities, add to CMS queue
-- **Performance (as of 2026-02-15):** 119 completed engagement actions tracked (likes, reposts on Twitter + Bluesky)
+- **Performance (as of 2026-02-17):** 85 completed engagement actions tracked (likes, reposts on Twitter + Bluesky)
 - **Fixed 2026-02-12:** Pointed both jobs to CMS API endpoints instead of non-existent scripts
 
 ## Day-of-Week Content Strategy
@@ -122,18 +137,18 @@ All kept under platform limits, used line breaks for readability.
 
 ## Project Status
 
-- **TensionLines CMS:** Production-stable ✓
-  - **Latest testing 2026-02-15:** All systems operational, no critical bugs found
-  - Dashboard with live metrics (13 agents, 63 tasks, 39 posting queue items, 152 notifications)
-  - Book progress tracking functional (5 books, phase/chapter/word count detail)
-  - Ideas bank system operational (41 ideas, 11 published, weekly goal tracking)
-  - Navigation, search, filtering, and UI controls all working
-  - Engagement automation running smoothly (119 completed actions tracked)
+- **TensionLines CMS:** Production-stable with 2 known bugs (see Known Issues) ⚠️
+  - **Latest testing 2026-02-17:** Core systems operational, search API broken, word count sync issue
+  - Dashboard with live metrics (13 agents, 63 tasks, 12 posting queue items, 155 notifications)
+  - Book progress tracking functional (5 books, phase/chapter tracking) - word count inconsistency noted
+  - Ideas bank system operational (41 ideas, 12 shipped, weekly goal tracking)
+  - Navigation, filtering, and UI controls working
+  - Engagement automation running smoothly (85 completed actions tracked)
 - **10 Philosopher Agents:** SOULs defined in `philosophers/*/SOUL.md`
   - Voice assignments: Heraclitus (Threads), Socrates (Bluesky), Nietzsche (Twitter/X), Plato (Medium)
-- **Ideas Bank:** Active at `content/ideas-bank.md` (41 ideas as of 2026-02-15)
-  - 27 captured, 2 organizing, 1 drafting, 11 published
-  - Recent usage: #007 (Exodus wilderness) - Threads + Bluesky midday posts (Feb 15)
+- **Ideas Bank:** Active at `content/ideas-bank.md` (41 ideas as of 2026-02-17)
+  - 28 captured, 1 drafted, 12 shipped
+  - Idea-to-publish conversion rate: ~43% (12 shipped / 28 captured)
   - 8-week streak maintained
   - 200+ tags available for organization
 - **5 Books:** In development with phase/chapter tracking in CMS
@@ -142,7 +157,6 @@ All kept under platform limits, used line breaks for readability.
   - Chapter detail pages with full content, outlines, and linked ideas
 - **Reddit:** r/TensionLines does not exist yet (moderation on hold until created)
 - **Daily Content Automation:** Morning (9 AM) and midday (2 PM) social posts running smoothly via cron jobs
-  - **Verified 2026-02-15:** Midday content correctly added to CMS queue (Threads + Bluesky using idea #007)
 
 ## CMS Enhancement Backlog
 
@@ -154,4 +168,9 @@ All kept under platform limits, used line breaks for readability.
 5. **Voice-to-Idea Capture** - Telegram voice message transcription → ideas bank integration
 6. **Engagement Opportunity Scoring** - AI scoring for queue prioritization (high/medium/low ROI)
 
-All enhancements non-blocking; CMS fully functional for current workflow.
+**Additional ideas identified 2026-02-17:**
+7. **Quick Engagement Dashboard Widget** - Show today's engagement stats on main dashboard (likes/reposts sent, queue size, success rate, top accounts)
+8. **Chapter Writing Momentum Tracker** - Words per day trend, estimated completion, velocity alerts, hot streak badges
+9. **Idea-to-Post Pipeline View** - Visual funnel with conversion rates, stage timing, bottleneck alerts, aging idea warnings
+
+All enhancements non-blocking; CMS fully functional for current workflow (minus search API bug).
