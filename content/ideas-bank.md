@@ -1327,8 +1327,8 @@ Do we try to "join" these two beliefs? Or hold them both?
 **Quote:** "Stop trying to get rid of inconsistent principles. Accept the tension and buzz in it."
 
 **Tags:** #tension #acceptance #principles #contradictions #aliveness #core-message #manifesto  
-**Chapter:** Chapter 1 (Introduction) or Chapter 2 (The Tension Line) - **CORE BOOK MESSAGE**  
-**Status:** 🔵 New - Just captured, awaiting organization
+**Chapter:** Book 1 - Chapter 1 Section 4 (The Core Proposition) - **CORE BOOK MESSAGE**  
+**Status:** 🟡 Organized → Added to book/chapters/chapter-1.md Section 4 (2026-02-17 8:00 PM weekly book session)
 **Source:** human
 
 **Notes:** **Direct counter-statement to Haidt (#013).** This is the TensionLines thesis in one sentence.
@@ -1695,7 +1695,7 @@ That vulnerability makes it powerful. It's not abstract philosophy. It's lived t
 
 **Tags:** #self-deception #shadow #ego #consciousness #truth #denial #awareness #inner-voice  
 **Chapter:** TBD - possibly Chapter 3 (Multiple Lines) or Chapter 5 (The Pull), or new chapter on Self-Knowledge  
-**Status:** 🔵 New - Just captured, awaiting organization
+**Status:** 🟢 Used - Twitter/X and Instagram posts added to CMS queue (2026-02-17 5:28 PM morning social cron)
 **Source:** human
 
 **Notes:** **Deep psychological insight** about genuine self-deception vs. conscious secrecy, and the inner voice that knows truth even when we don't.
@@ -4795,5 +4795,57 @@ I just got to sit"
 **Tags:** universaldesign, disabilityasepistemicresource, inclusiveknowledgeproduction, learningfrommarginalization, accessibility, expertisefromlivedexperience, designforall
 **Status:** 🔵 New
 **Source:** telegram
+
+---
+
+## 2026-02-14
+
+### #040 - 08:50 PM PST
+**Quote:** "- it seams interesting that we label time at the time of birth and the time of death.  The only life Grenache Mean Time,  an entire life between the poles of time."
+**Tags:** temporalidentity, mortality, birthdeathboundaries, timemeasurement, lifecontinuity, existentialmarkers
+**Status:** 🔵 New
+**Source:** telegram
+
+---
+
+## 2026-02-15
+
+### #041 - 08:46 AM PST
+**Quote:** "Here’s the text from the page:
+
+shed the false self and be loved.
+Manning always believed in the love of God. He studied it, illustrated it, wrote about it, spoke about it, counseled people toward it. But stripped of all distraction, activity, and busyness, on a mountain with nothing to dress himself up with—that’s where he knew the love of God.
+In the English language, we typically understand “belief” to be deeper and more personal than “knowledge.” Knowledge is purely intellectual; belief is gut-level conviction. Knowledge is the language of the head; belief is the language of the heart. But that’s not the Hebrew understanding of knowledge.
+The Hebrew word for knowledge is yada, and it’s a relational knowing. If you were to ask me, “How do you know that your wife loves you?” I’d begin to tell you about the way our relationship works. I’d describe all the little ways she chooses my company, all the times she’s stuck with me when I was wrong or lost or difficult, all the occasions she’s been a rock of support, and all the fun evenings of laughter, meals shared, and memories of doing nothing together. What is all that? It’s relational knowledge. I’ve experienced her love. That’s how I know.
+The Hebrew yada is even used in the Old Testament as a euphemism for sex. “Now Adam knew Eve his wife, and she conceived.“¹⁷ That sort of thing. That’s because knowledge, in the Hebrew understanding, was intimate. It was not memorized in a classroom but ​​​​"
+**Tags:** authenticself, experientialknowledge, divinelove, relationalepistemology, intellectualvsembodiedknowing, spiritualintimacy, strippedauthenticity
+**Status:** 🔵 New
+**Source:** telegram
+**Enhanced:** You're pointing out that real knowledge of God's love isn't something you *comprehend* intellectually—it's something you *experience* relationally, the way you know your spouse loves you through accumulated moments of choosing, staying, showing up. Manning had to strip away everything performative and distracting to finally *know* rather than just believe, which means the deepest spiritual truths require vulnerability and presence, not more information or understanding.
+
+---
+
+### #042 - 10:00 AM PST
+**Quote:** "The "now and not yet" theology, rooted in Jesus' proclamation that the kingdom of God is "at hand" (Mark 1:15), posits that God’s reign was inaugurated through Christ’s ministry, death, and resurrection ("now") but awaits full consummation at his return ("not yet"). It highlights a tension where believers experience the spiritual realities of the kingdom—such as salvation, empowerment by the Spirit, and, in some traditions, healing—while still living in a broken world marked by suffering and sin. 
+Key Aspects of "Now and Not Yet" Theology
+Inaugurated Eschatology: This framework, often attributed to scholar Gerhardus Vos, holds that the end-time promises of God have already begun to be fulfilled in Jesus, yet the final consummation is future.
+Present Reality ("Now"): The kingdom is present in the ministry of Jesus, the presence of the Holy Spirit, and in the lives of believers who submit to his lordship. It is characterized by righteousness, peace, and joy in the Holy Spirit.
+Future Hope ("Not Yet"): The kingdom is not yet fully realized, as the world still experiences pain, injustice, and death. The ultimate consummation will occur at the second coming of Christ.
+Living in Tension: Believers are called to live as active participants in God's redemptive work today, embodying kingdom values (love, justice), while simultaneously anticipating the full, physical restoration of creation.
+Missionary Purpose: This tension provides a framework for Christian mission, as believers are sent to demonstrate the reality of the kingdom, fighting against sin and suffering while waiting for the final victory. 
+This theology allows Christians to avoid extreme, exclusive views that the kingdom is only a future, heavenly reality or that it is only a humanly built, present society."
+**Tags:** eschatology, inauguratedkingdom, temporaltension, realizedvsfuture, theodicy, christianmission, already-notyet
+**Status:** 🔵 New
+**Source:** telegram
+**Enhanced:** You're describing a theological framework that solves a practical problem: how to take seriously both the radical changes Jesus claimed to bring *now* and the obvious fact that the world remains broken. The "now and not yet" holds these together by saying the kingdom has genuinely begun—it's real, active, present in transformed lives and communities—while insisting the final victory hasn't arrived yet, so suffering and injustice persist. This creates a productive middle ground between pure escapism (kingdom is only future) and naive utopianism (we can build the kingdom ourselves through social progress), giving believers both urgent motivation to act redemptively today and realistic patience about what they can actually accomplish.
+
+---
+
+### #043 - 03:12 PM PST
+**Quote:** "the saying goes you can bend a twig but not a tree. What would you rather be?"
+**Tags:** flexibility, growth, resilience, rigidity-vs-adaptability, personal-development, vulnerability, strength
+**Status:** 🔵 New
+**Source:** telegram
+**Enhanced:** You're asking whether it's better to be flexible and responsive (the twig) or stable and principled (the tree)—but the real tension is that we usually want both, and the proverb forces a false choice by implying you can't have rigidity where it matters and bend where it should.
 
 ---

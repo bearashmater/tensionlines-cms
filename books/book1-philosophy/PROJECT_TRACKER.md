@@ -77,12 +77,12 @@
 
 | Chapter | Target | Current | Status |
 |---------|--------|---------|--------|
-| Ch 1 | 8,000 | 1,505 | Section 1 drafted |
-| Ch 2 | 12,000 | 0 | Organized |
+| Ch 1 | 8,000 | 3,957 | Sections 1-4 drafted |
+| Ch 2 | 12,000 | 1,721 | Sections 1-5 drafted |
 | Ch 3 | 10,000 | 0 | Organized |
 | Ch 4 | 10,000 | 0 | Organized |
 | Ch 5 | 10,000 | 0 | Not Started |
-| **Total** | 50,000 | 1,505 | |
+| **Total** | 50,000 | 5,678 | 11.4% |
 
 ## Source Ideas (from ideas-bank.md)
 
