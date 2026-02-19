@@ -35,15 +35,28 @@ Content creation jobs (morning/midday/evening social, newsletters, articles) are
     - `/api/engagement-actions/execute` - Execute queued actions
     - `/api/dashboard` - Live metrics (agents, tasks, ideas, queue counts)
     - `/api/search` - ⚠️ **BROKEN:** Returns HTML instead of JSON
-- **Database:** File-based JSON at `mission-control/database.json`
+- **Database Architecture (file-based):**
+  - `mission-control/database.json` - Agents, tasks, messages, activities, notifications
+  - `content/ideas-bank.md` - All ideas (Markdown file, not in database.json)
+  - `books/` directory - Book content stored as individual files per book
+  - Dashboard API computes live metrics from multiple file sources
+  - **Note:** `database.json` shows `books: 0` and `ideas: 0` because data lives in separate files
 - **Twitter:** Bird CLI (`/opt/homebrew/bin/bird`) - READ ONLY (write blocked by Twitter)
 - **Bluesky:** AT Protocol via server.js - read + write works
 - **Git:** Always use `tensionlines-cms` repo, never `tension-lines-website`
 
 ## Known Issues
 
+**CRITICAL - Rate Limiting Too Aggressive (discovered 2026-02-18):**
+- Read limiter set to 100 requests per minute
+- Easily triggered during normal testing/usage and cron job operations
+- Blocks legitimate localhost API calls with "Too many requests" error
+- Impact: Blocks development, testing, and potentially cron jobs making frequent API calls
+- Priority: CRITICAL - blocking core functionality
+- Fix: Increase to 300/min for reads or exempt localhost entirely
+
 **Search API Broken (discovered 2026-02-17):**
-- `/api/search?q=<query>` returns HTML frontend instead of JSON
+- `/api/search?q=<query>` returns rate limit errors immediately (compounded by rate limit issue)
 - Impact: Search functionality non-functional via API
 - Priority: High - core feature
 - Likely cause: Missing API route or incorrect middleware order in server.js
@@ -90,13 +103,15 @@ Content creation jobs (morning/midday/evening social, newsletters, articles) are
 - Personal anecdotes that reveal larger truths
 - Practical wisdom grounded in real situations
 - Multi-part threads (2-3 parts) for deeper exploration
-- Examples: "Scale of 1-10" format, "You know how some people..." tech support story, robot dog virtue ethics
+- Narrative-driven transformation themes (wilderness as the work, not obstacle)
+- Examples: "Scale of 1-10" format, "You know how some people..." tech support story, robot dog virtue ethics, Exodus wilderness narrative
 
 **Bluesky posts (Socrates voice):**
 - Intellectual but accessible
-- Challenge dominant narratives ("Most of us approach X from...")
+- Challenge dominant narratives ("Most X gets this backwards...")
 - Clear distinctions and definitions
 - Socratic framing: questions over answers
+- Reframe the question, not just answer it (false binaries vs. generative tensions)
 - Can be longer (~800 chars) for developed arguments
 
 **Medium articles (Plato voice):**
@@ -106,10 +121,12 @@ Content creation jobs (morning/midday/evening social, newsletters, articles) are
 - Examples: "The Description Is Not the Dance" (practice vs. theory)
 
 **Effective Content Strategies:**
-- **Ancient wisdom works:** Biblical/classical references (Ecclesiastes, Socrates) add credibility and universal recognition
+- **Ancient wisdom works:** Biblical/classical references (Ecclesiastes, Exodus, Socrates) add credibility and universal recognition
 - **Concrete examples:** Robot dog, tech support stories - relatable entry points for abstract ideas
 - **Virtue ethics framing:** Shift from ontology ("what is X?") to character ("what do we become?")
 - **Reframe dominant narratives:** Don't answer the common question, question the question
+- **Transformation in the wilderness:** Challenge "getting through hard times" mindset - wilderness IS the work, not obstacle to overcome
+- **False binaries vs. generative tensions:** Not all polarities are equal - discernment matters (idea #021)
 - **Multi-part Threads:** 2-3 posts allow full argument development without overwhelming
 
 All kept under platform limits, used line breaks for readability.
@@ -121,6 +138,12 @@ All kept under platform limits, used line breaks for readability.
 2. Look for equivalent functionality in existing systems (CMS APIs vs standalone scripts)
 3. Test endpoints manually before updating cron jobs
 4. Prefer calling existing APIs over creating new scripts
+
+**API testing workarounds (learned 2026-02-18):**
+- When browser automation fails or rate limits block UI access, use curl
+- `curl -s localhost:3001/api/endpoint` bypasses frontend and tests API directly
+- Useful for validating endpoints without triggering aggressive rate limiters
+- Always test via command line before assuming API is broken
 
 **Before creating new tools:**
 - Check CMS server.js for existing API endpoints
@@ -137,13 +160,14 @@ All kept under platform limits, used line breaks for readability.
 
 ## Project Status
 
-- **TensionLines CMS:** Production-stable with 2 known bugs (see Known Issues) ⚠️
-  - **Latest testing 2026-02-17:** Core systems operational, search API broken, word count sync issue
-  - Dashboard with live metrics (13 agents, 63 tasks, 12 posting queue items, 155 notifications)
+- **TensionLines CMS:** Production-stable with 3 known bugs (1 critical, see Known Issues) ⚠️
+  - **Latest testing 2026-02-18:** Core systems operational, rate limiting blocking development/testing
+  - Dashboard with live metrics (13 agents, 63 tasks, 3 posting queue items, 162 notifications)
   - Book progress tracking functional (5 books, phase/chapter tracking) - word count inconsistency noted
   - Ideas bank system operational (41 ideas, 12 shipped, weekly goal tracking)
   - Navigation, filtering, and UI controls working
   - Engagement automation running smoothly (85 completed actions tracked)
+  - **CRITICAL priority:** Fix rate limiting to unblock testing and cron job reliability
 - **10 Philosopher Agents:** SOULs defined in `philosophers/*/SOUL.md`
   - Voice assignments: Heraclitus (Threads), Socrates (Bluesky), Nietzsche (Twitter/X), Plato (Medium)
 - **Ideas Bank:** Active at `content/ideas-bank.md` (41 ideas as of 2026-02-17)
