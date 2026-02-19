@@ -61,7 +61,7 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 // Rate limiting - separate limits for read vs write operations
 const readLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 100,  // 100 reads per minute
+  max: 300,  // 300 reads per minute (increased from 100 to unblock development/testing)
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later' }
