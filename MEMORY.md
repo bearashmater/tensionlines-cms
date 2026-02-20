@@ -47,16 +47,8 @@ Content creation jobs (morning/midday/evening social, newsletters, articles) are
 
 ## Known Issues
 
-**CRITICAL - Rate Limiting Too Aggressive (discovered 2026-02-18):**
-- Read limiter set to 100 requests per minute
-- Easily triggered during normal testing/usage and cron job operations
-- Blocks legitimate localhost API calls with "Too many requests" error
-- Impact: Blocks development, testing, and potentially cron jobs making frequent API calls
-- Priority: CRITICAL - blocking core functionality
-- Fix: Increase to 300/min for reads or exempt localhost entirely
-
 **Search API Broken (discovered 2026-02-17):**
-- `/api/search?q=<query>` returns rate limit errors immediately (compounded by rate limit issue)
+- `/api/search?q=<query>` returns errors
 - Impact: Search functionality non-functional via API
 - Priority: High - core feature
 - Likely cause: Missing API route or incorrect middleware order in server.js
@@ -66,6 +58,9 @@ Content creation jobs (morning/midday/evening social, newsletters, articles) are
 - Example: Chapter 1 shows 1505 words in books list, null in chapter detail
 - Impact: Book progress tracking unreliable
 - Priority: Medium
+
+**Recently Fixed:**
+- ✅ Rate Limiting (2026-02-19): Increased read limit 100→300 req/min, unblocked development/testing
 
 ## Engagement Automation
 
@@ -160,14 +155,14 @@ All kept under platform limits, used line breaks for readability.
 
 ## Project Status
 
-- **TensionLines CMS:** Production-stable with 3 known bugs (1 critical, see Known Issues) ⚠️
-  - **Latest testing 2026-02-18:** Core systems operational, rate limiting blocking development/testing
-  - Dashboard with live metrics (13 agents, 63 tasks, 3 posting queue items, 162 notifications)
+- **TensionLines CMS:** Production-stable with 2 known bugs (see Known Issues)
+  - **Latest status 2026-02-19:** Core systems fully operational, rate limiting fixed ✅
+  - Dashboard with live metrics (13 agents, 63 tasks, posting queue, notifications)
   - Book progress tracking functional (5 books, phase/chapter tracking) - word count inconsistency noted
   - Ideas bank system operational (41 ideas, 12 shipped, weekly goal tracking)
   - Navigation, filtering, and UI controls working
   - Engagement automation running smoothly (85 completed actions tracked)
-  - **CRITICAL priority:** Fix rate limiting to unblock testing and cron job reliability
+  - Daily content automation executing correctly (morning/midday posts to CMS queue)
 - **10 Philosopher Agents:** SOULs defined in `philosophers/*/SOUL.md`
   - Voice assignments: Heraclitus (Threads), Socrates (Bluesky), Nietzsche (Twitter/X), Plato (Medium)
 - **Ideas Bank:** Active at `content/ideas-bank.md` (41 ideas as of 2026-02-17)
