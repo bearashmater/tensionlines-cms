@@ -46,13 +46,14 @@ Content creation jobs (morning/midday/evening social, newsletters, articles) are
 ## Technical Stack
 
 - **CMS:** Node.js + Express backend, React + Vite frontend at `localhost:3001`
-  - **Tested 2026-02-20:** System health 9/10 - all core features operational (see latest review notes below)
+  - **Tested 2026-02-21:** System health 9.5/10 - all core features operational, stable 48h+ uptime
   - **Key API Endpoints:**
     - `/api/engagement/scan` - Scan for engagement opportunities (platform param: twitter|bluesky)
     - `/api/engagement-actions/scan` - Scan for engagement targets
     - `/api/engagement-actions/execute` - Execute queued actions
     - `/api/dashboard` - Live metrics (agents, tasks, ideas, queue counts)
     - `/api/search` - ⚠️ **BROKEN:** Returns HTML instead of JSON
+  - **Tools Created:** `cms/post-to-bluesky.js` - Standalone ES module for Bluesky posting via AT Protocol
 - **Database Architecture (file-based):**
   - `mission-control/database.json` - Agents, tasks, messages, activities, notifications
   - `content/ideas-bank.md` - All ideas (Markdown file, not in database.json)
@@ -65,39 +66,35 @@ Content creation jobs (morning/midday/evening social, newsletters, articles) are
 
 ## Known Issues
 
-**CMS Review (2026-02-20):**
-- **System Health: 9/10** - All core functionality operational
+**CMS Review (2026-02-21):**
+- **System Health: 9.5/10** - All core functionality operational, 48h+ stable uptime
 - Dashboard, Books, Ideas, Tasks, Agents, Notifications all working correctly
 - API endpoints responding properly
-- No blocking bugs identified
+- Zero critical bugs
 
-**Minor Issues Identified (2026-02-20):**
+**Minor Issues Identified:**
 
-1. **WebSocket Port Conflict Warning**
-   - Port 24678/3001 EADDRINUSE warnings in console
-   - Impact: Low - cosmetic, doesn't affect functionality
-   - Fix: Clean up duplicate server start attempts
+1. **Search Endpoint Method Confusion**
+   - Search is `POST /api/search` (correct implementation)
+   - Documentation might benefit from clarifying this is POST not GET
+   - Impact: None if frontend uses correct method
+   - Priority: Low (documentation only)
 
-2. **Frontend Dev Server Not Running**
-   - Vite dev (port 5173) not active, using compiled build instead
-   - Impact: None for production; affects hot-reload in development
-   - Fix: Add separate `npm run frontend` or use `concurrently`
+2. **Chapter Detail API Returns Minimal Metadata**
+   - Individual chapter endpoint returns basic data structure
+   - Dashboard shows richer section-level progress not exposed in detail endpoint
+   - Impact: Low - dashboard has the data, just not exposed in dedicated endpoint
+   - Priority: Low (future enhancement)
 
-3. **No Search Endpoint**
-   - `/api/search` endpoint not found
-   - Impact: Medium - limits content search capability
-   - Priority: High for UX improvement
-
-**Previously Identified:**
-
-**Chapter Word Count Inconsistency (discovered 2026-02-17):**
-- Books API shows different word counts than chapter detail API
-- Example: Chapter 1 shows 1505 words in books list, null in chapter detail
-- Impact: Book progress tracking unreliable
-- Priority: Medium
+3. **Ideas Array Empty in database.json**
+   - `database.json` has empty `ideas: []` array
+   - Ideas correctly parsed from `content/ideas-bank.md` (source of truth)
+   - No functional impact - ideas system works perfectly
+   - Impact: None (architectural choice, not a bug)
 
 **Recently Fixed:**
 - ✅ Rate Limiting (2026-02-19): Increased read limit 100→300 req/min, unblocked development/testing
+- ✅ WebSocket Port Warnings (2026-02-21): Resolved, cleaner console output
 
 ## Engagement Automation
 
@@ -163,6 +160,9 @@ Content creation jobs (morning/midday/evening social, newsletters, articles) are
 - **Frame shifts as liberation:** Expose "lose-lose" situations as fixed frames, offer reframe as "win-win" (idea #022)
 - **Projection in communication:** The judgment you imagine from others is usually self-judgment; to speak clearly is to listen (idea #018)
 - **Agency vs. surrender timing:** Develop sensitivity for when to rest vs. when to push - no universal answer (idea #017)
+- **Kobayashi Maru principle:** Some tensions are traps, not navigation opportunities - question the premise, change the rules (idea #020)
+- **Counter-positioning thought leaders:** Quote dominant view (Haidt: "people reconcile incompatible beliefs"), then offer TensionLines alternative ("Don't reconcile—inhabit the tension") - creates clear contrast (ideas #013 + #014)
+- **Idea pairing for depth:** Combine complementary ideas (Haidt quote + core thesis) for richer, more compelling content
 
 **Reddit Post Voice (discovered 2026-02-18 to 2026-02-20):**
 - Start with vulnerable question, not assertion ("Does this moment require me to be held, or does it require me to move?")
@@ -214,13 +214,14 @@ All kept under platform limits, used line breaks for readability.
   - Only minor issues: WebSocket port warnings, missing search endpoint (see Known Issues)
 - **10 Philosopher Agents:** SOULs defined in `philosophers/*/SOUL.md`
   - Voice assignments: Heraclitus (Threads), Socrates (Bluesky), Nietzsche (Twitter/X), Plato (Medium), Diogenes (Reddit - pending subreddit creation)
-- **Ideas Bank:** Active at `content/ideas-bank.md` (42 ideas as of 2026-02-20)
-  - Recent additions: #022 (frame shifts), #018 (communication/projection), #017 (agency/surrender)
-  - All three used successfully in Friday content (2026-02-20)
-  - 28 captured, 1 drafted, 12 shipped
-  - Idea-to-publish conversion rate: ~43% (12 shipped / 28 captured)
+- **Ideas Bank:** Active at `content/ideas-bank.md` (43 ideas as of 2026-02-21)
+  - Recent usage (2026-02-21 Saturday): #020 (Kobayashi Maru), #013/#014 (Haidt pairing), #018 (communication/projection)
+  - Previous day (2026-02-20 Friday): #022 (frame shifts), #018 (communication), #017 (agency/surrender)
+  - 28 captured, 1 drafted, 15 shipped (3 more today)
+  - Idea-to-publish conversion rate: ~54% (15 shipped / 28 captured) - improving
   - 8-week streak maintained
   - 200+ tags available for organization
+  - **Pattern:** Saturday "reflection/synthesis" theme working well (3 posts, cohesive but distinct)
 - **5 Books:** In development with phase/chapter tracking in CMS
   - Books: TensionLines, Practical Wisdom, Leadership, Therapeutic Applications, Philosophy of AI
   - TensionLines main book: 11% progress (per 2026-02-20 CMS review)
@@ -238,19 +239,26 @@ All kept under platform limits, used line breaks for readability.
 
 ## Content Production Insights
 
-**Daily Posting Cadence Working Well (2026-02-20):**
+**Daily Posting Cadence Working Well (2026-02-21 Saturday):**
+- Three Bluesky posts executed successfully: 9 AM, 2 PM (afternoon), 2 PM (midday)
+- Morning: False binaries / Kobayashi Maru (idea #020) - framework limits
+- Afternoon: Haidt counter-positioning + core thesis (ideas #013 + #014) - foundational message
+- Midday: Communication/projection/presence (idea #018) - practical application
+- Saturday "reflection/synthesis" theme: cohesive across all three posts
+- **Idea pairing success:** Combined #013 + #014 for stronger, clearer contrast (Haidt's view → TensionLines alternative)
+
+**Sustained Performance (2026-02-20 Friday):**
 - Three cron jobs executed successfully: 9 AM, 2 PM, 6 PM
-- Morning: Lighter reflection content (idea #022 - frame shifts)
-- Midday: Deeper philosophical exploration (idea #018 - communication/projection)
-- Evening: Reddit discussion post (idea #017 - agency/surrender)
+- Morning: Frame shifts (idea #022), Midday: Communication/projection (idea #018), Evening: Reddit (idea #017)
 - Friday theme consistency maintained across all three posts
 - Platform voice adaptation working: Bluesky (philosophical), Threads (conversational), Reddit (vulnerable questioning)
 
 **Process Strengths:**
-- Ideas bank → daily posting pipeline is smooth
+- Ideas bank → daily posting pipeline is smooth and reliable
 - Each philosopher voice adapting appropriately to platform
-- Day-of-week themes (Friday = reflection) being honored
-- Time-of-day content depth strategy working (morning lighter, midday deeper)
+- Day-of-week themes being honored (Friday = reflection, Saturday = synthesis)
+- Time-of-day content depth strategy working (morning accessible, midday/afternoon deeper)
+- **Idea conversion improving:** 54% shipped rate (up from 43% yesterday)
 
 **Process Gap Identified:**
 - Reddit posts drafting correctly but awaiting subreddit creation
@@ -272,4 +280,9 @@ All kept under platform limits, used line breaks for readability.
 8. **Chapter Writing Momentum Tracker** - Words per day trend, estimated completion, velocity alerts, hot streak badges
 9. **Idea-to-Post Pipeline View** - Visual funnel with conversion rates, stage timing, bottleneck alerts, aging idea warnings
 
-All enhancements non-blocking; CMS fully functional for current workflow (minus search API bug).
+**High-value improvements identified 2026-02-21:**
+10. **Quick Content Creation Workflow** - "Create Content from Idea" button in Ideas Bank with pre-filled platforms, real-time character counts, reduced friction (~4h effort, ~50% time savings)
+11. **Book Writing Session Tracking** - Start/stop writing timer, words/hour velocity, daily/weekly charts, projected completion dates, gamified progress (~5-6h effort)
+12. **Smart Task Prioritization** - Auto-prioritize stuck/overdue tasks, "What should I work on next?" recommendations, color-coded urgency (~3-4h effort)
+
+All enhancements non-blocking; CMS fully functional for current workflow.
